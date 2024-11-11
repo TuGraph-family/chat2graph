@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "chattugraph"
+name = "chat2graph"
 version = "0.0.1"
-description = "Make TuGraph an intelligent graph database."
-authors = ["Your Name <your.email@example.com>"]
+description = "An Agentic System on Graph Database."
+authors = ["Florian Fan <fanzhidongyzby@163.com>"]
 packages = [
-    { include = "chattugraph" }
+    { include = "app" }
 ]
 
 [tool.poetry.dependencies]
