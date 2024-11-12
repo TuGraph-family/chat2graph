@@ -9,6 +9,9 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10"
+openai = "^1.54.3"
+dbgpt = "0.6.1"
+pydantic = "^2.9.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
