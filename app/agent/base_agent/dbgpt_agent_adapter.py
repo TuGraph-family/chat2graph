@@ -1,13 +1,9 @@
 from typing import Any, List
 
-from dbgpt.core import ModelRequestContext
 from dbgpt.core.schema.api import ChatCompletionResponse, ChatMessage
-from dbgpt.model import (
-    ModelConfig,
-    ModelInstance,
-)
 
 from app.agent.base_agent.agent_adapter import AgentAdapter
+from app.agent.base_agent.base_agent import BaseAgent
 from app.memory.memory import Memory
 from app.memory.message import AgentMessage
 
@@ -15,18 +11,10 @@ from app.memory.message import AgentMessage
 class DBGPTAdapter(AgentAdapter):
     """DB-GPT Adapter"""
 
-    def __init__(self, model_name: str = "gpt-4o-mini", model_config: dict = None):
-        self.model_name = model_name
-        self.model_config = model_config or {}
-        self.client = None
+    def __init__(self, base_agent: BaseAgent):
+        self.base_agent = base_agent
         self.context = None
         self.memory: Memory = None
-
-    def init_client(self):
-        """Initialize the DB-GPT client."""
-        config = ModelConfig(**self.model_config)
-        self.client = ModelInstance(self.model_name, config)
-        self.context = ModelRequestContext()
 
     async def receive_msg(
         self, message: AgentMessage, role: str = "user"
@@ -38,8 +26,10 @@ class DBGPTAdapter(AgentAdapter):
         )
         await self.update_memory(chat_message)
 
-        response: ChatCompletionResponse = await self.client.chat_completion(
-            self.memory.get_messages(), self.context
+        response: ChatCompletionResponse = (
+            await self.base_agent.llm_client.chat_completion(
+                self.memory.get_messages(), self.context
+            )
         )
         return await self.parse_response(response)
 

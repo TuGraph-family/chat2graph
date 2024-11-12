@@ -6,7 +6,7 @@ from app.memory.message import AgentMessage
 
 
 class BaseAgent(ABC):
-    """"""
+    """Base Agent"""
 
     def __init__(self):
         """"""
