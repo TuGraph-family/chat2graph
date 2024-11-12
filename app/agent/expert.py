@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from app.agent.reasoner.base_reasoner import BaseReasoner
 from app.agent.workflow.workflow import Workflow
@@ -28,26 +28,26 @@ class Expert(ABC):
         self.called_num: int = 0
         self.max_called_num: int = 3
 
-    @abstractmethod
     async def execute_workflow(self):
         """Execute the workflow."""
 
-    @abstractmethod
-    async def call_next(self):
+    async def evaluate_workflow(self):
+        """Evaluate the workflow."""
+
+    async def auto_plan(self):
+        """Auto plan the subtasks and auto call the agents"""
+
+    async def _call_next(self):
         """Call the next expert."""
 
-    @abstractmethod
-    async def call_back(self):
+    async def _call_back(self):
         """Call the privious expert."""
 
-    @abstractmethod
-    async def call_leader(self):
+    async def _call_leader(self):
         """Call the leader expert."""
 
-    @abstractmethod
-    async def analyse_evalution(self):
+    async def _analyse_evalution(self):
         """Analyse the evalution of the execution of the workflow."""
 
-    @abstractmethod
     def set_context_propmt(self) -> str:
         """Set the context prompt by combining the input scratchpad, memory and knowledge."""
