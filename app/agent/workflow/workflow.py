@@ -14,8 +14,6 @@ class Workflow:
 
     def execute(self):
         """Execute the workflow."""
-        pass
 
     def evaluate(self):
         """Evaluate the workflow."""
-        pass
