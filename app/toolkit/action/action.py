@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass
 from typing import List
 
@@ -5,7 +6,7 @@ from app.toolkit.tool.tool import Tool
 
 
 @dataclass
-class Action:
+class Action(ABC):
     """The action in the toolkit."""
 
     id: str
