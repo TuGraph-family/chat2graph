@@ -6,7 +6,7 @@ from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 
 
-class Toolkit:
+class ToolkitManager:
     """The toolkit is a collection of actions and tools.
 
     In the toolkit graph, the actions are connected to the tools.
@@ -34,10 +34,10 @@ class Toolkit:
     def remove_action(self):
         """Remove action from the toolkit graph."""
 
-    def recommend_actions_and_tools(self):
+    async def recommend_actions_and_tools(self) -> List[Action]:
         """Recommend actions and tools from the toolkit graph."""
 
-    def update_toolkit_graph(self, text: str, called_tools: List[Tool]):
+    async def update_toolkit_graph(self, text: str, called_tools: List[Tool]):
         """Update the toolkit graph by renforcement learning."""
         # TODO: implement the reinforcement learning algorithm in S1
 
