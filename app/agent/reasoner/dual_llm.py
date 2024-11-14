@@ -1,10 +1,10 @@
 from typing import Any
 
-from app.agent.base_agent import BaseAgent
+from app.agent.base_agent.base_agent import BaseAgent
 from app.agent.reasoner.base_reasoner import BaseReasoner
 
 
-class CoLLMReasoner(BaseReasoner):
+class DualLLMReasoner(BaseReasoner):
     """CoLLM Reasoner."""
 
     def __init__(self, actor_agent: BaseAgent, thinker_agent: BaseAgent):
