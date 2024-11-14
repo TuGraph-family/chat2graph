@@ -10,5 +10,6 @@ class Action:
 
     id: str
     name: str
+    next_action_names: List[str]
     description: str
     tools: List[Tool]
