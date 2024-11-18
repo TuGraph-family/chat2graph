@@ -1,9 +1,10 @@
+from abc import ABC
 from typing import List, Union
 
 from app.memory.message import AgentMessage
 
 
-class Memory:
+class Memory(ABC):
     """Agent message memory."""
 
     def __init__(self):

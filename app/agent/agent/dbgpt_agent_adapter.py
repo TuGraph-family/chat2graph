@@ -13,7 +13,7 @@ from dbgpt.agent.resource import tool as dbgpt_tool
 from dbgpt.agent.util.llm.llm import LLMConfig
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient
 
-from app.agent.adpter.agent_adapter import AgentAdapter
+from app.agent.agent.agent_adapter import AgentAdapter
 from app.memory.message import AgentMessage
 from app.toolkit.tool.tool import Tool
 
@@ -30,14 +30,13 @@ class DBGPTAgentAdapter(AgentAdapter):
     ):
         """Initialize DB-GPT adapter."""
         self.id = str(uuid4())
+        self.agent: ConversableAgent = None
         self.llm_config = llm_config
         self.agent_memory = agent_memory or DBGPTAgentMemory()
         self.agent_context = DBGPTAgentContext(
             conv_id=self.id, language="en", temperature=0.7, max_new_tokens=2048
         )
         self.tool_list = tool_list
-        self.kwargs = kwargs
-        self.agent: Optional[ConversableAgent] = None
         self.kwargs = kwargs
 
     async def init_client(self):

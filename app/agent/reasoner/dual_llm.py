@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.agent.adpter.agent_adpter_factory import (
+from app.agent.agent.agent_adpter_factory import (
     AgentAdapterFactory,
     AgentFrameworkName,
 )

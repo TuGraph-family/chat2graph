@@ -2,11 +2,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.agent.adpter.agent_adpter_factory import (
+from app.agent.agent.agent_adpter_factory import (
     AgentAdapterFactory,
     AgentFrameworkName,
 )
-from app.agent.adpter.dbgpt_agent_adapter import AgentAdapter, DBGPTAgentAdapter
+from app.agent.agent.dbgpt_agent_adapter import AgentAdapter, DBGPTAgentAdapter
 from app.memory.message import AgentMessage
 
 

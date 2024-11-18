@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import Optional
 
-from app.agent.adpter.agent_adapter import AgentAdapter
-from app.agent.adpter.dbgpt_agent_adapter import DBGPTAgentAdapter
+from app.agent.agent.agent_adapter import AgentAdapter
+from app.agent.agent.dbgpt_agent_adapter import DBGPTAgentAdapter
 
 
 class AgentFrameworkName(Enum):

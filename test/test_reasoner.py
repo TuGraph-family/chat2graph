@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.agent.adpter.dbgpt_agent_adapter import DBGPTAgentAdapter
+from app.agent.agent.dbgpt_agent_adapter import DBGPTAgentAdapter
 from app.agent.reasoner.dual_llm import DualLLMReasoner
 from app.memory.message import AgentMessage
 
