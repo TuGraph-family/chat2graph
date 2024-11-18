@@ -1,20 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
-
-from app.agent.base_agent.base_agent import BaseAgent
+from typing import Any
 
 
 class BaseReasoner(ABC):
     """Base Reasoner, an env element of the multi-agent system."""
 
-    def __init__(self, agents: List[BaseAgent]):
-        self.agent_dict: Dict[str, BaseAgent] = {
-            agent.id: agent for agent in agents
-        }  # agent_id: agent
-
     @abstractmethod
-    async def infer(self, data: Any):
-        """Infer from the data."""
+    async def infer(self):
+        """Infer by the reasoner."""
 
     @abstractmethod
     async def update_knowledge(self, data: Any):
@@ -25,5 +18,5 @@ class BaseReasoner(ABC):
         """Evaluate the inference process."""
 
     @abstractmethod
-    async def refine(self):
-        """Refine the inference results."""
+    async def conclure(self):
+        """Conclure the inference results."""
