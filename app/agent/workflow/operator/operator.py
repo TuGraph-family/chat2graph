@@ -94,4 +94,6 @@ Tools are the LLM's API to the external world. This section defines not just too
 ===== Scratchpad =====
 LLMs benefit from explicit reasoning chains. This workspace isn't just for show - it forces structured thinking and provides an audit trail for the operation's execution. It's debug output for LLM reasoning.
 {scratchpad}
+
+=====
 """
