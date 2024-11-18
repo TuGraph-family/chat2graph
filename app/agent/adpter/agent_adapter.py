@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import List
 
 from app.memory.message import AgentMessage
 
@@ -8,15 +8,15 @@ class AgentAdapter(ABC):
     """Agent adapter."""
 
     @abstractmethod
-    def init_client(self):
+    async def init_client(self):
         """Initialize the LLM client."""
 
     @abstractmethod
-    async def receive_msg(self, message: AgentMessage, role: str = "user"):
+    async def receive_message(self, message: AgentMessage) -> AgentMessage:
         """Receive a message."""
 
     @abstractmethod
-    async def parse_response(self, response: Any):
+    async def parse_response(self, response: AgentMessage):
         """Parse the response."""
 
     @abstractmethod
