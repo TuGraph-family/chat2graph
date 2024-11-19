@@ -8,9 +8,9 @@ class Task(ABC):
 
     def __init__(
         self,
-        task_content: str,
+        content: str,
         tags: Optional[List[str]] = None,
     ):
         self.id = str(uuid4())
-        self.content = task_content
+        self.content = content
         self.tags = tags or []
