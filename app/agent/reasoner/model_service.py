@@ -55,6 +55,8 @@ class DbgptLllmClient(ModelService):
 
 
 class ModelServiceFactory(ABC):
+    """Model service factory."""
+
     @classmethod
     def create(
         cls, model_type: str, model_config: Dict[str, Any], **kwargs
