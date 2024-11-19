@@ -3,7 +3,7 @@ from typing import List
 from app.agent.reasoner.dual_llm import DualLLMReasoner
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit_manager import ToolkitManager
+from app.toolkit.toolkit import Toolkit
 
 
 class Operator:
@@ -16,7 +16,7 @@ class Operator:
         self.scratchpad: str = None
 
         self.embedding_vector: List[float] = None  # embedding vector of context
-        self.toolkit_manager: ToolkitManager = None
+        self.toolkit: Toolkit = None
 
         self.set_actions_and_tools()
 
@@ -39,7 +39,7 @@ class Operator:
 
     async def set_actions_and_tools(self) -> None:
         """Get the actions from the toolkit."""
-        self.actions = await self.toolkit_manager.recommend_actions_and_tools()
+        self.actions = await self.toolkit.recommend_actions_and_tools()
 
     def get_action_rels(self) -> str:
         """Get the action relationships from the toolkit."""
