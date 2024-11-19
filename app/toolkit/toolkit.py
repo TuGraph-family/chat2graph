@@ -6,7 +6,7 @@ from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 
 
-class ToolkitManager:
+class Toolkit:
     """The toolkit is a collection of actions and tools.
 
     In the toolkit graph, the actions are connected to the tools.

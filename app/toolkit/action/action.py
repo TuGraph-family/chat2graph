@@ -11,6 +11,6 @@ class Action(ABC):
 
     id: str
     name: str
-    next_action_names: List[str]
     description: str
-    tools: List[Tool]
+    next_action_names: List[str] = None
+    tools: List[Tool] = None
