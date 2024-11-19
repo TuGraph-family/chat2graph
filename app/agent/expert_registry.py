@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict
+from typing import Dict
 
 from app.agent.base_agent import BaseAgentConfig
 from app.agent.expert import ExpertAgent
@@ -10,32 +10,29 @@ class ExpertRegistry(ABC):
 
     def __init__(self):
         # Store class and config information, not instances
-        self._expert_dict: Dict[str, ExpertAgent] = {}  # expert_id -> expert_instance
+        self._expert_dict: Dict[str, BaseAgentConfig] = {}  # expert_id -> expert_config
 
-    def register(self, expert_id: str, expert: ExpertAgent) -> None:
+    def register(self, name: str, expert: BaseAgentConfig) -> None:
         """
         Register information needed to initialize an expert agent.
         """
 
-        if expert_id in self._expert_dict:
-            raise ValueError(f"Expert with ID {expert_id} already registered")
+        if name in self._expert_dict:
+            raise ValueError(f"Expert {name} already registered")
 
         # Store initialization information
-        self._expert_dict[expert_id] = expert
+        self._expert_dict[name] = expert
 
-    def create(
-        self, expert_id: str, task, agent_config: BaseAgentConfig
-    ) -> ExpertAgent:
+    def create(self, name: str, task, agent_config: BaseAgentConfig) -> ExpertAgent:
         """
         Create a new instance of an expert agent.
         """
-        if expert_id in self._expert_dict:
-            raise ValueError(f"Expert with ID {expert_id} has been registered")
+        if name in self._expert_dict:
+            raise ValueError(f"Expert with ID {name} has been registered")
         expert = ExpertAgent(task=task, agent_config=agent_config)
-        self._expert_dict[expert_id] = expert
         return expert
 
-    def list_experts(self) -> Dict[str, Dict[str, Any]]:
+    def list_expert_configs(self) -> Dict[str, BaseAgentConfig]:
         """Return a dictionary of all registered expert information."""
 
         return dict(self._expert_dict)
