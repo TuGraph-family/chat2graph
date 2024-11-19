@@ -2,9 +2,17 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from uuid import uuid4
 
-from app.agent.profile import Profile
+from app.agent.reasoner.dual_llm import DualLLMReasoner
 from app.agent.workflow.workflow import Workflow
 from app.memory.task import Task
+
+
+@dataclass
+class Profile(ABC):
+    """The profile of the agent."""
+
+    name: str
+    description: str = ""
 
 
 @dataclass
@@ -24,8 +32,9 @@ class BaseAgent(ABC):
         agent_config: BaseAgentConfig,
     ):
         self.id = str(uuid4())
-        self.agent_config = agent_config
-        self.reasoner = None
+        self.profile = agent_config.profile
+        self.workflow = agent_config.workflow
+        self.reasoner: DualLLMReasoner = DualLLMReasoner(task=task)
         self.task = task
 
     @abstractmethod

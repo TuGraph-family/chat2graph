@@ -1,12 +1,8 @@
 from typing import Any
 
-from app.agent.agent.agent_adpter_factory import (
-    AgentAdapterFactory,
-    AgentFrameworkName,
-)
 from app.agent.reasoner.base_reasoner import BaseReasoner
+from app.agent.reasoner.model_service import ModelService
 from app.memory.memory import Memory
-from app.memory.message import AgentMessage
 
 
 class DualLLMReasoner(BaseReasoner):
@@ -15,80 +11,12 @@ class DualLLMReasoner(BaseReasoner):
     def __init__(self, task: str):
         """Initialize without async operations."""
         self.task = task
-        self.actor = None
-        self.thinker = None
+        self.actor_model: ModelService = None
+        self.thinker_model: ModelService = None
         self.memory: Memory = Memory()
-        self._initialized = False
-
-    @classmethod
-    async def create(cls, task: str) -> "DualLLMReasoner":
-        """Factory method to create and initialize a DualLLMReasoner instance."""
-        instance = cls(task=task)
-        await instance.initialize()
-        return instance
-
-    async def initialize(self):
-        """Async initialization."""
-        if not self._initialized:
-            actor_name = "Actor"
-            thinker_name = "Thinker"
-            self.actor = await AgentAdapterFactory.create(
-                agent_type=AgentFrameworkName.DBGPT,
-                name=actor_name,
-                role="",
-                goal="",
-                desc="",
-                system_prompt_template=ACTOR_PROMPT_TEMPLATE.format(
-                    actor_name=actor_name,
-                    thinker_name=thinker_name,
-                    task=self.task,
-                ),
-            )
-            self.thinker = await AgentAdapterFactory.create(
-                agent_type=AgentFrameworkName.DBGPT,
-                name=thinker_name,
-                role="",
-                goal="",
-                desc="",
-                system_prompt_template=THINKER_PROPMT_TEMPLATE.format(
-                    thinker_name=thinker_name,
-                    actor_name=actor_name,
-                    n_instructions=1,
-                    task=self.task,
-                ),
-            )
-            self._initialized = True
-
-    async def ensure_initialized(self):
-        """Ensure the reasoner is initialized."""
-        if not self._initialized:
-            await self.initialize()
 
     async def infer(self, reasoning_rounds: int = 5):
         """Infer by the reasoner."""
-        # initial message
-        message: AgentMessage = AgentMessage(
-            msg_id="1",
-            sender_id="Acotr AI",
-            receiver_id="Thinker AI",
-            status="successed",
-            content=(
-                "Thought: I need your help to complete the task.\n"
-                "Action: None.\nFeedback: None\n"
-            ),
-            timestamp="2024-01-01",
-        )
-        for _ in range(reasoning_rounds):
-            message = await self.thinker.receive_message(message)
-            self.memory.add_message(message)
-            message = await self.actor.receive_message(message)
-            self.memory.add_message(message)
-            if "TASK_DONE" in message.content:
-                break
-
-        history_messages = self.memory.get_messages()
-        for message in history_messages:
-            print(f"{message.sender_id}:\n{message.content}\n\n")
 
     async def update_knowledge(self, data: Any):
         """Update the knowledge."""

@@ -8,3 +8,6 @@ class Leader(BaseAgent):
     def __init__(self, task, agent_config):
         super().__init__(task, agent_config)
         self.agent_registry = ExpertRegistry()
+
+    async def execute(self):
+        """Execute to resolve the task."""
