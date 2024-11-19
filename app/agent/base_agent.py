@@ -9,7 +9,12 @@ from app.memory.task import Task
 
 @dataclass
 class Profile(ABC):
-    """The profile of the agent."""
+    """The profile of the agent.
+
+    Attributes:
+        name (str): The name of the agent.
+        description (str): The description of the agent.
+    """
 
     name: str
     description: str = ""
@@ -17,14 +22,27 @@ class Profile(ABC):
 
 @dataclass
 class BaseAgentConfig:
-    """Configuration for the base agent."""
+    """Configuration for the base agent.
+
+    Attributes:
+        profile (Profile): The profile of the agent.
+        workflow (Workflow): The workflow of the agent.
+    """
 
     profile: Profile
     workflow: Workflow
 
 
 class BaseAgent(ABC):
-    """Base agent implementation."""
+    """Base agent implementation.
+
+    Attributes:
+        id (str): The unique identifier of the agent.
+        profile (Profile): The profile of the agent.
+        workflow (Workflow): The workflow of the agent.
+        reasoner (DualLLMReasoner): The reasoner of the agent.
+        task (Task): The task assigned to the agent.
+    """
 
     def __init__(
         self,
