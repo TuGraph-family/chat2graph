@@ -27,8 +27,8 @@ class DbgptLllmClient(ModelService):
     def __init__(self, model_config: Dict[str, Any]):
         super().__init__()
         self.model_alias = model_config.get("model_alias") or "qwen-turbo"
-        api_base = model_config.get("api_base") or os.getenv("OPENAI_API_BASE")
-        api_key = model_config.get("api_key") or os.getenv("OPENAI_API_KEY")
+        api_base = model_config.get("api_base") or os.getenv("QWEN_API_BASE")
+        api_key = model_config.get("api_key") or os.getenv("QWEN_API_KEY")
         self.streaming = model_config.get("streaming") or False
 
         # use openai llm client by default
