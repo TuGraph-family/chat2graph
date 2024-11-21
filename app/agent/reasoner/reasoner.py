@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-class Rreasoner(ABC):
-    """Base Reasoner, an env element of the multi-agent system."""
+class Reasoner(ABC):
+    """Reasoner is a basic element of the agent."""
 
     @abstractmethod
     async def infer(self):

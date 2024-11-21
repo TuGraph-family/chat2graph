@@ -4,7 +4,7 @@ from typing import Literal
 
 @dataclass
 class AgentMessage:
-    """Agent message dataclass"""
+    """Agent message"""
 
     msg_id: str
     sender_id: str

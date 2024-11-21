@@ -9,11 +9,11 @@ from app.agent.task import Task
 
 
 class LeaderState(ABC):
-    """Registry for managing expert agent initialization information.
+    """Leader State is uesd to manage expert agent and tasks.
 
     attributes:
-        _expert_dict: the expert dictionary (expert_id -> expert_config).
-        tasks: the oriented graph of the tasks.
+        _tasks: the oriented graph of the tasks.
+        _expert_assignments: the expert dictionary (task_id -> expert).
 
         tasks schema
             {
@@ -25,52 +25,51 @@ class LeaderState(ABC):
 
     def __init__(self):
         # Store class and config information, not instances
-        self._expert_dict: Dict[str, Expert] = {}  # expert_id -> expert_config
-        self.tasks: nx.DiGraph = nx.DiGraph()
+        self._tasks: nx.DiGraph = nx.DiGraph()
+        self._expert_assignments: Dict[str, Expert] = {}  # task_id -> expert
 
-    def register(self, expert_id: str, expert: Expert) -> None:
-        """Register information needed to initialize an expert agent."""
+    def register(self, task_id: str, expert: Expert) -> None:
+        """Register information needed to assign a task to an expert."""
 
-        if expert_id in self._expert_dict:
-            raise ValueError(f"Expert {expert_id} already registered")
+        if task_id in self._expert_assignments:
+            raise ValueError(f"Task with ID {task_id} already registered")
 
         # Store initialization information
-        self._expert_dict[expert_id] = expert
+        self._expert_assignments[task_id] = expert
 
-    def create(self, expert_id: str, agent_config: AgentConfig) -> Expert:
+    def create(self, task_id: str, agent_config: AgentConfig) -> Expert:
         """Create a new instance of an expert agent."""
-        if expert_id in self._expert_dict:
-            raise ValueError(f"Expert with ID {expert_id} has been registered")
+        if task_id in self._expert_assignments:
+            raise ValueError(f"Task with ID {task_id} has been registered")
         expert = Expert(agent_config=agent_config)
-        self.register(expert_id=expert_id, expert=expert)
+        self.register(task_id=task_id, expert=expert)
         return expert
 
-    def release(self, expert_id: str) -> None:
+    def release(self, task_id: str) -> None:
         """Release the expert agent."""
-        if expert_id in self._expert_dict:
-            del self._expert_dict[expert_id]
-        else:
-            raise ValueError(f"Expert with ID {expert_id} not found")
+        if task_id in self._expert_assignments:
+            del self._expert_assignments[task_id]
+        raise ValueError(f"Task with ID {task_id} not found in the registry")
 
-    def list_experts(self) -> Dict[str, Expert]:
+    def list_expert_assignmentss(self) -> Dict[str, Expert]:
         """Return a dictionary of all registered expert information."""
 
-        return dict(self._expert_dict)
+        return dict(self._expert_assignments)
 
     def add_task(
         self, task: Task, predecessors: List[Task], successors: List[Task]
     ) -> None:
         """Add a task to the task registry."""
-        self.tasks.add_node(task.id, task=task)
+        self._tasks.add_node(task.id, task=task)
         for predecessor in predecessors:
-            self.tasks.add_edge(predecessor.id, task.id)
+            self._tasks.add_edge(predecessor.id, task.id)
         for successor in successors:
-            self.tasks.add_edge(task.id, successor.id)
+            self._tasks.add_edge(task.id, successor.id)
 
     def remove_task(self, task_id: str) -> None:
         """Remove a task from the task registry."""
-        self.tasks.remove_node(task_id)
+        self._tasks.remove_node(task_id)
 
     def get_task(self, task_id: str) -> Task:
         """Get a task from the task registry."""
-        return self.tasks.nodes[task_id]["task"]
+        return self._tasks.nodes[task_id]["task"]

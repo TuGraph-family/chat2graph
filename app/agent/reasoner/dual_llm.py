@@ -1,19 +1,19 @@
 from typing import Any
 
 from app.agent.reasoner.model_service import ModelService
-from app.agent.reasoner.reasoner import Rreasoner
+from app.agent.reasoner.reasoner import Reasoner
 from app.memory.memory import BuiltinMemory, Memory
 
 
-class DualModelReasoner(Rreasoner):
-    """CoLLM Reasoner."""
+class DualModelReasoner(Reasoner):
+    """Dual model reasoner."""
 
     def __init__(self):
         """Initialize without async operations."""
-        self.task: str = None
-        self.actor_model: ModelService = None
-        self.thinker_model: ModelService = None
-        self.memory: Memory = BuiltinMemory()
+        self._task: str = None
+        self._actor_model: ModelService = None
+        self._thinker_model: ModelService = None
+        self._memory: Memory = BuiltinMemory()
 
     async def infer(self, reasoning_rounds: int = 5):
         """Infer by the reasoner."""

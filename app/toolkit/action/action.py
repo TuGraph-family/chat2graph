@@ -7,7 +7,7 @@ from app.toolkit.tool.tool import Tool
 
 @dataclass
 class Action(ABC):
-    """The action in the toolkit."""
+    """Action in the toolkit."""
 
     id: str
     name: str

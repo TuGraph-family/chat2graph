@@ -6,13 +6,13 @@ from app.agent.workflow.operator.operator import Operator
 
 
 class Workflow(ABC):
-    """A workflow is a sequence of operators that need to be executed"""
+    """Workflow is a sequence of operators that need to be executed"""
 
     def __init__(self):
-        self.operator_graph: nx.DiGraph = nx.DiGraph()
-        self.eval_operator: Operator = None
+        self._operator_graph: nx.DiGraph = nx.DiGraph()
+        self._eval_operator: Operator = None
 
-        self.input_data: str = None
+        self._input_data: str = None
 
     @abstractmethod
     def execute(self):

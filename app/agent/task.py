@@ -1,10 +1,16 @@
 from abc import ABC
+from dataclasses import dataclass
 from typing import List, Optional
 from uuid import uuid4
 
 
+@dataclass
 class Task(ABC):
-    """The task in the system."""
+    """Task in the system."""
+
+    id: str
+    content: str
+    tags: List[str]
 
     def __init__(
         self,

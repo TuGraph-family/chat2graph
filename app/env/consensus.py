@@ -4,7 +4,7 @@ from typing import List
 
 @dataclass
 class Consensus:
-    """Consensus dataclass, which is rarely modified"""
+    """Consensus is rarely modified in the environment."""
 
     id: str
     tags: List[str]

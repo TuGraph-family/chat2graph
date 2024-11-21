@@ -7,7 +7,7 @@ from app.toolkit.tool.tool import Tool
 
 
 class Toolkit:
-    """The toolkit is a collection of actions and tools.
+    """Toolkit is a collection of actions and tools.
 
     In the toolkit graph, the actions are connected to the tools.
         Action --Next--> Action
@@ -15,12 +15,12 @@ class Toolkit:
     """
 
     def __init__(self):
-        self.id = None
-        self.actions: List[Action] = None
-        self.tools: List[Tool] = None
+        self._id = None
+        self._actions: List[Action] = None
+        self._tools: List[Tool] = None
 
         # graph db
-        self.toolkit_graph: MemoryGraph = None
+        self._toolkit_graph: MemoryGraph = None
 
     def add_tool(self):
         """Add tool to toolkit graph. Action --Call--> Tool."""

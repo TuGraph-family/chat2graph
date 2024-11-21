@@ -10,25 +10,25 @@ class Operator:
     """Operator is a sequence of actions and tools that need to be executed."""
 
     def __init__(self):
-        self.actions: List[Action] = []
-        self.task: str = None
-        self.context: str = None
-        self.scratchpad: str = None
+        self._actions: List[Action] = []
+        self._task: str = None
+        self._context: str = None
+        self._scratchpad: str = None
 
-        self.embedding_vector: List[float] = None  # embedding vector of context
-        self.toolkit: Toolkit = None
+        self._embedding_vector: List[float] = None  # embedding vector of context
+        self._toolkit: Toolkit = None
 
         self.set_actions_and_tools()
 
     def format_operation_prompt(self) -> str:
         """Format the operation prompt."""
         return OPERATION_PT.format(
-            task=self.task,
-            context=self.context,
+            task=self._task,
+            context=self._context,
             knowledge=self.get_knowledge(),
             action_rels=self.get_action_rels(),
             tool_docstrings=self.get_tool_docstrings(),
-            scratchpad=self.scratchpad,
+            scratchpad=self._scratchpad,
         )
 
     async def execute(self, reasoner: DualModelReasoner):
@@ -39,13 +39,13 @@ class Operator:
 
     async def set_actions_and_tools(self) -> None:
         """Get the actions from the toolkit."""
-        self.actions = await self.toolkit.recommend_actions_and_tools()
+        self._actions = await self._toolkit.recommend_actions_and_tools()
 
     def get_action_rels(self) -> str:
         """Get the action relationships from the toolkit."""
         action_rels = "\n".join([
             f"[{action.name}] -next-> [{str(action.next_action_names)}]"
-            for action in self.actions
+            for action in self._actions
         ])
         return action_rels
 
@@ -53,7 +53,7 @@ class Operator:
         """Get the tool names and docstrings from the toolkit."""
         _tools: List[Tool] = []
         tool_docstrings = ""
-        for action in self.actions:
+        for action in self._actions:
             for tool in action.tools:
                 if tool not in _tools:
                     tool_docstrings += (

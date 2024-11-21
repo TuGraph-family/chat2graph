@@ -2,7 +2,7 @@ from app.agent.agent import Agent
 
 
 class Expert(Agent):
-    """An expert is a role that can execute a workflow."""
+    """Expert is a role that can execute a workflow."""
 
     async def execute(self):
         """Execute to resolve the task."""

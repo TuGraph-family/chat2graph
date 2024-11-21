@@ -4,13 +4,13 @@ from app.toolkit.tool.tool import Tool
 
 
 class QuerySchema(BaseModel):
-    """The query schema."""
+    """Query schema."""
 
     text: str
 
 
 class Query(Tool):
-    """The query tool in the toolkit."""
+    """Query tool in the toolkit."""
 
     def __init__(self):
         super().__init__(self.query, args_schema=QuerySchema)

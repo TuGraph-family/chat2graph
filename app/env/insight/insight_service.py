@@ -4,11 +4,11 @@ from typing import Any, List
 from app.env.insight.insight import Insight, InsightType
 
 
-class InsightServer(ABC):
-    """Base Insight, an env element of the multi-agent system."""
+class InsightService(ABC):
+    """Insight Service"""
 
     def __init__(self, insights: List[Insight] = None):
-        self.insights: List[Insight] = insights or []
+        self._insights: List[Insight] = insights or []
 
     @abstractmethod
     async def generate_insights(self, data: Any):
@@ -31,8 +31,8 @@ class InsightServer(ABC):
         """Convert insights to json."""
 
 
-class TextInsightServer(InsightServer):
-    """Text Insight"""
+class TextInsightService(InsightService):
+    """Text Insight Service"""
 
     async def generate_insights(self, data: Any):
         """Generate insights from the text."""
@@ -48,12 +48,12 @@ class TextInsightServer(InsightServer):
 
     async def insights_to_json(self):
         """Convert insights to json."""
-        return [insight.to_json() for insight in self.insights]
+        return [insight.to_json() for insight in self._insights]
 
 
 # TODO: multi-modal insights
-class ImageInsightServer(InsightServer):
-    """Image Insight"""
+class ImageInsightService(InsightService):
+    """Image Insight Service"""
 
     async def generate_insights(self, data: Any):
         """Generate insights from the image."""
@@ -69,12 +69,12 @@ class ImageInsightServer(InsightServer):
 
     async def insights_to_json(self):
         """Convert insights to json."""
-        return [insight.to_json() for insight in self.insights]
+        return [insight.to_json() for insight in self._insights]
 
 
 # TODO: multi-modal insights for table RAG
-class TableInsightServer(InsightServer):
-    """Table Insight"""
+class TableInsightService(InsightService):
+    """Table Insight Service"""
 
     async def generate_insights(self, data: Any):
         """Generate insights from the table."""
@@ -90,19 +90,19 @@ class TableInsightServer(InsightServer):
 
     async def insights_to_json(self):
         """Convert insights to json."""
-        return [insight.to_json() for insight in self.insights]
+        return [insight.to_json() for insight in self._insights]
 
 
-class InsightServerFactory:
-    """Insight Factory"""
+class InsightServiceFactory:
+    """Insight Server Factory"""
 
     @staticmethod
-    def create_insight_server(insight_type) -> InsightServer:
+    def create_insight_service(insight_type) -> InsightService:
         """Create an insight server."""
         if insight_type == InsightType.TEXT:
-            return TextInsightServer()
+            return TextInsightService()
         if insight_type == InsightType.IMAGE:
-            return ImageInsightServer()
+            return ImageInsightService()
         if insight_type == InsightType.TABLE:
-            return TableInsightServer()
+            return TableInsightService()
         raise ValueError("Invalid insight type.")

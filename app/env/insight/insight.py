@@ -13,7 +13,7 @@ class InsightType(Enum):
 
 @dataclass
 class Insight:
-    """Insight Data"""
+    """Insight is an element of the environment."""
 
     id: str
     insight_type: InsightType
@@ -26,7 +26,7 @@ class Insight:
 
 @dataclass
 class TextInsight(Insight):
-    """Insight Data"""
+    """Text Insight"""
 
     insight_type: InsightType = InsightType.TEXT
     entities: List[str]
@@ -35,7 +35,7 @@ class TextInsight(Insight):
 
 @dataclass
 class ImageInsight(Insight):
-    """Insight Data"""
+    """Image Insight"""
 
     insight_type: InsightType = InsightType.IMAGE
     image_url: str
@@ -45,7 +45,7 @@ class ImageInsight(Insight):
 
 @dataclass
 class TableInsight(Insight):
-    """Insight Data"""
+    """Table Insight"""
 
     insight_type: InsightType = InsightType.TABLE
 

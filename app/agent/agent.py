@@ -34,7 +34,7 @@ class AgentConfig:
 
 
 class Agent(ABC):
-    """Base agent implementation.
+    """Agent implementation.
 
     Attributes:
         id (str): The unique identifier of the agent.
@@ -48,11 +48,11 @@ class Agent(ABC):
         self,
         agent_config: AgentConfig,
     ):
-        self.id = str(uuid4())
-        self.profile = agent_config.profile
-        self.workflow = agent_config.workflow
-        self.reasoner: DualModelReasoner = DualModelReasoner()
-        self.task: str = None
+        self._id = str(uuid4())
+        self._profile = agent_config.profile
+        self._workflow = agent_config.workflow
+        self._reasoner: DualModelReasoner = DualModelReasoner()
+        self._task: str = None
 
     @abstractmethod
     async def execute(self):

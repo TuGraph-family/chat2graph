@@ -14,7 +14,7 @@ class ModelService(ABC):
     """Model service."""
 
     def __init__(self):
-        self.id = str(uuid4())
+        self._id = str(uuid4())
 
     @abstractmethod
     async def generate(self, messages: List[AgentMessage]) -> str:
@@ -22,36 +22,36 @@ class ModelService(ABC):
 
 
 class DbgptLllmClient(ModelService):
-    """DBGPT LLM service."""
+    """DBGPT LLM Client."""
 
     def __init__(self, model_config: Dict[str, Any]):
         super().__init__()
-        self.model_alias = model_config.get("model_alias") or "qwen-turbo"
+        self._model_alias = model_config.get("model_alias") or "qwen-turbo"
         api_base = model_config.get("api_base") or os.getenv("QWEN_API_BASE")
         api_key = model_config.get("api_key") or os.getenv("QWEN_API_KEY")
-        self.streaming = model_config.get("streaming") or False
+        self._streaming = model_config.get("streaming") or False
 
         # use openai llm client by default
-        self._llm_client: LLMClient = OpenAILLMClient(
-            model_alias=self.model_alias,
+        self.__llm_client: LLMClient = OpenAILLMClient(
+            model_alias=self._model_alias,
             api_base=api_base,
             api_key=api_key,
-            streaming=self.streaming,
+            streaming=self._streaming,
         )
 
     async def generate(self, messages: List[AgentMessage]) -> str:
         """Generate a text given a prompt."""
-        if self.streaming:
+        if self._streaming:
             raise ValueError("The streaming output is not supported yet.")
         base_messages: List[BaseMessage] = [
             BaseMessage(content=msg.content) for msg in messages
         ]
         model_messages = ModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
-            model=self.model_alias, messages=model_messages
+            model=self._model_alias, messages=model_messages
         )
 
-        return await self._llm_client.generate(model_request)
+        return await self.__llm_client.generate(model_request)
 
 
 class ModelServiceFactory(ABC):

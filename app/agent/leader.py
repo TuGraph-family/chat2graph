@@ -3,11 +3,11 @@ from app.agent.leader_state import LeaderState
 
 
 class Leader(Agent):
-    """A leader is a role that can manage a group of agents and the tasks."""
+    """Leader is a role that can manage a group of agents and the tasks."""
 
     def __init__(self, agent_config: AgentConfig):
         super().__init__(agent_config)
-        self.leader_state: LeaderState = LeaderState()
+        self._leader_state: LeaderState = LeaderState()
 
     async def execute(self):
         """Execute to resolve the task."""
