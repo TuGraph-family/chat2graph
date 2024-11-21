@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from uuid import uuid4
 
+from app.agent.reasoner.base_reasoner import BaseReasoner
 from app.agent.reasoner.dual_llm import DualLLMReasoner
 from app.agent.workflow.workflow import Workflow
 from app.memory.task import Task
@@ -40,7 +41,7 @@ class BaseAgent(ABC):
         id (str): The unique identifier of the agent.
         profile (Profile): The profile of the agent.
         workflow (Workflow): The workflow of the agent.
-        reasoner (DualLLMReasoner): The reasoner of the agent.
+        reasoner (BaseReasoner): The reasoner of the agent.
         task (Task): The task assigned to the agent.
     """
 
@@ -52,9 +53,12 @@ class BaseAgent(ABC):
         self.id = str(uuid4())
         self.profile = agent_config.profile
         self.workflow = agent_config.workflow
-        self.reasoner: DualLLMReasoner = DualLLMReasoner(task=task)
+        self.reasoner: BaseReasoner = DualLLMReasoner(task=task)
         self.task = task
 
     @abstractmethod
     async def execute(self):
         """Execute the agent."""
+
+    async def decompose_task(self, task: Task, n_subtasks: int = 2):
+        """Decompose the task into sub-tasks."""

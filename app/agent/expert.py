@@ -7,7 +7,7 @@ class ExpertAgent(BaseAgent):
     async def execute(self):
         """Execute to resolve the task."""
 
-    async def _execute_workflow(self):
+    async def _execute_workflow(self) -> None:
         """Execute the workflow."""
 
     async def _evaluate_workflow(self):
