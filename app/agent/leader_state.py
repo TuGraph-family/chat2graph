@@ -45,7 +45,7 @@ class LeaderState(ABC):
         self.register(expert_id=expert_id, expert=expert)
         return expert
 
-    def relese(self, expert_id: str) -> None:
+    def release(self, expert_id: str) -> None:
         """Release the expert agent."""
         if expert_id in self._expert_dict:
             del self._expert_dict[expert_id]
