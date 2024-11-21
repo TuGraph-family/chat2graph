@@ -53,6 +53,22 @@ class Toolkit:
         # graph db
         self._toolkit_graph: nx.DiGraph = nx.DiGraph()
 
+    def verify_actions(self, actions: List[Action]) -> bool:
+        """Verify the actions.
+
+        Args:
+            actions: List of actions to verify
+
+        Returns:
+            bool: True if all action ids are in the toolkit graph
+        """
+        verified = True
+        for action in actions:
+            if action.id not in self._toolkit_graph:
+                verified = False
+                break
+        return verified
+
     def add_tool(self, tool: Tool, connected_actions: List[tuple[Action, float]]):
         """Add tool to toolkit graph. Action --Call--> Tool.
 
