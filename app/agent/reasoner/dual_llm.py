@@ -10,7 +10,6 @@ class DualModelReasoner(Reasoner):
 
     def __init__(self):
         """Initialize without async operations."""
-        self._task: str = None
         self._actor_model: ModelService = None
         self._thinker_model: ModelService = None
         self._memory: Memory = BuiltinMemory()

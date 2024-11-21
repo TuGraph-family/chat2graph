@@ -12,7 +12,7 @@ class Workflow(ABC):
         self._operator_graph: nx.DiGraph = nx.DiGraph()
         self._eval_operator: Operator = None
 
-        self._input_data: str = None
+        # self._input_data: str = None
 
     @abstractmethod
     def execute(self):

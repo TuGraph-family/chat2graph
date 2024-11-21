@@ -52,7 +52,6 @@ class Agent(ABC):
         self._profile = agent_config.profile
         self._workflow = agent_config.workflow
         self._reasoner: DualModelReasoner = DualModelReasoner()
-        self._task: str = None
 
     @abstractmethod
     async def execute(self):

@@ -11,24 +11,21 @@ class Operator:
 
     def __init__(self):
         self._actions: List[Action] = []
-        self._task: str = None
-        self._context: str = None
-        self._scratchpad: str = None
 
         self._embedding_vector: List[float] = None  # embedding vector of context
         self._toolkit: Toolkit = None
 
         self.set_actions_and_tools()
 
-    def format_operation_prompt(self) -> str:
+    def format_operation_prompt(self, task: str, context: str, scratchpad: str) -> str:
         """Format the operation prompt."""
         return OPERATION_PT.format(
-            task=self._task,
-            context=self._context,
+            task=task,
+            context=context,
             knowledge=self.get_knowledge(),
             action_rels=self.get_action_rels(),
             tool_docstrings=self.get_tool_docstrings(),
-            scratchpad=self._scratchpad,
+            scratchpad=scratchpad,
         )
 
     async def execute(self, reasoner: DualModelReasoner):

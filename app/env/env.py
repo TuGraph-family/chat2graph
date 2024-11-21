@@ -1,7 +1,16 @@
+from dataclasses import dataclass
 from typing import List
 
-from app.env.consensus import Consensus
 from app.env.insight.insight_service import TextInsightService
+
+
+@dataclass
+class Consensus:
+    """Consensus is rarely modified in the environment."""
+
+    id: str
+    tags: List[str]
+    content: str
 
 
 class Env:
