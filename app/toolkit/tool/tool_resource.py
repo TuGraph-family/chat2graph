@@ -12,8 +12,8 @@ class QuerySchema(BaseModel):
 class Query(Tool):
     """The query tool in the toolkit."""
 
-    def __init__(self):
-        super().__init__(self.query, args_schema=QuerySchema)
+    def __init__(self, tool_id: str = None):
+        super().__init__(tool_id=tool_id, function=self.query, args_schema=QuerySchema)
 
     def query(self, text: str) -> str:
         """Query the text."""

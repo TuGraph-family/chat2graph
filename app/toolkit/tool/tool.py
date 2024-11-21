@@ -14,7 +14,7 @@ class Tool(ABC):
     function: Callable
     args_schema: BaseModel
 
-    def __init__(self, function: Callable, args_schema: BaseModel):
-        self.id = str(uuid4())
+    def __init__(self, tool_id: str, function: Callable, args_schema: BaseModel):
+        self.id = tool_id or str(uuid4())
         self.function = function
         self.args_schema = args_schema
