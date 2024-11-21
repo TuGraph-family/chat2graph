@@ -1,22 +1,95 @@
-from typing import Any
+import time
+from typing import Any, Dict, List
 
 from app.agent.reasoner.base_reasoner import BaseReasoner
-from app.agent.reasoner.model_service import ModelService
+from app.agent.reasoner.model_service import (
+    DbgptLllmClient,
+    ModelService,
+    ModelServiceFactory,
+    ModelType,
+)
 from app.memory.memory import Memory
+from app.memory.message import AgentMessage
+from app.toolkit.tool.tool import Tool
 
 
 class DualLLMReasoner(BaseReasoner):
-    """CoLLM Reasoner."""
+    """CoLLM Reasoner.
 
-    def __init__(self, task: str):
+    Attributes:
+        actor_model (ModelService): The actor model service.
+        thinker_model (ModelService): The thinker model service.
+        memory (Memory): The memory of the reasoner (shared memory).
+        func_list (List[Tool]): The list of functions for the function calling.
+    """
+
+    def __init__(
+        self,
+        model_config: Dict[str, Any] = None,
+    ):
         """Initialize without async operations."""
-        self.task = task
-        self.actor_model: ModelService = None
-        self.thinker_model: ModelService = None
-        self.memory: Memory = Memory()
+        self.actor_model: ModelService = ModelServiceFactory.create(
+            model_type=ModelType.DBGPT,
+            model_config=model_config or {"model_alias": "qwen-turbo"},
+            sys_prompt=self._actor_prompt(),
+        )
+        self.thinker_model: ModelService = ModelServiceFactory.create(
+            model_type=ModelType.DBGPT,
+            model_config=model_config or {"model_alias": "qwen-turbo"},
+            sys_prompt=self._thinker_prompt(),
+        )
+        assert isinstance(self.actor_model, DbgptLllmClient)
 
-    async def infer(self, reasoning_rounds: int = 5):
+        self.memories: Dict[str, Memory] = {}
+
+    async def infer(
+        self,
+        op_id: str,
+        task: str,
+        func_list: List[Tool] = None,
+        reasoning_rounds: int = 5,
+        print_messages: bool = False,
+    ):
         """Infer by the reasoner."""
+        # set the system prompt
+        self.actor_model.set_sys_prompt(task=task)
+        self.thinker_model.set_sys_prompt(task=task)
+
+        # init the memory by the operation id
+        self.memories[op_id] = Memory()
+        self.memories[op_id].add_message(
+            AgentMessage(
+                sender_id="Actor",
+                receiver_id="Thinker",
+                content=(
+                    "Thought: I need your help to complete the task.\n"
+                    "Action: \nFeedback: I have no idea.\n"
+                ),
+                status="successed",
+                timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                op_id=op_id,
+            )
+        )
+
+        for _ in range(reasoning_rounds):
+            # thinker
+            response = await self.thinker_model.generate(
+                messages=self.memories[op_id].get_messages()
+            )
+            self.memories[op_id].add_message(response)
+            if print_messages:
+                print(f"Thinker:\n{response.content}\n")
+
+            # actor
+            response = await self.actor_model.generate(
+                messages=self.memories[op_id].get_messages()
+            )
+            self.memories[op_id].add_message(response)
+            if print_messages:
+                print(f"Actor:\n{response.content}\n")
+
+            if self.stop(response):
+                break
 
     async def update_knowledge(self, data: Any):
         """Update the knowledge."""
@@ -26,6 +99,21 @@ class DualLLMReasoner(BaseReasoner):
 
     async def conclure(self):
         """Conclure the inference results."""
+
+    def _thinker_prompt(self):
+        """Get the thinker prompt."""
+        return THINKER_PROPMT_TEMPLATE.format(
+            thinker_name="thinker", actor_name="actor", n_instructions=1
+        )
+
+    def _actor_prompt(self):
+        """Get the actor prompt."""
+        return ACTOR_PROMPT_TEMPLATE.format(thinker_name="thinker", actor_name="actor")
+
+    @staticmethod
+    def stop(message: AgentMessage):
+        """Stop the reasoner."""
+        return "TASK_DONE" in message.content
 
 
 THINKER_PROPMT_TEMPLATE = """
@@ -49,7 +137,7 @@ We share a common interest in collaborating to successfully complete the task by
         e) Feel free to explore both conventional and creative directions
         f) The goal is to generate diverse thinking paths, not to find the single "right" answer immediately
 ===== TASK =====
-{task}
+{{task}}
 ===== ANSWER TEMPLATE =====
 Judgement:
     <YOUR_JUDGEMENT_OF_ASSISTANCE'S_RESPONSE>  // Allowed to use None if no assistant's response
@@ -90,7 +178,7 @@ We share a common interest in collaborating to successfully complete the task by
     7. When I tell you the TASK is completed, you MUST use the "TASK_DONE" in English terminate the conversation. Although multilingual communication is permissible, usage of "TASK_DONE" MUST be exclusively used in English.
     8. (Optional) The instruction can be wrong that I provided to you, so you can doubt the instruction by providing reasons, during the process of the conversation. 
 ===== TASK =====
-{task}
+{{task}}
 ===== ANSWER TEMPLATE =====
 1. Unless I say the task is completed, you need to provide the thoughts and the action:
 Thought:
