@@ -2,13 +2,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from uuid import uuid4
 
-from app.agent.reasoner.dual_llm import DualLLMReasoner
+from app.agent.reasoner.dual_llm import DualModelReasoner
 from app.agent.workflow.workflow import Workflow
-from app.memory.task import Task
 
 
 @dataclass
-class Profile(ABC):
+class Profile:
     """The profile of the agent.
 
     Attributes:
@@ -21,7 +20,7 @@ class Profile(ABC):
 
 
 @dataclass
-class BaseAgentConfig:
+class AgentConfig:
     """Configuration for the base agent.
 
     Attributes:
@@ -29,31 +28,31 @@ class BaseAgentConfig:
         workflow (Workflow): The workflow of the agent.
     """
 
+    # TODO: to be refactored (yaml)
     profile: Profile
     workflow: Workflow
 
 
-class BaseAgent(ABC):
+class Agent(ABC):
     """Base agent implementation.
 
     Attributes:
         id (str): The unique identifier of the agent.
         profile (Profile): The profile of the agent.
         workflow (Workflow): The workflow of the agent.
-        reasoner (DualLLMReasoner): The reasoner of the agent.
+        reasoner (DualModelReasoner): The reasoner of the agent.
         task (Task): The task assigned to the agent.
     """
 
     def __init__(
         self,
-        task: Task,
-        agent_config: BaseAgentConfig,
+        agent_config: AgentConfig,
     ):
         self.id = str(uuid4())
         self.profile = agent_config.profile
         self.workflow = agent_config.workflow
-        self.reasoner: DualLLMReasoner = DualLLMReasoner(task=task)
-        self.task = task
+        self.reasoner: DualModelReasoner = DualModelReasoner()
+        self.task: str = None
 
     @abstractmethod
     async def execute(self):

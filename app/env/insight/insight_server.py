@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Any, List
 
-from app.env.insight.insight_data import InsightData, InsightType
+from app.env.insight.insight import Insight, InsightType
 
 
-class BaseInsightManager(ABC):
+class InsightServer(ABC):
     """Base Insight, an env element of the multi-agent system."""
 
-    def __init__(self, insight_data: List[InsightData] = None):
-        self.insights: List[InsightData] = insight_data or []
+    def __init__(self, insights: List[Insight] = None):
+        self.insights: List[Insight] = insights or []
 
     @abstractmethod
     async def generate_insights(self, data: Any):
@@ -31,7 +31,7 @@ class BaseInsightManager(ABC):
         """Convert insights to json."""
 
 
-class TextInsightManager(BaseInsightManager):
+class TextInsightServer(InsightServer):
     """Text Insight"""
 
     async def generate_insights(self, data: Any):
@@ -52,7 +52,7 @@ class TextInsightManager(BaseInsightManager):
 
 
 # TODO: multi-modal insights
-class ImageInsightManager(BaseInsightManager):
+class ImageInsightServer(InsightServer):
     """Image Insight"""
 
     async def generate_insights(self, data: Any):
@@ -73,7 +73,7 @@ class ImageInsightManager(BaseInsightManager):
 
 
 # TODO: multi-modal insights for table RAG
-class TableInsightManager(BaseInsightManager):
+class TableInsightServer(InsightServer):
     """Table Insight"""
 
     async def generate_insights(self, data: Any):
@@ -93,16 +93,16 @@ class TableInsightManager(BaseInsightManager):
         return [insight.to_json() for insight in self.insights]
 
 
-class InsightManagerFactory:
+class InsightServerFactory:
     """Insight Factory"""
 
     @staticmethod
-    def create_insight(insight_data: InsightData) -> BaseInsightManager:
-        """Create an insight."""
-        if insight_data.insight_type == InsightType.TEXT:
-            return TextInsightManager(insight_data)
-        if insight_data.insight_type == InsightType.IMAGE:
-            return ImageInsightManager(insight_data)
-        if insight_data.insight_type == InsightType.TABLE:
-            return TableInsightManager(insight_data)
+    def create_insight_server(insight_type) -> InsightServer:
+        """Create an insight server."""
+        if insight_type == InsightType.TEXT:
+            return TextInsightServer()
+        if insight_type == InsightType.IMAGE:
+            return ImageInsightServer()
+        if insight_type == InsightType.TABLE:
+            return TableInsightServer()
         raise ValueError("Invalid insight type.")

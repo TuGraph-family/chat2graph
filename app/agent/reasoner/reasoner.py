@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-class BaseReasoner(ABC):
+class Rreasoner(ABC):
     """Base Reasoner, an env element of the multi-agent system."""
 
     @abstractmethod

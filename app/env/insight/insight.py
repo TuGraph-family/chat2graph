@@ -12,7 +12,7 @@ class InsightType(Enum):
 
 
 @dataclass
-class InsightData:
+class Insight:
     """Insight Data"""
 
     id: str
@@ -25,7 +25,7 @@ class InsightData:
 
 
 @dataclass
-class TextInsightData(InsightData):
+class TextInsight(Insight):
     """Insight Data"""
 
     insight_type: InsightType = InsightType.TEXT
@@ -34,7 +34,7 @@ class TextInsightData(InsightData):
 
 
 @dataclass
-class ImageInsightData(InsightData):
+class ImageInsight(Insight):
     """Insight Data"""
 
     insight_type: InsightType = InsightType.IMAGE
@@ -44,7 +44,7 @@ class ImageInsightData(InsightData):
 
 
 @dataclass
-class TableInsightData(InsightData):
+class TableInsight(Insight):
     """Insight Data"""
 
     insight_type: InsightType = InsightType.TABLE

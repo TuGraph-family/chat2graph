@@ -1,6 +1,6 @@
 from typing import List
 
-from app.agent.reasoner.dual_llm import DualLLMReasoner
+from app.agent.reasoner.dual_llm import DualModelReasoner
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit
@@ -31,7 +31,7 @@ class Operator:
             scratchpad=self.scratchpad,
         )
 
-    async def execute(self, reasoner: DualLLMReasoner):
+    async def execute(self, reasoner: DualModelReasoner):
         """Execute the operator by LLM client."""
 
     async def get_knowledge(self):

@@ -1,10 +1,9 @@
-from abc import ABC
 from typing import List
 
 from app.env.consensus.consensus import Consensus
 
 
-class ConsensusManager(ABC):
+class ConsensusServer:
     """Consensus Manager manages the consensus of the multi-agent system."""
 
     def __init__(self, consensus: List[Consensus] = None):
