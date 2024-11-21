@@ -10,6 +10,10 @@ class Memory(ABC):
     def __init__(self):
         self.history_messages: List[AgentMessage] = []
 
+    def is_empty(self) -> bool:
+        """Check if the memory is empty."""
+        return len(self.history_messages) == 0
+
     def add_message(self, message: AgentMessage):
         """Add a message to the memory."""
         self.history_messages.append(message)
