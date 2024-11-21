@@ -34,19 +34,26 @@ class ModelService(ABC):
 
 
 class DbgptLllmClient(ModelService):
-    """DBGPT LLM service."""
+    """DBGPT LLM Client.
+
+    Attributes:
+        _model_alias (str): The model alias.
+        _streaming (bool): The streaming flag.
+        _sys_prompt (str): The system prompt.
+        _llm_client (LLMClient): The LLM client provided by DB-GPT.
+    """
 
     def __init__(self, sys_prompt: str, model_config: Dict[str, Any]):
         super().__init__()
         self._model_alias = model_config.get("model_alias") or "qwen-turbo"
-        api_base = model_config.get("api_base") or os.getenv("QWEN_API_BASE")
-        api_key = model_config.get("api_key") or os.getenv("QWEN_API_KEY")
         self._streaming = model_config.get("streaming") or False
-
         self._sys_prompt = sys_prompt
 
+        api_base = model_config.get("api_base") or os.getenv("QWEN_API_BASE")
+        api_key = model_config.get("api_key") or os.getenv("QWEN_API_KEY")
+
         # use openai llm client by default
-        self.__llm_client: LLMClient = OpenAILLMClient(
+        self._llm_client: LLMClient = OpenAILLMClient(
             model_alias=self._model_alias,
             api_base=api_base,
             api_key=api_key,
@@ -73,7 +80,7 @@ class DbgptLllmClient(ModelService):
         model_request = ModelRequest.build_request(
             model=self._model_alias, messages=model_messages
         )
-        model_output = await self.__llm_client.generate(model_request)
+        model_output = await self._llm_client.generate(model_request)
         response = AgentMessage(
             sender_id=messages[-1].receiver_id,
             receiver_id=messages[-1].sender_id,

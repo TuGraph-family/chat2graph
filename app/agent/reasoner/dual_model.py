@@ -13,14 +13,13 @@ from app.memory.message import AgentMessage
 from app.toolkit.tool.tool import Tool
 
 
-class DualLLMReasoner(Reasoner):
-    """CoLLM Reasoner.
+class DualModelReasoner(Reasoner):
+    """Dual model reasoner.
 
     Attributes:
-        actor_model (ModelService): The actor model service.
-        thinker_model (ModelService): The thinker model service.
-        memory (Memory): The memory of the reasoner (shared memory).
-        func_list (List[Tool]): The list of functions for the function calling.
+        _actor_model (ModelService): The actor model service.
+        _thinker_model (ModelService): The thinker model service.
+        _memories (Dict[str, Memory]): The memories of the reasonings.
     """
 
     def __init__(
