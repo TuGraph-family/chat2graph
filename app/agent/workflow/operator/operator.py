@@ -1,69 +1,151 @@
-from typing import List
+from abc import ABC
+from typing import List, Set
+from uuid import uuid4
+
+import networkx as nx
 
 from app.agent.reasoner.dual_llm import DualLLMReasoner
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit import Toolkit
+from app.toolkit.toolkit import Toolkit, ToolkitGraphType
 
 
-class Operator:
-    """Operator is a sequence of actions and tools that need to be executed."""
+class Operator(ABC):
+    """Operator is a sequence of actions and tools that need to be executed.
 
-    def __init__(self):
-        self.actions: List[Action] = []
+    Attributes:
+        toolkit (Toolkit): The toolkit of the operator.
+        actions (List[Action]): The actions of the operator.
+        task (str): The task of the operator.
+        context (str): The context of the operator.
+        scratchpad (str): The scratchpad of the operator.
+        embedding_vector (List[float]): The embedding vector of the context.
+        toolkit (Toolkit): The toolkit of the operator.
+    """
+
+    def __init__(self, op_id: str, toolkit: Toolkit, actions: List[Action] = None):
+        self.id = op_id or str(uuid4())
+
+        self.toolkit: Toolkit = toolkit
+        if actions is None or not self.verify_action_ids(actions):
+            raise ValueError("Invalid actions in the toolkit.")
+        self.actions: List[Action] = actions
+        self.recommanded_actions: List[Action] = None
+
         self.task: str = None
         self.context: str = None
         self.scratchpad: str = None
 
-        self.embedding_vector: List[float] = None  # embedding vector of context
-        self.toolkit: Toolkit = None
+        # TODO: embedding vector of context
+        self.embedding_vector: List[float] = None
 
-        self.set_actions_and_tools()
-
-    def format_operation_prompt(self) -> str:
-        """Format the operation prompt."""
-        return OPERATION_PT.format(
-            task=self.task,
-            context=self.context,
-            knowledge=self.get_knowledge(),
-            action_rels=self.get_action_rels(),
-            tool_docstrings=self.get_tool_docstrings(),
-            scratchpad=self.scratchpad,
+    async def initialize(self, threshold: float = 0.5, hops: int = 0):
+        """Initialize the operator."""
+        self.recommanded_actions = await self.get_recommanded_actions(
+            threshold=threshold, hops=hops
         )
 
-    async def execute(self, reasoner: DualLLMReasoner):
+    async def execute(
+        self,
+        reasoner: DualLLMReasoner,
+        reasoning_rounds: int = 5,
+        print_messages: bool = True,
+    ):
         """Execute the operator by LLM client."""
+        operator_prompt = await self.format_operation_prompt()
+        print(f"Operator prompt:\n{operator_prompt}")  # TODO
+        await reasoner.infer(
+            op_id=self.id,
+            task=operator_prompt,
+            func_list=self.get_tools_from_actions(),
+            reasoning_rounds=reasoning_rounds,
+            print_messages=print_messages,
+        )
 
-    async def get_knowledge(self):
+    def verify_action_ids(self, actions: List[Action]) -> bool:
+        """Verify the action ids."""
+        verified = True
+        for action in actions:
+            if action.id not in self.toolkit.toolkit_graph:
+                verified = False
+                break
+        return verified
+
+    async def get_knowledge(self) -> str:
         """Get the knowledge from the knowledge base."""
 
-    async def set_actions_and_tools(self) -> None:
+    async def get_recommanded_actions(
+        self, threshold: float = 0.5, hops: int = 0
+    ) -> List[Action]:
         """Get the actions from the toolkit."""
-        self.actions = await self.toolkit.recommend_actions_and_tools()
+        toolkit_subgraph: nx.DiGraph = await self.toolkit.recommend_toolkit_subgraph(
+            actions=self.actions, threshold=threshold, hops=hops
+        )
+        recommanded_actions: List[Action] = []
+        for node in toolkit_subgraph.nodes:
+            if toolkit_subgraph.nodes[node]["type"] == ToolkitGraphType.ACTION:
+                action: Action = toolkit_subgraph.nodes[node]["data"]
+                next_action_names = [
+                    toolkit_subgraph.nodes[n]["data"].name
+                    for n in toolkit_subgraph.successors(node)
+                    if toolkit_subgraph.nodes[n]["type"] == ToolkitGraphType.ACTION
+                ]
+                tools = [
+                    toolkit_subgraph.nodes[n]["data"]
+                    for n in toolkit_subgraph.successors(node)
+                    if toolkit_subgraph.nodes[n]["type"] == ToolkitGraphType.TOOL
+                ]
+                recommanded_actions.append(
+                    Action(
+                        id=action.id,
+                        name=action.name,
+                        description=action.description,
+                        next_action_names=next_action_names,
+                        tools=tools,
+                    )
+                )
+
+        return recommanded_actions
 
     def get_action_rels(self) -> str:
         """Get the action relationships from the toolkit."""
         action_rels = "\n".join([
-            f"[{action.name}] -next-> [{str(action.next_action_names)}]"
-            for action in self.actions
+            f"[{action.name}: {action.description}] -next-> {str(action.next_action_names)}"
+            for action in self.recommanded_actions
         ])
         return action_rels
 
+    def get_tools_from_actions(self) -> List[Tool]:
+        """Get the tools from the actions."""
+        seen_ids: Set[str] = set()
+        tools = []
+        for action in self.recommanded_actions:
+            for tool in action.tools:
+                if tool.id not in seen_ids:
+                    seen_ids.add(tool.id)
+                    tools.append(tool)
+        return tools
+
     def get_tool_docstrings(self) -> str:
         """Get the tool names and docstrings from the toolkit."""
-        _tools: List[Tool] = []
+        tools = self.get_tools_from_actions()
         tool_docstrings = ""
-        for action in self.actions:
-            for tool in action.tools:
-                if tool not in _tools:
-                    tool_docstrings += (
-                        f"func {tool.function.__name__}:\n{tool.function.__doc__}\n"
-                    )
-                    _tools.append(tool)
+        for tool in tools:
+            tool_docstrings += (
+                f"func {tool.function.__name__}:\n{tool.function.__doc__}\n"
+            )
         return tool_docstrings
 
-    def get_scratchpad(self):
-        """Get the scratchpad from the workflow."""
+    async def format_operation_prompt(self) -> str:
+        """Format the operation prompt."""
+        return OPERATION_PT.format(
+            task=self.task,
+            context=self.context,
+            knowledge=await self.get_knowledge(),
+            action_rels=self.get_action_rels(),
+            tool_docstrings=self.get_tool_docstrings(),
+            scratchpad=self.scratchpad,
+        )
 
 
 OPERATION_PT = """
