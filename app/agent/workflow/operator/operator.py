@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import networkx as nx
 
-from app.agent.reasoner.dual_llm import DualModelReasoner
+from app.agent.reasoner.dual_model import DualModelReasoner
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
@@ -24,7 +24,7 @@ class Operator:
         self._id = op_id or str(uuid4())
 
         self._toolkit: Toolkit = toolkit
-        if actions is None or not self.verify_action_ids(actions):
+        if actions is None or not self.verify_actions(actions):
             raise ValueError("Invalid actions in the toolkit.")
         self._actions: List[Action] = actions
         self._recommanded_actions: List[Action] = None
@@ -40,12 +40,17 @@ class Operator:
 
     async def execute(
         self,
+        task: str,
+        context: str,
+        scratchpad: str,
         reasoner: DualModelReasoner,
         reasoning_rounds: int = 5,
         print_messages: bool = True,
     ):
         """Execute the operator by LLM client."""
-        operator_prompt = await self.format_operation_prompt()
+        operator_prompt = await self.format_operation_prompt(
+            task=task, context=context, scratchpad=scratchpad
+        )
         print(f"Operator prompt:\n{operator_prompt}")  # TODO
         await reasoner.infer(
             op_id=self._id,
@@ -55,14 +60,9 @@ class Operator:
             print_messages=print_messages,
         )
 
-    def verify_action_ids(self, actions: List[Action]) -> bool:
-        """Verify the action ids."""
-        verified = True
-        for action in actions:
-            if action.id not in self._toolkit.toolkit_graph:
-                verified = False
-                break
-        return verified
+    def verify_actions(self, actions: List[Action]) -> bool:
+        """Verify the actions."""
+        return self._toolkit.verify_actions(actions)
 
     async def get_knowledge(self) -> str:
         """Get the knowledge from the knowledge base."""
