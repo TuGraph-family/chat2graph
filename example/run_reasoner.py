@@ -1,6 +1,6 @@
 import asyncio
 
-from app.agent.reasoner.dual_llm import DualLLMReasoner
+from app.agent.reasoner.dual_model import DualModelReasoner
 
 
 async def main():
@@ -39,7 +39,7 @@ Scratchpad:
 城中人马皆惊恐，备曰：“吾有诈，可破之。”遂开门，大呼而出，操兵大败。备乘胜追击，操军大溃，曹操自走脱。备收其军器，仓库，军民无不欢喜。
 ===
 """
-    reasoner = DualLLMReasoner(model_config={"model_alias": "qwen-max"})
+    reasoner = DualModelReasoner(model_config={"model_alias": "qwen-max"})
 
     await reasoner.infer(op_id="op1", task=task, print_messages=True)
 

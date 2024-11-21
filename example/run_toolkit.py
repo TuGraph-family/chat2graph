@@ -186,13 +186,13 @@ async def main():
     toolkit.add_tool(tool=tool4, connected_actions=[(action4, 0.8)])
 
     # verify initial graph structure
-    assert len(toolkit.toolkit_graph.nodes()) == 8, (
+    assert len(toolkit._toolkit_graph.nodes()) == 8, (
         "Graph should have 4 actions and 4 tools"
     )
     assert (
         len([
             n
-            for n, d in toolkit.toolkit_graph.nodes(data=True)
+            for n, d in toolkit._toolkit_graph.nodes(data=True)
             if d["type"] == ToolkitGraphType.ACTION
         ])
         == 4
@@ -200,7 +200,7 @@ async def main():
     assert (
         len([
             n
-            for n, d in toolkit.toolkit_graph.nodes(data=True)
+            for n, d in toolkit._toolkit_graph.nodes(data=True)
             if d["type"] == ToolkitGraphType.TOOL
         ])
         == 4
@@ -209,12 +209,12 @@ async def main():
     # verify edge types and weights
     action_next_edges = [
         (u, v, d)
-        for u, v, d in toolkit.toolkit_graph.edges(data=True)
+        for u, v, d in toolkit._toolkit_graph.edges(data=True)
         if d["type"] == ToolkitGraphType.ACTION_NEXT_ACTION
     ]
     tool_call_edges = [
         (u, v, d)
-        for u, v, d in toolkit.toolkit_graph.edges(data=True)
+        for u, v, d in toolkit._toolkit_graph.edges(data=True)
         if d["type"] == ToolkitGraphType.ACTION_CALL_TOOL
     ]
 
@@ -223,11 +223,11 @@ async def main():
 
     # verify all edge scores are within valid range
     assert all(
-        0 <= d["score"] <= 1 for _, _, d in toolkit.toolkit_graph.edges(data=True)
+        0 <= d["score"] <= 1 for _, _, d in toolkit._toolkit_graph.edges(data=True)
     ), "All edge scores should be between 0 and 1"
 
     # visualize the full graph
-    visualize_toolkit_graph(toolkit.toolkit_graph, "Full Toolkit Graph")
+    visualize_toolkit_graph(toolkit._toolkit_graph, "Full Toolkit Graph")
     plt.show(block=False)
 
     print("\nTesting recommendation with different parameters:")

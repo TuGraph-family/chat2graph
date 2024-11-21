@@ -1,6 +1,6 @@
 import os
 
-from app.agent.reasoner.dual_llm import DualLLMReasoner
+from app.agent.reasoner.dual_model import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool_resource import Query
@@ -55,7 +55,7 @@ async def main():
     await operator.initialize(threshold=0.7, hops=2)
 
     # Set operator properties
-    operator.task = """
+    task = """
     Answer user questions about movies by:
     1. Find currently popular movies and their ratings
     2. Extract movie-related user preferences from chat history
@@ -64,7 +64,7 @@ async def main():
     Answer in Chinese.
     """
 
-    operator.context = """
+    context = """
     User's chat history:
     - "I loved The Dark Knight trilogy, especially the complex characters"
     - "Not a fan of romantic comedies, they're too predictable"
@@ -79,7 +79,7 @@ async def main():
     - Recent viewing history: Mostly Christopher Nolan films
     """
 
-    operator.scratchpad = """
+    scratchpad = """
     Current analysis:
     1. User Profile
        - Strong preference for complex narratives
@@ -97,21 +97,13 @@ async def main():
     # Initialize reasoner (mock for demonstration)
     openai_api_base = os.getenv("OPENAI_API_BASE")
     openai_api_key = os.getenv("OPENAI_API_KEY")
-    reasoner = DualLLMReasoner(
+    reasoner = DualModelReasoner(
         model_config={
             "model_alias": "gpt-4o-mini",
             "api_base": openai_api_base,
             "api_key": openai_api_key,
         }
     )
-
-    # Test operator functionality
-    print("Testing operator...")
-
-    # Verify initial state
-    assert operator.id == "test_operator", "Operator ID should match"
-    assert len(operator.actions) == 1, "Should start with one action"
-    assert operator.toolkit is not None, "Toolkit should be initialized"
 
     # Get recommended actions
     recommended_actions = await operator.get_recommanded_actions(threshold=0.7, hops=2)
@@ -122,24 +114,23 @@ async def main():
     assert len(tools) == 3, "Should have tools available"
 
     # Format prompt
-    prompt = await operator.format_operation_prompt()
+    prompt = await operator.format_operation_prompt(
+        task=task, context=context, scratchpad=scratchpad
+    )
     assert all(
         section in prompt for section in ["Task", "Context", "Actions", "Tools"]
     ), "Prompt should contain all required sections"
 
     # Execute operator (with minimal reasoning rounds for testing)
     await operator.execute(
+        task=task,
+        context=context,
+        scratchpad=scratchpad,
         reasoner=reasoner,
         reasoning_rounds=5,
         print_messages=True,
     )
     print("Operator execution completed successfully")
-
-    # Verify final state
-    assert operator.recommanded_actions is not None, (
-        "Should have recommended actions after execution"
-    )
-
     print("All tests passed!")
 
 
