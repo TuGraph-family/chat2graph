@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 @dataclass
 class Tool(ABC):
-    """The tool in the toolkit."""
+    """Tool in the toolkit."""
 
     id: str
     function: Callable

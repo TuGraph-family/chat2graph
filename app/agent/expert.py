@@ -1,13 +1,13 @@
-from app.agent.base_agent import BaseAgent
+from app.agent.agent import Agent
 
 
-class ExpertAgent(BaseAgent):
-    """An expert is a role that can execute a workflow."""
+class Expert(Agent):
+    """Expert is a role that can execute a workflow."""
 
     async def execute(self):
         """Execute to resolve the task."""
 
-    async def _execute_workflow(self) -> None:
+    async def _execute_workflow(self):
         """Execute the workflow."""
 
     async def _evaluate_workflow(self):

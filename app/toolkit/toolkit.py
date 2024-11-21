@@ -51,7 +51,7 @@ class Toolkit:
 
     def __init__(self):
         # graph db
-        self.toolkit_graph: nx.DiGraph = nx.DiGraph()
+        self._toolkit_graph: nx.DiGraph = nx.DiGraph()
 
     def add_tool(self, tool: Tool, connected_actions: List[tuple[Action, float]]):
         """Add tool to toolkit graph. Action --Call--> Tool.
@@ -62,13 +62,13 @@ class Toolkit:
         """
         has_connected_actions = False
         # add tool node if not exists
-        if tool.id not in self.toolkit_graph:
-            self.toolkit_graph.add_node(tool.id, type=ToolkitGraphType.TOOL, data=tool)
+        if tool.id not in self._toolkit_graph:
+            self._toolkit_graph.add_node(tool.id, type=ToolkitGraphType.TOOL, data=tool)
 
         # add edges from actions to tool
         for action, score in connected_actions:
-            if action.id in self.toolkit_graph:
-                self.toolkit_graph.add_edge(
+            if action.id in self._toolkit_graph:
+                self._toolkit_graph.add_edge(
                     action.id,
                     tool.id,
                     type=ToolkitGraphType.ACTION_CALL_TOOL,
@@ -80,7 +80,7 @@ class Toolkit:
 
         if not has_connected_actions:
             print(f"warning: Tool {tool.id} has no connected actions")
-            self.toolkit_graph.remove_node(tool.id)
+            self._toolkit_graph.remove_node(tool.id)
 
     def add_action(
         self,
@@ -96,15 +96,15 @@ class Toolkit:
             prev_actions: List of tuples (action, score) that precede this action
         """
         # add action node if not exists
-        if action.id not in self.toolkit_graph:
-            self.toolkit_graph.add_node(
+        if action.id not in self._toolkit_graph:
+            self._toolkit_graph.add_node(
                 action.id, type=ToolkitGraphType.ACTION, data=action
             )
 
         # add edges to next actions
         for next_action, score in next_actions:
-            if next_action.id in self.toolkit_graph:
-                self.toolkit_graph.add_edge(
+            if next_action.id in self._toolkit_graph:
+                self._toolkit_graph.add_edge(
                     action.id,
                     next_action.id,
                     type=ToolkitGraphType.ACTION_NEXT_ACTION,
@@ -113,8 +113,8 @@ class Toolkit:
 
         # add edges from previous actions
         for prev_action, score in prev_actions:
-            if prev_action.id in self.toolkit_graph:
-                self.toolkit_graph.add_edge(
+            if prev_action.id in self._toolkit_graph:
+                self._toolkit_graph.add_edge(
                     prev_action.id,
                     action.id,
                     type=ToolkitGraphType.ACTION_NEXT_ACTION,
@@ -127,8 +127,8 @@ class Toolkit:
         Args:
             tool_id: ID of the tool to remove
         """
-        if tool_id in self.toolkit_graph:
-            self.toolkit_graph.remove_node(tool_id)
+        if tool_id in self._toolkit_graph:
+            self._toolkit_graph.remove_node(tool_id)
 
     def remove_action(self, action_id: str):
         """Remove action from the toolkit graph.
@@ -136,22 +136,22 @@ class Toolkit:
         Args:
             action_id: ID of the action to remove
         """
-        if action_id not in self.toolkit_graph:
+        if action_id not in self._toolkit_graph:
             return
 
         # clean up the dirty tool nodes
-        out_edges = self.toolkit_graph[action_id]
+        out_edges = self._toolkit_graph[action_id]
         for neighbor_id, edge_data in out_edges.items():
             # if the called tool is only called by this action, remove the tool
             if (
                 edge_data["type"] == ToolkitGraphType.ACTION_CALL_TOOL
-                and self.toolkit_graph.in_degree(neighbor_id) == 1
+                and self._toolkit_graph.in_degree(neighbor_id) == 1
             ):
-                self.toolkit_graph.remove_node(neighbor_id)
+                self._toolkit_graph.remove_node(neighbor_id)
 
         # remove the action
-        if action_id in self.toolkit_graph:
-            self.toolkit_graph.remove_node(action_id)
+        if action_id in self._toolkit_graph:
+            self._toolkit_graph.remove_node(action_id)
 
     async def recommend_toolkit_subgraph(
         self, actions: List[Action], threshold: float = 0.5, hops: int = 0
@@ -168,7 +168,7 @@ class Toolkit:
         """
         # get initial action node ids
         node_ids_to_keep: Set[str] = {
-            action.id for action in actions if action.id in self.toolkit_graph
+            action.id for action in actions if action.id in self._toolkit_graph
         }
 
         # do BFS to get all action node ids within hops
@@ -177,8 +177,8 @@ class Toolkit:
             next_node_ids = set()
             for node_id in current_node_ids:
                 # find next actions connected with score >= threshold
-                for neighbor_id in self.toolkit_graph.successors(node_id):
-                    edge_data = self.toolkit_graph.get_edge_data(node_id, neighbor_id)
+                for neighbor_id in self._toolkit_graph.successors(node_id):
+                    edge_data = self._toolkit_graph.get_edge_data(node_id, neighbor_id)
                     if (
                         edge_data["type"] == ToolkitGraphType.ACTION_NEXT_ACTION
                         and edge_data["score"] >= threshold
@@ -195,8 +195,8 @@ class Toolkit:
             n for n in node_ids_to_keep
         }  # copy to avoid modification during iteration
         for action_node_id in action_node_ids:
-            for tool_id in self.toolkit_graph.successors(action_node_id):
-                edge_data = self.toolkit_graph.get_edge_data(action_node_id, tool_id)
+            for tool_id in self._toolkit_graph.successors(action_node_id):
+                edge_data = self._toolkit_graph.get_edge_data(action_node_id, tool_id)
                 # add tools that are called with score >= threshold
                 if (
                     edge_data["type"] == ToolkitGraphType.ACTION_CALL_TOOL
@@ -204,7 +204,7 @@ class Toolkit:
                 ):
                     node_ids_to_keep.add(tool_id)
 
-        original_toolkit_subgraph: nx.DiGraph = self.toolkit_graph.subgraph(
+        original_toolkit_subgraph: nx.DiGraph = self._toolkit_graph.subgraph(
             node_ids_to_keep
         )
         toolkit_subgraph = original_toolkit_subgraph.copy()

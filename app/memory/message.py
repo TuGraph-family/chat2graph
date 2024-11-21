@@ -5,7 +5,7 @@ from uuid import uuid4
 
 @dataclass
 class AgentMessage:
-    """Agent message dataclass"""
+    """Agent message"""
 
     sender_id: str
     receiver_id: str

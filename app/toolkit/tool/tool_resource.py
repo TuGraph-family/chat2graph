@@ -4,7 +4,7 @@ from app.toolkit.tool.tool import Tool
 
 
 class QuerySchema(BaseModel):
-    """The query schema."""
+    """Query schema."""
 
     text: str
 

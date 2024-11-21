@@ -1,15 +1,13 @@
-from app.agent.base_agent import BaseAgent, BaseAgentConfig
-from app.agent.expert_registry import ExpertRegistry
+from app.agent.agent import Agent, AgentConfig
+from app.agent.leader_state import LeaderState
 
 
-class Leader(BaseAgent):
-    """A leader is a role that can manage a group of agents and the tasks."""
+class Leader(Agent):
+    """Leader is a role that can manage a group of agents and the tasks."""
 
-    def __init__(
-        self, task, agent_config: BaseAgentConfig, expert_registry: ExpertRegistry
-    ):
-        super().__init__(task, agent_config)
-        self.agent_registry = expert_registry
+    def __init__(self, agent_config: AgentConfig):
+        super().__init__(agent_config)
+        self._leader_state: LeaderState = LeaderState()
 
     async def execute(self):
         """Execute to resolve the task."""
