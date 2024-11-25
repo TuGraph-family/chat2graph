@@ -34,6 +34,7 @@ class Env:
 
     async def recommend_info(self, data: str) -> str:
         """Recommend information."""
+        return ""
 
     async def generate_insights(self):
         """Generate insights from the data."""
