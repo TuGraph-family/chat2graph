@@ -90,15 +90,15 @@ class Operator:
         self, threshold: float = 0.5, hops: int = 0
     ) -> List[Action]:
         """Get the actions from the toolkit."""
-        toolkit_subgraph: nx.DiGraph = await self._toolkit.recommend_toolkit_subgraph(
+        toolkit_subgraph: nx.DiGraph = await self._toolkit.recommend_tools(
             actions=self._actions, threshold=threshold, hops=hops
         )
         recommanded_actions: List[Action] = []
         for node in toolkit_subgraph.nodes:
             if toolkit_subgraph.nodes[node]["type"] == ToolkitGraphType.ACTION:
                 action: Action = toolkit_subgraph.nodes[node]["data"]
-                next_action_names = [
-                    toolkit_subgraph.nodes[n]["data"].name
+                next_action_ids = [
+                    toolkit_subgraph.nodes[n]["data"].id
                     for n in toolkit_subgraph.successors(node)
                     if toolkit_subgraph.nodes[n]["type"] == ToolkitGraphType.ACTION
                 ]
@@ -112,7 +112,7 @@ class Operator:
                         id=action.id,
                         name=action.name,
                         description=action.description,
-                        next_action_names=next_action_names,
+                        next_action_ids=next_action_ids,
                         tools=tools,
                     )
                 )
@@ -123,10 +123,17 @@ class Operator:
         """Get the action relationships from the toolkit."""
         if self._recommanded_actions is None:
             raise ValueError("The recommanded actions have not been initialized.")
-        action_rels = "\n".join([
-            f"[{action.name}: {action.description}] -next-> {str(action.next_action_names)}"
-            for action in self._recommanded_actions
-        ])
+
+        action_rels = ""
+        for action in self._recommanded_actions:
+            next_action_names = [
+                self._toolkit.get_action(a_id).name for a_id in action.next_action_ids
+            ]
+            action_rels += (
+                f"[{action.name}: {action.description}] -next-> "
+                f"{str(next_action_names)}\n"
+            )
+
         return action_rels
 
     def get_tools_from_actions(self) -> List[Tool]:

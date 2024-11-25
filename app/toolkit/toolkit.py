@@ -20,29 +20,24 @@ class ToolkitGraphType:
 class Toolkit:
     """The toolkit is a collection of actions and tools.
 
-    In the toolkit graph, the actions are connected to the tools.
+    In the toolkit graph, the actions are connected to the tools:
         Action --Next--> Action
         Action --Call--> Tool
 
-    Action node schema:
+
+    Node schema:
         {
-            "type": "action",
-            "data": Action
+            "node_id": {
+                "type": "action" | "tool",
+                "data": Action | Tool
+            }
         }
-    Tool node schema:
+    Edge schema:
         {
-            "type": "tool",
-            "data": Tool
-        }
-    Action-Tool edge schema:
-        {
-            "type": "call",
-            "score": float
-        }
-    Action-Action edge schema:
-        {
-            "type": "next",
-            "score": float
+            "edge_id": {
+                "type": "call" | "next",
+                "score": float
+            }
         }
 
     Attributes:
@@ -50,7 +45,6 @@ class Toolkit:
     """
 
     def __init__(self):
-        # graph db
         self._toolkit_graph: nx.DiGraph = nx.DiGraph()
 
     def verify_actions(self, actions: List[Action]) -> bool:
@@ -137,6 +131,19 @@ class Toolkit:
                     score=score,
                 )
 
+    def get_action(self, action_id: str) -> Action:
+        """Get action from the toolkit graph.
+
+        Args:
+            action_id: ID of the action to get
+
+        Returns:
+            Action: The action with the given ID
+        """
+        if action_id in self._toolkit_graph:
+            return self._toolkit_graph.nodes[action_id]["data"]
+        raise ValueError(f"Action {action_id} not found in the toolkit graph")
+
     def remove_tool(self, tool_id: str):
         """Remove tool from the toolkit graph.
 
@@ -169,10 +176,20 @@ class Toolkit:
         if action_id in self._toolkit_graph:
             self._toolkit_graph.remove_node(action_id)
 
-    async def recommend_toolkit_subgraph(
+    async def recommend_tools(
         self, actions: List[Action], threshold: float = 0.5, hops: int = 0
     ) -> nx.DiGraph:
-        """Returns a subgraph containing recommended actions and their tools.
+        """It is a recommendation engine that extracts a relevant subgraph from a
+        toolkit graph based on input actions. It performs a weighted breadth-first
+        search (BFS) to find related actions within specified hops, then associates
+        relevant tools with these actions. The resulting subgraph contains both
+        actions and their tools, filtered by a score threshold.
+
+        The function works in three main steps:
+        1. Initializes with input actions and expands to related actions using BFS
+        within hop limit
+        2. Adds relevant tools connected to the found actions
+        3. Filters edges based on score threshold and returns the final subgraph
 
         Args:
             actions: The input actions to search for recommendations
@@ -190,7 +207,7 @@ class Toolkit:
         # do BFS to get all action node ids within hops
         current_node_ids = node_ids_to_keep.copy()
         for _ in range(hops):
-            next_node_ids = set()
+            next_node_ids: Set[str] = set()
             for node_id in current_node_ids:
                 # find next actions connected with score >= threshold
                 for neighbor_id in self._toolkit_graph.successors(node_id):
@@ -206,7 +223,7 @@ class Toolkit:
             if not current_node_ids:
                 break
 
-        # for all found actions, add their connected tools
+        # for all found actions, add their connected tools to the found actions
         action_node_ids = {
             n for n in node_ids_to_keep
         }  # copy to avoid modification during iteration
@@ -232,13 +249,11 @@ class Toolkit:
             if d["score"] < threshold
         ]
         toolkit_subgraph.remove_edges_from(edges_to_remove)
-        self.visualize_toolkit_graph(
-            graph=toolkit_subgraph, title="Recommended Toolkit"
-        )
+        self.visualize(graph=toolkit_subgraph, title="Recommended Toolkit")
 
         return toolkit_subgraph
 
-    async def update_toolkit_graph(self, text: str, called_tools: List[Tool]):
+    async def update_action(self, text: str, called_tools: List[Tool]):
         """Update the toolkit graph by reinforcement learning.
 
         Args:
@@ -248,7 +263,7 @@ class Toolkit:
         # TODO: simple reinforcement learning implementation
         # Increase weight of edges leading to successful tool calls
 
-    def visualize_toolkit_graph(self, graph: nx.DiGraph, title: str, show=True):
+    def visualize(self, graph: nx.DiGraph, title: str, show=True):
         """Visualize the toolkit graph with different colors for actions and tools.
 
         Args:
@@ -261,12 +276,12 @@ class Toolkit:
         """
         plt.figure(figsize=(12, 8))
 
-        # Get node positions using spring layout with larger distance and more iterations
+        # get node positions using spring layout with larger distance and more iterations
         pos = nx.spring_layout(
             graph, k=2, iterations=200
         )  # increase k and iterations for better layout
 
-        # Draw nodes
+        # draw nodes
         action_nodes = [
             n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.ACTION
         ]
@@ -274,7 +289,7 @@ class Toolkit:
             n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.TOOL
         ]
 
-        # Draw action nodes in blue
+        # draw action nodes in blue
         nx.draw_networkx_nodes(
             graph,
             pos,
@@ -284,7 +299,7 @@ class Toolkit:
             node_shape="o",
         )
 
-        # Draw tool nodes in green
+        # draw tool nodes in green
         nx.draw_networkx_nodes(
             graph,
             pos,
@@ -294,7 +309,7 @@ class Toolkit:
             node_shape="s",
         )
 
-        # Draw edges with different colors and styles for different types
+        # draw edges with different colors and styles for different types
         next_edges = [
             (u, v)
             for (u, v, d) in graph.edges(data=True)
@@ -306,7 +321,7 @@ class Toolkit:
             if d["type"] == ToolkitGraphType.ACTION_CALL_TOOL
         ]
 
-        # Draw action-to-action edges in blue with curved arrows
+        # draw action-to-action edges in blue with curved arrows
         nx.draw_networkx_edges(
             graph,
             pos,
@@ -317,7 +332,7 @@ class Toolkit:
             width=2,
         )
 
-        # Draw action-to-tool edges in green with different curve style
+        # draw action-to-tool edges in green with different curve style
         nx.draw_networkx_edges(
             graph,
             pos,
@@ -328,7 +343,7 @@ class Toolkit:
             width=1.5,
         )
 
-        # Add edge labels (scores) with adjusted positions for curved edges
+        # add edge labels (scores) with adjusted positions for curved edges
         edge_labels = {
             (u, v): f"{d['score']:.2f}" for (u, v, d) in graph.edges(data=True)
         }
@@ -341,7 +356,7 @@ class Toolkit:
             bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
         )
 
-        # Add node labels - handle both Action and Tool nodes
+        # add node labels - handle both Action and Tool nodes
         node_labels = {}
         for n, d in graph.nodes(data=True):
             if d["type"] == ToolkitGraphType.ACTION:
@@ -349,7 +364,7 @@ class Toolkit:
             elif d["type"] == ToolkitGraphType.TOOL:
                 node_labels[n] = d["data"].id
 
-        # Draw labels with white background for better visibility
+        # draw labels with white background for better visibility
         nx.draw_networkx_labels(
             graph,
             pos,
@@ -361,7 +376,7 @@ class Toolkit:
         plt.title(title)
         plt.axis("off")
 
-        # Add a legend
+        # add a legend
 
         legend_elements = [
             Line2D([0], [0], color="blue", label="Action→Action"),

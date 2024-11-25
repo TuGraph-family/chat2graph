@@ -104,7 +104,7 @@ async def main():
     ), "All edge scores should be between 0 and 1"
 
     # visualize the full graph
-    toolkit.visualize_toolkit_graph(toolkit._toolkit_graph, "Full Toolkit Graph")
+    toolkit.visualize(toolkit._toolkit_graph, "Full Toolkit Graph")
     plt.show(block=False)
 
     print("\nTesting recommendation with different parameters:")
@@ -171,7 +171,7 @@ async def main():
     ]
 
     for i, case in enumerate(test_cases):
-        subgraph = await toolkit.recommend_toolkit_subgraph(
+        subgraph = await toolkit.recommend_tools(
             actions=case["actions"], threshold=case["threshold"], hops=case["hops"]
         )
 
@@ -197,7 +197,7 @@ async def main():
         ), f"Test case {i + 1}: All edges should have score >= {case['threshold']}"
 
         plt.figure(i + 2)
-        toolkit.visualize_toolkit_graph(subgraph, case["title"])
+        toolkit.visualize(subgraph, case["title"])
         # plt.show(block=False)
 
     print("\nAll assertions passed! (press ctrl+c to exit)")
