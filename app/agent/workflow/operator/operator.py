@@ -1,7 +1,7 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 from uuid import uuid4
 
-import networkx as nx
+import networkx as nx  # type: ignore
 
 from app.agent.reasoner.dual_model import DualModelReasoner
 from app.toolkit.action.action import Action
@@ -24,11 +24,11 @@ class Operator:
 
     def __init__(
         self,
+        reasoner: DualModelReasoner,
+        task: str,
+        toolkit: Toolkit,
+        actions: List[Action],
         op_id: str = str(uuid4()),
-        reasoner: DualModelReasoner = None,
-        task: str = None,
-        toolkit: Toolkit = None,
-        actions: List[Action] = None,
     ):
         self._id = op_id
         self._reasoner: DualModelReasoner = reasoner
@@ -38,10 +38,10 @@ class Operator:
         # if actions is None or not self.verify_actions(actions):
         #     raise ValueError("Invalid actions in the toolkit.")
         self._actions: List[Action] = actions
-        self._recommanded_actions: List[Action] = None
+        self._recommanded_actions: Optional[List[Action]] = None
 
         # TODO: embedding vector of context
-        self._embedding_vector: List[float] = None
+        self._embedding_vector: Optional[List[float]] = None
 
     async def initialize(self, threshold: float = 0.5, hops: int = 0):
         """Initialize the operator."""
@@ -136,6 +136,7 @@ class Operator:
         seen_ids: Set[str] = set()
         tools = []
         for action in self._recommanded_actions:
+            assert action.tools is not None
             for tool in action.tools:
                 if tool.id not in seen_ids:
                     seen_ids.add(tool.id)
