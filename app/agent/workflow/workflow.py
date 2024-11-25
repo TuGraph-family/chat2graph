@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-import networkx as nx
-from dbgpt.core.awel import (
+import networkx as nx  # type: ignore
+from dbgpt.core.awel import (  # type: ignore
     DAG,
     InputOperator,
     JoinOperator,
@@ -18,7 +18,7 @@ class Workflow(ABC):
 
     def __init__(self):
         self._operator_graph: nx.DiGraph = nx.DiGraph()
-        self._eval_operator: Operator = None
+        self._eval_operator: Optional[Operator] = None
 
     @abstractmethod
     async def execute(self):
@@ -46,7 +46,9 @@ class DbgptWorkflow(Workflow):
     """
 
     def __init__(
-        self, operator_graph: nx.DiGraph = nx.DiGraph(), input_data: str = None
+        self,
+        operator_graph: nx.DiGraph = nx.DiGraph(),
+        input_data: Optional[str] = None,
     ):
         super().__init__()
         self._operator_graph: nx.DiGraph = operator_graph
@@ -65,8 +67,8 @@ class DbgptWorkflow(Workflow):
     def add_operator(
         self,
         operator: Operator,
-        previous_ops: List[Operator] = None,
-        next_ops: List[Operator] = None,
+        previous_ops: Optional[List[Operator]] = None,
+        next_ops: Optional[List[Operator]] = None,
     ):
         """Add an operator to the workflow."""
         self._operator_graph.add_node(operator.id, operator=operator)
