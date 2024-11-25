@@ -37,7 +37,7 @@ def populated_toolkit(
     action1, action2, action3, action4 = sample_actions
     tool1, tool2, tool3, tool4 = sample_tools
 
-    # Add actions with connections
+    # add actions with connections
     toolkit.add_action(
         action=action1, next_actions=[(action2, 0.8), (action3, 0.6)], prev_actions=[]
     )
@@ -55,7 +55,7 @@ def populated_toolkit(
         action=action4, next_actions=[], prev_actions=[(action2, 0.9), (action3, 0.7)]
     )
 
-    # Add tools with connections
+    # add tools with connections
     toolkit.add_tool(tool=tool1, connected_actions=[(action1, 0.9)])
     toolkit.add_tool(tool=tool2, connected_actions=[(action2, 0.8)])
     toolkit.add_tool(tool=tool3, connected_actions=[(action3, 0.9)])
@@ -98,7 +98,7 @@ def test_graph_structure(populated_toolkit):
     """Test the overall graph structure."""
     graph = populated_toolkit._toolkit_graph
 
-    # Verify node counts
+    # verify node counts
     action_nodes = [
         n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.ACTION
     ]
@@ -109,7 +109,7 @@ def test_graph_structure(populated_toolkit):
     assert len(action_nodes) == 4
     assert len(tool_nodes) == 4
 
-    # Verify edge types and counts
+    # verify edge types and counts
     action_next_edges = [
         (u, v, d)
         for u, v, d in graph.edges(data=True)
@@ -124,7 +124,7 @@ def test_graph_structure(populated_toolkit):
     assert len(action_next_edges) == 5
     assert len(tool_call_edges) == 4
 
-    # Verify edge scores
+    # verify edge scores
     assert all(0 <= d["score"] <= 1 for _, _, d in graph.edges(data=True))
 
 
@@ -168,7 +168,7 @@ async def test_recommend_subgraph_high_threshold(
         actions=[action1], threshold=0.8, hops=2
     )
 
-    # Only high-score edges should be included
+    # only high-score edges should be included
     assert all(d["score"] >= 0.8 for _, _, d in subgraph.edges(data=True))
 
 
@@ -182,5 +182,5 @@ async def test_recommend_subgraph_multiple_start_points(
         actions=[action1, action3], threshold=0.6, hops=1
     )
 
-    assert len(subgraph.nodes()) == 8  # All nodes should be included
-    assert len(subgraph.edges()) == 9  # All edges above threshold
+    assert len(subgraph.nodes()) == 8  # all nodes should be included
+    assert len(subgraph.edges()) == 9  # all edges above threshold
