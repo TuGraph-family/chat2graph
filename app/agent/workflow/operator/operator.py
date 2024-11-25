@@ -90,7 +90,7 @@ class Operator:
         self, threshold: float = 0.5, hops: int = 0
     ) -> List[Action]:
         """Get the actions from the toolkit."""
-        toolkit_subgraph: nx.DiGraph = await self._toolkit.recommend_toolkit_subgraph(
+        toolkit_subgraph: nx.DiGraph = await self._toolkit.recommend_tools(
             actions=self._actions, threshold=threshold, hops=hops
         )
         recommanded_actions: List[Action] = []
@@ -127,11 +127,12 @@ class Operator:
         action_rels = ""
         for action in self._recommanded_actions:
             next_action_names = [
-                a.name
-                for a in self._recommanded_actions
-                if a.id in action.next_action_ids
+                self._toolkit.get_action(a_id).name for a_id in action.next_action_ids
             ]
-            action_rels += f"[{action.name}: {action.description}] -next-> {str(next_action_names)}\n"
+            action_rels += (
+                f"[{action.name}: {action.description}] -next-> "
+                f"{str(next_action_names)}\n"
+            )
 
         return action_rels
 

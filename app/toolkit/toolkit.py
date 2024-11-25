@@ -131,6 +131,19 @@ class Toolkit:
                     score=score,
                 )
 
+    def get_action(self, action_id: str) -> Action:
+        """Get action from the toolkit graph.
+
+        Args:
+            action_id: ID of the action to get
+
+        Returns:
+            Action: The action with the given ID
+        """
+        if action_id in self._toolkit_graph:
+            return self._toolkit_graph.nodes[action_id]["data"]
+        raise ValueError(f"Action {action_id} not found in the toolkit graph")
+
     def remove_tool(self, tool_id: str):
         """Remove tool from the toolkit graph.
 
@@ -163,7 +176,7 @@ class Toolkit:
         if action_id in self._toolkit_graph:
             self._toolkit_graph.remove_node(action_id)
 
-    async def recommend_toolkit_subgraph(
+    async def recommend_tools(
         self, actions: List[Action], threshold: float = 0.5, hops: int = 0
     ) -> nx.DiGraph:
         """It is a recommendation engine that extracts a relevant subgraph from a
@@ -236,13 +249,11 @@ class Toolkit:
             if d["score"] < threshold
         ]
         toolkit_subgraph.remove_edges_from(edges_to_remove)
-        self.visualize_toolkit_graph(
-            graph=toolkit_subgraph, title="Recommended Toolkit"
-        )
+        self.visualize(graph=toolkit_subgraph, title="Recommended Toolkit")
 
         return toolkit_subgraph
 
-    async def update_toolkit_graph(self, text: str, called_tools: List[Tool]):
+    async def update_action(self, text: str, called_tools: List[Tool]):
         """Update the toolkit graph by reinforcement learning.
 
         Args:
@@ -252,7 +263,7 @@ class Toolkit:
         # TODO: simple reinforcement learning implementation
         # Increase weight of edges leading to successful tool calls
 
-    def visualize_toolkit_graph(self, graph: nx.DiGraph, title: str, show=True):
+    def visualize(self, graph: nx.DiGraph, title: str, show=True):
         """Visualize the toolkit graph with different colors for actions and tools.
 
         Args:
