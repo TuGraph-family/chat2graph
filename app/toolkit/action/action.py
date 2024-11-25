@@ -13,12 +13,12 @@ class Action(ABC):
         id (str): The unique identifier of the action.
         name (str): The name of the action.
         description (str): The description of the action.
-        next_action_names (List[str]): The names of the next actions in the toolkit.
+        next_action_ids (List[str]): The ids of the next actions in the toolkit.
         tools (List[Tool]): The tools can be used in the action.
     """
 
     id: str
     name: str
     description: str
-    next_action_names: Optional[List[str]] = None
+    next_action_ids: Optional[List[str]] = None
     tools: Optional[List[Tool]] = None
