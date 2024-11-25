@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from app.toolkit.tool.tool import Tool
 
@@ -20,5 +20,5 @@ class Action(ABC):
     id: str
     name: str
     description: str
-    next_action_names: List[str] = None
-    tools: List[Tool] = None
+    next_action_names: Optional[List[str]] = None
+    tools: Optional[List[Tool]] = None

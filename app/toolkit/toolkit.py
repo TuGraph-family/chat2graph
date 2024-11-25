@@ -1,7 +1,7 @@
 from typing import List, Set
 
 import matplotlib.pyplot as plt
-import networkx as nx
+import networkx as nx  # type: ignore
 from matplotlib.lines import Line2D
 
 from app.toolkit.action.action import Action
