@@ -99,7 +99,7 @@ class DualModelReasoner(Reasoner):
             if self.stop(response):
                 break
 
-        return self.conclure(op_id=op_id)
+        return await self.conclure(op_id=op_id)
 
     async def update_knowledge(self, data: Any):
         """Update the knowledge."""

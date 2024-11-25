@@ -15,7 +15,7 @@ class Reasoner(ABC):
         func_list: List[Tool] = None,
         reasoning_rounds: int = 5,
         print_messages: bool = False,
-    ):
+    ) -> str:
         """Infer by the reasoner."""
 
     @abstractmethod

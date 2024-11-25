@@ -68,13 +68,14 @@ class Operator:
             scratchpad=scratchpad,
         )
         print(f"Operator prompt:\n{operator_prompt}")
-        await self._reasoner.infer(
+        result = await self._reasoner.infer(
             op_id=self._id,
             task=operator_prompt,
             func_list=self.get_tools_from_actions(),
             reasoning_rounds=reasoning_rounds,
             print_messages=print_messages,
         )
+        return {"scratchpad": result}
 
     def verify_actions(self, actions: List[Action]) -> bool:
         """Verify the actions."""
