@@ -1,11 +1,12 @@
 import asyncio
+import os
 
 from app.agent.reasoner.dual_model import DualModelReasoner
 
 
 async def main():
     """Main function."""
-    task = """
+    graph_modeling_task = """
 ===
 Task: 从原始文本中识别和提取关键实体类型，为后续的图数据库模型构建奠定基础。(用中文回答)
 Context:
@@ -39,9 +40,86 @@ Scratchpad:
 城中人马皆惊恐，备曰：“吾有诈，可破之。”遂开门，大呼而出，操兵大败。备乘胜追击，操军大溃，曹操自走脱。备收其军器，仓库，军民无不欢喜。
 ===
 """
-    reasoner = DualModelReasoner(model_config={"model_alias": "qwen-max"})
 
-    await reasoner.infer(op_id="op1", task=task, print_messages=True)
+    travel_planning_task = """
+Task: 利用给定的信息，请为主人制定一份合理的一日游计划。
+Context:
+限制条件：
+1. 总预算：一定不超过500元/人，越接近 500元/人 主人越满意（包含交通、门票、餐饮）
+2. 体力限制：总步行距离不宜超过15公里
+3. 需要安排午餐和晚餐
+4. 须考虑景点间交通时间
+5. 旺季需预约的景点须提前规划
+
+要求：
+1. 制定具体的行程时间表
+2. 计算总预算
+3. 说明交通方案
+4. 解释行程安排的合理性
+
+
+Knowledge:
+- 主人的偏好是在周末时光里享受美食，喜欢尝试新鲜的食物，但不喜欢排队等候。
+- 主人的预算是每顿餐饮在100-200元之间。
+- 主人开车或者地铁都可以，但不喜欢步行。
+
+Actions:
+Do what you want -next-> Do what you want
+
+Tools:
+- None
+
+Scratchpad:
+时间信息：
+- 日期：2024年4月15日（周一）
+- 天气：晴朗，气温15-25℃
+- 规划时段：早8:00至晚20:00
+
+可选景点信息：
+1. 故宫博物院
+   - 开放时间：8:30-17:00（最后入场16:10）
+   - 门票：60元/人
+   - 建议游览时间：3-4小时
+   - 地铁：天安门东站（1号线）
+
+2. 天坛公园
+   - 开放时间：6:00-22:00
+   - 门票：15元/人（普通联票35元/人）
+   - 建议游览时间：2-3小时
+   - 地铁：天坛东门站（5号线）
+
+3. 南锣鼓巷
+   - 开放时间：全天
+   - 门票：免费
+   - 建议游览时间：2-3小时
+   - 地铁：南锣鼓巷站（6、8号线）
+
+4. 颐和园
+   - 开放时间：6:30-18:00
+   - 门票：30元/人（联票60元/人）
+   - 建议游览时间：3-4小时
+   - 地铁：北宫门站（4号线）
+
+交通信息：
+- 北京地铁：3-10元/程（普通卡）
+- 出租车：起步价13元/3公里，超出部分2.3元/公里
+
+用餐推荐：
+1. 全聚德（前门店）：烤鸭套餐 298元/套
+2. 护国寺小吃：炸酱面 15元/碗
+3. 南锣鼓巷小吃：人均50-100元
+4. 四季民福烤鸭：烤鸭套餐 238元/套
+
+"""
+
+    model_config = {
+        "model_alias": "qwen-max",
+        "api_base": os.getenv("QWEN_API_BASE"),
+        "api_key": os.getenv("QWEN_API_KEY"),
+    }
+    reasoner = DualModelReasoner(model_config=model_config)
+
+    await reasoner.infer(op_id="op1", task=travel_planning_task, print_messages=True)
 
 
 if __name__ == "__main__":

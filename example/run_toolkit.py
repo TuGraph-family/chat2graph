@@ -1,132 +1,9 @@
 import matplotlib.pyplot as plt
-import networkx as nx
-from matplotlib.lines import Line2D
 
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.tool.tool_resource import Query
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
-
-
-def visualize_toolkit_graph(graph: nx.DiGraph, title: str):
-    """Visualize the toolkit graph with different colors for actions and tools.
-
-    Args:
-        graph: The graph to visualize
-        title: Title for the plot
-    """
-    plt.figure(figsize=(12, 8))
-
-    # Get node positions using spring layout with larger distance and more iterations
-    pos = nx.spring_layout(
-        graph, k=2, iterations=200
-    )  # increase k and iterations for better layout
-
-    # Draw nodes
-    action_nodes = [
-        n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.ACTION
-    ]
-    tool_nodes = [
-        n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.TOOL
-    ]
-
-    # Draw action nodes in blue
-    nx.draw_networkx_nodes(
-        graph,
-        pos,
-        nodelist=action_nodes,
-        node_color="lightblue",
-        node_size=2000,
-        node_shape="o",
-    )
-
-    # Draw tool nodes in green
-    nx.draw_networkx_nodes(
-        graph,
-        pos,
-        nodelist=tool_nodes,
-        node_color="lightgreen",
-        node_size=1500,
-        node_shape="s",
-    )
-
-    # Draw edges with different colors and styles for different types
-    next_edges = [
-        (u, v)
-        for (u, v, d) in graph.edges(data=True)
-        if d["type"] == ToolkitGraphType.ACTION_NEXT_ACTION
-    ]
-    call_edges = [
-        (u, v)
-        for (u, v, d) in graph.edges(data=True)
-        if d["type"] == ToolkitGraphType.ACTION_CALL_TOOL
-    ]
-
-    # Draw action-to-action edges in blue with curved arrows
-    nx.draw_networkx_edges(
-        graph,
-        pos,
-        edgelist=next_edges,
-        edge_color="blue",
-        arrows=True,
-        arrowsize=35,
-        width=2,
-    )
-
-    # Draw action-to-tool edges in green with different curve style
-    nx.draw_networkx_edges(
-        graph,
-        pos,
-        edgelist=call_edges,
-        edge_color="green",
-        arrows=True,
-        arrowsize=35,
-        width=1.5,
-    )
-
-    # Add edge labels (scores) with adjusted positions for curved edges
-    edge_labels = {(u, v): f"{d['score']:.2f}" for (u, v, d) in graph.edges(data=True)}
-    nx.draw_networkx_edge_labels(
-        graph,
-        pos,
-        edge_labels,
-        font_size=8,
-        label_pos=0.5,
-        bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
-    )
-
-    # Add node labels - handle both Action and Tool nodes
-    node_labels = {}
-    for n, d in graph.nodes(data=True):
-        if d["type"] == ToolkitGraphType.ACTION:
-            node_labels[n] = d["data"].id
-        elif d["type"] == ToolkitGraphType.TOOL:
-            node_labels[n] = d["data"].id
-
-    # Draw labels with white background for better visibility
-    nx.draw_networkx_labels(
-        graph,
-        pos,
-        node_labels,
-        font_size=8,
-        # bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
-    )
-
-    plt.title(title)
-    plt.axis("off")
-
-    # Add a legend
-
-    legend_elements = [
-        Line2D([0], [0], color="blue", label="Action→Action"),
-        Line2D([0], [0], color="green", label="Action→Tool"),
-        plt.scatter([0], [0], color="lightblue", s=100, label="Action"),
-        plt.scatter([0], [0], color="lightgreen", marker="s", s=100, label="Tool"),
-    ]
-    plt.legend(handles=legend_elements, loc="upper left", bbox_to_anchor=(1, 1))
-
-    plt.tight_layout()
-    return plt.gcf()
 
 
 async def main():
@@ -227,7 +104,7 @@ async def main():
     ), "All edge scores should be between 0 and 1"
 
     # visualize the full graph
-    visualize_toolkit_graph(toolkit._toolkit_graph, "Full Toolkit Graph")
+    toolkit.visualize_toolkit_graph(toolkit._toolkit_graph, "Full Toolkit Graph")
     plt.show(block=False)
 
     print("\nTesting recommendation with different parameters:")
@@ -320,7 +197,7 @@ async def main():
         ), f"Test case {i + 1}: All edges should have score >= {case['threshold']}"
 
         plt.figure(i + 2)
-        visualize_toolkit_graph(subgraph, case["title"])
+        toolkit.visualize_toolkit_graph(subgraph, case["title"])
         # plt.show(block=False)
 
     print("\nAll assertions passed! (press ctrl+c to exit)")
