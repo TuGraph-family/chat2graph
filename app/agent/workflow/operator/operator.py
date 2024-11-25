@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import Dict, List, Set
 from uuid import uuid4
 
 import networkx as nx
@@ -14,18 +14,29 @@ class Operator:
 
     Attributes:
         _id (str): The unique identifier of the operator.
+        _reasoner (DualModelReasoner): The dual model reasoner.
+        _task (str): The task of the operator.
         _toolkit (Toolkit): The toolkit that contains the actions and tools.
         _actions (List[Action]): The actions that need to be executed.
         _recommanded_actions (List[Action]): The recommanded actions from the toolkit.
         _embedding_vector (List[float]): The embedding vector of the operator.
     """
 
-    def __init__(self, op_id: str, toolkit: Toolkit, actions: List[Action] = None):
-        self._id = op_id or str(uuid4())
+    def __init__(
+        self,
+        op_id: str = str(uuid4()),
+        reasoner: DualModelReasoner = None,
+        task: str = None,
+        toolkit: Toolkit = None,
+        actions: List[Action] = None,
+    ):
+        self._id = op_id
+        self._reasoner: DualModelReasoner = reasoner
+        self._task: str = task
 
         self._toolkit: Toolkit = toolkit
-        if actions is None or not self.verify_actions(actions):
-            raise ValueError("Invalid actions in the toolkit.")
+        # if actions is None or not self.verify_actions(actions):
+        #     raise ValueError("Invalid actions in the toolkit.")
         self._actions: List[Action] = actions
         self._recommanded_actions: List[Action] = None
 
@@ -38,21 +49,26 @@ class Operator:
             threshold=threshold, hops=hops
         )
 
+    @property
+    def id(self) -> str:
+        """Get the unique identifier of the operator."""
+        return self._id
+
     async def execute(
         self,
-        task: str,
         context: str,
         scratchpad: str,
-        reasoner: DualModelReasoner,
         reasoning_rounds: int = 5,
         print_messages: bool = True,
-    ):
+    ) -> Dict[str, str]:
         """Execute the operator by LLM client."""
         operator_prompt = await self.format_operation_prompt(
-            task=task, context=context, scratchpad=scratchpad
+            task=self._task,
+            context=context,
+            scratchpad=scratchpad,
         )
-        print(f"Operator prompt:\n{operator_prompt}")  # TODO
-        await reasoner.infer(
+        print(f"Operator prompt:\n{operator_prompt}")
+        await self._reasoner.infer(
             op_id=self._id,
             task=operator_prompt,
             func_list=self.get_tools_from_actions(),
@@ -66,6 +82,8 @@ class Operator:
 
     async def get_knowledge(self) -> str:
         """Get the knowledge from the knowledge base."""
+        # TODO: get the knowledge from the knowledge base
+        return ""
 
     async def get_recommanded_actions(
         self, threshold: float = 0.5, hops: int = 0
@@ -102,6 +120,8 @@ class Operator:
 
     def get_action_rels(self) -> str:
         """Get the action relationships from the toolkit."""
+        if self._recommanded_actions is None:
+            raise ValueError("The recommanded actions have not been initialized.")
         action_rels = "\n".join([
             f"[{action.name}: {action.description}] -next-> {str(action.next_action_names)}"
             for action in self._recommanded_actions
@@ -110,6 +130,8 @@ class Operator:
 
     def get_tools_from_actions(self) -> List[Tool]:
         """Get the tools from the actions."""
+        if self._recommanded_actions is None:
+            raise ValueError("The recommanded actions have not been initialized.")
         seen_ids: Set[str] = set()
         tools = []
         for action in self._recommanded_actions:
