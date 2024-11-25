@@ -126,6 +126,7 @@ Tools:
         reasoning_rounds=5,
         print_messages=True,
     )
+
     print(f"Operator execution result:\n{result}")
     print("Operator execution completed successfully")
     print("All tests passed!")
