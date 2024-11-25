@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Optional
 from uuid import uuid4
 
 
@@ -14,5 +14,5 @@ class AgentMessage:
     timestamp: str
 
     msg_id: str = str(uuid4())
-    op_id: str = None
-    tool_log: str = None
+    op_id: Optional[str] = None
+    tool_log: Optional[str] = None
