@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Dict, List
 
-import networkx as nx
+import networkx as nx  # type: ignore
 
 from app.agent.agent import AgentConfig
 from app.agent.expert import Expert
