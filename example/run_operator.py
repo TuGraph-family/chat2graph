@@ -50,7 +50,7 @@ async def main():
 
     # Set operator properties
     task = """
-从原始文本中识别和提取关键实体类型，为后续的图数据库模型构建奠定基础。
+从原始文本中识别和提取出三元组。
 Answer in Chinese.
     """
 
@@ -71,16 +71,9 @@ Answer in Chinese.
 
 
 Actions:
-读取文本内容 -next-> 识别关键实体类型
+解析段落结构 -next-> 识别命名实体 -next-> 提取实体别称
 Tools:
-1. text_content_loader
-描述: 加载并解析源文本内容
-输入: file_path, encoding_type
-输出: text_content(string)
-2. entity_type_extractor
-描述: 从文本中识别和提取关键实体类型
-输入: text_content(string), extraction_rules(dict)
-输出: entity_types(list)
+None
     """
 
     scratchpad = """
