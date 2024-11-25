@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, Optional
 
 from app.toolkit.tool.tool import Tool
 
@@ -12,7 +12,7 @@ class Reasoner(ABC):
         self,
         op_id: str,
         task: str,
-        func_list: List[Tool] = None,
+        func_list: Optional[List[Tool]] = None,
         reasoning_rounds: int = 5,
         print_messages: bool = False,
     ) -> str:

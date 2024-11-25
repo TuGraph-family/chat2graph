@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from app.agent.reasoner.model_service import (
     ModelService,
@@ -23,7 +23,7 @@ class DualModelReasoner(Reasoner):
 
     def __init__(
         self,
-        model_config: Dict[str, Any] = None,
+        model_config: Optional[Dict[str, Any]] = None,
     ):
         """Initialize without async operations."""
         self._actor_model: ModelService = ModelServiceFactory.create(
@@ -43,7 +43,7 @@ class DualModelReasoner(Reasoner):
         self,
         op_id: str,
         task: str,
-        func_list: List[Tool] = None,
+        func_list: Optional[List[Tool]] = None,
         reasoning_rounds: int = 5,
         print_messages: bool = False,
     ) -> str:

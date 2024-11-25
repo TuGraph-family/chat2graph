@@ -5,15 +5,15 @@ from enum import Enum
 from typing import Any, Dict, List
 from uuid import uuid4
 
-from dbgpt.core import (
+from dbgpt.core import (  # type: ignore
     AIMessage,
     HumanMessage,
     ModelMessage,
     ModelRequest,
     SystemMessage,
 )
-from dbgpt.model.proxy.base import LLMClient
-from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient
+from dbgpt.model.proxy.base import LLMClient  # type: ignore
+from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 
 from app.memory.message import AgentMessage
 
