@@ -235,7 +235,6 @@ class Toolkit:
         self.visualize_toolkit_graph(
             graph=toolkit_subgraph, title="Recommended Toolkit"
         )
-        plt.show(block=True)
 
         return toolkit_subgraph
 
@@ -249,12 +248,16 @@ class Toolkit:
         # TODO: simple reinforcement learning implementation
         # Increase weight of edges leading to successful tool calls
 
-    def visualize_toolkit_graph(self, graph: nx.DiGraph, title: str):
+    def visualize_toolkit_graph(self, graph: nx.DiGraph, title: str, show=True):
         """Visualize the toolkit graph with different colors for actions and tools.
 
         Args:
-            graph: The graph to visualize
-            title: Title for the plot
+            graph: The graph to visualize.
+            title: Title for the plot.
+            show: Whether to show the plot.
+
+        Returns:
+            plt.Figure: The plot figure.
         """
         plt.figure(figsize=(12, 8))
 
@@ -369,4 +372,7 @@ class Toolkit:
         plt.legend(handles=legend_elements, loc="upper left", bbox_to_anchor=(1, 1))
 
         plt.tight_layout()
+
+        if show:
+            plt.show(block=False)
         return plt.gcf()
