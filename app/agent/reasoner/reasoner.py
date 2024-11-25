@@ -27,5 +27,5 @@ class Reasoner(ABC):
         """Evaluate the inference process."""
 
     @abstractmethod
-    async def conclure(self):
+    async def conclure(self, op_id: str) -> str:
         """Conclure the inference results."""
