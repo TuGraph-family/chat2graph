@@ -116,10 +116,10 @@ class DualModelReasoner(Reasoner):
         return (
             self._memories[op_id]
             .get_message_by_index(-1)
-            .replace("Scratchpad:", "")
+            .content.replace("Scratchpad:", "")
             .replace("Action:", "")
             .replace("Feedback:", "")
-            .content.replace("TASK_DONE", "")
+            .replace("TASK_DONE", "")
         )
 
     def _thinker_prompt(self):
