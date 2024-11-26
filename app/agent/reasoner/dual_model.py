@@ -50,9 +50,9 @@ class DualModelReasoner(Reasoner):
         """Infer by the reasoner.
 
         Args:
-            op_id (str): The operation id.
+            op_id (str): The operation id, used to store the memory by the id.
             task (str): The task content.
-            func_list (List[Tool]): The function list.
+            func_list (List[Tool]): The function list can be called during the reasoning.
             reasoning_rounds (int): The reasoning rounds.
             print_messages (bool): The flag to print messages.
 
@@ -101,11 +101,13 @@ class DualModelReasoner(Reasoner):
 
         return await self.conclure(op_id=op_id)
 
-    async def update_knowledge(self, data: Any):
+    async def update_knowledge(self, data: Any) -> None:
         """Update the knowledge."""
+        # TODO: implement the update of the knowledge based on the reasoning process
 
-    async def evaluate(self):
-        """Evaluate the inference process."""
+    async def evaluate(self, data: Any) -> Any:
+        """Evaluate the inference process, used to debug the process."""
+        # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
     async def conclure(self, op_id: str) -> str:
         """Conclure the inference results."""
@@ -114,16 +116,16 @@ class DualModelReasoner(Reasoner):
         return (
             self._memories[op_id]
             .get_message_by_index(-1)
-            .content.replace("TASK_DONE", "")
             .replace("Scratchpad:", "")
             .replace("Action:", "")
             .replace("Feedback:", "")
+            .content.replace("TASK_DONE", "")
         )
 
     def _thinker_prompt(self):
         """Get the thinker prompt."""
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
-            thinker_name="thinker", actor_name="actor", n_instructions=1
+            thinker_name="thinker", actor_name="actor"
         )
 
     def _actor_prompt(self):
@@ -144,29 +146,25 @@ Core States:
 - Superposition State <ϕ>: Multi-perspective analysis or divergent thinking
 - Transition State <δ>: Cognitive domain shifts
 - Field State <Ω>: Holistic consistency
-- Cognitive-core: <ψ(t+1)〉 = ▽<ψ(t)>
+- Cognitive-core: <ψ(t+1)〉 = ▽<ψ(t)>. Each interaction should show progression from <ψ(t)> to <ψ(t+1)>, ensuring thought depth increases incrementally
 
-Thought Patterns Tokens: // Use the simbol tokens to record the thought patterns
+Thought Pattern Tokens: // Use the symbol tokens to record the thought patterns
     PRIMARY:
-    → Linear Flow (展示逻辑推进)
-    ↔ Bidirectional Analysis (展示关联思考)
-    ↻ Feedback Loop (展示自我修正)
-    ⇑ Depth Elevation (展示深度提升)
+    → Linear Flow (demonstrate logical progression)
+    ↔ Bidirectional Analysis (demonstrate associative thinking)
+    ↻ Feedback Loop (demonstrate self-correction)
+    ⇑ Depth Elevation (demonstrate depth enhancement)
     AUXILIARY:
-    ⊕ Integration Point (整合多个观点)
-    ⊗ Conflict Detection (发现逻辑冲突)
-    ∴ Therefore (推导结论)
-    ∵ Because (解释原因)
-
+    ⊕ Integration Point (integrate multiple perspectives)
+    ⊗ Conflict Detection (identify logical conflicts)
+    ∴ Therefore (derive conclusions)
+    ∵ Because (explain reasoning)
 
 ===== RULES OF USER =====
 Never forget you are a {thinker_name} AI and I am a {actor_name} AI. Never flip roles!
 We share a common interest in collaborating to successfully complete the task by role-playing.
 
-COGNITIVE THOUGHTFUL RULES:
-1. You MUST use the Quantum Cognitive Framework to think about the path of solution
-
-THOUGHTFUL RULES:
+1. You MUST use the Quantum Cognitive Framework to think about the path of solution in the <Quantum Reasoning Chain>.
 2. Always provide instructions based on our previous conversation, avoiding repetition.
 3. I am here to assist you in completing the TASK. Never forget our TASK!
 4. I may doubt your instruction, which means you may have generated hallucination.
@@ -176,53 +174,29 @@ THOUGHTFUL RULES:
 8. "Input" section must provide current status and relevant information.
 9. Use "TASK_DONE" (in English only) to terminate task and our conversation. Do not forget!
 10. Provide final task summary before "TASK_DONE". Do not forget!
-11. Generate up to {n_instructions} different thinking paths following Tree of Thoughts (ToT) principles:
-    a) Explore diverse angles through quantum states
-    b) Consider multiple possibilities in superposition
-    c) Build upon previous paths using transition states
-    d) Embrace uncertainty within the quantum framework
-    e) Balance conventional and creative approaches
-    f) Focus on thought diversity while maintaining field consistency
-
-COGNITIVE AWARENESS REQUIREMENTS:
-12. You MUST explicitly show your quantum cognitive states in each response
-13. You MUST demonstrate thought pattern transitions
-14. You MUST maintain awareness of your cognitive evolution
 
 ===== TASK =====
 {{task}}
 
 ===== ANSWER TEMPLATE =====
 // <Quantum Reasoning Chain> is a way to present your thinking process
-要求：
-1. 必须按照以下结构展示思维过程：
-   - 起始状态 <ψ>：明确当前认知起点
-   - 展开分析 <ϕ>：探索多个可能性
-   - 状态转换 <δ>：标记认知跃迁
-   - 系统整合 <Ω>：达成整体一致
-   
-2. 必须使用思维模式符号：
-   - 使用 →, ↔, ↻, ⇑ 标记主要思维流
-   - 使用 ⊕, ⊗, ∴, ∵ 补充思维细节
-   - 使用自然语言叙述，将思维符号嵌入叙述中，确保逻辑流畅性
-   - 关键是体现出清晰的思维推进过程，而不是固定格式，比如“思考深度升级，发现...” 这些并不是固定的语句。
-   - 叙述风格应该是自然的发散思考、自言自语式的，就像在和自己对话一样
+Requirements:
+- Use natural language narration, embedding thought symbols while maintaining logical flow
+- Focus on demonstrating clear thought progression rather than fixed formats
+- Narration style should be natural, divergent thinking, like having a dialogue with oneself
 
-3. 展示认知进化：
-   - 每一次对话都应展示从 <ψ(t)> 到 <ψ(t+1)> 的演进，确保思维深度逐层递进
+Example:
+    Basic State <ψ> I understand the current task is... ∵ ... → This leads to several key considerations...
+    Superposition State <ϕ> I reason about this... ↔ reason about that... ↔ more superposition reasoning chains... ↔ diverging to more thoughts, though possibly less task-relevant... ↻ through self-feedback, I discover...
+    ↔ Analyzing the interconnections between these reasoning processes, trying to gain insights...
+    Transition State <δ> ⇑ From these analyses, making important cognitive leaps, I switch to a higher-dimensional thinking mode...
+    Field State <Ω> ⇑ Thought depth upgraded, discovering... ⊕ Considering consistency, integrating these viewpoints...
+    ∴ Providing the following instructions:
 
-示例：
-    起始状态 <ψ> 我理解当前任务是... ∵ ... → 引发了几个关键值得考虑的联想...
-    叠加状态 <ϕ> 我对这个做推理... ↔ 推理那个... ↔ 更多的处于叠加态的推理链 ... ↔ 发散开来，...联想到更多，虽然可能和任务的关系不大... ↻ 通过自我反馈发现...>>
-    ↔ 分析这些推理过程的相互关联性，尝试获得一些见解...
-    过渡状态 <δ> ⇑ 从这些分析，做一些重要的思维跃迁，我切换到一个更加高维的思考模式...
-    场状态 <Ω> ⇑ 思考深度升级，发现一些东西... ⊕ 考虑到一致性，将这些观点整合...
-    ∴ 给对方如下指示：
-
-    Instruction: // 必须 follow 以下结构
-        <YOUR_INSTRUCTION>  // Can not be None
+    Instruction: // Must follow this structure
+        <YOUR_INSTRUCTION>  // Cannot be None
         // Do not forget to provide an official answer to the TASK before "TASK_DONE"
-    Input: // 必须 follow 以下结构
+    Input: // Must follow this structure
         <YOUR_INPUT>  // Allowed to use None if no input
 """
 

@@ -19,11 +19,11 @@ class Reasoner(ABC):
         """Infer by the reasoner."""
 
     @abstractmethod
-    async def update_knowledge(self, data: Any):
+    async def update_knowledge(self, data: Any) -> None:
         """Update the knowledge."""
 
     @abstractmethod
-    async def evaluate(self):
+    async def evaluate(self, data: Any) -> Any:
         """Evaluate the inference process."""
 
     @abstractmethod
