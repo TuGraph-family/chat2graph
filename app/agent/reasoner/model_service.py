@@ -1,8 +1,6 @@
-import os
 import time
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, Dict, List
+from typing import List
 from uuid import uuid4
 
 from dbgpt.core import (  # type: ignore
@@ -15,7 +13,9 @@ from dbgpt.core import (  # type: ignore
 from dbgpt.model.proxy.base import LLMClient  # type: ignore
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 
+from app.agent.reasoner.model_config import ModelConfig
 from app.memory.message import AgentMessage
+from app.type import PlatformType
 
 
 class ModelService(ABC):
@@ -33,7 +33,7 @@ class ModelService(ABC):
         """Set the system prompt."""
 
 
-class DbgptLllmClient(ModelService):
+class DbgptLlmClient(ModelService):
     """DBGPT LLM Client.
 
     Attributes:
@@ -43,14 +43,14 @@ class DbgptLllmClient(ModelService):
         _llm_client (LLMClient): The LLM client provided by DB-GPT.
     """
 
-    def __init__(self, sys_prompt: str, model_config: Dict[str, Any]):
+    def __init__(self, sys_prompt: str, model_config: ModelConfig):
         super().__init__()
-        self._model_alias = model_config.get("model_alias") or "qwen-turbo"
-        self._streaming = model_config.get("streaming") or False
+        self._model_alias = model_config.model_alias
+        self._streaming = model_config.streaming
         self._sys_prompt = sys_prompt
 
-        api_base = model_config.get("api_base") or os.getenv("QWEN_API_BASE")
-        api_key = model_config.get("api_key") or os.getenv("QWEN_API_KEY")
+        api_base = model_config.api_base
+        api_key = model_config.api_key
 
         # use openai llm client by default
         self._llm_client: LLMClient = OpenAILLMClient(
@@ -87,7 +87,7 @@ class DbgptLllmClient(ModelService):
             content=model_output.text,
             status="successed",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            op_id=messages[-1].op_id,
+            reasoning_id=messages[-1].reasoning_id,
         )
 
         return response
@@ -97,21 +97,15 @@ class DbgptLllmClient(ModelService):
         self._sys_prompt = self._sys_prompt.format(task=task)
 
 
-class ModelType(Enum):
-    """Model type enum."""
-
-    DBGPT = "dbgpt"
-
-
 class ModelServiceFactory(ABC):
     """Model service factory."""
 
     @classmethod
     def create(
-        cls, model_type: ModelType, model_config: Dict[str, Any], **kwargs
+        cls, platform_type: PlatformType, model_config: ModelConfig, **kwargs
     ) -> ModelService:
         """Create a model service."""
-        if model_type == ModelType.DBGPT:
+        if platform_type == PlatformType.DBGPT:
             sys_prompt = kwargs.get("sys_prompt") or "You are a helpful assistant."
-            return DbgptLllmClient(sys_prompt=sys_prompt, model_config=model_config)
-        raise ValueError(f"Cannot create model service of type {model_type}")
+            return DbgptLlmClient(sys_prompt=sys_prompt, model_config=model_config)
+        raise ValueError(f"Cannot create model service of type {platform_type}")

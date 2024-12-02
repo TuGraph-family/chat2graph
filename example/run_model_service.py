@@ -3,21 +3,22 @@ import os
 import time
 from typing import List
 
-from app.agent.reasoner.model_service import ModelServiceFactory, ModelType
+from app.agent.reasoner.model_config import ModelConfig
+from app.agent.reasoner.model_service import ModelServiceFactory
 from app.memory.message import AgentMessage
+from app.type import PlatformType
 
 
 async def main():
     """Main function."""
-    model_config = {
-        "model_alias": "qwen-max",
-        "api_base": os.getenv("QWEN_API_BASE"),
-        "api_key": os.getenv("QWEN_API_KEY"),
-    }
-
+    model_config = ModelConfig(
+        model_alias="qwen-max",
+        api_base=os.getenv("QWEN_API_BASE"),
+        api_key=os.getenv("QWEN_API_KEY"),
+    )
     # create model service using factory method
     model_service = ModelServiceFactory.create(
-        model_type=ModelType.DBGPT, model_config=model_config
+        platform_type=PlatformType.DBGPT, model_config=model_config
     )
 
     # create test messages

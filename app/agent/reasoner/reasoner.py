@@ -10,7 +10,7 @@ class Reasoner(ABC):
     @abstractmethod
     async def infer(
         self,
-        op_id: str,
+        reasoning_id: str,
         task: str,
         func_list: Optional[List[Tool]] = None,
         reasoning_rounds: int = 5,
@@ -27,5 +27,5 @@ class Reasoner(ABC):
         """Evaluate the inference process."""
 
     @abstractmethod
-    async def conclure(self, op_id: str) -> str:
+    async def conclure(self, reasoning_id: str) -> str:
         """Conclure the inference results."""

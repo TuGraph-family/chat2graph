@@ -1,15 +1,17 @@
+import os
 import time
 from typing import Any, Dict, List, Optional
 
+from app.agent.reasoner.model_config import ModelConfig
 from app.agent.reasoner.model_service import (
     ModelService,
     ModelServiceFactory,
-    ModelType,
 )
 from app.agent.reasoner.reasoner import Reasoner
 from app.memory.memory import BuiltinMemory, Memory
 from app.memory.message import AgentMessage
 from app.toolkit.tool.tool import Tool
+from app.type import PlatformType
 
 
 class DualModelReasoner(Reasoner):
@@ -23,17 +25,21 @@ class DualModelReasoner(Reasoner):
 
     def __init__(
         self,
-        model_config: Optional[Dict[str, Any]] = None,
+        model_config: Optional[ModelConfig] = None,
     ):
         """Initialize without async operations."""
         self._actor_model: ModelService = ModelServiceFactory.create(
-            model_type=ModelType.DBGPT,
-            model_config=model_config or {"model_alias": "qwen-turbo"},
+            platform_type=PlatformType[
+                os.getenv("PLATFORM_TYPE", PlatformType.DBGPT.name)
+            ],
+            model_config=model_config or ModelConfig(model_alias="qwen-turbo"),
             sys_prompt=self._actor_prompt(),
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
-            model_type=ModelType.DBGPT,
-            model_config=model_config or {"model_alias": "qwen-turbo"},
+            platform_type=PlatformType[
+                os.getenv("PLATFORM_TYPE", PlatformType.DBGPT.name)
+            ],
+            model_config=model_config or ModelConfig(model_alias="qwen-turbo"),
             sys_prompt=self._thinker_prompt(),
         )
 
@@ -41,7 +47,7 @@ class DualModelReasoner(Reasoner):
 
     async def infer(
         self,
-        op_id: str,
+        reasoning_id: str,
         task: str,
         func_list: Optional[List[Tool]] = None,
         reasoning_rounds: int = 5,
@@ -50,7 +56,7 @@ class DualModelReasoner(Reasoner):
         """Infer by the reasoner.
 
         Args:
-            op_id (str): The operation id, used to store the memory by the id.
+            reasoning_id (str): The operation id, used to store the memory by the id.
             task (str): The task content.
             func_list (List[Tool]): The function list can be called during the reasoning.
             reasoning_rounds (int): The reasoning rounds.
@@ -64,8 +70,8 @@ class DualModelReasoner(Reasoner):
         self._thinker_model.set_sys_prompt(task=task)
 
         # init the memory by the operation id
-        self._memories[op_id] = BuiltinMemory()
-        self._memories[op_id].add_message(
+        self._memories[reasoning_id] = BuiltinMemory()
+        self._memories[reasoning_id].add_message(
             AgentMessage(
                 sender_id="Actor",
                 receiver_id="Thinker",
@@ -75,31 +81,31 @@ class DualModelReasoner(Reasoner):
                 ),
                 status="successed",
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                op_id=op_id,
+                reasoning_id=reasoning_id,
             )
         )
 
         for _ in range(reasoning_rounds):
             # thinker
             response = await self._thinker_model.generate(
-                messages=self._memories[op_id].get_messages()
+                messages=self._memories[reasoning_id].get_messages()
             )
-            self._memories[op_id].add_message(response)
+            self._memories[reasoning_id].add_message(response)
             if print_messages:
                 print(f"\033[94mThinker:\n{response.content}\033[0m\n")
 
             # actor
             response = await self._actor_model.generate(
-                messages=self._memories[op_id].get_messages()
+                messages=self._memories[reasoning_id].get_messages()
             )
-            self._memories[op_id].add_message(response)
+            self._memories[reasoning_id].add_message(response)
             if print_messages:
                 print(f"\033[92mActor:\n{response.content}\033[0m\n")
 
             if self.stop(response):
                 break
 
-        return await self.conclure(op_id=op_id)
+        return await self.conclure(reasoning_id=reasoning_id)
 
     async def update_knowledge(self, data: Any) -> None:
         """Update the knowledge."""
@@ -109,12 +115,12 @@ class DualModelReasoner(Reasoner):
         """Evaluate the inference process, used to debug the process."""
         # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
-    async def conclure(self, op_id: str) -> str:
+    async def conclure(self, reasoning_id: str) -> str:
         """Conclure the inference results."""
-        if op_id not in self._memories:
-            raise ValueError(f"Operation id {op_id} not found in the memories.")
+        if reasoning_id not in self._memories:
+            raise ValueError(f"Operation id {reasoning_id} not found in the memories.")
         return (
-            self._memories[op_id]
+            self._memories[reasoning_id]
             .get_message_by_index(-1)
             .content.replace("Scratchpad:", "")
             .replace("Action:", "")
@@ -124,12 +130,14 @@ class DualModelReasoner(Reasoner):
 
     def _thinker_prompt(self):
         """Get the thinker prompt."""
+        # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
             thinker_name="thinker", actor_name="actor"
         )
 
     def _actor_prompt(self):
         """Get the actor prompt."""
+        # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return ACTOR_PROMPT_TEMPLATE.format(thinker_name="thinker", actor_name="actor")
 
     @staticmethod

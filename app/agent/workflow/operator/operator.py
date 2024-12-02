@@ -28,9 +28,9 @@ class Operator:
         task: str,
         toolkit: Toolkit,
         actions: List[Action],
-        op_id: str = str(uuid4()),
+        reasoning_id: str = str(uuid4()),
     ):
-        self._id = op_id
+        self._id = reasoning_id
         self._reasoner: DualModelReasoner = reasoner
         self._task: str = task
 
@@ -69,7 +69,7 @@ class Operator:
         )
         print(f"Operator prompt:\n{operator_prompt}")
         result = await self._reasoner.infer(
-            op_id=self._id,
+            reasoning_id=self._id,
             task=operator_prompt,
             func_list=self.get_tools_from_actions(),
             reasoning_rounds=reasoning_rounds,

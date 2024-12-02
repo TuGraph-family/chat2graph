@@ -1,3 +1,4 @@
+import os
 import time
 from typing import List
 from unittest.mock import AsyncMock, patch
@@ -5,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.agent.reasoner.dual_model import DualModelReasoner
+from app.agent.reasoner.model_config import ModelConfig
 from app.memory.memory import BuiltinMemory
 from app.memory.message import AgentMessage
 
@@ -13,11 +15,11 @@ from app.memory.message import AgentMessage
 async def dual_reasoner():
     """Fixture to create a DualModelReasoner with mocked generate methods."""
     # create a real DualModelReasoner instance
-    model_config = {
-        "model_alias": "test-model",
-        "api_base": "test-base",
-        "api_key": "test-key",
-    }
+    model_config = ModelConfig(
+        model_alias="qwen-max",
+        api_base=os.getenv("QWEN_API_BASE"),
+        api_key=os.getenv("QWEN_API_KEY"),
+    )
     reasoner = DualModelReasoner(model_config=model_config)
 
     # create default response for generate
@@ -27,7 +29,7 @@ async def dual_reasoner():
         content="Action: FINISH\nFeedback: Task completed successfully",
         status="successed",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        op_id="test_op",
+        reasoning_id="test_op",
     )
     thinker_default_response = AgentMessage(
         sender_id="Thinker",
@@ -35,7 +37,7 @@ async def dual_reasoner():
         content="Action: FINISH\nFeedback: Task completed successfully",
         status="successed",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        op_id="test_op",
+        reasoning_id="test_op",
     )
 
     # mock generate methods of both models
@@ -49,16 +51,19 @@ async def dual_reasoner():
 async def test_infer_basic_functionality(dual_reasoner: DualModelReasoner):
     """Test basic functionality of infer method."""
     test_task = "Test task description"
-    test_op_id = "test_op"
+    test_reasoning_id = "test_op"
 
     result = await dual_reasoner.infer(
-        op_id=test_op_id, task=test_task, reasoning_rounds=2, print_messages=False
+        reasoning_id=test_reasoning_id,
+        task=test_task,
+        reasoning_rounds=2,
+        print_messages=False,
     )
 
-    assert test_op_id in dual_reasoner._memories
-    assert isinstance(dual_reasoner._memories[test_op_id], BuiltinMemory)
+    assert test_reasoning_id in dual_reasoner._memories
+    assert isinstance(dual_reasoner._memories[test_reasoning_id], BuiltinMemory)
 
-    messages = dual_reasoner._memories[test_op_id].get_messages()
+    messages = dual_reasoner._memories[test_reasoning_id].get_messages()
     assert len(messages) > 0
     assert messages[0].sender_id == "Actor"
     assert messages[0].receiver_id == "Thinker"
@@ -72,7 +77,7 @@ async def test_infer_basic_functionality(dual_reasoner: DualModelReasoner):
 @pytest.mark.asyncio
 async def test_infer_early_stop(dual_reasoner: DualModelReasoner):
     """Test that infer stops when stop condition is met."""
-    test_op_id = "test_op"
+    test_reasoning_id = "test_op"
 
     # set specific response for early stop
     early_stop_response = AgentMessage(
@@ -81,13 +86,16 @@ async def test_infer_early_stop(dual_reasoner: DualModelReasoner):
         content="Action: FINISH\nFeedback: Early stop",
         status="successed",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        op_id=test_op_id,
+        reasoning_id=test_reasoning_id,
     )
     dual_reasoner._actor_model.generate.return_value = early_stop_response
 
     with patch.object(dual_reasoner, "stop", return_value=True):
         await dual_reasoner.infer(
-            op_id=test_op_id, task="Test task", reasoning_rounds=5, print_messages=False
+            reasoning_id=test_reasoning_id,
+            task="Test task",
+            reasoning_rounds=5,
+            print_messages=False,
         )
 
     assert dual_reasoner._thinker_model.generate.call_count == 1
@@ -97,7 +105,7 @@ async def test_infer_early_stop(dual_reasoner: DualModelReasoner):
 @pytest.mark.asyncio
 async def test_infer_multiple_rounds(dual_reasoner: DualModelReasoner):
     """Test multiple rounds of inference."""
-    test_op_id = "test_op"
+    test_reasoning_id = "test_op"
 
     # create response generator
     round_responses = {}
@@ -111,7 +119,7 @@ async def test_infer_multiple_rounds(dual_reasoner: DualModelReasoner):
             content=f"Round {msg_count} message",
             status="successed",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            op_id=test_op_id,
+            reasoning_id=test_reasoning_id,
         )
 
     dual_reasoner._actor_model.generate = AsyncMock(side_effect=mock_generate)
@@ -126,17 +134,20 @@ async def test_infer_multiple_rounds(dual_reasoner: DualModelReasoner):
 
     with patch.object(dual_reasoner, "stop", side_effect=mock_stop):
         await dual_reasoner.infer(
-            op_id=test_op_id, task="Test task", reasoning_rounds=5, print_messages=False
+            reasoning_id=test_reasoning_id,
+            task="Test task",
+            reasoning_rounds=5,
+            print_messages=False,
         )
 
-    messages = dual_reasoner._memories[test_op_id].get_messages()
+    messages = dual_reasoner._memories[test_reasoning_id].get_messages()
     assert len(messages) == 7  # initial + (3 rounds * 2 messages per round)
 
 
 @pytest.mark.asyncio
 async def test_infer_message_accumulation(dual_reasoner: DualModelReasoner):
     """Test that messages are properly accumulated in memory."""
-    test_op_id = "test_op"
+    test_reasoning_id = "test_op"
 
     async def actor_generate(messages: List[AgentMessage]):
         return AgentMessage(
@@ -145,7 +156,7 @@ async def test_infer_message_accumulation(dual_reasoner: DualModelReasoner):
             content="Actor message",
             status="successed",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            op_id=test_op_id,
+            reasoning_id=test_reasoning_id,
         )
 
     async def thinker_generate(messages: List[AgentMessage]):
@@ -155,7 +166,7 @@ async def test_infer_message_accumulation(dual_reasoner: DualModelReasoner):
             content="Thinker message",
             status="successed",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            op_id=test_op_id,
+            reasoning_id=test_reasoning_id,
         )
 
     dual_reasoner._actor_model.generate = AsyncMock(side_effect=actor_generate)
@@ -163,10 +174,13 @@ async def test_infer_message_accumulation(dual_reasoner: DualModelReasoner):
 
     with patch.object(dual_reasoner, "stop", side_effect=[False, True]):
         await dual_reasoner.infer(
-            op_id=test_op_id, task="Test task", reasoning_rounds=5, print_messages=False
+            reasoning_id=test_reasoning_id,
+            task="Test task",
+            reasoning_rounds=5,
+            print_messages=False,
         )
 
-    messages = dual_reasoner._memories[test_op_id].get_messages()
+    messages = dual_reasoner._memories[test_reasoning_id].get_messages()
     assert len(messages) == 5
 
     assert messages[0].sender_id == "Actor"  # initial
