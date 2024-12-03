@@ -1,4 +1,3 @@
-import os
 import time
 from typing import List
 from unittest.mock import AsyncMock, patch
@@ -94,11 +93,6 @@ async def test_model_service_generate(
 @pytest.mark.asyncio
 async def test_model_service_factory():
     """Test the model service factory creation."""
-    model_config = ModelConfig(
-        model_alias="qwen-max",
-        api_base=os.getenv("QWEN_API_BASE"),
-        api_key=os.getenv("QWEN_API_KEY"),
-    )
     with patch(
         "app.agent.reasoner.model_service_factory.ModelServiceFactory.create"
     ) as mock_create:
@@ -108,14 +102,14 @@ async def test_model_service_factory():
 
         # create service using factory
         service = ModelServiceFactory.create(
-            platform_type=PlatformType.DBGPT, model_config=model_config
+            platform_type=PlatformType.DBGPT, model_config=ModelConfig()
         )
 
         # Assertions
         assert service is not None
         assert service == mock_service
         mock_create.assert_called_once_with(
-            platform_type=PlatformType.DBGPT, model_config=model_config
+            platform_type=PlatformType.DBGPT, model_config=ModelConfig()
         )
 
 

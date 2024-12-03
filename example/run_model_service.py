@@ -1,5 +1,4 @@
 import asyncio
-import os
 import time
 from typing import List
 
@@ -11,11 +10,7 @@ from app.type import PlatformType
 
 async def main():
     """Main function."""
-    model_config = ModelConfig(
-        model_alias="qwen-max",
-        api_base=os.getenv("QWEN_API_BASE"),
-        api_key=os.getenv("QWEN_API_KEY"),
-    )
+    model_config = ModelConfig()
     # create model service using factory method
     model_service = ModelServiceFactory.create(
         platform_type=PlatformType.DBGPT, model_config=model_config

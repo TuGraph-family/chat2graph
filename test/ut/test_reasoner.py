@@ -1,4 +1,3 @@
-import os
 import time
 from typing import List
 from unittest.mock import AsyncMock, patch
@@ -14,12 +13,7 @@ from app.memory.message import AgentMessage
 @pytest.fixture
 async def dual_reasoner():
     """Fixture to create a DualModelReasoner with mocked generate methods."""
-    # create a real DualModelReasoner instance
-    model_config = ModelConfig(
-        model_alias="qwen-max",
-        api_base=os.getenv("QWEN_API_BASE"),
-        api_key=os.getenv("QWEN_API_KEY"),
-    )
+    model_config = ModelConfig()
     reasoner = DualModelReasoner(model_config=model_config)
 
     # create default response for generate

@@ -1,4 +1,3 @@
-import os
 import time
 from typing import Any, Dict, List, Optional
 
@@ -8,8 +7,8 @@ from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
 from app.memory.memory import BuiltinMemory, Memory
 from app.memory.message import AgentMessage
+from app.system_env import SystemEnv
 from app.toolkit.tool.tool import Tool
-from app.type import PlatformType
 
 
 class DualModelReasoner(Reasoner):
@@ -27,17 +26,13 @@ class DualModelReasoner(Reasoner):
     ):
         """Initialize without async operations."""
         self._actor_model: ModelService = ModelServiceFactory.create(
-            platform_type=PlatformType[
-                os.getenv("PLATFORM_TYPE", PlatformType.DBGPT.name)
-            ],
-            model_config=model_config or ModelConfig(model_alias="qwen-turbo"),
+            platform_type=SystemEnv.platform_type(),
+            model_config=model_config or ModelConfig(),
             sys_prompt=self._actor_prompt(),
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
-            platform_type=PlatformType[
-                os.getenv("PLATFORM_TYPE", PlatformType.DBGPT.name)
-            ],
-            model_config=model_config or ModelConfig(model_alias="qwen-turbo"),
+            platform_type=SystemEnv.platform_type(),
+            model_config=model_config or ModelConfig(),
             sys_prompt=self._thinker_prompt(),
         )
 

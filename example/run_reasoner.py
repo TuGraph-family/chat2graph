@@ -1,5 +1,4 @@
 import asyncio
-import os
 
 from app.agent.reasoner.dual_model import DualModelReasoner
 from app.agent.reasoner.model_config import ModelConfig
@@ -42,11 +41,7 @@ Scratchpad:
 ===
 """
 
-    model_config = ModelConfig(
-        model_alias="qwen-max",
-        api_base=os.getenv("QWEN_API_BASE"),
-        api_key=os.getenv("QWEN_API_KEY"),
-    )
+    model_config = ModelConfig()
     reasoner = DualModelReasoner(model_config=model_config)
 
     await reasoner.infer(

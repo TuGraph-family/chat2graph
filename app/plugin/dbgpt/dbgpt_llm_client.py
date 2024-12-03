@@ -20,7 +20,7 @@ class DbgptLlmClient(ModelService):
     """DBGPT LLM Client.
 
     Attributes:
-        _model_alias (str): The model alias.
+        _model_name (str): The model name.
         _streaming (bool): The streaming flag.
         _sys_prompt (str): The system prompt.
         _llm_client (LLMClient): The LLM client provided by DB-GPT.
@@ -28,17 +28,17 @@ class DbgptLlmClient(ModelService):
 
     def __init__(self, sys_prompt: str, model_config: ModelConfig):
         super().__init__()
-        self._model_alias = model_config.model_alias
+        self._model_name = model_config.model_name
         self._streaming = model_config.streaming
         self._sys_prompt = sys_prompt
 
-        api_base = model_config.api_base
+        base_url = model_config.base_url
         api_key = model_config.api_key
 
         # use openai llm client by default
         self._llm_client: LLMClient = OpenAILLMClient(
-            model_alias=self._model_alias,
-            api_base=api_base,
+            model_alias=self._model_name,
+            api_base=base_url,
             api_key=api_key,
             streaming=self._streaming,
         )
@@ -61,7 +61,7 @@ class DbgptLlmClient(ModelService):
 
         model_messages = ModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
-            model=self._model_alias, messages=model_messages
+            model=self._model_name, messages=model_messages
         )
         model_output = await self._llm_client.generate(model_request)
         response = AgentMessage(
