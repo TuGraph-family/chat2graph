@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.agent.reasoner.model_config import ModelConfig
-from app.agent.reasoner.model_service import ModelServiceFactory
+from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.memory.message import AgentMessage
 from app.type import PlatformType
 
@@ -14,7 +14,9 @@ from app.type import PlatformType
 @pytest.fixture
 def mock_model_service():
     """Fixture to create a mock model service."""
-    with patch("app.agent.reasoner.model_service.ModelServiceFactory") as mock_factory:
+    with patch(
+        "app.agent.reasoner.model_service_factory.ModelServiceFactory"
+    ) as mock_factory:
         # create a mock model service instance
         mock_service = AsyncMock()
 
@@ -98,7 +100,7 @@ async def test_model_service_factory():
         api_key=os.getenv("QWEN_API_KEY"),
     )
     with patch(
-        "app.agent.reasoner.model_service.ModelServiceFactory.create"
+        "app.agent.reasoner.model_service_factory.ModelServiceFactory.create"
     ) as mock_create:
         # configure mock
         mock_service = AsyncMock()

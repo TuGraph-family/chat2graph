@@ -3,10 +3,8 @@ import time
 from typing import Any, Dict, List, Optional
 
 from app.agent.reasoner.model_config import ModelConfig
-from app.agent.reasoner.model_service import (
-    ModelService,
-    ModelServiceFactory,
-)
+from app.agent.reasoner.model_service import ModelService
+from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
 from app.memory.memory import BuiltinMemory, Memory
 from app.memory.message import AgentMessage

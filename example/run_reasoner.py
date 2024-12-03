@@ -50,7 +50,7 @@ Scratchpad:
     reasoner = DualModelReasoner(model_config=model_config)
 
     await reasoner.infer(
-        reasoning_id="op1", task=graph_modeling_task, print_messages=True
+        reasoning_id="1", task=graph_modeling_task, print_messages=True
     )
 
 

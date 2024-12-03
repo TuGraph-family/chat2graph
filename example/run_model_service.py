@@ -4,7 +4,7 @@ import time
 from typing import List
 
 from app.agent.reasoner.model_config import ModelConfig
-from app.agent.reasoner.model_service import ModelServiceFactory
+from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.memory.message import AgentMessage
 from app.type import PlatformType
 
