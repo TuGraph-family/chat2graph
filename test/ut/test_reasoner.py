@@ -4,8 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.agent.reasoner.dual_model import DualModelReasoner
-from app.agent.reasoner.model_config import ModelConfig
+from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.memory.memory import BuiltinMemory
 from app.memory.message import AgentMessage
 
@@ -13,8 +12,7 @@ from app.memory.message import AgentMessage
 @pytest.fixture
 async def dual_reasoner():
     """Fixture to create a DualModelReasoner with mocked generate methods."""
-    model_config = ModelConfig()
-    reasoner = DualModelReasoner(model_config=model_config)
+    reasoner = DualModelReasoner()
 
     # create default response for generate
     actor_default_response = AgentMessage(

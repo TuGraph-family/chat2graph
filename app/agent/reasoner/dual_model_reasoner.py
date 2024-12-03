@@ -1,13 +1,12 @@
 import time
 from typing import Any, Dict, List, Optional
 
-from app.agent.reasoner.model_config import ModelConfig
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
 from app.memory.memory import BuiltinMemory, Memory
 from app.memory.message import AgentMessage
-from app.system_env import SystemEnv
+from app.commom.system_env import SystemEnv
 from app.toolkit.tool.tool import Tool
 
 
@@ -22,18 +21,15 @@ class DualModelReasoner(Reasoner):
 
     def __init__(
         self,
-        model_config: Optional[ModelConfig] = None,
     ):
         """Initialize without async operations."""
         self._actor_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
-            model_config=model_config or ModelConfig(),
-            sys_prompt=self._actor_prompt(),
+            sys_prompt_template=self._actor_prompt_template(),
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
-            model_config=model_config or ModelConfig(),
-            sys_prompt=self._thinker_prompt(),
+            sys_prompt_template=self._thinker_prompt_template(),
         )
 
         self._memories: Dict[str, Memory] = {}
@@ -121,14 +117,14 @@ class DualModelReasoner(Reasoner):
             .replace("TASK_DONE", "")
         )
 
-    def _thinker_prompt(self):
+    def _thinker_prompt_template(self):
         """Get the thinker prompt."""
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
             thinker_name="thinker", actor_name="actor"
         )
 
-    def _actor_prompt(self):
+    def _actor_prompt_template(self):
         """Get the actor prompt."""
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return ACTOR_PROMPT_TEMPLATE.format(thinker_name="thinker", actor_name="actor")

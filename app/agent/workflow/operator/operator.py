@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import networkx as nx  # type: ignore
 
-from app.agent.reasoner.dual_model import DualModelReasoner
+from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType

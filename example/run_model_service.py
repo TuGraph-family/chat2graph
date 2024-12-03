@@ -2,19 +2,15 @@ import asyncio
 import time
 from typing import List
 
-from app.agent.reasoner.model_config import ModelConfig
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.memory.message import AgentMessage
-from app.type import PlatformType
+from app.commom.type import PlatformType
 
 
 async def main():
     """Main function."""
-    model_config = ModelConfig()
     # create model service using factory method
-    model_service = ModelServiceFactory.create(
-        platform_type=PlatformType.DBGPT, model_config=model_config
-    )
+    model_service = ModelServiceFactory.create(platform_type=PlatformType.DBGPT)
 
     # create test messages
     sender_id = "user"
