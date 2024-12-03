@@ -42,11 +42,6 @@ class SystemEnv:
                             _env_cache[key.strip()] = value.strip()
             cls._initialized = True
 
-    @property
-    def context_cache(self) -> Dict[str, str]:
-        """Access to current context cache"""
-        return _context_cache.get()
-
     @staticmethod
     def get(key: str, default_value: Optional[str] = None) -> str:
         """Get value following priority: context cache > .env > os env > default value"""
