@@ -19,8 +19,6 @@ class SystemEnv:
     _instance = None
     _initialized = False
 
-    _platform_type: Optional[PlatformType] = None
-
     def __new__(cls) -> "SystemEnv":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
