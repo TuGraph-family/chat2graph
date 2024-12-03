@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Optional
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
+from app.commom.system_env import SystemEnv
 from app.memory.memory import BuiltinMemory, Memory
 from app.memory.message import AgentMessage
-from app.commom.system_env import SystemEnv
 from app.toolkit.tool.tool import Tool
 
 
@@ -21,15 +21,21 @@ class DualModelReasoner(Reasoner):
 
     def __init__(
         self,
+        thinker_name: Optional[str] = None,
+        actor_name: Optional[str] = None,
     ):
         """Initialize without async operations."""
         self._actor_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
-            sys_prompt_template=self._actor_prompt_template(),
+            sys_prompt_template=self._actor_prompt_template(
+                thinker_name=thinker_name, actor_name=actor_name
+            ),
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
-            sys_prompt_template=self._thinker_prompt_template(),
+            sys_prompt_template=self._thinker_prompt_template(
+                thinker_name=thinker_name, actor_name=actor_name
+            ),
         )
 
         self._memories: Dict[str, Memory] = {}
@@ -117,17 +123,23 @@ class DualModelReasoner(Reasoner):
             .replace("TASK_DONE", "")
         )
 
-    def _thinker_prompt_template(self):
+    def _thinker_prompt_template(
+        self, thinker_name: str = "Thinker AI", actor_name: str = "Actor AI"
+    ):
         """Get the thinker prompt."""
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
-            thinker_name="thinker", actor_name="actor"
+            thinker_name=thinker_name, actor_name=actor_name
         )
 
-    def _actor_prompt_template(self):
+    def _actor_prompt_template(
+        self, thinker_name: str = "Thinker AI", actor_name: str = "Actor AI"
+    ):
         """Get the actor prompt."""
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
-        return ACTOR_PROMPT_TEMPLATE.format(thinker_name="thinker", actor_name="actor")
+        return ACTOR_PROMPT_TEMPLATE.format(
+            actor_name=actor_name, thinker_name=thinker_name
+        )
 
     @staticmethod
     def stop(message: AgentMessage):
@@ -158,7 +170,7 @@ Thought Pattern Tokens: // Use the symbol tokens to record the thought patterns
     ∵ Because (explain reasoning)
 
 ===== RULES OF USER =====
-Never forget you are a {thinker_name} AI and I am a {actor_name} AI. Never flip roles!
+Never forget you are a {thinker_name} and I am a {actor_name}. Never flip roles!
 We share a common interest in collaborating to successfully complete the task by role-playing.
 
 1. You MUST use the Quantum Cognitive Framework to think about the path of solution in the <Quantum Reasoning Chain>.
@@ -247,7 +259,7 @@ Input:
 
 ACTOR_PROMPT_TEMPLATE = """
 ===== RULES OF ASSISTANT =====
-Never forget you are a {actor_name} AI and I am a {thinker_name} AI. Never flip roles!
+Never forget you are a {actor_name} and I am a {thinker_name}. Never flip roles!
 We share a common interest in collaborating to successfully complete the task by role-playing.
     1. I always provide you with instructions.
         - I must instruct you based on your expertise and my needs to complete the task.
