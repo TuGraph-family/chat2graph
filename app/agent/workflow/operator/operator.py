@@ -28,9 +28,9 @@ class Operator:
         task: str,
         toolkit: Toolkit,
         actions: List[Action],
-        reasoning_id: str = str(uuid4()),
+        op_id: str = str(uuid4()),
     ):
-        self._id = reasoning_id
+        self._id = op_id
         self._reasoner: DualModelReasoner = reasoner
         self._task: str = task
 
