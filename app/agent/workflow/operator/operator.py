@@ -1,5 +1,4 @@
 from typing import Dict, List, Optional, Set
-from uuid import uuid4
 
 import networkx as nx  # type: ignore
 
@@ -28,8 +27,20 @@ class Operator(ReasonerCaller):
         task: str,
         toolkit: Toolkit,
         actions: List[Action],
-        op_id: str = str(uuid4()),
+        system_id: str,
+        session_id: str,
+        task_id: str,
+        agent_id: str,
+        operator_id: str,
     ):
+        super().__init__(
+            system_id=system_id,
+            session_id=session_id,
+            task_id=task_id,
+            agent_id=agent_id,
+            operator_id=operator_id,
+        )
+
         self._task: str = task
 
         self._toolkit: Toolkit = toolkit
