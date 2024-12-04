@@ -1,6 +1,7 @@
 import asyncio
 
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.reasoner import ReasonerCaller
 
 
 async def main():
@@ -42,9 +43,14 @@ Scratchpad:
 
     reasoner = DualModelReasoner()
 
-    await reasoner.infer(
-        reasoning_id="1", task=graph_modeling_task, print_messages=True
+    caller = ReasonerCaller(
+        system_id="system_id",
+        session_id="session_id",
+        task_id="task_id",
+        agent_id="agent_id",
+        operator_id="operator_id",
     )
+    await reasoner.infer(input=graph_modeling_task, tools=[], caller=caller)
 
 
 if __name__ == "__main__":

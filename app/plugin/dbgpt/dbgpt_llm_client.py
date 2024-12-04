@@ -64,7 +64,6 @@ class DbgptLlmClient(ModelService):
             content=model_output.text,
             status="successed",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            reasoning_id=messages[-1].reasoning_id,
         )
 
         return response

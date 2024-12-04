@@ -3,8 +3,8 @@ import time
 from typing import List
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
-from app.memory.message import AgentMessage
 from app.commom.type import PlatformType
+from app.memory.message import AgentMessage
 
 
 async def main():

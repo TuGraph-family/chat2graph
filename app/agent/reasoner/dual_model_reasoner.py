@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
-from app.agent.reasoner.reasoner import Reasoner
+from app.agent.reasoner.reasoner import Reasoner, ReasonerCaller
 from app.commom.system_env import SystemEnv
 from app.memory.memory import BuiltinMemory, Memory
 from app.memory.message import AgentMessage
@@ -38,35 +38,33 @@ class DualModelReasoner(Reasoner):
             ),
         )
 
-        self._memories: Dict[str, Memory] = {}
+        self._memories: Dict[
+            str, Dict[str, Dict[str, Dict[str, Dict[str, Memory]]]]
+        ] = {}
 
     async def infer(
         self,
-        reasoning_id: str,
-        task: str,
-        func_list: Optional[List[Tool]] = None,
-        reasoning_rounds: int = 5,
-        print_messages: bool = False,
+        input: str,
+        tools: Optional[List[Tool]] = None,
+        caller: Optional[ReasonerCaller] = None,
     ) -> str:
         """Infer by the reasoner.
 
         Args:
-            reasoning_id (str): The operation id, used to store the memory by the id.
-            task (str): The task content.
-            func_list (List[Tool]): The function list can be called during the reasoning.
-            reasoning_rounds (int): The reasoning rounds.
-            print_messages (bool): The flag to print messages.
+            input (str): The input task to reason.
+            tools (List[Tool]): The tools that can be called in the reasoning.
+            caller (ReasonerCaller): The caller that triggers the reasoning.
 
         Returns:
             str: The conclusion and the final resultes of the inference.
         """
         # set the system prompt
-        self._actor_model.set_sys_prompt(task=task)
-        self._thinker_model.set_sys_prompt(task=task)
+        self._actor_model.set_sys_prompt(task=input)
+        self._thinker_model.set_sys_prompt(task=input)
 
         # init the memory by the operation id
-        self._memories[reasoning_id] = BuiltinMemory()
-        self._memories[reasoning_id].add_message(
+        memory = self.init_memory(caller)
+        memory.add_message(
             AgentMessage(
                 sender_id="Actor",
                 receiver_id="Thinker",
@@ -76,31 +74,32 @@ class DualModelReasoner(Reasoner):
                 ),
                 status="successed",
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                reasoning_id=reasoning_id,
             )
         )
 
+        reasoning_rounds = int(SystemEnv.get("REASONING_ROUNDS", "5"))
+        print_messages = SystemEnv.get("PRINT_MESSAGES", "True").lower() == "true"
         for _ in range(reasoning_rounds):
             # thinker
             response = await self._thinker_model.generate(
-                messages=self._memories[reasoning_id].get_messages()
+                messages=memory.get_messages()
             )
-            self._memories[reasoning_id].add_message(response)
+            memory.add_message(response)
+
             if print_messages:
                 print(f"\033[94mThinker:\n{response.content}\033[0m\n")
 
             # actor
-            response = await self._actor_model.generate(
-                messages=self._memories[reasoning_id].get_messages()
-            )
-            self._memories[reasoning_id].add_message(response)
+            response = await self._actor_model.generate(messages=memory.get_messages())
+            memory.add_message(response)
+
             if print_messages:
                 print(f"\033[92mActor:\n{response.content}\033[0m\n")
 
             if self.stop(response):
                 break
 
-        return await self.conclure(reasoning_id=reasoning_id)
+        return await self.conclure(memory=memory)
 
     async def update_knowledge(self, data: Any) -> None:
         """Update the knowledge."""
@@ -110,13 +109,11 @@ class DualModelReasoner(Reasoner):
         """Evaluate the inference process, used to debug the process."""
         # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
-    async def conclure(self, reasoning_id: str) -> str:
+    async def conclure(self, memory: Memory) -> str:
         """Conclure the inference results."""
-        if reasoning_id not in self._memories:
-            raise ValueError(f"Operation id {reasoning_id} not found in the memories.")
+
         return (
-            self._memories[reasoning_id]
-            .get_message_by_index(-1)
+            memory.get_message_by_index(-1)
             .content.replace("Scratchpad:", "")
             .replace("Action:", "")
             .replace("Feedback:", "")
@@ -140,6 +137,43 @@ class DualModelReasoner(Reasoner):
         return ACTOR_PROMPT_TEMPLATE.format(
             actor_name=actor_name, thinker_name=thinker_name
         )
+
+    def init_memory(self, caller: Optional[ReasonerCaller] = None) -> Memory:
+        """Initialize the memory."""
+        if not caller:
+            return BuiltinMemory()
+
+        system_id = caller.get_system_id()
+        session_id = caller.get_session_id()
+        task_id = caller.get_task_id()
+        agent_id = caller.get_agent_id()
+        operator_id = caller.get_operator_id()
+
+        if system_id not in self._memories:
+            self._memories[system_id] = {}
+        if session_id not in self._memories[system_id]:
+            self._memories[system_id][session_id] = {}
+        if task_id not in self._memories[system_id][session_id]:
+            self._memories[system_id][session_id][task_id] = {}
+        if agent_id not in self._memories[system_id][session_id][task_id]:
+            self._memories[system_id][session_id][task_id][agent_id] = {}
+        self._memories[system_id][session_id][task_id][agent_id][operator_id] = (
+            BuiltinMemory()
+        )
+        return self.get_memory(caller=caller)
+
+    def get_memory(self, caller: ReasonerCaller) -> Memory:
+        """Get the memory."""
+        system_id = caller.get_system_id()
+        session_id = caller.get_session_id()
+        task_id = caller.get_task_id()
+        agent_id = caller.get_agent_id()
+        operator_id = caller.get_operator_id()
+
+        try:
+            return self._memories[system_id][session_id][task_id][agent_id][operator_id]
+        except KeyError:
+            return self.init_memory(caller)
 
     @staticmethod
     def stop(message: AgentMessage):

@@ -14,5 +14,4 @@ class AgentMessage:
     timestamp: str
 
     msg_id: str = str(uuid4())
-    reasoning_id: Optional[str] = None
     tool_log: Optional[str] = None

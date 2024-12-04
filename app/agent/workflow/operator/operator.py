@@ -4,12 +4,13 @@ from uuid import uuid4
 import networkx as nx  # type: ignore
 
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.reasoner import ReasonerCaller
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
 
 
-class Operator:
+class Operator(ReasonerCaller):
     """Operator is a sequence of actions and tools that need to be executed.
 
     Attributes:
@@ -24,14 +25,11 @@ class Operator:
 
     def __init__(
         self,
-        reasoner: DualModelReasoner,
         task: str,
         toolkit: Toolkit,
         actions: List[Action],
         op_id: str = str(uuid4()),
     ):
-        self._id = op_id
-        self._reasoner: DualModelReasoner = reasoner
         self._task: str = task
 
         self._toolkit: Toolkit = toolkit
@@ -52,10 +50,11 @@ class Operator:
     @property
     def id(self) -> str:
         """Get the unique identifier of the operator."""
-        return self._id
+        return self._operator_id
 
     async def execute(
         self,
+        reasoner: DualModelReasoner,
         context: str,
         scratchpad: str,
         reasoning_rounds: int = 5,
@@ -68,10 +67,9 @@ class Operator:
             scratchpad=scratchpad,
         )
         print(f"Operator prompt:\n{operator_prompt}")
-        result = await self._reasoner.infer(
-            reasoning_id=self._id,
-            task=operator_prompt,
-            func_list=self.get_tools_from_actions(),
+
+        result = await reasoner.infer(
+            caller=self,
             reasoning_rounds=reasoning_rounds,
             print_messages=print_messages,
         )
