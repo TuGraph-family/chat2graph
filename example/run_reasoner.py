@@ -4,6 +4,33 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
 
 
+class TestCaller(ReasonerCaller):
+    """Test ReasonerCaller for testing."""
+
+    def __init__(self):
+        super().__init__()
+        self._system_id = "test_system_id"
+        self._session_id = "test_session_id"
+        self._task_id = "test_task_id"
+        self._agent_id = "test_agent_id"
+        self._operator_id = "test_operator_id"
+
+    def get_system_id(self) -> str:
+        return self._system_id
+
+    def get_session_id(self) -> str:
+        return self._session_id
+
+    def get_task_id(self) -> str:
+        return self._task_id
+
+    def get_agent_id(self) -> str:
+        return self._agent_id
+
+    def get_operator_id(self) -> str:
+        return self._operator_id
+
+
 async def main():
     """Main function."""
     graph_modeling_task = """
@@ -43,13 +70,7 @@ Scratchpad:
 
     reasoner = DualModelReasoner()
 
-    caller = ReasonerCaller(
-        system_id="system_id",
-        session_id="session_id",
-        task_id="task_id",
-        agent_id="agent_id",
-        operator_id="operator_id",
-    )
+    caller = TestCaller()
     await reasoner.infer(input=graph_modeling_task, tools=[], caller=caller)
 
 

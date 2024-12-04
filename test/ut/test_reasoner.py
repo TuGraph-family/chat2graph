@@ -9,16 +9,37 @@ from app.agent.reasoner.reasoner import ReasonerCaller
 from app.memory.message import AgentMessage
 
 
+class TestCaller(ReasonerCaller):
+    """Test ReasonerCaller for testing."""
+
+    def __init__(self):
+        super().__init__()
+        self._system_id = "test_system_id"
+        self._session_id = "test_session_id"
+        self._task_id = "test_task_id"
+        self._agent_id = "test_agent_id"
+        self._operator_id = "test_operator_id"
+
+    def get_system_id(self) -> str:
+        return self._system_id
+
+    def get_session_id(self) -> str:
+        return self._session_id
+
+    def get_task_id(self) -> str:
+        return self._task_id
+
+    def get_agent_id(self) -> str:
+        return self._agent_id
+
+    def get_operator_id(self) -> str:
+        return self._operator_id
+
+
 @pytest.fixture
 def caller():
     """Create a standard ReasonerCaller for testing."""
-    return ReasonerCaller(
-        system_id="test_system",
-        session_id="test_session",
-        task_id="test_task",
-        agent_id="test_agent",
-        operator_id="test_operator",
-    )
+    return TestCaller()
 
 
 @pytest.fixture

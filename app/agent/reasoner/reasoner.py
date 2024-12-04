@@ -8,39 +8,32 @@ from app.toolkit.tool.tool import Tool
 class ReasonerCaller(ABC):
     """Reasoner caller."""
 
-    def __init__(
-        self,
-        system_id: str,
-        session_id: str,
-        task_id: str,
-        agent_id: str,
-        operator_id: str,
-    ):
-        self._system_id: str = system_id
-        self._session_id: str = session_id
-        self._task_id: str = task_id
-        self._agent_id: str = agent_id
-        self._operator_id: str = operator_id
+    def __init__(self):
+        self._system_id: Optional[str] = None
+        self._session_id: Optional[str] = None
+        self._task_id: Optional[str] = None
+        self._agent_id: Optional[str] = None
+        self._operator_id: Optional[str] = None
 
+    @abstractmethod
     def get_system_id(self) -> str:
         """Get the system id."""
-        return self._system_id
 
+    @abstractmethod
     def get_session_id(self) -> str:
         """Get the session id."""
-        return self._session_id
 
+    @abstractmethod
     def get_task_id(self) -> str:
         """Get the task id."""
-        return self._task_id
 
+    @abstractmethod
     def get_agent_id(self) -> str:
         """Get the agent id."""
-        return self._agent_id
 
+    @abstractmethod
     def get_operator_id(self) -> str:
         """Get the operator id."""
-        return self._operator_id
 
 
 class Reasoner(ABC):

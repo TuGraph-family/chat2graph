@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional, Set
+from uuid import uuid4
 
 import networkx as nx  # type: ignore
 
@@ -27,19 +28,8 @@ class Operator(ReasonerCaller):
         task: str,
         toolkit: Toolkit,
         actions: List[Action],
-        system_id: str,
-        session_id: str,
-        task_id: str,
-        agent_id: str,
-        operator_id: str,
     ):
-        super().__init__(
-            system_id=system_id,
-            session_id=session_id,
-            task_id=task_id,
-            agent_id=agent_id,
-            operator_id=operator_id,
-        )
+        super().__init__()
 
         self._task: str = task
 
@@ -181,6 +171,36 @@ class Operator(ReasonerCaller):
             tool_docstrings=self.get_tool_docstrings(),
             scratchpad=scratchpad,
         )
+
+    def get_system_id(self) -> str:
+        """Get the system id."""
+        # TODO: get the system id
+        self._system_id = "system_id"
+        return self._system_id
+
+    def get_session_id(self) -> str:
+        """Get the session id."""
+        # TODO: get the session id
+        self._session_id = "session_id"
+        return self._session_id
+
+    def get_task_id(self) -> str:
+        """Get the task id."""
+        # TODO: get the task id
+        self._task_id = "task_id"
+        return self._task_id
+
+    def get_agent_id(self) -> str:
+        """Get the agent id."""
+        # TODO: get the agent id
+        self._agent_id = "agent_id"
+        return self._agent_id
+
+    def get_operator_id(self) -> str:
+        """Get the operator id."""
+        if self._operator_id is None:
+            self._operator_id = str(uuid4())
+        return self._operator_id
 
 
 OPERATION_PT = """
