@@ -27,7 +27,7 @@ class Operator(ReasonerCaller):
 
     def __init__(self):
         id = SystemEnv.get("OPERATOR_ID", "operator_id")
-        super().__init__(caller_id=id)
+        super().__init__(id=id)
 
         self._role: str
 
@@ -175,9 +175,9 @@ class Operator(ReasonerCaller):
             scratchpad=scratchpad,
         )
 
-    def get_caller_id(self) -> str:
-        """Get the caller id."""
-        return self._caller_id
+    def get_id(self) -> str:
+        """Get the id."""
+        return self._id
 
 
 OPERATION_PT = """

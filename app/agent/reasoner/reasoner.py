@@ -10,14 +10,14 @@ class ReasonerCaller(ABC):
     """Reasoner caller.
 
     Attributes:
-        _caller_id (str): The unique identifier of the caller
+        _id (str): The unique identifier of the caller
     """
 
-    def __init__(self, caller_id: Optional[str] = None):
-        self._caller_id: str = caller_id
+    def __init__(self, id: Optional[str] = None):
+        self._id: str = id
 
     @abstractmethod
-    def get_caller_id(self) -> str:
+    def get_id(self) -> str:
         """Get the unique identifier of the caller."""
 
 

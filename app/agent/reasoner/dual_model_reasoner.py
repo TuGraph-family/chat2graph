@@ -155,7 +155,7 @@ class DualModelReasoner(Reasoner):
 
         session_id = task.session_id
         task_id = task.id
-        operator_id = caller.get_caller_id()
+        operator_id = caller.get_id()
 
         if session_id not in self._memories:
             self._memories[session_id] = {}
@@ -170,7 +170,7 @@ class DualModelReasoner(Reasoner):
         """Get the memory."""
         session_id = task.session_id
         task_id = task.id
-        operator_id = caller.get_caller_id()
+        operator_id = caller.get_id()
 
         try:
             return self._memories[session_id][task_id][operator_id]

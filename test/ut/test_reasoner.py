@@ -16,11 +16,11 @@ class TestCaller(ReasonerCaller):
 
     def __init__(self):
         super().__init__()
-        self._caller_id = "test_caller_id"
+        self._id = "test_caller_id"
 
-    def get_caller_id(self) -> str:
+    def get_id(self) -> str:
         """Get the unique identifier of the caller."""
-        return self._caller_id
+        return self._id
 
 
 @pytest.fixture
