@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import List, Literal
 
 from dbgpt.core import (  # type: ignore
     AIMessage,
@@ -57,7 +57,9 @@ class DbgptLlmClient(ModelService):
             messages=model_messages,
         )
         model_output = await self._llm_client.generate(model_request)
-        sender = "Actor" if messages[-1].sender == "Thinker" else "Thinker"
+        sender: Literal["Thinker", "Actor"] = (
+            "Actor" if messages[-1].sender == "Thinker" else "Thinker"
+        )
         response = AgentMessage(
             sender=sender,
             content=model_output.text,
