@@ -6,7 +6,15 @@ from app.toolkit.tool.tool import Tool
 
 
 class ReasonerCaller(ABC):
-    """Reasoner caller."""
+    """Reasoner caller.
+
+    Attributes:
+        _system_id: The system id.
+        _session_id: The session id.
+        _task_id: The task id.
+        _agent_id: The agent id.
+        _operator_id: The operator id.
+    """
 
     def __init__(self):
         self._system_id: Optional[str] = None
