@@ -145,35 +145,27 @@ class DualModelReasoner(Reasoner):
         if not caller:
             return BuiltinMemory()
 
-        system_id = caller.get_system_id()
         session_id = caller.get_session_id()
         task_id = caller.get_task_id()
-        agent_id = caller.get_agent_id()
         operator_id = caller.get_operator_id()
 
-        if system_id not in self._memories:
-            self._memories[system_id] = {}
-        if session_id not in self._memories[system_id]:
-            self._memories[system_id][session_id] = {}
-        if task_id not in self._memories[system_id][session_id]:
-            self._memories[system_id][session_id][task_id] = {}
-        if agent_id not in self._memories[system_id][session_id][task_id]:
-            self._memories[system_id][session_id][task_id][agent_id] = {}
-        self._memories[system_id][session_id][task_id][agent_id][operator_id] = (
-            BuiltinMemory()
-        )
-        return self.get_memory(caller=caller)
+        if session_id not in self._memories:
+            self._memories[session_id] = {}
+        if task_id not in self._memories[session_id]:
+            self._memories[session_id][task_id] = {}
+        memory = BuiltinMemory()
+        self._memories[session_id][task_id][operator_id] = memory
+
+        return memory
 
     def get_memory(self, caller: ReasonerCaller) -> Memory:
         """Get the memory."""
-        system_id = caller.get_system_id()
         session_id = caller.get_session_id()
         task_id = caller.get_task_id()
-        agent_id = caller.get_agent_id()
         operator_id = caller.get_operator_id()
 
         try:
-            return self._memories[system_id][session_id][task_id][agent_id][operator_id]
+            return self._memories[session_id][task_id][operator_id]
         except KeyError:
             return self.init_memory(caller)
 

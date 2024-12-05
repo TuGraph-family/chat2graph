@@ -14,14 +14,12 @@ class TestCaller(ReasonerCaller):
 
     def __init__(self):
         super().__init__()
-        self._system_id = "test_system_id"
         self._session_id = "test_session_id"
         self._task_id = "test_task_id"
-        self._agent_id = "test_agent_id"
         self._operator_id = "test_operator_id"
 
     def get_system_id(self) -> str:
-        return self._system_id
+        pass
 
     def get_session_id(self) -> str:
         return self._session_id
@@ -30,7 +28,7 @@ class TestCaller(ReasonerCaller):
         return self._task_id
 
     def get_agent_id(self) -> str:
-        return self._agent_id
+        pass
 
     def get_operator_id(self) -> str:
         return self._operator_id
