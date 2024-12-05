@@ -1,5 +1,5 @@
 import time
-from typing import List, Literal
+from typing import List
 
 from dbgpt.core import (  # type: ignore
     AIMessage,
@@ -14,6 +14,7 @@ from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 
 from app.agent.reasoner.model_service import ModelService
 from app.commom.system_env import SystemEnv
+from app.commom.type import MessageSourceType
 from app.memory.message import AgentMessage
 
 
@@ -46,8 +47,9 @@ class DbgptLlmClient(ModelService):
         base_messages: List[BaseMessage] = [sys_message]
 
         # convert the conversation messages for LLM
+        # thinker <-> human, actor <-> ai
         for message in messages:
-            if message.sender == "Actor":
+            if message.source_type == MessageSourceType.ACTOR:
                 base_messages.append(AIMessage(content=message.content))
             else:
                 base_messages.append(HumanMessage(content=message.content))
@@ -61,27 +63,9 @@ class DbgptLlmClient(ModelService):
         model_output = await self._llm_client.generate(model_request)
 
         # convert the model output to agent message
-        sender: Literal["Thinker", "Actor", "Reasoner"]
-        if messages[-1].sender == "Thinker":
-            sender = "Actor"
-        elif messages[-1].sender == "Actor":
-            sender = "Thinker"
-        else:
-            sender = "Reasoner"
         response = AgentMessage(
-            sender=sender,
             content=model_output.text,
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
-
-        # log the response if enabled
-        print_messages = SystemEnv.get("PRINT_MESSAGES", "True").lower() == "true"
-        if print_messages:
-            if sender == "Thinker":
-                print(f"\033[94mThinker:\n{response.content}\033[0m\n")
-            elif sender == "Actor":
-                print(f"\033[92mActor:\n{response.content}\033[0m\n")
-            else:
-                print(f"\033[93mReasoner:\n{response.content}\033[0m\n")
 
         return response

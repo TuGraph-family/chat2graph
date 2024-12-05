@@ -7,6 +7,7 @@ import pytest
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
 from app.agent.task import Task
+from app.commom.type import MessageSourceType
 from app.memory.message import AgentMessage
 
 
@@ -34,12 +35,12 @@ async def mock_reasoner() -> DualModelReasoner:
     reasoner = DualModelReasoner()
 
     actor_response = AgentMessage(
-        sender="Actor",
+        source_type=MessageSourceType.ACTOR,
         content="Scratchpad: Testing\nAction: Proceed\nFeedback: Success",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
     thinker_response = AgentMessage(
-        sender="Thinker",
+        source_type=MessageSourceType.THINKER,
         content="Instruction: Test instruction\nInput: Test input",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
@@ -73,7 +74,7 @@ async def test_infer_basic_flow(
     messages = memory.get_messages()
 
     # check initial message
-    assert messages[0].sender == "Actor"
+    assert messages[0].source_type == MessageSourceType.ACTOR
     assert "Scratchpad: Empty" in messages[0].content
 
     # check message flow
@@ -87,7 +88,7 @@ async def test_infer_early_stop(
     """Test inference with early stop condition."""
     # modify actor response to trigger stop condition
     stop_response = AgentMessage(
-        sender="Actor",
+        source_type=MessageSourceType.ACTOR,
         content="Scratchpad: Done\nAction: Complete\nFeedback: TASK_DONE",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
@@ -118,7 +119,9 @@ async def test_infer_multiple_rounds(
         nonlocal round_count
         round_count += 1
         return AgentMessage(
-            sender="Actor" if round_count % 2 == 0 else "Thinker",
+            source_type=MessageSourceType.ACTOR
+            if round_count % 2 == 0
+            else MessageSourceType.THINKER,
             content=f"Round {round_count} content",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
@@ -141,8 +144,8 @@ async def test_infer_multiple_rounds(
     assert len(messages) > round_count  # Including initial message
 
     for i in range(1, len(messages) - 1, 2):
-        assert messages[i].sender == "Thinker"
-        assert messages[i + 1].sender == "Actor"
+        assert messages[i].source_type == MessageSourceType.THINKER
+        assert messages[i + 1].source_type == MessageSourceType.ACTOR
 
 
 @pytest.mark.asyncio
@@ -168,7 +171,7 @@ async def test_infer_error_handling(
     memory = mock_reasoner.get_memory(task=task, caller=caller)
     messages = memory.get_messages()
     assert len(messages) == 1
-    assert messages[0].sender == "Actor"
+    assert messages[0].source_type == MessageSourceType.ACTOR
 
 
 @pytest.mark.asyncio

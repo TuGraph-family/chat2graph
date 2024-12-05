@@ -6,6 +6,7 @@ from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner, ReasonerCaller
 from app.agent.task import Task
 from app.commom.system_env import SystemEnv
+from app.commom.type import MessageSourceType
 from app.memory.memory import BuiltinMemory, Memory
 from app.memory.message import AgentMessage
 from app.toolkit.tool.tool import Tool
@@ -21,7 +22,6 @@ class DualModelReasoner(Reasoner):
     """
 
     def __init__(self):
-        """Initialize without async operations."""
         self._actor_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
         )
@@ -54,13 +54,13 @@ class DualModelReasoner(Reasoner):
         actor_sys_prompt = self._set_actor_sys_prompt(
             goal=task.goal, goal_context=task.context
         )
-        thinker_sys_prompt = self._set_thinker_sys_prompt(
+        thinker_sys_prompt = self._format_thinker_sys_prompt(
             goal=task.goal, goal_context=task.context
         )
 
         # trigger the reasoning process
         init_message = AgentMessage(
-            sender="Actor",
+            source_type=MessageSourceType.ACTOR,
             content=(
                 "Scratchpad: Empty\n"
                 "Action: Empty\nFeedback: I need your help to complete the task\n"
@@ -77,12 +77,14 @@ class DualModelReasoner(Reasoner):
             response = await self._thinker_model.generate(
                 sys_prompt=thinker_sys_prompt, messages=memory.get_messages()
             )
+            response.source_type = MessageSourceType.THINKER
             memory.add_message(response)
 
             # actor
             response = await self._actor_model.generate(
                 sys_prompt=actor_sys_prompt, messages=memory.get_messages()
             )
+            response.source_type = MessageSourceType.ACTOR
             memory.add_message(response)
 
             if self.stop(response):
@@ -109,35 +111,35 @@ class DualModelReasoner(Reasoner):
             .replace("TASK_DONE", "")
         )
 
-    def _set_actor_sys_prompt(
+    def _format_actor_sys_prompt(
         self,
         goal: str,
         goal_context: str,
-        thinker_name: str = "Thinker AI",
-        actor_name: str = "Actor AI",
     ) -> str:
         """Set the system prompt."""
         reasoning_task = (
             "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
         )
 
+        thinker_name = SystemEnv.get("THINKER_NAME", "Thinker AI")
+        actor_name = SystemEnv.get("ACTOR_NAME", "Actor AI")
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return ACTOR_PROMPT_TEMPLATE.format(
             actor_name=actor_name, thinker_name=thinker_name, task=reasoning_task
         )
 
-    def _set_thinker_sys_prompt(
+    def _format_thinker_sys_prompt(
         self,
         goal: str,
         goal_context: str,
-        thinker_name: str = "Thinker AI",
-        actor_name: str = "Actor AI",
     ) -> str:
         """Set the system prompt."""
         reasoning_task = (
             "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
         )
 
+        thinker_name = SystemEnv.get("THINKER_NAME", "Thinker AI")
+        actor_name = SystemEnv.get("ACTOR_NAME", "Actor AI")
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
             actor_name=actor_name, thinker_name=thinker_name, task=reasoning_task

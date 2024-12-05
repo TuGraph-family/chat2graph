@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
-from app.commom.type import PlatformType
+from app.commom.type import MessageSourceType, PlatformType
 from app.memory.message import AgentMessage
 
 
@@ -21,7 +21,7 @@ def mock_model_service():
         # Configure the mock to return a predefined response
         mock_response = AgentMessage(
             message_id="4",
-            sender="Actor",
+            source_type=MessageSourceType.ACTOR,
             content="Your name is Alice, as you mentioned earlier.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
@@ -39,19 +39,19 @@ def test_messages() -> List[AgentMessage]:
     return [
         AgentMessage(
             message_id="1",
-            sender="Thinker",
+            source_type=MessageSourceType.THINKER,
             content="Hello, how are you? I am Alice.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
             message_id="2",
-            sender="Actor",
+            source_type=MessageSourceType.ACTOR,
             content="I'm fine, thank you.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
             message_id="3",
-            sender="Thinker",
+            source_type=MessageSourceType.THINKER,
             content="What's my name?",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
@@ -73,7 +73,7 @@ async def test_model_service_generate(
     assert response is not None
     assert isinstance(response, AgentMessage)
     assert "Alice" in response.content
-    assert response.sender == "Actor"
+    assert response.source_type == MessageSourceType.ACTOR
 
     # verify the generate method was called with correct arguments
     model_service.generate.assert_called_once_with(test_messages)
@@ -103,12 +103,12 @@ def test_agent_message_creation():
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
     message = AgentMessage(
         message_id="test",
-        sender="Thinker",
+        source_type=MessageSourceType.THINKER,
         content="Test message",
         timestamp=timestamp,
     )
 
     assert message.message_id == "test"
-    assert message.sender == "Thinker"
+    assert message.source_type == MessageSourceType.THINKER
     assert message.content == "Test message"
     assert message.timestamp == timestamp

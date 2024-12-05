@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import Literal
 from uuid import uuid4
+
+from app.commom.type import TaskLabel
 
 
 @dataclass
@@ -12,7 +13,7 @@ class Task:
         goal (str): The goal of the task.
         id (str): The unique identifier of the task.
         context (str): The context of the task.
-        lable (Literal["original", "generated"]): The lable of the
+        lable (TaskLabel): The lable of the
             task to indicate whether it is decomposed from the original task.
     """
 
@@ -20,4 +21,4 @@ class Task:
     goal: str
     id: str = str(uuid4())
     context: str = ""
-    lable: Literal["original", "generated"] = "original"
+    lable: TaskLabel = TaskLabel.ORIGINAL

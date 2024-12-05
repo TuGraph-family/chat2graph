@@ -6,6 +6,7 @@ import networkx as nx  # type: ignore
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
 from app.agent.task import Task
+from app.commom.system_env import SystemEnv
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
@@ -15,7 +16,7 @@ class Operator(ReasonerCaller):
     """Operator is a sequence of actions and tools that need to be executed.
 
     Attributes:
-        _id (str): The unique identifier of the operator.
+        _caller_id (str): The unique identifier of the operator.
         _reasoner (DualModelReasoner): The dual model reasoner.
         _role (str): The role of the operator.
         _toolkit (Toolkit): The toolkit that contains the actions and tools.
@@ -24,43 +25,44 @@ class Operator(ReasonerCaller):
         _embedding_vector (List[float]): The embedding vector of the operator.
     """
 
-    def __init__(
-        self,
-        role: str,
-        toolkit: Toolkit,
-        actions: List[Action],
-        operator_id: str = str(uuid4()),
-    ):
-        super().__init__()
-        self._operator_id: str = operator_id
+    def __init__(self):
+        id = SystemEnv.get("OPERATOR_ID", "operator_id")
+        super().__init__(caller_id=id)
 
-        self._role: str = role
+        self._role: str
 
-        self._toolkit: Toolkit = toolkit
-        # if actions is None or not self.verify_actions(actions):
-        #     raise ValueError("Invalid actions in the toolkit.")
-        self._actions: List[Action] = actions
+        # TODO: Initialize the following attributes by the config file
+        self._toolkit: Toolkit = None
+        self._actions: List[Action] = None
         self._recommanded_actions: Optional[List[Action]] = None
 
         # TODO: embedding vector of context
         self._embedding_vector: Optional[List[float]] = None
 
-    async def initialize(self, threshold: float = 0.5, hops: int = 0):
+    async def initialize(
+        self,
+        toolkit: Toolkit,
+        actions: List[Action],
+        role: str,
+        id: str = str(uuid4),
+        threshold: float = 0.5,
+        hops: int = 0,
+    ):
         """Initialize the operator."""
+        # TODO: Leave an interface for code testing (to be removed)
+        self._caller_id = id
+        self._role = role
+        self._toolkit = toolkit
+        self._actions = actions
         self._recommanded_actions = await self.get_recommanded_actions(
             threshold=threshold, hops=hops
         )
-
-    @property
-    def id(self) -> str:
-        """Get the unique identifier of the operator."""
-        return self._operator_id
 
     async def execute(
         self,
         reasoner: DualModelReasoner,
         task: Task,
-        scratchpad: str,
+        scratchpad: str,  # TODO: need to be removed
     ) -> Dict[str, str]:
         """Execute the operator by LLM client."""
         operator_prompt = await self.format_operation_prompt(
@@ -173,27 +175,9 @@ class Operator(ReasonerCaller):
             scratchpad=scratchpad,
         )
 
-    def get_system_id(self) -> str:
-        """Get the system id."""
-        # TODO: get the system id
-        return "system_id"
-
-    def get_session_id(self) -> str:
-        """Get the session id."""
-        return self._session_id
-
-    def get_task_id(self) -> str:
-        """Get the task id."""
-        return self._task_id
-
-    def get_agent_id(self) -> str:
-        """Get the agent id."""
-        # TODO: get the agent id
-        return "agent_id"
-
-    def get_operator_id(self) -> str:
-        """Get the operator id."""
-        return self._operator_id
+    def get_caller_id(self) -> str:
+        """Get the caller id."""
+        return self._caller_id
 
 
 OPERATION_PT = """

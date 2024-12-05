@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
+
+from app.commom.type import MessageSourceType
 
 
 @dataclass
 class Message:
     """Message"""
 
-    sender: str
     content: str
     timestamp: str
     message_id: str = str(uuid4())
@@ -17,7 +18,7 @@ class Message:
 class AgentMessage(Message):
     """Agent message"""
 
-    sender: Literal["Thinker", "Actor", "Reasoner"]
+    source_type: MessageSourceType = MessageSourceType.MODEL
     function: Optional[Dict[str, Any]] = None
     tool_log: Optional[str] = None
 
