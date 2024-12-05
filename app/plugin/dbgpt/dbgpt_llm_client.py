@@ -57,14 +57,27 @@ class DbgptLlmClient(ModelService):
             messages=model_messages,
         )
         model_output = await self._llm_client.generate(model_request)
-        sender: Literal["Thinker", "Actor"] = (
-            "Actor" if messages[-1].sender == "Thinker" else "Thinker"
-        )
+        sender: Literal["Thinker", "Actor", "Reasoner"]
+        if messages[-1].sender == "Thinker":
+            sender = "Actor"
+        elif messages[-1].sender == "Actor":
+            sender = "Thinker"
+        else:
+            sender = "Reasoner"
         response = AgentMessage(
             sender=sender,
             content=model_output.text,
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
+
+        print_messages = SystemEnv.get("PRINT_MESSAGES", "True").lower() == "true"
+        if print_messages:
+            if sender == "Thinker":
+                print(f"\033[94mThinker:\n{response.content}\033[0m\n")
+            elif sender == "Actor":
+                print(f"\033[92mActor:\n{response.content}\033[0m\n")
+            else:
+                print(f"\033[93mReasoner:\n{response.content}\033[0m\n")
 
         return response
 

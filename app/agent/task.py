@@ -1,22 +1,23 @@
-from abc import ABC
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Literal
 from uuid import uuid4
 
 
 @dataclass
-class Task(ABC):
-    """Task in the system."""
+class Task:
+    """Task in the system.e
 
-    id: str
-    content: str
-    tags: List[str]
+    Attributes:
+        session_id (str): The unique identifier of the session.
+        goal (str): The goal of the task.
+        id (str): The unique identifier of the task.
+        context (str): The context of the task.
+        lable (Literal["original", "generated"]): The lable of the
+            task to indicate whether it is decomposed from the original task.
+    """
 
-    def __init__(
-        self,
-        content: str,
-        tags: Optional[List[str]] = None,
-    ):
-        self.id = str(uuid4())
-        self.content = content
-        self.tags = tags or []
+    session_id: str
+    goal: str
+    id: str = str(uuid4())
+    context: str = ""
+    lable: Literal["original", "generated"] = "original"

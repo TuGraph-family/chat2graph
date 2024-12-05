@@ -6,6 +6,7 @@ import pytest
 
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
+from app.agent.task import Task
 from app.memory.message import AgentMessage
 
 
@@ -14,24 +15,11 @@ class TestCaller(ReasonerCaller):
 
     def __init__(self):
         super().__init__()
-        self._session_id = "test_session_id"
-        self._task_id = "test_task_id"
-        self._operator_id = "test_operator_id"
+        self._caller_id = "test_caller_id"
 
-    def get_system_id(self) -> str:
-        pass
-
-    def get_session_id(self) -> str:
-        return self._session_id
-
-    def get_task_id(self) -> str:
-        return self._task_id
-
-    def get_agent_id(self) -> str:
-        pass
-
-    def get_operator_id(self) -> str:
-        return self._operator_id
+    def get_caller_id(self) -> str:
+        """Get the unique identifier of the caller."""
+        return self._caller_id
 
 
 @pytest.fixture
@@ -67,17 +55,21 @@ async def test_infer_basic_flow(
     mock_reasoner: DualModelReasoner, caller: ReasonerCaller
 ):
     """Test basic inference flow with memory management."""
-    test_input = "Test task input"
+    task = Task(
+        session_id="test_session_id",
+        goal="Test goal",
+        context="Test context",
+    )
 
     # run inference
-    _ = await mock_reasoner.infer(input=test_input, caller=caller)
+    _ = await mock_reasoner.infer(task=task, caller=caller)
 
     # verify model interactions
     assert mock_reasoner._actor_model.generate.called
     assert mock_reasoner._thinker_model.generate.called
 
     # verify memory management
-    memory = mock_reasoner.get_memory(caller)
+    memory = mock_reasoner.get_memory(task=task, caller=caller)
     messages = memory.get_messages()
 
     # check initial message
@@ -101,7 +93,12 @@ async def test_infer_early_stop(
     )
     mock_reasoner._actor_model.generate = AsyncMock(return_value=stop_response)
 
-    _ = await mock_reasoner.infer(input="Test task", caller=caller)
+    task = Task(
+        session_id="test_session_id",
+        goal="Test goal",
+        context="Test context",
+    )
+    _ = await mock_reasoner.infer(task=task, caller=caller)
 
     # verify early stop
     assert mock_reasoner._actor_model.generate.call_count == 1
@@ -128,10 +125,15 @@ async def test_infer_multiple_rounds(
     mock_reasoner._actor_model.generate = AsyncMock(side_effect=generate_with_rounds)
     mock_reasoner._thinker_model.generate = AsyncMock(side_effect=generate_with_rounds)
 
-    _ = await mock_reasoner.infer(input="Test task", caller=caller)
+    task = Task(
+        session_id="test_session_id",
+        goal="Test goal",
+        context="Test context",
+    )
+    _ = await mock_reasoner.infer(task=task, caller=caller)
 
     # verify message accumulation
-    memory = mock_reasoner.get_memory(caller)
+    memory = mock_reasoner.get_memory(task=task, caller=caller)
     messages = memory.get_messages()
 
     assert len(messages) > round_count  # Including initial message
@@ -152,11 +154,16 @@ async def test_infer_error_handling(
     )
 
     with pytest.raises(Exception) as exc_info:
-        await mock_reasoner.infer(input="Test task", caller=caller)
+        task = Task(
+            session_id="test_session_id",
+            goal="Test goal",
+            context="Test context",
+        )
+        await mock_reasoner.infer(task=task, caller=caller)
 
     assert str(exc_info.value) == "Model error"
 
-    memory = mock_reasoner.get_memory(caller)
+    memory = mock_reasoner.get_memory(task=task, caller=caller)
     messages = memory.get_messages()
     assert len(messages) == 1
     assert messages[0].sender == "Actor"
@@ -165,7 +172,12 @@ async def test_infer_error_handling(
 @pytest.mark.asyncio
 async def test_infer_without_caller(mock_reasoner: DualModelReasoner):
     """Test inference without caller (using temporary memory)."""
-    _ = await mock_reasoner.infer(input="Test task", caller=None)
+    task = Task(
+        session_id="test_session_id",
+        goal="Test goal",
+        context="Test context",
+    )
+    _ = await mock_reasoner.infer(task=task, caller=None)
 
     assert mock_reasoner._actor_model.generate.called
     assert mock_reasoner._thinker_model.generate.called
