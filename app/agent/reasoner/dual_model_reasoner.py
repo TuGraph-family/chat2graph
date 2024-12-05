@@ -38,9 +38,7 @@ class DualModelReasoner(Reasoner):
             ),
         )
 
-        self._memories: Dict[
-            str, Dict[str, Dict[str, Dict[str, Dict[str, Memory]]]]
-        ] = {}
+        self._memories: Dict[str, Dict[str, Dict[str, Memory]]] = {}
 
     async def infer(
         self,
