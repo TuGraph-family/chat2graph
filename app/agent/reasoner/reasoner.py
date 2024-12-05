@@ -13,8 +13,8 @@ class ReasonerCaller(ABC):
         _caller_id (str): The unique identifier of the caller
     """
 
-    def __init__(self):
-        self._caller_id: str = None
+    def __init__(self, _caller_id: Optional[str] = None):
+        self._caller_id: str = _caller_id
 
     @abstractmethod
     def get_caller_id(self) -> str:
