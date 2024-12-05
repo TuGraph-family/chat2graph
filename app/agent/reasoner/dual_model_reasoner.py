@@ -154,7 +154,7 @@ class DualModelReasoner(Reasoner):
             return BuiltinMemory()
 
         session_id = task.get_session_id()
-        task_id = task.id
+        task_id = task.get_id()
         operator_id = caller.get_id()
 
         if session_id not in self._memories:
@@ -169,7 +169,7 @@ class DualModelReasoner(Reasoner):
     def get_memory(self, task: Task, caller: ReasonerCaller) -> Memory:
         """Get the memory."""
         session_id = task.get_session_id()
-        task_id = task.id
+        task_id = task.get_id()
         operator_id = caller.get_id()
 
         try:
