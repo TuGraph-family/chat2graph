@@ -9,18 +9,14 @@ class ReasonerCaller(ABC):
     """Reasoner caller.
 
     Attributes:
-        _system_id: The system id.
         _session_id: The session id.
         _task_id: The task id.
-        _agent_id: The agent id.
         _operator_id: The operator id.
     """
 
     def __init__(self):
-        self._system_id: Optional[str] = None
         self._session_id: Optional[str] = None
         self._task_id: Optional[str] = None
-        self._agent_id: Optional[str] = None
         self._operator_id: Optional[str] = None
 
     @abstractmethod

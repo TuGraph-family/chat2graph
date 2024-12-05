@@ -66,13 +66,11 @@ class DualModelReasoner(Reasoner):
         memory = self.init_memory(caller)
         memory.add_message(
             AgentMessage(
-                sender_id="Actor",
-                receiver_id="Thinker",
+                sender="Actor",
                 content=(
                     "Scratchpad: Empty\n"
                     "Action: Empty\nFeedback: I need your help to complete the task\n"
                 ),
-                status="successed",
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             )
         )

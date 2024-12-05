@@ -20,10 +20,8 @@ def mock_model_service():
 
         # Configure the mock to return a predefined response
         mock_response = AgentMessage(
-            msg_id="4",
-            sender_id="assistant",
-            receiver_id="user",
-            status="successed",
+            message_id="4",
+            sender="Actor",
             content="Your name is Alice, as you mentioned earlier.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
@@ -40,26 +38,20 @@ def test_messages() -> List[AgentMessage]:
     """Fixture to create test messages."""
     return [
         AgentMessage(
-            msg_id="1",
-            sender_id="user",
-            receiver_id="assistant",
-            status="successed",
+            message_id="1",
+            sender="Thinker",
             content="Hello, how are you? I am Alice.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
-            msg_id="2",
-            sender_id="assistant",
-            receiver_id="user",
-            status="successed",
+            message_id="2",
+            sender="Actor",
             content="I'm fine, thank you.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
-            msg_id="3",
-            sender_id="user",
-            receiver_id="assistant",
-            status="successed",
+            message_id="3",
+            sender="Thinker",
             content="What's my name?",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
@@ -81,9 +73,7 @@ async def test_model_service_generate(
     assert response is not None
     assert isinstance(response, AgentMessage)
     assert "Alice" in response.content
-    assert response.sender_id == "assistant"
-    assert response.receiver_id == "user"
-    assert response.status == "successed"
+    assert response.sender == "Actor"
 
     # verify the generate method was called with correct arguments
     model_service.generate.assert_called_once_with(test_messages)
@@ -112,17 +102,13 @@ def test_agent_message_creation():
     """Test the creation of AgentMessage objects."""
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
     message = AgentMessage(
-        msg_id="test",
-        sender_id="user",
-        receiver_id="assistant",
-        status="successed",
+        message_id="test",
+        sender="Thinker",
         content="Test message",
         timestamp=timestamp,
     )
 
-    assert message.msg_id == "test"
-    assert message.sender_id == "user"
-    assert message.receiver_id == "assistant"
-    assert message.status == "successed"
+    assert message.message_id == "test"
+    assert message.sender == "Thinker"
     assert message.content == "Test message"
     assert message.timestamp == timestamp

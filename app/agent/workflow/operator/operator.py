@@ -5,6 +5,7 @@ import networkx as nx  # type: ignore
 
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
+from app.agent.task import Task
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
@@ -16,7 +17,7 @@ class Operator(ReasonerCaller):
     Attributes:
         _id (str): The unique identifier of the operator.
         _reasoner (DualModelReasoner): The dual model reasoner.
-        _task (str): The task of the operator.
+        _role (str): The role of the operator.
         _toolkit (Toolkit): The toolkit that contains the actions and tools.
         _actions (List[Action]): The actions that need to be executed.
         _recommanded_actions (List[Action]): The recommanded actions from the toolkit.
@@ -25,7 +26,7 @@ class Operator(ReasonerCaller):
 
     def __init__(
         self,
-        task: str,
+        role: str,
         toolkit: Toolkit,
         actions: List[Action],
         operator_id: str = str(uuid4()),
@@ -33,7 +34,7 @@ class Operator(ReasonerCaller):
         super().__init__()
         self._operator_id: str = operator_id
 
-        self._task: str = task
+        self._role: str = role
 
         self._toolkit: Toolkit = toolkit
         # if actions is None or not self.verify_actions(actions):
@@ -58,10 +59,8 @@ class Operator(ReasonerCaller):
     async def execute(
         self,
         reasoner: DualModelReasoner,
-        context: str,
+        task: Task,
         scratchpad: str,
-        reasoning_rounds: int = 5,
-        print_messages: bool = True,
     ) -> Dict[str, str]:
         """Execute the operator by LLM client."""
         operator_prompt = await self.format_operation_prompt(
@@ -177,26 +176,20 @@ class Operator(ReasonerCaller):
     def get_system_id(self) -> str:
         """Get the system id."""
         # TODO: get the system id
-        self._system_id = "system_id"
-        return self._system_id
+        return "system_id"
 
     def get_session_id(self) -> str:
         """Get the session id."""
-        # TODO: get the session id
-        self._session_id = "session_id"
         return self._session_id
 
     def get_task_id(self) -> str:
         """Get the task id."""
-        # TODO: get the task id
-        self._task_id = "task_id"
         return self._task_id
 
     def get_agent_id(self) -> str:
         """Get the agent id."""
         # TODO: get the agent id
-        self._agent_id = "agent_id"
-        return self._agent_id
+        return "agent_id"
 
     def get_operator_id(self) -> str:
         """Get the operator id."""

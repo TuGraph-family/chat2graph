@@ -45,9 +45,8 @@ class DbgptLlmClient(ModelService):
         sys_message = SystemMessage(content=self._sys_prompt)
         base_messages: List[AIMessage] = [sys_message]
 
-        n = len(messages)
-        for i, message in enumerate(messages):
-            if (i + n) % 2 == 0:
+        for message in messages:
+            if message.sender == "Actor":
                 base_messages.append(AIMessage(content=message.content))
             else:
                 base_messages.append(HumanMessage(content=message.content))
@@ -58,11 +57,10 @@ class DbgptLlmClient(ModelService):
             messages=model_messages,
         )
         model_output = await self._llm_client.generate(model_request)
+        sender = "Actor" if messages[-1].sender == "Thinker" else "Thinker"
         response = AgentMessage(
-            sender_id=messages[-1].receiver_id,
-            receiver_id=messages[-1].sender_id,
+            sender=sender,
             content=model_output.text,
-            status="successed",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
