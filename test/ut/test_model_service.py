@@ -20,7 +20,7 @@ def mock_model_service():
 
         # Configure the mock to return a predefined response
         mock_response = AgentMessage(
-            message_id="4",
+            id="4",
             source_type=MessageSourceType.ACTOR,
             content="Your name is Alice, as you mentioned earlier.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -38,19 +38,19 @@ def test_messages() -> List[AgentMessage]:
     """Fixture to create test messages."""
     return [
         AgentMessage(
-            message_id="1",
+            id="1",
             source_type=MessageSourceType.THINKER,
             content="Hello, how are you? I am Alice.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
-            message_id="2",
+            id="2",
             source_type=MessageSourceType.ACTOR,
             content="I'm fine, thank you.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
-            message_id="3",
+            id="3",
             source_type=MessageSourceType.THINKER,
             content="What's my name?",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -72,7 +72,7 @@ async def test_model_service_generate(
     # assertions
     assert response is not None
     assert isinstance(response, AgentMessage)
-    assert "Alice" in response.get_content()
+    assert "Alice" in response.get_payload()
     assert response.get_source_type() == MessageSourceType.ACTOR
 
     # verify the generate method was called with correct arguments
@@ -102,13 +102,13 @@ def test_agent_message_creation():
     """Test the creation of AgentMessage objects."""
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
     message = AgentMessage(
-        message_id="test",
+        id="test",
         source_type=MessageSourceType.THINKER,
         content="Test message",
         timestamp=timestamp,
     )
 
-    assert message.get_message_id() == "test"
+    assert message.get_id() == "test"
     assert message.get_source_type() == MessageSourceType.THINKER
-    assert message.get_content() == "Test message"
+    assert message.get_payload() == "Test message"
     assert message.get_timestamp() == timestamp

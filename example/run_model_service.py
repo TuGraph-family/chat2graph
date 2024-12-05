@@ -15,19 +15,19 @@ async def main():
     # create test messages
     messages: List[AgentMessage] = [
         AgentMessage(
-            message_id="1",
+            id="1",
             source_type=MessageSourceType.THINKER,
             content="Hello, how are you? I am Alice.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
-            message_id="2",
+            id="2",
             source_type=MessageSourceType.ACTOR,
             content="I'm fine, thank you.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         AgentMessage(
-            message_id="3",
+            id="3",
             source_type=MessageSourceType.THINKER,
             content="What's my name?",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),

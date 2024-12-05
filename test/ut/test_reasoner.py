@@ -70,12 +70,12 @@ async def test_infer_basic_flow(
     assert mock_reasoner._thinker_model.generate.called
 
     # verify memory management
-    memory = mock_reasoner.get_memory(task=task, caller=caller)
-    messages = memory.get_messages()
+    reasoner_memory = mock_reasoner.get_memory(task=task, caller=caller)
+    messages = reasoner_memory.get_messages()
 
     # check initial message
     assert messages[0].get_source_type() == MessageSourceType.ACTOR
-    assert "Scratchpad: Empty" in messages[0].get_content()
+    assert "Scratchpad: Empty" in messages[0].get_payload()
 
     # check message flow
     assert len(messages) > 2  # Should have initial + at least one round of interaction
@@ -138,8 +138,8 @@ async def test_infer_multiple_rounds(
     _ = await mock_reasoner.infer(task=task, caller=caller)
 
     # verify message accumulation
-    memory = mock_reasoner.get_memory(task=task, caller=caller)
-    messages = memory.get_messages()
+    reasoner_memory = mock_reasoner.get_memory(task=task, caller=caller)
+    messages = reasoner_memory.get_messages()
 
     assert len(messages) > round_count  # Including initial message
 
@@ -168,8 +168,8 @@ async def test_infer_error_handling(
 
     assert str(exc_info.value) == "Model error"
 
-    memory = mock_reasoner.get_memory(task=task, caller=caller)
-    messages = memory.get_messages()
+    reasoner_memory = mock_reasoner.get_memory(task=task, caller=caller)
+    messages = reasoner_memory.get_messages()
     assert len(messages) == 1
     assert messages[0].get_source_type() == MessageSourceType.ACTOR
 
