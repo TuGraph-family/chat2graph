@@ -39,7 +39,7 @@ async def main():
         sys_prompt="test_sys_prompt", messages=messages
     )
     print("Generated response:\n", response)
-    assert "Alice" in response.content
+    assert "Alice" in response.get_payload()
 
 
 if __name__ == "__main__":
