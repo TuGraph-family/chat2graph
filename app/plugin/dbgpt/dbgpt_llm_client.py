@@ -20,30 +20,28 @@ class DbgptLlmClient(ModelService):
     """DBGPT LLM Client.
 
     Attributes:
-        _sys_prompt_template (str): The system prompt template.
-        _sys_prompt (str): The system prompt.
         _llm_client (LLMClient): The LLM client provided by DB-GPT.
     """
 
-    def __init__(self, sys_prompt_template: str):
+    def __init__(self):
         super().__init__()
-        self._sys_prompt_template: str = sys_prompt_template
-        self._sys_prompt: str = ""
-
         # use openai llm client by default
-        # TODO: support other llm clients
+        # TODO: Support other llm clients
         self._llm_client: LLMClient = OpenAILLMClient(
             model_alias=SystemEnv.get("PROXYLLM_BACKEND", "gpt-4o-mini"),
             api_base=SystemEnv.get("PROXY_SERVER_URL"),
             api_key=SystemEnv.get("PROXY_API_KEY"),
         )
 
-    async def generate(self, messages: List[AgentMessage]) -> AgentMessage:
+    async def generate(
+        self, sys_prompt: str, messages: List[AgentMessage]
+    ) -> AgentMessage:
         """Generate a text given a prompt."""
         if len(messages) == 0:
             raise ValueError("No messages provided.")
-        sys_message = SystemMessage(content=self._sys_prompt)
-        base_messages: List[AIMessage] = [sys_message]
+
+        sys_message = SystemMessage(content=sys_prompt)
+        base_messages: List[SystemMessage] = [sys_message]
 
         for message in messages:
             if message.sender == "Actor":
@@ -80,7 +78,3 @@ class DbgptLlmClient(ModelService):
                 print(f"\033[93mReasoner:\n{response.content}\033[0m\n")
 
         return response
-
-    def set_sys_prompt(self, task: str) -> None:
-        """Set the system prompt."""
-        self._sys_prompt = self._sys_prompt_template.format(task=task)

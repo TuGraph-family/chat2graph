@@ -12,9 +12,7 @@ class ModelService(ABC):
         self._id = str(uuid4())
 
     @abstractmethod
-    async def generate(self, messages: List[AgentMessage]) -> AgentMessage:
+    async def generate(
+        self, sys_prompt: str, messages: List[AgentMessage]
+    ) -> AgentMessage:
         """Generate a text given a prompt (non-)streaming"""
-
-    @abstractmethod
-    def set_sys_prompt(self, task: str) -> None:
-        """Set the system prompt."""

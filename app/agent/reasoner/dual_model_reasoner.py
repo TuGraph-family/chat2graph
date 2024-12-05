@@ -20,23 +20,13 @@ class DualModelReasoner(Reasoner):
         _memories (Dict[str, Memory]): The memories of the reasonings.
     """
 
-    def __init__(
-        self,
-        thinker_name: Optional[str] = None,
-        actor_name: Optional[str] = None,
-    ):
+    def __init__(self):
         """Initialize without async operations."""
         self._actor_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
-            sys_prompt_template=self._actor_prompt_template(
-                thinker_name=thinker_name, actor_name=actor_name
-            ),
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
-            sys_prompt_template=self._thinker_prompt_template(
-                thinker_name=thinker_name, actor_name=actor_name
-            ),
         )
 
         self._memories: Dict[str, Dict[str, Dict[str, Memory]]] = {}
@@ -61,11 +51,12 @@ class DualModelReasoner(Reasoner):
         reasoning_rounds = int(SystemEnv.get("REASONING_ROUNDS", "5"))
 
         # set the system prompt
-        reasoning_task = (
-            "=====\nTASK:\n" + task.goal + "\nCONTEXT:\n" + task.context + "\n====="
+        actor_sys_prompt = self._set_actor_sys_prompt(
+            goal=task.goal, goal_context=task.context
         )
-        self._actor_model.set_sys_prompt(task=reasoning_task)
-        self._thinker_model.set_sys_prompt(task=reasoning_task)
+        thinker_sys_prompt = self._set_thinker_sys_prompt(
+            goal=task.goal, goal_context=task.context
+        )
 
         # trigger the reasoning process
         init_message = AgentMessage(
@@ -84,12 +75,14 @@ class DualModelReasoner(Reasoner):
         for _ in range(reasoning_rounds):
             # thinker
             response = await self._thinker_model.generate(
-                messages=memory.get_messages()
+                sys_prompt=thinker_sys_prompt, messages=memory.get_messages()
             )
             memory.add_message(response)
 
             # actor
-            response = await self._actor_model.generate(messages=memory.get_messages())
+            response = await self._actor_model.generate(
+                sys_prompt=actor_sys_prompt, messages=memory.get_messages()
+            )
             memory.add_message(response)
 
             if self.stop(response):
@@ -116,26 +109,38 @@ class DualModelReasoner(Reasoner):
             .replace("TASK_DONE", "")
         )
 
-    def _thinker_prompt_template(
+    def _set_actor_sys_prompt(
         self,
-        thinker_name: Optional[str] = "Thinker AI",
-        actor_name: Optional[str] = "Actor AI",
-    ):
-        """Get the thinker prompt."""
-        # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
-        return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
-            thinker_name=thinker_name, actor_name=actor_name
+        goal: str,
+        goal_context: str,
+        thinker_name: str = "Thinker AI",
+        actor_name: str = "Actor AI",
+    ) -> str:
+        """Set the system prompt."""
+        reasoning_task = (
+            "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
         )
 
-    def _actor_prompt_template(
-        self,
-        thinker_name: Optional[str] = "Thinker AI",
-        actor_name: Optional[str] = "Actor AI",
-    ):
-        """Get the actor prompt."""
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return ACTOR_PROMPT_TEMPLATE.format(
-            actor_name=actor_name, thinker_name=thinker_name
+            actor_name=actor_name, thinker_name=thinker_name, task=reasoning_task
+        )
+
+    def _set_thinker_sys_prompt(
+        self,
+        goal: str,
+        goal_context: str,
+        thinker_name: str = "Thinker AI",
+        actor_name: str = "Actor AI",
+    ) -> str:
+        """Set the system prompt."""
+        reasoning_task = (
+            "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
+        )
+
+        # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
+        return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
+            actor_name=actor_name, thinker_name=thinker_name, task=reasoning_task
         )
 
     def init_memory(
@@ -213,7 +218,7 @@ We share a common interest in collaborating to successfully complete the task by
 10. Provide final task summary before "TASK_DONE". Do not forget!
 
 ===== TASK =====
-{{task}}
+{task}
 
 ===== ANSWER TEMPLATE =====
 // <Quantum Reasoning Chain> is a way to present your thinking process
@@ -237,53 +242,6 @@ Example:
         <YOUR_INPUT>  // Allowed to use None if no input
 """
 
-# backup template
-THINKER_PROPMT_TEMPLATE = """
-===== RULES OF USER =====
-Never forget you are a {thinker_name} and I am a {actor_name}. Never flip roles!
-We share a common interest in collaborating to successfully complete the task by role-playing.
-    1. You always provide me with instructions to have me complete the TASK based on our previous conversation. Based ont the previous conversation, meaing you can not repeat the instruction you provided in the privous conversation and continue the conversation.
-    2. I am here to assist you in completing the TASK. Never forget our TASK!
-    3. I may doubt your instruction, wich means you may have generated the hallucination. The function calling may help you.
-    4. The assistant's response may be incorrect because the LLM's depth of thought is insufficient. Please judge the assistant's response and try to find logical conflicts in the "Judgement." If there are any, you must point out the logical conflict and instruct the assistant to use role_playing_functions for deeper thinking to avoid making mistakes again.
-    5. You must instruct me based on our expertise and your needs to solve the task. Your answer MUST strictly adhere to the structure of ANSWER TEMPLATE.
-    6. The "Instruction" should outline a specific subtask, provided one at a time. You should instruct me not ask me questions. And make sure the "Instruction" you provided is not reapeated in the privous conversation. One instruction one time.
-    7. The "Input" provides the current statut and known information/data for the requested "Instruction".
-    8. Instruct until task completion. Once you comfire or decide to complete the TASK, you MUST use the "TASK_DONE" in English terminate the TASK. Although multilingual communication is permissible, usage of "TASK_DONE" MUST be exclusively used in English.
-    9. Knowing that our conversation will be read by a third party, please instruct me to summarize the final answer for TASK (the content can be in any form) before you say "TASK_DONE" (the termination flag of the conversation).
-    10. Try your best to provide me with at most {n_instructions}(1 by default) different answers (Judgement, Instruction and Input) that represent different possible paths of thinking. Like Tree of Thoughts (ToT), these instructions are just nodes in a long chain of reasoning where we don't know which path is optimal yet. Just as humans think divergently:
-        a) Each instruction should explore a different angle or approach
-        b) The instructions are not necessarily all correct - they are possibilities to explore
-        c) Later instructions can build upon or branch from previous ones
-        d) If you're not sure which approach is best, provide multiple options to try
-        e) Feel free to explore both conventional and creative directions
-        f) The goal is to generate diverse thinking paths, not to find the single "right" answer immediately
-===== TASK =====
-{{task}}
-===== ANSWER TEMPLATE =====
-Judgement:
-    <YOUR_JUDGEMENT_OF_ASSISTANCE'S_RESPONSE>  // Allowed to use None if no assistant's response
-Instruction:  // The 1st answer
-    <YOUR_INSTRUCTION>  // Can not be None
-Input:
-    <YOUR_INPUT>  // Allowed to use None if no input
-
-Judgement:
-    <YOUR_JUDGEMENT_OF_ASSISTANCE'S_RESPONSE>
-Instruction:
-    <YOUR_INSTRUCTIONS>
-Input:
-    <YOUR_INPUT>
-
-... ...
-
-Judgement:  // The n-th answer
-    <YOUR_JUDGEMENT_OF_ASSISTANCE'S_RESPONSE>
-Instruction:
-    <YOUR_INSTRUCTIONS>  
-Input:
-    <YOUR_INPUT>
-"""
 
 ACTOR_PROMPT_TEMPLATE = """
 ===== RULES OF ASSISTANT =====
@@ -300,7 +258,8 @@ We share a common interest in collaborating to successfully complete the task by
     7. When I tell you the TASK is completed, you MUST use the "TASK_DONE" in English terminate the conversation. Although multilingual communication is permissible, usage of "TASK_DONE" MUST be exclusively used in English.
     8. (Optional) The instruction can be wrong that I provided to you, so you can doubt the instruction by providing reasons, during the process of the conversation. 
 ===== TASK =====
-{{task}}
+{task}
+
 ===== ANSWER TEMPLATE =====
 1. Unless I say the task is completed, you need to provide the scratchpads and the action:
 Scratchpad:

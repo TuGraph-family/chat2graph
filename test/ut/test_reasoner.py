@@ -112,7 +112,9 @@ async def test_infer_multiple_rounds(
     """Test multiple rounds of inference with message accumulation."""
     round_count = 0
 
-    async def generate_with_rounds(messages: List[AgentMessage]) -> AgentMessage:
+    async def generate_with_rounds(
+        sys_prompt: str, messages: List[AgentMessage]
+    ) -> AgentMessage:
         nonlocal round_count
         round_count += 1
         return AgentMessage(
