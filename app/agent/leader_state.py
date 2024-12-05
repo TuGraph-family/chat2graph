@@ -62,9 +62,9 @@ class LeaderState(ABC):
         """Add a task to the task registry."""
         self._tasks.add_node(task.get_id(), task=task)
         for predecessor in predecessors:
-            self._tasks.add_edge(predecessor.id, task.get_id())
+            self._tasks.add_edge(predecessor.get_id(), task.get_id())
         for successor in successors:
-            self._tasks.add_edge(task.get_id(), successor.id)
+            self._tasks.add_edge(task.get_id(), successor.get_id())
 
     def remove_task(self, task_id: str) -> None:
         """Remove a task from the task registry."""

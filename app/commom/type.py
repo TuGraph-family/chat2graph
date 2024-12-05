@@ -14,12 +14,3 @@ class MessageSourceType(Enum):
     ACTOR = "Actor"
     MODEL = "Model"
     USER = "User"
-
-
-class TaskLabel(Enum):
-    """Task label enum. The lable of the task to indicate
-    whether it is decomposed from the original task
-    """
-
-    ORIGINAL = "original"
-    GENERATED = "generated"

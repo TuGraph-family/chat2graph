@@ -6,7 +6,6 @@ import networkx as nx  # type: ignore
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
 from app.agent.task import Task
-from app.commom.system_env import SystemEnv
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
@@ -25,8 +24,7 @@ class Operator(ReasonerCaller):
         _embedding_vector (List[float]): The embedding vector of the operator.
     """
 
-    def __init__(self):
-        id = SystemEnv.get("OPERATOR_ID", "operator_id")
+    def __init__(self, id: str = str(uuid4())):
         super().__init__(id=id)
 
         self._role: str

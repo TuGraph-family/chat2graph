@@ -5,9 +5,9 @@ from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner, ReasonerCaller
 from app.agent.task import Task
-from app.commom.system_env import SystemEnv
+from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
-from app.memory.memory import BuiltinMemory, Memory
+from app.memory.memory import ReasonerMemory
 from app.memory.message import AgentMessage
 from app.toolkit.tool.tool import Tool
 
@@ -16,12 +16,20 @@ class DualModelReasoner(Reasoner):
     """Dual model reasoner.
 
     Attributes:
+        _actor_name (str): The name of the actor.
+        _thinker_name (str): The name of the thinker.
         _actor_model (ModelService): The actor model service.
         _thinker_model (ModelService): The thinker model service.
-        _memories (Dict[str, Memory]): The memories of the reasonings.
+        _memories (Dict[str, ReasonerMemory]): The memories of the reasonings.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        actor_name: str = MessageSourceType.ACTOR.value,
+        thinker_name: str = MessageSourceType.THINKER.value,
+    ):
+        self._actor_name = actor_name
+        self._thinker_name = thinker_name
         self._actor_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.platform_type(),
         )
@@ -29,7 +37,7 @@ class DualModelReasoner(Reasoner):
             platform_type=SystemEnv.platform_type(),
         )
 
-        self._memories: Dict[str, Dict[str, Dict[str, Memory]]] = {}
+        self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
 
     async def infer(
         self,
@@ -48,14 +56,14 @@ class DualModelReasoner(Reasoner):
             str: The conclusion and the final resultes of the inference.
         """
         # prepare the variables from the SystemEnv
-        reasoning_rounds = int(SystemEnv.get("REASONING_ROUNDS", "5"))
+        reasoning_rounds = int(SystemEnv.get(SysEnvKey.REASONING_ROUNDS))
 
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(
-            goal=task.get_goal(), goal_context=task.context
+            goal=task.get_goal(), goal_context=task.get_context()
         )
         thinker_sys_prompt = self._format_thinker_sys_prompt(
-            goal=task.get_goal(), goal_context=task.context
+            goal=task.get_goal(), goal_context=task.get_context()
         )
 
         # trigger the reasoning process
@@ -69,28 +77,28 @@ class DualModelReasoner(Reasoner):
         )
 
         # init the memory
-        memory = self.init_memory(task=task, caller=caller)
-        memory.add_message(init_message)
+        reasoner_memory = self.init_memory(task=task, caller=caller)
+        reasoner_memory.add_message(init_message)
 
         for _ in range(reasoning_rounds):
             # thinker
             response = await self._thinker_model.generate(
-                sys_prompt=thinker_sys_prompt, messages=memory.get_messages()
+                sys_prompt=thinker_sys_prompt, messages=reasoner_memory.get_messages()
             )
             response.set_source_type(MessageSourceType.THINKER)
-            memory.add_message(response)
+            reasoner_memory.add_message(response)
 
             # actor
             response = await self._actor_model.generate(
-                sys_prompt=actor_sys_prompt, messages=memory.get_messages()
+                sys_prompt=actor_sys_prompt, messages=reasoner_memory.get_messages()
             )
             response.set_source_type(MessageSourceType.ACTOR)
-            memory.add_message(response)
+            reasoner_memory.add_message(response)
 
             if self.stop(response):
                 break
 
-        return await self.conclure(memory=memory)
+        return await self.conclure(reasoner_memory=reasoner_memory)
 
     async def update_knowledge(self, data: Any) -> None:
         """Update the knowledge."""
@@ -100,12 +108,12 @@ class DualModelReasoner(Reasoner):
         """Evaluate the inference process, used to debug the process."""
         # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
-    async def conclure(self, memory: Memory) -> str:
+    async def conclure(self, reasoner_memory: ReasonerMemory) -> str:
         """Conclure the inference results."""
 
         return (
-            memory.get_message_by_index(-1)
-            .get_content()
+            reasoner_memory.get_message_by_index(-1)
+            .get_payload()
             .replace("Scratchpad:", "")
             .replace("Action:", "")
             .replace("Feedback:", "")
@@ -122,11 +130,11 @@ class DualModelReasoner(Reasoner):
             "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
         )
 
-        thinker_name = SystemEnv.get("THINKER_NAME", "Thinker AI")
-        actor_name = SystemEnv.get("ACTOR_NAME", "Actor AI")
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return ACTOR_PROMPT_TEMPLATE.format(
-            actor_name=actor_name, thinker_name=thinker_name, task=reasoning_task
+            actor_name=self._actor_name,
+            thinker_name=self._thinker_name,
+            task=reasoning_task,
         )
 
     def _format_thinker_sys_prompt(
@@ -139,19 +147,19 @@ class DualModelReasoner(Reasoner):
             "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
         )
 
-        thinker_name = SystemEnv.get("THINKER_NAME", "Thinker AI")
-        actor_name = SystemEnv.get("ACTOR_NAME", "Actor AI")
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
-            actor_name=actor_name, thinker_name=thinker_name, task=reasoning_task
+            actor_name=self._actor_name,
+            thinker_name=self._thinker_name,
+            task=reasoning_task,
         )
 
     def init_memory(
         self, task: Task, caller: Optional[ReasonerCaller] = None
-    ) -> Memory:
+    ) -> ReasonerMemory:
         """Initialize the memory."""
         if not caller:
-            return BuiltinMemory()
+            return ReasonerMemory()
 
         session_id = task.get_session_id()
         task_id = task.get_id()
@@ -161,12 +169,12 @@ class DualModelReasoner(Reasoner):
             self._memories[session_id] = {}
         if task_id not in self._memories[session_id]:
             self._memories[session_id][task_id] = {}
-        memory = BuiltinMemory()
-        self._memories[session_id][task_id][operator_id] = memory
+        reasoner_memory = ReasonerMemory()
+        self._memories[session_id][task_id][operator_id] = reasoner_memory
 
-        return memory
+        return reasoner_memory
 
-    def get_memory(self, task: Task, caller: ReasonerCaller) -> Memory:
+    def get_memory(self, task: Task, caller: ReasonerCaller) -> ReasonerMemory:
         """Get the memory."""
         session_id = task.get_session_id()
         task_id = task.get_id()
@@ -180,7 +188,7 @@ class DualModelReasoner(Reasoner):
     @staticmethod
     def stop(message: AgentMessage):
         """Stop the reasoner."""
-        return "TASK_DONE" in message.get_content()
+        return "TASK_DONE" in message.get_payload()
 
 
 # TODO: need to translate the following templates into English

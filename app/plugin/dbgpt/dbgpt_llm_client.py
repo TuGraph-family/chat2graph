@@ -13,7 +13,7 @@ from dbgpt.model.proxy.base import LLMClient  # type: ignore
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 
 from app.agent.reasoner.model_service import ModelService
-from app.commom.system_env import SystemEnv
+from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import AgentMessage
 
@@ -30,9 +30,9 @@ class DbgptLlmClient(ModelService):
         # use openai llm client by default
         # TODO: Support other llm clients
         self._llm_client: LLMClient = OpenAILLMClient(
-            model_alias=SystemEnv.get("PROXYLLM_BACKEND", "gpt-4o-mini"),
-            api_base=SystemEnv.get("PROXY_SERVER_URL"),
-            api_key=SystemEnv.get("PROXY_API_KEY"),
+            model_alias=SystemEnv.get(SysEnvKey.PROXYLLM_BACKEND),
+            api_base=SystemEnv.get(SysEnvKey.PROXY_SERVER_URL),
+            api_key=SystemEnv.get(SysEnvKey.PROXY_API_KEY),
         )
 
     async def generate(
@@ -50,12 +50,12 @@ class DbgptLlmClient(ModelService):
         # thinker <-> human, actor <-> ai
         for message in messages:
             if message.get_source_type() == MessageSourceType.ACTOR:
-                base_messages.append(AIMessage(content=message.content))
+                base_messages.append(AIMessage(content=message.get_payload()))
             else:
-                base_messages.append(HumanMessage(content=message.content))
+                base_messages.append(HumanMessage(content=message.get_payload()))
         model_messages = ModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
-            model=SystemEnv.get("PROXYLLM_BACKEND", "gpt-4o-mini"),
+            model=SystemEnv.get(SysEnvKey.PROXYLLM_BACKEND),
             messages=model_messages,
         )
 

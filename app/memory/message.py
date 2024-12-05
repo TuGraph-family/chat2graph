@@ -8,13 +8,13 @@ from app.commom.type import MessageSourceType
 class Message(ABC):
     """Message"""
 
-    def __init__(self, content: str, timestamp: str, message_id: str = str(uuid4())):
+    def __init__(self, content: str, timestamp: str, id: str = str(uuid4())):
         self._content: str = content
         self._timestamp: str = timestamp
-        self._message_id: str = message_id
+        self._id: str = id
 
     @abstractmethod
-    def get_content(self) -> str:
+    def get_payload(self) -> str:
         """Get the content of the message."""
 
     @abstractmethod
@@ -22,7 +22,7 @@ class Message(ABC):
         """Get the timestamp of the message."""
 
     @abstractmethod
-    def get_message_id(self) -> str:
+    def get_id(self) -> str:
         """Get the message id."""
 
 
@@ -33,17 +33,17 @@ class AgentMessage(Message):
         self,
         content: str,
         timestamp: str,
-        message_id: str = str(uuid4()),
+        id: str = str(uuid4()),
         source_type: MessageSourceType = MessageSourceType.MODEL,
         function: Optional[Dict[str, Any]] = None,
         tool_log: Optional[str] = None,
     ):
-        super().__init__(content, timestamp, message_id)
+        super().__init__(content=content, timestamp=timestamp, id=id)
         self._source_type: MessageSourceType = source_type
         self._function: Optional[Dict[str, Any]] = function
         self._tool_log: Optional[str] = tool_log
 
-    def get_content(self) -> str:
+    def get_payload(self) -> str:
         """Get the content of the message."""
         return self._content
 
@@ -51,9 +51,9 @@ class AgentMessage(Message):
         """Get the timestamp of the message."""
         return self._timestamp
 
-    def get_message_id(self) -> str:
+    def get_id(self) -> str:
         """Get the message id."""
-        return self._message_id
+        return self._id
 
     def get_source_type(self) -> MessageSourceType:
         """Get the source type of the message."""
@@ -72,15 +72,45 @@ class AgentMessage(Message):
         self._source_type = source_type
 
 
-class UserMessage(Message):
+class UserMessage(ABC):
     """User message"""
 
-    # TODO: Add user message attributes
-    def get_content(self) -> str:
+    def __init__(self, content: Any, timestamp: str, id: str = str(uuid4())):
+        self._id = id
+        self._content: Any = None
+        self._timestamp: str = ""
+
+    @abstractmethod
+    def get_payload(self) -> Any:
         """Get the content of the message."""
 
+    @abstractmethod
     def get_timestamp(self) -> str:
         """Get the timestamp of the message."""
 
-    def get_message_id(self) -> str:
+    @abstractmethod
+    def get_id(self) -> str:
         """Get the message id."""
+
+
+class UserTextMessage(UserMessage):
+    """User message"""
+
+    # TODO: Add  user message attributes
+
+    def get_payload(self) -> Any:
+        """Get the content of the message."""
+        pass
+
+    def get_timestamp(self) -> str:
+        """Get the timestamp of the message."""
+        return self._timestamp
+
+    def get_id(self) -> str:
+        """Get the message id."""
+        return self._id
+
+    def get_text(self) -> str:
+        """Get the string content of the message."""
+        # TODO: Implement get_text
+        return ""
