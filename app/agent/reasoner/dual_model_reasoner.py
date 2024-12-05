@@ -52,10 +52,10 @@ class DualModelReasoner(Reasoner):
 
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(
-            goal=task.goal, goal_context=task.context
+            goal=task.get_goal(), goal_context=task.context
         )
         thinker_sys_prompt = self._format_thinker_sys_prompt(
-            goal=task.goal, goal_context=task.context
+            goal=task.get_goal(), goal_context=task.context
         )
 
         # trigger the reasoning process
@@ -153,7 +153,7 @@ class DualModelReasoner(Reasoner):
         if not caller:
             return BuiltinMemory()
 
-        session_id = task.session_id
+        session_id = task.get_session_id()
         task_id = task.id
         operator_id = caller.get_id()
 
@@ -168,7 +168,7 @@ class DualModelReasoner(Reasoner):
 
     def get_memory(self, task: Task, caller: ReasonerCaller) -> Memory:
         """Get the memory."""
-        session_id = task.session_id
+        session_id = task.get_session_id()
         task_id = task.id
         operator_id = caller.get_id()
 
