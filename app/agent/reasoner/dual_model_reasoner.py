@@ -51,7 +51,7 @@ class DualModelReasoner(Reasoner):
         reasoning_rounds = int(SystemEnv.get("REASONING_ROUNDS", "5"))
 
         # set the system prompt
-        actor_sys_prompt = self._set_actor_sys_prompt(
+        actor_sys_prompt = self._format_actor_sys_prompt(
             goal=task.goal, goal_context=task.context
         )
         thinker_sys_prompt = self._format_thinker_sys_prompt(
