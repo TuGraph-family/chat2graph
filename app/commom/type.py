@@ -13,6 +13,7 @@ class MessageSourceType(Enum):
     THINKER = "Thinker"
     ACTOR = "Actor"
     MODEL = "Model"
+    USER = "User"
 
 
 class TaskLabel(Enum):

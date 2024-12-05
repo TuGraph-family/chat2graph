@@ -72,8 +72,8 @@ async def test_model_service_generate(
     # assertions
     assert response is not None
     assert isinstance(response, AgentMessage)
-    assert "Alice" in response.content
-    assert response.source_type == MessageSourceType.ACTOR
+    assert "Alice" in response.get_content()
+    assert response.get_source_type() == MessageSourceType.ACTOR
 
     # verify the generate method was called with correct arguments
     model_service.generate.assert_called_once_with(test_messages)
@@ -108,7 +108,7 @@ def test_agent_message_creation():
         timestamp=timestamp,
     )
 
-    assert message.message_id == "test"
-    assert message.source_type == MessageSourceType.THINKER
-    assert message.content == "Test message"
-    assert message.timestamp == timestamp
+    assert message.get_message_id() == "test"
+    assert message.get_source_type() == MessageSourceType.THINKER
+    assert message.get_content() == "Test message"
+    assert message.get_timestamp() == timestamp

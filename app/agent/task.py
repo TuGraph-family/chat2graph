@@ -22,3 +22,23 @@ class Task:
     id: str = str(uuid4())
     context: str = ""
     lable: TaskLabel = TaskLabel.ORIGINAL
+
+    def get_session_id(self) -> str:
+        """Get the unique identifier of the session."""
+        return self.session_id
+
+    def get_goal(self) -> str:
+        """Get the goal of the task."""
+        return self.goal
+
+    def get_id(self) -> str:
+        """Get the unique identifier of the task."""
+        return self.id
+
+    def get_context(self) -> str:
+        """Get the context of the task."""
+        return self.context
+
+    def get_lable(self) -> TaskLabel:
+        """Get the lable of the task."""
+        return self.lable

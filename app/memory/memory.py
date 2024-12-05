@@ -77,7 +77,7 @@ class BuiltinMemory(Memory):
     def get_message_by_id(self, message_id: str) -> Union[AgentMessage, None]:
         """Get a message by id."""
         for message in self._history_messages:
-            if message.message_id == message_id:
+            if message.get_message_id() == message_id:
                 return message
 
         return None

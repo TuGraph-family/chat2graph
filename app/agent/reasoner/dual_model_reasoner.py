@@ -77,14 +77,14 @@ class DualModelReasoner(Reasoner):
             response = await self._thinker_model.generate(
                 sys_prompt=thinker_sys_prompt, messages=memory.get_messages()
             )
-            response.source_type = MessageSourceType.THINKER
+            response.set_source_type(MessageSourceType.THINKER)
             memory.add_message(response)
 
             # actor
             response = await self._actor_model.generate(
                 sys_prompt=actor_sys_prompt, messages=memory.get_messages()
             )
-            response.source_type = MessageSourceType.ACTOR
+            response.set_source_type(MessageSourceType.ACTOR)
             memory.add_message(response)
 
             if self.stop(response):
@@ -105,7 +105,8 @@ class DualModelReasoner(Reasoner):
 
         return (
             memory.get_message_by_index(-1)
-            .content.replace("Scratchpad:", "")
+            .get_content()
+            .replace("Scratchpad:", "")
             .replace("Action:", "")
             .replace("Feedback:", "")
             .replace("TASK_DONE", "")
@@ -179,7 +180,7 @@ class DualModelReasoner(Reasoner):
     @staticmethod
     def stop(message: AgentMessage):
         """Stop the reasoner."""
-        return "TASK_DONE" in message.content
+        return "TASK_DONE" in message.get_content()
 
 
 # TODO: need to translate the following templates into English

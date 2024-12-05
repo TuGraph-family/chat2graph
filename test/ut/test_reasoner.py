@@ -74,8 +74,8 @@ async def test_infer_basic_flow(
     messages = memory.get_messages()
 
     # check initial message
-    assert messages[0].source_type == MessageSourceType.ACTOR
-    assert "Scratchpad: Empty" in messages[0].content
+    assert messages[0].get_source_type() == MessageSourceType.ACTOR
+    assert "Scratchpad: Empty" in messages[0].get_content()
 
     # check message flow
     assert len(messages) > 2  # Should have initial + at least one round of interaction
@@ -144,8 +144,8 @@ async def test_infer_multiple_rounds(
     assert len(messages) > round_count  # Including initial message
 
     for i in range(1, len(messages) - 1, 2):
-        assert messages[i].source_type == MessageSourceType.THINKER
-        assert messages[i + 1].source_type == MessageSourceType.ACTOR
+        assert messages[i].get_source_type() == MessageSourceType.THINKER
+        assert messages[i + 1].get_source_type() == MessageSourceType.ACTOR
 
 
 @pytest.mark.asyncio
@@ -171,7 +171,7 @@ async def test_infer_error_handling(
     memory = mock_reasoner.get_memory(task=task, caller=caller)
     messages = memory.get_messages()
     assert len(messages) == 1
-    assert messages[0].source_type == MessageSourceType.ACTOR
+    assert messages[0].get_source_type() == MessageSourceType.ACTOR
 
 
 @pytest.mark.asyncio

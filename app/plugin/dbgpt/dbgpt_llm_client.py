@@ -49,7 +49,7 @@ class DbgptLlmClient(ModelService):
         # convert the conversation messages for LLM
         # thinker <-> human, actor <-> ai
         for message in messages:
-            if message.source_type == MessageSourceType.ACTOR:
+            if message.get_source_type() == MessageSourceType.ACTOR:
                 base_messages.append(AIMessage(content=message.content))
             else:
                 base_messages.append(HumanMessage(content=message.content))
