@@ -40,21 +40,26 @@ class DbgptLlmClient(ModelService):
         if len(messages) == 0:
             raise ValueError("No messages provided.")
 
+        # convert system prompt to system message
         sys_message = SystemMessage(content=sys_prompt)
         base_messages: List[SystemMessage] = [sys_message]
 
+        # convert the conversation messages for LLM
         for message in messages:
             if message.sender == "Actor":
                 base_messages.append(AIMessage(content=message.content))
             else:
                 base_messages.append(HumanMessage(content=message.content))
-
         model_messages = ModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
             model=SystemEnv.get("PROXYLLM_BACKEND", "gpt-4o-mini"),
             messages=model_messages,
         )
+
+        # generate response using the llm client
         model_output = await self._llm_client.generate(model_request)
+
+        # convert the model output to agent message
         sender: Literal["Thinker", "Actor", "Reasoner"]
         if messages[-1].sender == "Thinker":
             sender = "Actor"
@@ -68,6 +73,7 @@ class DbgptLlmClient(ModelService):
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
+        # log the response if enabled
         print_messages = SystemEnv.get("PRINT_MESSAGES", "True").lower() == "true"
         if print_messages:
             if sender == "Thinker":
