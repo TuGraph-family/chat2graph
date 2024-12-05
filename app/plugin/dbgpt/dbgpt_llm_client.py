@@ -42,7 +42,7 @@ class DbgptLlmClient(ModelService):
 
         # convert system prompt to system message
         sys_message = SystemMessage(content=sys_prompt)
-        base_messages: List[SystemMessage] = [sys_message]
+        base_messages: List[AIMessage] = [sys_message]
 
         # convert the conversation messages for LLM
         for message in messages:
