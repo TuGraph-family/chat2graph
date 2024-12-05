@@ -17,21 +17,25 @@ class Operator(ReasonerCaller):
     Attributes:
         _id (str): The unique identifier of the operator.
         _reasoner (DualModelReasoner): The dual model reasoner.
-        _role (str): The role of the operator.
+        _operator_prompt_template (str): The prompt template of the operator.
         _toolkit (Toolkit): The toolkit that contains the actions and tools.
         _actions (List[Action]): The actions that need to be executed.
         _recommanded_actions (List[Action]): The recommanded actions from the toolkit.
         _embedding_vector (List[float]): The embedding vector of the operator.
     """
 
-    def __init__(self, id: str = str(uuid4())):
+    def __init__(
+        self,
+        operator_prompt_template: str,
+        toolkit: Toolkit,
+        actions: List[Action],
+        id: str = str(uuid4()),
+    ):
         super().__init__(id=id)
 
-        self._role: str
-
-        # TODO: Initialize the following attributes by the config file
-        self._toolkit: Toolkit = None
-        self._actions: List[Action] = None
+        self._operator_prompt_template: str = operator_prompt_template
+        self._toolkit: Toolkit = toolkit
+        self._actions: List[Action] = actions
         self._recommanded_actions: Optional[List[Action]] = None
 
         # TODO: embedding vector of context
@@ -39,19 +43,10 @@ class Operator(ReasonerCaller):
 
     async def initialize(
         self,
-        toolkit: Toolkit,
-        actions: List[Action],
-        role: str,
-        id: str = str(uuid4),
         threshold: float = 0.5,
         hops: int = 0,
     ):
         """Initialize the operator."""
-        # TODO: Leave an interface for code testing (to be removed)
-        self._caller_id = id
-        self._role = role
-        self._toolkit = toolkit
-        self._actions = actions
         self._recommanded_actions = await self.get_recommanded_actions(
             threshold=threshold, hops=hops
         )
