@@ -28,8 +28,10 @@ class Operator(ReasonerCaller):
         task: str,
         toolkit: Toolkit,
         actions: List[Action],
+        operator_id: str = str(uuid4()),
     ):
         super().__init__()
+        self._operator_id: str = operator_id
 
         self._task: str = task
 
@@ -198,8 +200,6 @@ class Operator(ReasonerCaller):
 
     def get_operator_id(self) -> str:
         """Get the operator id."""
-        if self._operator_id is None:
-            self._operator_id = str(uuid4())
         return self._operator_id
 
 
