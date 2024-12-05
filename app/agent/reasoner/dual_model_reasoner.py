@@ -121,7 +121,9 @@ class DualModelReasoner(Reasoner):
         )
 
     def _thinker_prompt_template(
-        self, thinker_name: str = "Thinker AI", actor_name: str = "Actor AI"
+        self,
+        thinker_name: Optional[str] = "Thinker AI",
+        actor_name: Optional[str] = "Actor AI",
     ):
         """Get the thinker prompt."""
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
@@ -130,7 +132,9 @@ class DualModelReasoner(Reasoner):
         )
 
     def _actor_prompt_template(
-        self, thinker_name: str = "Thinker AI", actor_name: str = "Actor AI"
+        self,
+        thinker_name: Optional[str] = "Thinker AI",
+        actor_name: Optional[str] = "Actor AI",
     ):
         """Get the actor prompt."""
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
