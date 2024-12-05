@@ -16,7 +16,7 @@ class Operator(ReasonerCaller):
     """Operator is a sequence of actions and tools that need to be executed.
 
     Attributes:
-        _caller_id (str): The unique identifier of the operator.
+        _id (str): The unique identifier of the operator.
         _reasoner (DualModelReasoner): The dual model reasoner.
         _role (str): The role of the operator.
         _toolkit (Toolkit): The toolkit that contains the actions and tools.
