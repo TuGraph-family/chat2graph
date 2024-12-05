@@ -3,6 +3,7 @@ from typing import List, Literal
 
 from dbgpt.core import (  # type: ignore
     AIMessage,
+    BaseMessage,
     HumanMessage,
     ModelMessage,
     ModelRequest,
@@ -42,7 +43,7 @@ class DbgptLlmClient(ModelService):
 
         # convert system prompt to system message
         sys_message = SystemMessage(content=sys_prompt)
-        base_messages: List[AIMessage] = [sys_message]
+        base_messages: List[BaseMessage] = [sys_message]
 
         # convert the conversation messages for LLM
         for message in messages:
