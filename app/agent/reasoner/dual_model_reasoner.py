@@ -98,6 +98,7 @@ class DualModelReasoner(Reasoner):
             if self.stop(response):
                 break
 
+        # TODO: Design a new structure as the returned value, not only in the string format
         return await self.conclure(reasoner_memory=reasoner_memory)
 
     async def update_knowledge(self, data: Any) -> None:
