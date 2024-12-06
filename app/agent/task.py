@@ -4,7 +4,7 @@ from uuid import uuid4
 
 @dataclass
 class Task:
-    """Task in the system.e
+    """Task in the system.
 
     Attributes:
         _session_id (str): The unique identifier of the session.
