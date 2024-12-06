@@ -3,7 +3,7 @@ from typing import Any, List, Optional
 from uuid import uuid4
 
 from app.agent.task import Task
-from app.memory.memory import ReasonerMemory
+from app.memory.reasoner_memory import ReasonerMemory
 from app.toolkit.tool.tool import Tool
 
 
