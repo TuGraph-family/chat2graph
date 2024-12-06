@@ -8,7 +8,7 @@ from app.agent.task import Task
 from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import AgentMessage
-from app.memory.reasoner_memory import BuildinReasonerMemory, ReasonerMemory
+from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.toolkit.tool.tool import Tool
 
 
@@ -159,7 +159,7 @@ class DualModelReasoner(Reasoner):
     ) -> ReasonerMemory:
         """Initialize the memory."""
         if not caller:
-            return BuildinReasonerMemory()
+            return BuiltinReasonerMemory()
 
         session_id = task.get_session_id()
         task_id = task.get_id()
@@ -169,7 +169,7 @@ class DualModelReasoner(Reasoner):
             self._memories[session_id] = {}
         if task_id not in self._memories[session_id]:
             self._memories[session_id][task_id] = {}
-        reasoner_memory = BuildinReasonerMemory()
+        reasoner_memory = BuiltinReasonerMemory()
         self._memories[session_id][task_id][operator_id] = reasoner_memory
 
         return reasoner_memory

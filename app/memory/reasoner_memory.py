@@ -47,7 +47,7 @@ class ReasonerMemory(ABC):
         """Get all the messages in the memory in json format."""
 
 
-class BuildinReasonerMemory(ReasonerMemory):
+class BuiltinReasonerMemory(ReasonerMemory):
     """Agent message memory."""
 
     def add_message(self, message: AgentMessage):
