@@ -54,7 +54,7 @@ class Operator(ReasonerCaller):
     async def execute(
         self,
         reasoner: DualModelReasoner,
-        task: Task,
+        task: Task,  # TODO: will change the name in the next PR
         scratchpad: str,  # TODO: need to be removed
     ) -> Dict[str, str]:
         """Execute the operator by LLM client."""

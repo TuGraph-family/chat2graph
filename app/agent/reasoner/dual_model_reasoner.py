@@ -48,7 +48,7 @@ class DualModelReasoner(Reasoner):
         """Infer by the reasoner.
 
         Args:
-            input (str): The input task to reason.
+            task (Task): The task that needs to be reasoned.
             tools (List[Tool]): The tools that can be called in the reasoning.
             caller (ReasonerCaller): The caller that triggers the reasoning.
 
@@ -60,10 +60,10 @@ class DualModelReasoner(Reasoner):
 
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(
-            goal=task.get_goal(), goal_context=task.get_context()
+            task=task,
         )
         thinker_sys_prompt = self._format_thinker_sys_prompt(
-            goal=task.get_goal(), goal_context=task.get_context()
+            task=task,
         )
 
         # trigger the reasoning process
@@ -121,14 +121,10 @@ class DualModelReasoner(Reasoner):
             .replace("TASK_DONE", "")
         )
 
-    def _format_actor_sys_prompt(
-        self,
-        goal: str,
-        goal_context: str,
-    ) -> str:
+    def _format_actor_sys_prompt(self, task: Task) -> str:
         """Set the system prompt."""
         reasoning_task = (
-            "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
+            f"=====\nTASK:\n{task.get_goal()}\nCONTEXT:\n{task.get_context()}\n====="
         )
 
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
@@ -138,14 +134,10 @@ class DualModelReasoner(Reasoner):
             task=reasoning_task,
         )
 
-    def _format_thinker_sys_prompt(
-        self,
-        goal: str,
-        goal_context: str,
-    ) -> str:
+    def _format_thinker_sys_prompt(self, task: Task) -> str:
         """Set the system prompt."""
         reasoning_task = (
-            "=====\nTASK:\n" + goal + "\nCONTEXT:\n" + goal_context + "\n====="
+            f"=====\nTASK:\n{task.get_goal()}\nCONTEXT:\n{task.get_context()}\n====="
         )
 
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
@@ -166,6 +158,7 @@ class DualModelReasoner(Reasoner):
         task_id = task.get_id()
         operator_id = caller.get_id()
 
+        # initialize memory hierarchy if not exists
         if session_id not in self._memories:
             self._memories[session_id] = {}
         if task_id not in self._memories[session_id]:
