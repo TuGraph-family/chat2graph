@@ -41,11 +41,7 @@ class Operator(ReasonerCaller):
         # TODO: embedding vector of context
         self._embedding_vector: Optional[List[float]] = None
 
-    async def initialize(
-        self,
-        threshold: float = 0.5,
-        hops: int = 0,
-    ):
+    async def initialize(self, threshold: float = 0.5, hops: int = 0):
         """Initialize the operator."""
         self._recommanded_actions = await self.get_recommanded_actions(
             threshold=threshold, hops=hops
