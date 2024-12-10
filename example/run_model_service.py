@@ -38,7 +38,7 @@ async def main():
     response: AgentMessage = await model_service.generate(
         sys_prompt="test_sys_prompt", messages=messages
     )
-    print("Generated response:\n", response)
+    print("Generated response:\n", response.get_payload())
     assert "Alice" in response.get_payload()
 
 

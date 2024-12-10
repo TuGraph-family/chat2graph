@@ -1,8 +1,9 @@
 import asyncio
 
+from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
-from app.agent.task import Task
+from app.agent.reasoner.task import Task
 
 
 class TestCaller(ReasonerCaller):
@@ -55,11 +56,15 @@ Scratchpad:
 
     reasoner = DualModelReasoner()
 
-    task = Task(
+    job = Job(
+        id="test_job_id",
         session_id="test_session_id",
-        id="test_task_id",
-        goal=graph_modeling_task,
-        context=graph_modeling_context,
+        goal="Test goal",
+    )
+    task = Task(
+        task_description=graph_modeling_task,
+        task_context=graph_modeling_context,
+        job=job,
     )
     caller = TestCaller()
 

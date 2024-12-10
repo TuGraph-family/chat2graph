@@ -1,3 +1,5 @@
+import asyncio
+
 import matplotlib.pyplot as plt
 
 from app.toolkit.action.action import Action
@@ -30,10 +32,10 @@ async def main():
     )
 
     # create some sample tools
-    tool1: Tool = Query(tool_id="tool1")
-    tool2: Tool = Query(tool_id="tool2")
-    tool3: Tool = Query(tool_id="tool3")
-    tool4: Tool = Query(tool_id="tool4")
+    tool1: Tool = Query(id="tool1")
+    tool2: Tool = Query(id="tool2")
+    tool3: Tool = Query(id="tool3")
+    tool4: Tool = Query(id="tool4")
 
     # add actions with connections
     toolkit.add_action(
@@ -205,6 +207,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    import asyncio
-
     asyncio.run(main())
