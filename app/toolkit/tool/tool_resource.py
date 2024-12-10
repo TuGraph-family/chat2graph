@@ -1,22 +1,23 @@
 from typing import Optional
 
-from pydantic import BaseModel
-
 from app.toolkit.tool.tool import Tool
 
 
-class QuerySchema(BaseModel):
-    """Query schema."""
-
-    text: str
-
-
+# example tool
 class Query(Tool):
     """The query tool in the toolkit."""
 
-    def __init__(self, tool_id: Optional[str] = None):
-        super().__init__(tool_id=tool_id, function=self.query, args_schema=QuerySchema)
+    def __init__(self, id: Optional[str] = None):
+        super().__init__(id=id, function=self.query)
 
     def query(self, text: str) -> str:
-        """Query the text."""
+        """Query the text.
+
+        Args:
+            text: The text to query.
+
+        Returns:
+            The result of the query.
+        """
+        # TODO: implement the query function
         return text

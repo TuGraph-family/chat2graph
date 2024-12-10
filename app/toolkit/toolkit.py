@@ -48,7 +48,7 @@ class Toolkit:
         self._toolkit_graph: nx.DiGraph = nx.DiGraph()
 
     def verify_actions(self, actions: List[Action]) -> bool:
-        """Verify the actions.
+        """Verify if all action ids are in the toolkit graph.
 
         Args:
             actions: List of actions to verify

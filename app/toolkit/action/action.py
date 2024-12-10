@@ -1,12 +1,11 @@
-from abc import ABC
-from dataclasses import dataclass
-from typing import List, Optional
+from dataclasses import dataclass, field
+from typing import List
 
 from app.toolkit.tool.tool import Tool
 
 
 @dataclass
-class Action(ABC):
+class Action:
     """The action in the toolkit.
 
     Attributes:
@@ -20,5 +19,5 @@ class Action(ABC):
     id: str
     name: str
     description: str
-    next_action_ids: Optional[List[str]] = None
-    tools: Optional[List[Tool]] = None
+    next_action_ids: List[str] = field(default_factory=list)
+    tools: List[Tool] = field(default_factory=list)
