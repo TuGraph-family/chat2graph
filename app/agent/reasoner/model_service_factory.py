@@ -13,4 +13,5 @@ class ModelServiceFactory(ABC):
         """Create a model service."""
         if platform_type == PlatformType.DBGPT:
             return DbgptLlmClient()
+        # TODO: add more platforms, so the **kwargs can be used to pass the necessary parameters
         raise ValueError(f"Cannot create model service of type {platform_type}")

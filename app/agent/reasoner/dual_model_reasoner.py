@@ -1,10 +1,15 @@
+import re
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner, ReasonerCaller
-from app.agent.task import Task
+from app.agent.workflow.operator.task import Task
+from app.commom.prompt import (
+    ACTOR_PROMPT_TEMPLATE,
+    QUANTUM_THINKER_PROPMT_TEMPLATE,
+)
 from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import AgentMessage
@@ -55,16 +60,27 @@ class DualModelReasoner(Reasoner):
         Returns:
             str: The conclusion and the final resultes of the inference.
         """
+        # logging
+        # TODO: use standard logging instead of print
+        print(f"Operator starts reasoning for task:\n{task.task_description}")
+        print(f"Operator inference Context:\n{task.task_context}")
+        print(f"Operator inference Output Schema:\n{task.output_schema}")
+
         # prepare the variables from the SystemEnv
         reasoning_rounds = int(SystemEnv.get(SysEnvKey.REASONING_ROUNDS))
+        print_messages = (
+            SystemEnv.get(SysEnvKey.PRINT_REASONER_MESSAGES).lower() == "true"
+        )
+
+        # get the function list
+        funcs: List[Callable] = [tool.function for tool in tools] if tools else []
 
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(
             task=task,
+            funcs=funcs,
         )
-        thinker_sys_prompt = self._format_thinker_sys_prompt(
-            task=task,
-        )
+        thinker_sys_prompt = self._format_thinker_sys_prompt(task=task)
 
         # trigger the reasoning process
         init_message = AgentMessage(
@@ -88,17 +104,39 @@ class DualModelReasoner(Reasoner):
             response.set_source_type(MessageSourceType.THINKER)
             reasoner_memory.add_message(response)
 
+            # TODO: use standard logging instead of print
+            if print_messages:
+                print(f"\033[94mThinker:\n{response.get_payload()}\033[0m\n")
+
             # actor
             response = await self._actor_model.generate(
-                sys_prompt=actor_sys_prompt, messages=reasoner_memory.get_messages()
+                sys_prompt=actor_sys_prompt,
+                messages=reasoner_memory.get_messages(),
+                funcs=funcs,
             )
             response.set_source_type(MessageSourceType.ACTOR)
             reasoner_memory.add_message(response)
 
+            # TODO: use standard logging instead of print
+            if print_messages:
+                print(f"\033[92mActor:\n{response.get_payload()}\033[0m\n")
+                func_call_results = response.get_function_calls()
+                if func_call_results:
+                    print(
+                        "\033[92m"
+                        + "\n".join([
+                            f"{i + 1}. {result.status} called function "
+                            f"{result.func_name}:\n"
+                            f"Call objective: {result.call_objective}\n"
+                            f"Function Output: {result.output}"
+                            for i, result in enumerate(func_call_results)
+                        ])
+                        + "\033[0m\n"
+                    )
+
             if self.stop(response):
                 break
 
-        # TODO: Design a new structure as the returned value, not only in the string format
         return await self.conclure(reasoner_memory=reasoner_memory)
 
     async def update_knowledge(self, data: Any) -> None:
@@ -112,32 +150,75 @@ class DualModelReasoner(Reasoner):
     async def conclure(self, reasoner_memory: ReasonerMemory) -> str:
         """Conclure the inference results."""
 
+        content = reasoner_memory.get_message_by_index(-1).get_payload()
+
+        # find DELIVERABLE content
+        match = re.search(r"<DELIVERABLE>:\s*(.*)", content, re.DOTALL)
+
+        # If match found, process and return the content
+        if match:
+            deliverable_content = match.group(1)
+            return (
+                deliverable_content.replace("<Scratchpad>:", "")
+                .replace("<Action>:", "")
+                .replace("<Feedback>:", "")
+                .replace("TASK_DONE", "")
+            )
         return (
-            reasoner_memory.get_message_by_index(-1)
-            .get_payload()
-            .replace("Scratchpad:", "")
-            .replace("Action:", "")
-            .replace("Feedback:", "")
+            content.replace("<Scratchpad>:", "")
+            .replace("<Action>:", "")
+            .replace("<Feedback>:", "")
             .replace("TASK_DONE", "")
         )
 
-    def _format_actor_sys_prompt(self, task: Task) -> str:
+    def _format_actor_sys_prompt(
+        self,
+        task: Task,
+        funcs: Optional[List[Callable]] = None,
+    ) -> str:
         """Set the system prompt."""
         reasoning_task = (
-            f"=====\nTASK:\n{task.get_goal()}\nCONTEXT:\n{task.get_context()}\n====="
+            f"=====\nTASK:\n{task.task_description}\n"
+            f"CONTEXT:\n{task.task_context}\n====="
         )
+
+        if funcs:
+            func_description = "\n".join([
+                f"Function: {func.__name__}()\n{func.__doc__}\n" for func in funcs
+            ])
+        else:
+            func_description = "No function calling in this round."
+
+        if task.output_schema:
+            output_schema = "\n".join([
+                "\t    " + schema
+                for schema in (
+                    f"[Follow the final delivery example:]\n{task.output_schema}"
+                ).split("\n")
+            ])
+        else:
+            output_schema = ""
 
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
         return ACTOR_PROMPT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
             task=reasoning_task,
+            functions=func_description,
+            output_schema=output_schema,
         )
 
-    def _format_thinker_sys_prompt(self, task: Task) -> str:
+    def _format_thinker_sys_prompt(
+        self,
+        task: Task,
+    ) -> str:
         """Set the system prompt."""
         reasoning_task = (
-            f"=====\nTASK:\n{task.get_goal()}\nCONTEXT:\n{task.get_context()}\n====="
+            "=====\nTASK:\n"
+            + task.task_description
+            + "\nCONTEXT:\n"
+            + task.task_context
+            + "\n====="
         )
 
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
@@ -155,123 +236,30 @@ class DualModelReasoner(Reasoner):
             return BuiltinReasonerMemory()
 
         session_id = task.get_session_id()
-        task_id = task.get_id()
+        job_id = task.get_job_id()
         operator_id = caller.get_id()
 
-        # initialize memory hierarchy if not exists
         if session_id not in self._memories:
             self._memories[session_id] = {}
-        if task_id not in self._memories[session_id]:
-            self._memories[session_id][task_id] = {}
+        if job_id not in self._memories[session_id]:
+            self._memories[session_id][job_id] = {}
         reasoner_memory = BuiltinReasonerMemory()
-        self._memories[session_id][task_id][operator_id] = reasoner_memory
+        self._memories[session_id][job_id][operator_id] = reasoner_memory
 
         return reasoner_memory
 
     def get_memory(self, task: Task, caller: ReasonerCaller) -> ReasonerMemory:
         """Get the memory."""
         session_id = task.get_session_id()
-        task_id = task.get_id()
+        job_id = task.get_job_id()
         operator_id = caller.get_id()
 
         try:
-            return self._memories[session_id][task_id][operator_id]
+            return self._memories[session_id][job_id][operator_id]
         except KeyError:
             return self.init_memory(task=task, caller=caller)
 
     @staticmethod
-    def stop(message: AgentMessage):
+    def stop(message: AgentMessage) -> bool:
         """Stop the reasoner."""
         return "TASK_DONE" in message.get_payload()
-
-
-# TODO: need to translate the following templates into English
-QUANTUM_THINKER_PROPMT_TEMPLATE = """
-===== QUANTUM COGNITIVE FRAMEWORK =====
-Core States:
-- Basic State <ψ>: Foundation for standard interactions
-- Superposition State <ϕ>: Multi-perspective analysis or divergent thinking
-- Transition State <δ>: Cognitive domain shifts
-- Field State <Ω>: Holistic consistency
-- Cognitive-core: <ψ(t+1)〉 = ▽<ψ(t)>. Each interaction should show progression from <ψ(t)> to <ψ(t+1)>, ensuring thought depth increases incrementally
-
-Thought Pattern Tokens: // Use the symbol tokens to record the thought patterns
-    PRIMARY:
-    → Linear Flow (demonstrate logical progression)
-    ↔ Bidirectional Analysis (demonstrate associative thinking)
-    ↻ Feedback Loop (demonstrate self-correction)
-    ⇑ Depth Elevation (demonstrate depth enhancement)
-    AUXILIARY:
-    ⊕ Integration Point (integrate multiple perspectives)
-    ⊗ Conflict Detection (identify logical conflicts)
-    ∴ Therefore (derive conclusions)
-    ∵ Because (explain reasoning)
-
-===== RULES OF USER =====
-Never forget you are a {thinker_name} and I am a {actor_name}. Never flip roles!
-We share a common interest in collaborating to successfully complete the task by role-playing.
-
-1. You MUST use the Quantum Cognitive Framework to think about the path of solution in the <Quantum Reasoning Chain>.
-2. Always provide instructions based on our previous conversation, avoiding repetition.
-3. I am here to assist you in completing the TASK. Never forget our TASK!
-4. I may doubt your instruction, which means you may have generated hallucination.
-5. You must evaluate response depth and logical consistency in the "Judgement" section.
-6. Instructions must align with our expertise and task requirements.
-7. Provide one specific instruction at a time, no repetition.
-8. "Input" section must provide current status and relevant information.
-9. Use "TASK_DONE" (in English only) to terminate task and our conversation. Do not forget!
-10. Provide final task summary before "TASK_DONE". Do not forget!
-
-===== TASK =====
-{task}
-
-===== ANSWER TEMPLATE =====
-// <Quantum Reasoning Chain> is a way to present your thinking process
-Requirements:
-- Use natural language narration, embedding thought symbols while maintaining logical flow
-- Focus on demonstrating clear thought progression rather than fixed formats
-- Narration style should be natural, divergent thinking, like having a dialogue with oneself
-
-Example:
-    Basic State <ψ> I understand the current task is... ∵ ... → This leads to several key considerations...
-    Superposition State <ϕ> I reason about this... ↔ reason about that... ↔ more superposition reasoning chains... ↔ diverging to more thoughts, though possibly less task-relevant... ↻ through self-feedback, I discover...
-    ↔ Analyzing the interconnections between these reasoning processes, trying to gain insights...
-    Transition State <δ> ⇑ From these analyses, making important cognitive leaps, I switch to a higher-dimensional thinking mode...
-    Field State <Ω> ⇑ Thought depth upgraded, discovering... ⊕ Considering consistency, integrating these viewpoints...
-    ∴ Providing the following instructions:
-
-    Instruction: // Must follow this structure
-        <YOUR_INSTRUCTION>  // Cannot be None
-        // Do not forget to provide an official answer to the TASK before "TASK_DONE"
-    Input: // Must follow this structure
-        <YOUR_INPUT>  // Allowed to use None if no input
-"""
-
-
-ACTOR_PROMPT_TEMPLATE = """
-===== RULES OF ASSISTANT =====
-Never forget you are a {actor_name} and I am a {thinker_name}. Never flip roles!
-We share a common interest in collaborating to successfully complete the task by role-playing.
-    1. I always provide you with instructions.
-        - I must instruct you based on your expertise and my needs to complete the task.
-        - I must give you one instruction at a time.
-    2. You are here to assist me in completing the TASK. Never forget our TASK!
-    3. You must write something specific in the Scratchpad that appropriately solves the requested instruction and explain your thoughts. Your answer MUST strictly adhere to the structure of ANSWER TEMPLATE.
-    4. The "Scratchpad" refers the consideration, which is specific, decisive, comprehensive, and direct, to the instruction. And it can be sovled step by step with your chain of thoughts.
-    5. After the part of "Scratchpad" in your answer, you should perform your action in straightforward manner and return back the detailed feedback of the action.
-    6. Before you act you need to know about your ability of function calling. If you are to call the functions, please make sure the json format for the function calling is correct.
-    7. When I tell you the TASK is completed, you MUST use the "TASK_DONE" in English terminate the conversation. Although multilingual communication is permissible, usage of "TASK_DONE" MUST be exclusively used in English.
-    8. (Optional) The instruction can be wrong that I provided to you, so you can doubt the instruction by providing reasons, during the process of the conversation. 
-===== TASK =====
-{task}
-
-===== ANSWER TEMPLATE =====
-1. Unless I say the task is completed, you need to provide the scratchpads and the action:
-Scratchpad:
-    <YOUR_SCRATCHPAD>  // If you are not satisfied with my answer, you can say 'I am not satisfied with the answer, please provide me with another one.'
-    // If you receive the "TASK_DONE" from me, you need to provide the final task summary.
-Action:
-    <YOUR_ACTION>  // Can not be None
-Feedback:
-    <YOUR_FEEDBACK_OF_FUNCTION_CALLING>  // If you have called the function calling, you need to return the feedback of the function calling. If not, you can use hypothetical data.
-"""
