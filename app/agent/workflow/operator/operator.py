@@ -1,14 +1,36 @@
-from typing import Dict, List, Optional, Set
-from uuid import uuid4
+from dataclasses import dataclass
+from typing import List, Optional, Set, Tuple, Type
 
 import networkx as nx  # type: ignore
 
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.reasoner import ReasonerCaller
-from app.agent.task import Task
+from app.agent.job import Job
+from app.agent.reasoner.reasoner import Reasoner, ReasonerCaller
+from app.agent.reasoner.task import Task, TaskDescriptor
+from app.agent.workflow.operator.frame import Frame
+from app.commom.prompt import OPERATION_CONTEXT_PROMPT_TEMPLATE
+from app.knowledge_base.knowlege_base_factory import (
+    KnowledgeBaseProvider,
+    KnowledgeBaseRegistry,
+)
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
+
+
+@dataclass
+class OperatorConfig:
+    """Operator configuration."""
+
+    instruction: str
+    toolkit: Toolkit
+    actions: List[Action]
+    threshold: float = 0.5
+    hops: int = 0
+    operator_context_prompt_template: str = OPERATION_CONTEXT_PROMPT_TEMPLATE
+    profile: str = ""
+    output_schema: str = ""
+    knowledge_base_registry: Type[KnowledgeBaseRegistry] = KnowledgeBaseRegistry
+    environment_provider: Optional[KnowledgeBaseProvider] = None
 
 
 class Operator(ReasonerCaller):
@@ -16,74 +38,79 @@ class Operator(ReasonerCaller):
 
     Attributes:
         _id (str): The unique identifier of the operator.
-        _reasoner (DualModelReasoner): The dual model reasoner.
-        _operator_prompt_template (str): The prompt template of the operator.
+        _profile (str): The profile of the operator.
+        _instruction (str): The instruction of the operator.
+        _output_schema (str): The output schema of the operator.
+        _operator_context_prompt_template (str): The prompt template of the operator.
         _toolkit (Toolkit): The toolkit that contains the actions and tools.
         _actions (List[Action]): The actions that need to be executed.
-        _recommanded_actions (List[Action]): The recommanded actions from the toolkit.
+        _rec_actions (List[Action]): The recommanded actions from the toolkit.
         _embedding_vector (List[float]): The embedding vector of the operator.
+        _knowledge_base_registry (Type[KnowledgeBaseRegistry]): The knowledge base registry.
+        _environment_provider (Optional[KnowledgeBaseProvider]): The environment provider.
     """
 
-    def __init__(
-        self,
-        operator_prompt_template: str,
-        toolkit: Toolkit,
-        actions: List[Action],
-        id: str = str(uuid4()),
-    ):
+    def __init__(self, config: OperatorConfig, id: Optional[str] = None):
         super().__init__(id=id)
 
-        self._operator_prompt_template: str = operator_prompt_template
-        self._toolkit: Toolkit = toolkit
-        self._actions: List[Action] = actions
-        self._recommanded_actions: Optional[List[Action]] = None
+        self._profile: str = config.profile
+        self._instruction: str = config.instruction
+        self._output_schema: str = config.output_schema
+        self._operator_context_prompt_template = config.operator_context_prompt_template
 
-        # TODO: embedding vector of context
-        self._embedding_vector: Optional[List[float]] = None
+        self._toolkit: Toolkit = config.toolkit
+        self._actions: List[Action] = config.actions
+        self._rec_actions: List[Action] = []
 
-    async def initialize(self, threshold: float = 0.5, hops: int = 0):
-        """Initialize the operator."""
-        self._recommanded_actions = await self.get_recommanded_actions(
-            threshold=threshold, hops=hops
+        self._knowledge_base_registry: Type[KnowledgeBaseRegistry] = (
+            config.knowledge_base_registry
         )
+        # TODO: the type of the _environment_provider is under discussions
+        self._environment_provider: Optional[KnowledgeBaseProvider] = (
+            config.environment_provider
+        )  # viewing the env as a knowledge base
+
+        self._threshold: float = config.threshold
+        self._hops: int = config.hops
+
+        # TODO: Embedding vector of operator's ablitity
+        self._embedding_vector: Optional[List[float]] = None
 
     async def execute(
         self,
-        reasoner: DualModelReasoner,
-        task: Task,  # TODO: will change the name in the next PR
-        scratchpad: str,  # TODO: need to be removed
-    ) -> Dict[str, str]:
+        reasoner: Reasoner,
+        job: Job,
+        frames: Optional[List[Frame]] = None,
+    ) -> Frame:
         """Execute the operator by LLM client."""
-        operator_prompt = await self.format_operation_prompt(
-            task=self._task,
-            context=context,
-            scratchpad=scratchpad,
-        )
-        print(f"Operator prompt:\n{operator_prompt}")
+        task, tools = await self._prepare_infer_para(frames=frames, job=job)
 
-        result = await reasoner.infer(
-            caller=self,
-            reasoning_rounds=reasoning_rounds,
-            print_messages=print_messages,
-        )
-        return {"scratchpad": result}
-
-    def verify_actions(self, actions: List[Action]) -> bool:
-        """Verify the actions."""
-        return self._toolkit.verify_actions(actions)
+        result = await reasoner.infer(task=task, tools=tools, caller=self)
+        return Frame(scratchpad=result)
 
     async def get_knowledge(self) -> str:
         """Get the knowledge from the knowledge base."""
         # TODO: get the knowledge from the knowledge base
-        return ""
+        return "Do not have provieded any knowledge yet."
 
-    async def get_recommanded_actions(
-        self, threshold: float = 0.5, hops: int = 0
-    ) -> List[Action]:
-        """Get the actions from the toolkit."""
+    async def get_env_info(self) -> str:
+        """Get the environment information."""
+        # TODO: get the environment information
+        return "Do not have provieded any environment information yet."
+
+    async def init_rec_actions(self):
+        """Initialize the operator."""
+        self._rec_actions = await self.get_rec_actions()
+
+    async def get_rec_actions(self) -> List[Action]:
+        """Get the recommanded actions from the toolkit."""
+
+        # get the subgraph from the toolkit based on the provided actions, threshold, and hops
         toolkit_subgraph: nx.DiGraph = await self._toolkit.recommend_tools(
-            actions=self._actions, threshold=threshold, hops=hops
+            actions=self._actions, threshold=self._threshold, hops=self._hops
         )
+
+        # get the recommanded actions from the subgraph
         recommanded_actions: List[Action] = []
         for node in toolkit_subgraph.nodes:
             if toolkit_subgraph.nodes[node]["type"] == ToolkitGraphType.ACTION:
@@ -110,13 +137,14 @@ class Operator(ReasonerCaller):
 
         return recommanded_actions
 
-    def get_action_rels(self) -> str:
-        """Get the action relationships from the toolkit."""
-        if self._recommanded_actions is None:
-            raise ValueError("The recommanded actions have not been initialized.")
+    async def get_action_rels(self) -> str:
+        """Format the action relationships from the recommanded actions."""
+        # TOOD: can the operator does not have any recommanded actions?
+        if len(self._rec_actions) == 0:
+            await self.init_rec_actions()
 
         action_rels = ""
-        for action in self._recommanded_actions:
+        for action in self._rec_actions:
             next_action_names = [
                 self._toolkit.get_action(a_id).name for a_id in action.next_action_ids
             ]
@@ -127,13 +155,15 @@ class Operator(ReasonerCaller):
 
         return action_rels
 
-    def get_tools_from_actions(self) -> List[Tool]:
-        """Get the tools from the actions."""
-        if self._recommanded_actions is None:
-            raise ValueError("The recommanded actions have not been initialized.")
+    async def get_tools_from_actions(self) -> List[Tool]:
+        """Get the tools from the recommanded actions."""
+        # TOOD: can the operator does not have any recommanded actions?
+        if len(self._rec_actions) == 0:
+            await self.init_rec_actions()
+
         seen_ids: Set[str] = set()
-        tools = []
-        for action in self._recommanded_actions:
+        tools: List[Tool] = []
+        for action in self._rec_actions:
             assert action.tools is not None
             for tool in action.tools:
                 if tool.id not in seen_ids:
@@ -141,62 +171,32 @@ class Operator(ReasonerCaller):
                     tools.append(tool)
         return tools
 
-    def get_tool_docstrings(self) -> str:
-        """Get the tool names and docstrings from the toolkit."""
-        tools = self.get_tools_from_actions()
-        tool_docstrings = ""
-        for tool in tools:
-            tool_docstrings += (
-                f"func {tool.function.__name__}:\n{tool.function.__doc__}\n"
-            )
-        return tool_docstrings
+    async def _prepare_infer_para(
+        self, job: Job, frames: Optional[List[Frame]] = None
+    ) -> Tuple[Task, List[Tool]]:
+        """Prepare the parameters for the operator calling the reasoner to infer."""
+        task_descriptor = TaskDescriptor()
 
-    async def format_operation_prompt(
-        self, task: str, context: str, scratchpad: str
-    ) -> str:
-        """Format the operation prompt."""
-        return OPERATION_PT.format(
-            task=task,
-            context=context,
+        tools = await self.get_tools_from_actions()
+
+        if frames is None:
+            workload_content = ""
+        else:
+            workload_content = "\n".join([frame.scratchpad for frame in frames])
+
+        task = task_descriptor.aggregate(
+            profile=self._profile,
+            instruction=self._instruction,
+            output_schema=self._output_schema,
             knowledge=await self.get_knowledge(),
-            action_rels=self.get_action_rels(),
-            tool_docstrings=self.get_tool_docstrings(),
-            scratchpad=scratchpad,
+            env_info=await self.get_env_info(),
+            action_rels=await self.get_action_rels(),
+            scratchpad=workload_content,
+            job=job,
+            operator_context_prompt_template=self._operator_context_prompt_template,
         )
+        return task, tools
 
     def get_id(self) -> str:
         """Get the id."""
         return self._id
-
-
-OPERATION_PT = """
-===== Operator =====
-This section exists because LLMs need explicit task framing - it's not just about the operation name, but about setting the operational boundaries and execution mode. Like a function signature, it tells the LLM "you are now operating in this specific mode with these specific constraints."
-
-===== Task =====
-Without clear success criteria, LLMs can drift or hallucinate objectives. This section anchors the operation to concrete, measurable outcomes - it's the semantic equivalent of a unit test for the operation.
-{task}
-
-===== Context =====
-LLMs lack persistent memory and operational state. This section provides the critical runtime context - what's happened before, what's the current state, and what's the operational environment. It's like providing the heap/stack state to a running program.
-{context}
-
-===== Knowledge =====
-While LLMs have broad knowledge, they need domain-specific guardrails and patterns for consistent output. This section provides the "expert rules" that constrain and guide the LLM's decision-making process within the operation's domain.
-{knowledge}
-
-===== Actions =====
-LLMs need explicit action spaces and valid transitions. This isn't just a list - it's a state machine definition showing valid transitions (-next->) between actions.
-It prevents invalid action sequences and ensures operational coherence. However the sequences of the actions are recommended, not mandatory.
-{action_rels}
-
-===== Tools =====
-Tools are the LLM's API to the external world. This section defines not just tool interfaces, but their operational semantics - how they transform state, what guarantees they provide, and how they can be composed safely.
-{tool_docstrings}
-
-===== Scratchpad =====
-LLMs benefit from explicit reasoning chains. This workspace isn't just for show - it forces structured thinking and provides an audit trail for the operation's execution. It's debug output for LLM reasoning.
-{scratchpad}
-
-=====
-"""
