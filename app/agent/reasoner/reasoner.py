@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from uuid import uuid4
 
-from app.agent.workflow.operator.task import Task
+from app.agent.reasoner.task import Task
 from app.memory.reasoner_memory import ReasonerMemory
 from app.toolkit.tool.tool import Tool
 

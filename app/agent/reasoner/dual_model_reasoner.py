@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner, ReasonerCaller
-from app.agent.workflow.operator.task import Task
+from app.agent.reasoner.task import Task
 from app.commom.prompt import (
     ACTOR_PROMPT_TEMPLATE,
     QUANTUM_THINKER_PROPMT_TEMPLATE,
