@@ -214,11 +214,8 @@ class DualModelReasoner(Reasoner):
     ) -> str:
         """Set the system prompt."""
         reasoning_task = (
-            "=====\nTASK:\n"
-            + task.task_description
-            + "\nCONTEXT:\n"
-            + task.task_context
-            + "\n====="
+            f"=====\nTASK:\n{task.task_description}\n"
+            f"CONTEXT:\n{task.task_context}\n====="
         )
 
         # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
