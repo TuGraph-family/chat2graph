@@ -20,7 +20,7 @@ def sample_actions():
 @pytest.fixture
 def sample_tools():
     """Create sample tools for testing."""
-    return [Query(tool_id=f"tool{i}") for i in range(1, 5)]
+    return [Query(id=f"tool{i}") for i in range(1, 5)]
 
 
 @pytest.fixture

@@ -1,14 +1,16 @@
 import time
-from typing import List
+from typing import List, Optional
 from unittest.mock import AsyncMock
 
 import pytest
 
+from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
-from app.agent.task import Task
+from app.agent.reasoner.task import Task
 from app.commom.type import MessageSourceType
 from app.memory.message import AgentMessage
+from app.toolkit.tool.tool import Tool
 
 
 class TestCaller(ReasonerCaller):
@@ -56,10 +58,15 @@ async def test_infer_basic_flow(
     mock_reasoner: DualModelReasoner, caller: ReasonerCaller
 ):
     """Test basic inference flow with memory management."""
-    task = Task(
+    job = Job(
+        id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
-        context="Test context",
+    )
+    task = Task(
+        task_description="Test task",
+        task_context="Test context",
+        job=job,
     )
 
     # run inference
@@ -92,18 +99,24 @@ async def test_infer_early_stop(
         content="Scratchpad: Done\nAction: Complete\nFeedback: TASK_DONE",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
+    mock_reasoner._thinker_model.generate = AsyncMock(return_value=stop_response)
     mock_reasoner._actor_model.generate = AsyncMock(return_value=stop_response)
 
-    task = Task(
+    job = Job(
+        id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
-        context="Test context",
+    )
+    task = Task(
+        task_description="Test task",
+        task_context="Test context",
+        job=job,
     )
     _ = await mock_reasoner.infer(task=task, caller=caller)
 
     # verify early stop
-    assert mock_reasoner._actor_model.generate.call_count == 1
     assert mock_reasoner._thinker_model.generate.call_count == 1
+    assert mock_reasoner._actor_model.generate.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -114,7 +127,9 @@ async def test_infer_multiple_rounds(
     round_count = 0
 
     async def generate_with_rounds(
-        sys_prompt: str, messages: List[AgentMessage]
+        sys_prompt: str,
+        messages: List[AgentMessage],
+        funcs: Optional[List[Tool]] = None,
     ) -> AgentMessage:
         nonlocal round_count
         round_count += 1
@@ -130,10 +145,15 @@ async def test_infer_multiple_rounds(
     mock_reasoner._actor_model.generate = AsyncMock(side_effect=generate_with_rounds)
     mock_reasoner._thinker_model.generate = AsyncMock(side_effect=generate_with_rounds)
 
-    task = Task(
+    job = Job(
+        id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
-        context="Test context",
+    )
+    task = Task(
+        task_description="Test task",
+        task_context="Test context",
+        job=job,
     )
     _ = await mock_reasoner.infer(task=task, caller=caller)
 
@@ -159,10 +179,15 @@ async def test_infer_error_handling(
     )
 
     with pytest.raises(Exception) as exc_info:
-        task = Task(
+        job = Job(
+            id="test_job_id",
             session_id="test_session_id",
             goal="Test goal",
-            context="Test context",
+        )
+        task = Task(
+            task_description="Test task",
+            task_context="Test context",
+            job=job,
         )
         await mock_reasoner.infer(task=task, caller=caller)
 
@@ -177,10 +202,15 @@ async def test_infer_error_handling(
 @pytest.mark.asyncio
 async def test_infer_without_caller(mock_reasoner: DualModelReasoner):
     """Test inference without caller (using temporary memory)."""
-    task = Task(
+    job = Job(
+        id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
-        context="Test context",
+    )
+    task = Task(
+        task_description="Test task",
+        task_context="Test context",
+        job=job,
     )
     _ = await mock_reasoner.infer(task=task, caller=None)
 
