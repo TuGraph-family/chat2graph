@@ -29,6 +29,7 @@ class SysEnvKey(str, Enum):
     PROXY_SERVER_URL = "PROXY_SERVER_URL"
     PROXY_API_KEY = "PROXY_API_KEY"
     REASONING_ROUNDS = "REASONING_ROUNDS"
+    PRINT_REASONER_MESSAGES = "PRINT_REASONER_MESSAGES"
 
     def get_default(self) -> Optional[str]:
         """Get default value for the key."""
@@ -37,7 +38,8 @@ class SysEnvKey(str, Enum):
             self.PROXYLLM_BACKEND: "gpt-4o-mini",
             self.PROXY_SERVER_URL: None,
             self.PROXY_API_KEY: None,
-            self.REASONING_ROUNDS: "5",
+            self.REASONING_ROUNDS: "10",
+            self.PRINT_REASONER_MESSAGES: "True",
         }
         return defaults.get(self)
 
