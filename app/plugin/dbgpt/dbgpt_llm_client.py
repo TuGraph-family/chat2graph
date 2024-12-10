@@ -1,11 +1,12 @@
 import time
-from typing import List
+from typing import Any, Callable, List, Optional
 
 from dbgpt.core import (  # type: ignore
     AIMessage,
     BaseMessage,
     HumanMessage,
     ModelMessage,
+    ModelOutput,
     ModelRequest,
     SystemMessage,
 )
@@ -13,9 +14,11 @@ from dbgpt.model.proxy.base import LLMClient  # type: ignore
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 
 from app.agent.reasoner.model_service import ModelService
+from app.commom.prompt import FUNC_CALLING_PROMPT
 from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import AgentMessage
+from app.toolkit.tool.tool import FunctionCallResult
 
 
 class DbgptLlmClient(ModelService):
@@ -36,35 +39,101 @@ class DbgptLlmClient(ModelService):
         )
 
     async def generate(
-        self, sys_prompt: str, messages: List[AgentMessage]
+        self,
+        sys_prompt: str,
+        messages: List[AgentMessage],
+        funcs: Optional[List[Callable[..., Any]]] = None,
     ) -> AgentMessage:
         """Generate a text given a prompt."""
+        # prepare model request
+        model_request: ModelRequest = self._prepare_model_request(
+            sys_prompt=sys_prompt, messages=messages, funcs=funcs
+        )
+
+        # generate response using the llm client
+        model_response: ModelOutput = await self._llm_client.generate(model_request)
+
+        # call functions based on the model output
+        func_call_results: Optional[List[FunctionCallResult]] = None
+        if funcs:
+            func_call_results = await self.call_function(
+                funcs=funcs, model_response_text=model_response.text
+            )
+
+        # parse model response to agent message
+        response: AgentMessage = self._parse_model_response(
+            model_response=model_response,
+            messages=messages,
+            func_call_results=func_call_results,
+        )
+
+        return response
+
+    def _prepare_model_request(
+        self,
+        sys_prompt: str,
+        messages: List[AgentMessage],
+        funcs: Optional[List[Callable[..., Any]]] = None,
+    ) -> ModelRequest:
+        """Prepare base messages for the LLM client."""
         if len(messages) == 0:
             raise ValueError("No messages provided.")
 
         # convert system prompt to system message
-        sys_message = SystemMessage(content=sys_prompt)
+        if funcs:
+            sys_message = SystemMessage(content=sys_prompt + FUNC_CALLING_PROMPT)
+        else:
+            sys_message = SystemMessage(content=sys_prompt)
         base_messages: List[BaseMessage] = [sys_message]
 
-        # convert the conversation messages for LLM
-        # thinker <-> human, actor <-> ai
+        # convert the conversation messages for DB-GPT LLM
         for message in messages:
+            # handle the func call information in the agent message
+            base_message_content = message.get_payload()
+            func_call_results = message.get_function_calls()
+            if func_call_results:
+                for result in func_call_results:
+                    base_message_content += (
+                        f"\n{result.status} called function "
+                        f"{result.func_name}:\n"
+                        f"Call objective: {result.call_objective}\n"
+                        f"Function Output: {result.output}"
+                    )
+
+            # Chat2Graph <-> DB-GPT msg: actor <-> ai & thinker <-> human
             if message.get_source_type() == MessageSourceType.ACTOR:
-                base_messages.append(AIMessage(content=message.get_payload()))
+                base_messages.append(AIMessage(content=base_message_content))
             else:
-                base_messages.append(HumanMessage(content=message.get_payload()))
+                base_messages.append(HumanMessage(content=base_message_content))
+
         model_messages = ModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
             model=SystemEnv.get(SysEnvKey.PROXYLLM_BACKEND),
             messages=model_messages,
         )
 
-        # generate response using the llm client
-        model_output = await self._llm_client.generate(model_request)
+        return model_request
 
-        # convert the model output to agent message
+    def _parse_model_response(
+        self,
+        model_response: ModelOutput,
+        messages: List[AgentMessage],
+        func_call_results: Optional[List[FunctionCallResult]] = None,
+    ) -> AgentMessage:
+        """Parse model response to agent message."""
+
+        # determine the source type of the response
+        if messages[-1].get_source_type() == MessageSourceType.MODEL:
+            source_type = MessageSourceType.MODEL
+        elif messages[-1].get_source_type() == MessageSourceType.ACTOR:
+            source_type = MessageSourceType.THINKER
+        else:
+            source_type = MessageSourceType.ACTOR
+
         response = AgentMessage(
-            content=model_output.text,
+            content=model_response.text,
+            source_type=source_type,
+            function_calls=func_call_results,
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
