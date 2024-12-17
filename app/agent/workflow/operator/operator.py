@@ -6,12 +6,12 @@ import networkx as nx  # type: ignore
 from app.agent.job import Job
 from app.agent.reasoner.reasoner import Reasoner, ReasonerCaller
 from app.agent.reasoner.task import Task, TaskDescriptor
-from app.agent.workflow.operator.frame import Frame
 from app.commom.prompt import OPERATION_CONTEXT_PROMPT_TEMPLATE
 from app.knowledge_base.knowlege_base_factory import (
     KnowledgeBaseProvider,
     KnowledgeBaseRegistry,
 )
+from app.memory.message import WorkflowMessage
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitGraphType
@@ -80,13 +80,15 @@ class Operator(ReasonerCaller):
         self,
         reasoner: Reasoner,
         job: Job,
-        frames: Optional[List[Frame]] = None,
-    ) -> Frame:
+        workflowmessages: Optional[List[WorkflowMessage]] = None,
+    ) -> WorkflowMessage:
         """Execute the operator by LLM client."""
-        task, tools = await self._prepare_infer_para(frames=frames, job=job)
+        task, tools = await self._prepare_infer_para(
+            workflowmessages=workflowmessages, job=job
+        )
 
         result = await reasoner.infer(task=task, tools=tools, caller=self)
-        return Frame(scratchpad=result)
+        return WorkflowMessage(metadata={"scratchpad": result})
 
     async def get_knowledge(self) -> str:
         """Get the knowledge from the knowledge base."""
@@ -172,17 +174,20 @@ class Operator(ReasonerCaller):
         return tools
 
     async def _prepare_infer_para(
-        self, job: Job, frames: Optional[List[Frame]] = None
+        self, job: Job, workflowmessages: Optional[List[WorkflowMessage]] = None
     ) -> Tuple[Task, List[Tool]]:
         """Prepare the parameters for the operator calling the reasoner to infer."""
         task_descriptor = TaskDescriptor()
 
         tools = await self.get_tools_from_actions()
 
-        if frames is None:
+        if workflowmessages is None:
             workload_content = ""
         else:
-            workload_content = "\n".join([frame.scratchpad for frame in frames])
+            workload_content = "\n".join([
+                workflowmessage.get_payload().get("scratchpad", "")
+                for workflowmessage in workflowmessages
+            ])
 
         task = task_descriptor.aggregate(
             profile=self._profile,

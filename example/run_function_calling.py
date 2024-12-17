@@ -4,7 +4,7 @@ from typing import List
 
 from app.agent.reasoner.model_service import ModelService
 from app.commom.type import MessageSourceType
-from app.memory.message import AgentMessage
+from app.memory.message import ModelMessage
 
 
 # Sample functions for testing
@@ -53,10 +53,10 @@ class TestModelService(ModelService):
     """Test implementation of ModelService."""
 
     async def generate(
-        self, system_prompt: str, messages: List[AgentMessage]
-    ) -> AgentMessage:
+        self, system_prompt: str, messages: List[ModelMessage]
+    ) -> ModelMessage:
         """Implement abstract method."""
-        return AgentMessage(
+        return ModelMessage(
             source_type=MessageSourceType.ACTOR,
             content="test",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -72,7 +72,7 @@ async def main():
     # Create test messages with function calls
     test_cases = [
         # test sync function
-        AgentMessage(
+        ModelMessage(
             source_type=MessageSourceType.MODEL,
             content=(
                 '<function_call>{"name": "sync_add", "call_objective": "Add two numbers", '
@@ -81,7 +81,7 @@ async def main():
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test async function
-        AgentMessage(
+        ModelMessage(
             source_type=MessageSourceType.MODEL,
             content=(
                 '<function_call>{"name": "async_multiply", "call_objective": "Multiply two numbers", '
@@ -90,20 +90,20 @@ async def main():
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test multiple function calls
-        AgentMessage(
+        ModelMessage(
             source_type=MessageSourceType.MODEL,
             content='<function_call>{"name": "sync_add", "args": {"a": 2, "b": 3}}</function_call>\n<function_call>{"name": "async_multiply", '
             '"call_objective": "Multiply two numbers", "args": {"a": 4, "b": 6}}</function_call>',
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test invalid function
-        AgentMessage(
+        ModelMessage(
             source_type=MessageSourceType.MODEL,
             content='<function_call>{"name": "invalid_function", "args": {"a": 1, "b": 2}}</function_call>',
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test complex fuction call
-        AgentMessage(
+        ModelMessage(
             source_type=MessageSourceType.MODEL,
             content="""<function_call>{"name": "process_complex_data",
                 "call_objective": "Process complex data",

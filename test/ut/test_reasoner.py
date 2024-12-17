@@ -9,7 +9,7 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import ReasonerCaller
 from app.agent.reasoner.task import Task
 from app.commom.type import MessageSourceType
-from app.memory.message import AgentMessage
+from app.memory.message import ModelMessage
 from app.toolkit.tool.tool import Tool
 
 
@@ -36,12 +36,12 @@ async def mock_reasoner() -> DualModelReasoner:
     """Create a DualModelReasoner with mocked model responses."""
     reasoner = DualModelReasoner()
 
-    actor_response = AgentMessage(
+    actor_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
         content="Scratchpad: Testing\nAction: Proceed\nFeedback: Success",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
-    thinker_response = AgentMessage(
+    thinker_response = ModelMessage(
         source_type=MessageSourceType.THINKER,
         content="Instruction: Test instruction\nInput: Test input",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -94,7 +94,7 @@ async def test_infer_early_stop(
 ):
     """Test inference with early stop condition."""
     # modify actor response to trigger stop condition
-    stop_response = AgentMessage(
+    stop_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
         content="Scratchpad: Done\nAction: Complete\nFeedback: TASK_DONE",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -128,12 +128,12 @@ async def test_infer_multiple_rounds(
 
     async def generate_with_rounds(
         sys_prompt: str,
-        messages: List[AgentMessage],
+        messages: List[ModelMessage],
         funcs: Optional[List[Tool]] = None,
-    ) -> AgentMessage:
+    ) -> ModelMessage:
         nonlocal round_count
         round_count += 1
-        return AgentMessage(
+        return ModelMessage(
             source_type=MessageSourceType.ACTOR
             if round_count % 2 == 0
             else MessageSourceType.THINKER,

@@ -17,7 +17,7 @@ from app.agent.reasoner.model_service import ModelService
 from app.commom.prompt import FUNC_CALLING_PROMPT
 from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
-from app.memory.message import AgentMessage
+from app.memory.message import ModelMessage
 from app.toolkit.tool.tool import FunctionCallResult
 
 
@@ -41,9 +41,9 @@ class DbgptLlmClient(ModelService):
     async def generate(
         self,
         sys_prompt: str,
-        messages: List[AgentMessage],
+        messages: List[ModelMessage],
         funcs: Optional[List[Callable[..., Any]]] = None,
-    ) -> AgentMessage:
+    ) -> ModelMessage:
         """Generate a text given a prompt."""
         # prepare model request
         model_request: ModelRequest = self._prepare_model_request(
@@ -61,7 +61,7 @@ class DbgptLlmClient(ModelService):
             )
 
         # parse model response to agent message
-        response: AgentMessage = self._parse_model_response(
+        response: ModelMessage = self._parse_model_response(
             model_response=model_response,
             messages=messages,
             func_call_results=func_call_results,
@@ -72,7 +72,7 @@ class DbgptLlmClient(ModelService):
     def _prepare_model_request(
         self,
         sys_prompt: str,
-        messages: List[AgentMessage],
+        messages: List[ModelMessage],
         funcs: Optional[List[Callable[..., Any]]] = None,
     ) -> ModelRequest:
         """Prepare base messages for the LLM client."""
@@ -117,9 +117,9 @@ class DbgptLlmClient(ModelService):
     def _parse_model_response(
         self,
         model_response: ModelOutput,
-        messages: List[AgentMessage],
+        messages: List[ModelMessage],
         func_call_results: Optional[List[FunctionCallResult]] = None,
-    ) -> AgentMessage:
+    ) -> ModelMessage:
         """Parse model response to agent message."""
 
         # determine the source type of the response
@@ -130,7 +130,7 @@ class DbgptLlmClient(ModelService):
         else:
             source_type = MessageSourceType.ACTOR
 
-        response = AgentMessage(
+        response = ModelMessage(
             content=model_response.text,
             source_type=source_type,
             function_calls=func_call_results,

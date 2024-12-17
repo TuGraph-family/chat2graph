@@ -5,8 +5,8 @@ import pytest
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.workflow.operator.frame import Frame
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
+from app.memory.message import WorkflowMessage
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.tool.tool_resource import Query
@@ -98,11 +98,11 @@ async def test_execute_basic_functionality(
         goal="Test goal",
         context="Test context",
     )
-    frame = Frame(scratchpad="Test scratchpad")
+    workflowmessage = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
 
     op_output = await operator.execute(
         reasoner=mock_reasoner,
-        frames=[frame],
+        workflowmessages=[workflowmessage],
         job=job,
     )
 
@@ -118,8 +118,8 @@ async def test_execute_basic_functionality(
     assert all(isinstance(tool, Query) for tool in tools)
 
     # verify return value
-    assert isinstance(op_output, Frame)
-    assert op_output.scratchpad == "Test result"
+    assert isinstance(op_output, WorkflowMessage)
+    assert op_output.get_payload().get("scratchpad") == "Test result"
 
 
 @pytest.mark.asyncio
@@ -151,12 +151,12 @@ async def test_execute_error_handling(operator: Operator, mock_reasoner: AsyncMo
         session_id="test_session_id",
         goal="Test goal",
     )
-    frame = Frame(scratchpad="Test scratchpad")
+    workflowmessage = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
 
     with pytest.raises(Exception) as excinfo:
         await operator.execute(
             reasoner=mock_reasoner,
-            frames=[frame],
+            workflowmessages=[workflowmessage],
             job=job,
         )
 

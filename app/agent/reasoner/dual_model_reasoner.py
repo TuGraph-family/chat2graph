@@ -12,7 +12,7 @@ from app.commom.prompt import (
 )
 from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
-from app.memory.message import AgentMessage
+from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.toolkit.tool.tool import Tool
 
@@ -83,7 +83,7 @@ class DualModelReasoner(Reasoner):
         thinker_sys_prompt = self._format_thinker_sys_prompt(task=task)
 
         # trigger the reasoning process
-        init_message = AgentMessage(
+        init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
             content=(
                 "Scratchpad: Empty\n"
@@ -257,6 +257,6 @@ class DualModelReasoner(Reasoner):
             return self.init_memory(task=task, caller=caller)
 
     @staticmethod
-    def stop(message: AgentMessage) -> bool:
+    def stop(message: ModelMessage) -> bool:
         """Stop the reasoner."""
         return "TASK_DONE" in message.get_payload()

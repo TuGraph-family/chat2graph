@@ -6,7 +6,7 @@ import pytest
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.commom.type import MessageSourceType, PlatformType
-from app.memory.message import AgentMessage
+from app.memory.message import ModelMessage
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def mock_model_service():
         mock_service = AsyncMock()
 
         # Configure the mock to return a predefined response
-        mock_response = AgentMessage(
+        mock_response = ModelMessage(
             id="4",
             source_type=MessageSourceType.ACTOR,
             content="Your name is Alice, as you mentioned earlier.",
@@ -34,22 +34,22 @@ def mock_model_service():
 
 
 @pytest.fixture
-def test_messages() -> List[AgentMessage]:
+def test_messages() -> List[ModelMessage]:
     """Fixture to create test messages."""
     return [
-        AgentMessage(
+        ModelMessage(
             id="1",
             source_type=MessageSourceType.THINKER,
             content="Hello, how are you? I am Alice.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
-        AgentMessage(
+        ModelMessage(
             id="2",
             source_type=MessageSourceType.ACTOR,
             content="I'm fine, thank you.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
-        AgentMessage(
+        ModelMessage(
             id="3",
             source_type=MessageSourceType.THINKER,
             content="What's my name?",
@@ -60,7 +60,7 @@ def test_messages() -> List[AgentMessage]:
 
 @pytest.mark.asyncio
 async def test_model_service_generate(
-    mock_model_service: AsyncMock, test_messages: List[AgentMessage]
+    mock_model_service: AsyncMock, test_messages: List[ModelMessage]
 ):
     """Test the model service generate function."""
     # get the mock service
@@ -71,7 +71,7 @@ async def test_model_service_generate(
 
     # assertions
     assert response is not None
-    assert isinstance(response, AgentMessage)
+    assert isinstance(response, ModelMessage)
     assert "Alice" in response.get_payload()
     assert response.get_source_type() == MessageSourceType.ACTOR
 
@@ -99,9 +99,9 @@ async def test_model_service_factory():
 
 
 def test_agent_message_creation():
-    """Test the creation of AgentMessage objects."""
+    """Test the creation of ModelMessage objects."""
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-    message = AgentMessage(
+    message = ModelMessage(
         id="test",
         source_type=MessageSourceType.THINKER,
         content="Test message",

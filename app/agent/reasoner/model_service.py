@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from app.memory.message import AgentMessage
+from app.memory.message import ModelMessage
 from app.toolkit.tool.tool import FunctionCallResult
 
 
@@ -19,9 +19,9 @@ class ModelService(ABC):
     async def generate(
         self,
         sys_prompt: str,
-        messages: List[AgentMessage],
+        messages: List[ModelMessage],
         funcs: Optional[List[Callable[..., Any]]] = None,
-    ) -> AgentMessage:
+    ) -> ModelMessage:
         """Generate a text given a prompt non-streaming"""
 
     async def call_function(
@@ -34,7 +34,7 @@ class ModelService(ABC):
             model_response_text: The text containing potential function calls
 
         Returns:
-            AgentMessage: Response message containing function results
+            ModelMessage: Response message containing function results
         """
         func_calls, err = self._parse_function_calls(model_response_text)
         if err:

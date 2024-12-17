@@ -1,16 +1,16 @@
+import time
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.commom.type import MessageSourceType
 from app.toolkit.tool.tool import FunctionCallResult
 
 
-class Message(ABC):
-    """Message"""
+class Tracable(ABC):
+    """Interface for the tracable message."""
 
-    def __init__(self, content: str, timestamp: str, id: Optional[str] = None):
-        self._content: str = content
+    def __init__(self, timestamp: str, id: Optional[str] = None):
         self._timestamp: str = timestamp
         self._id: str = id or str(uuid4())
 
@@ -27,7 +27,7 @@ class Message(ABC):
         """Get the message id."""
 
 
-class AgentMessage(Message):
+class ModelMessage(Tracable):
     """Agent message"""
 
     def __init__(
@@ -38,7 +38,8 @@ class AgentMessage(Message):
         source_type: MessageSourceType = MessageSourceType.MODEL,
         function_calls: Optional[List[FunctionCallResult]] = None,
     ):
-        super().__init__(content=content, timestamp=timestamp, id=id)
+        super().__init__(timestamp=timestamp, id=id)
+        self._content: str = content
         self._source_type: MessageSourceType = source_type
         self._function_calls: Optional[List[FunctionCallResult]] = function_calls
 
@@ -67,13 +68,39 @@ class AgentMessage(Message):
         self._source_type = source_type
 
 
-class UserMessage(ABC):
+class WorkflowMessage(Tracable):
+    """Workflow message, used to communicate between the operators in the workflow."""
+
+    def __init__(
+        self,
+        metadata: Dict[str, Any],
+        timestamp: Optional[str] = None,
+        id: Optional[str] = None,
+    ):
+        super().__init__(
+            timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id
+        )
+        self._metadata: Dict[str, Any] = metadata
+
+    def get_payload(self) -> Dict[str, Any]:
+        """Get the content of the message."""
+        return self._metadata
+
+    def get_timestamp(self) -> str:
+        """Get the timestamp of the message."""
+        return self._timestamp
+
+    def get_id(self) -> str:
+        """Get the message id."""
+        return self._id
+
+
+class UserMessage(Tracable):
     """User message"""
 
-    def __init__(self, content: Any, timestamp: str, id: Optional[str] = None):
+    def __init__(self, timestamp: str, id: Optional[str] = None):
         self._id = id or str(uuid4())
-        self._content: Any = None
-        self._timestamp: str = ""
+        self._timestamp: str = timestamp
 
     @abstractmethod
     def get_payload(self) -> Any:
@@ -91,7 +118,7 @@ class UserMessage(ABC):
 class UserTextMessage(UserMessage):
     """User message"""
 
-    # TODO: Add  user message attributes
+    # TODO: Add user message attributes
 
     def get_payload(self) -> Any:
         """Get the content of the message."""
