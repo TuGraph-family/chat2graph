@@ -66,7 +66,7 @@ Answer in Chinese.
   ○ 上下文对实体类型判断至关重要
     """
 
-    scratchpad = """
+    context = """
 输入文本：
 建安七年冬，赤壁之战后，孙刘联盟虽挫败曹操，但天下大局仍未定。刘备在荆州稳固立足，诸葛亮提出“隆中对”，建议占据荆益二州，以图天下。刘备遂决意西进，目光投向益州。
 
@@ -107,7 +107,7 @@ Answer in Chinese.
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
-        context=scratchpad,
+        context=context,
     )
     result = await operator.execute(reasoner=reasoner, job=job)
 
