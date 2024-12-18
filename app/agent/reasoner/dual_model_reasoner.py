@@ -179,7 +179,7 @@ class DualModelReasoner(Reasoner):
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
             scratchpad = "\n".join([
-                f"{workflow_message.get_payload().get('scratchpad', '')}"
+                f"{workflow_message.scratchpad}"
                 for workflow_message in task.workflow_messages
             ])
         else:
@@ -239,7 +239,7 @@ class DualModelReasoner(Reasoner):
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
             scratchpad = "\n".join([
-                f"{workflow_message.get_payload().get('scratchpad', '')}"
+                f"{str(workflow_message.scratchpad)}"
                 for workflow_message in task.workflow_messages
             ])
         else:

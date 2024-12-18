@@ -59,7 +59,7 @@ class Operator:
 
         result = await reasoner.infer(task=task)
 
-        return WorkflowMessage(metadata={"scratchpad": result})
+        return WorkflowMessage(content={"scratchpad": result})
 
     async def get_knowledge(self) -> str:
         """Get the knowledge from the knowledge base."""

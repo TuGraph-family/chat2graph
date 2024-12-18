@@ -27,6 +27,7 @@ class Task:
     operator_config: Optional[OperatorConfig] = None
     workflow_messages: Optional[List[WorkflowMessage]] = None
     tools: Optional[List[Tool]] = None
+    # TODO: action can be related to a tool, move action_rels to action's previous / next fields.
     action_rels: str = ""
     knowledge: str = ""
     insights: Optional[List[Insight]] = None

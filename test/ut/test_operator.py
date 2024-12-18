@@ -96,7 +96,7 @@ async def test_execute_basic_functionality(
         goal="Test goal",
         context="Test context",
     )
-    workflow_message = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
+    workflow_message = WorkflowMessage(content={"scratchpad": "Test scratchpad"})
 
     op_output = await operator.execute(
         reasoner=mock_reasoner,
@@ -118,7 +118,7 @@ async def test_execute_basic_functionality(
 
     # verify return value
     assert isinstance(op_output, WorkflowMessage)
-    assert op_output.get_payload().get("scratchpad") == "Test result"
+    assert str(op_output.scratchpad) == "Test result"
 
 
 @pytest.mark.asyncio
@@ -150,7 +150,7 @@ async def test_execute_error_handling(operator: Operator, mock_reasoner: AsyncMo
         session_id="test_session_id",
         goal="Test goal",
     )
-    workflow_message = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
+    workflow_message = WorkflowMessage(content={"scratchpad": "Test scratchpad"})
 
     with pytest.raises(Exception) as excinfo:
         await operator.execute(

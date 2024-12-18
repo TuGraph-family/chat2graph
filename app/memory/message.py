@@ -7,8 +7,8 @@ from app.commom.type import MessageSourceType
 from app.toolkit.tool.tool import FunctionCallResult
 
 
-class Tracable(ABC):
-    """Interface for the tracable message."""
+class Message(ABC):
+    """Interface for the Message message."""
 
     def __init__(self, timestamp: str, id: Optional[str] = None):
         self._timestamp: str = timestamp
@@ -27,7 +27,7 @@ class Tracable(ABC):
         """Get the message id."""
 
 
-class ModelMessage(Tracable):
+class ModelMessage(Message):
     """Agent message"""
 
     def __init__(
@@ -68,23 +68,44 @@ class ModelMessage(Tracable):
         self._source_type = source_type
 
 
-class WorkflowMessage(Tracable):
+class WorkflowMessage(Message):
     """Workflow message, used to communicate between the operators in the workflow."""
 
     def __init__(
         self,
-        metadata: Dict[str, Any],
+        content: Dict[str, Any],
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(
             timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id
         )
-        self._metadata: Dict[str, Any] = metadata
+        self._content: Dict[str, Any] = content
+        for key, value in content.items():
+            setattr(self, key, value)
 
     def get_payload(self) -> Dict[str, Any]:
         """Get the content of the message."""
-        return self._metadata
+        return self._content
+
+    def __getattr__(self, name: str) -> Any:
+        """Dynamic field access through attributes."""
+        try:
+            return self._content[name]
+        except KeyError:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' has no attribute '{name}'"
+            )
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Dynamic field setting through attributes."""
+        if name.startswith("_"):
+            super().__setattr__(name, value)
+        else:
+            if hasattr(self, "_content"):
+                self._content[name] = value
+            else:
+                super().__setattr__(name, value)
 
     def get_timestamp(self) -> str:
         """Get the timestamp of the message."""
@@ -95,7 +116,7 @@ class WorkflowMessage(Tracable):
         return self._id
 
 
-class UserMessage(Tracable):
+class UserMessage(Message):
     """User message"""
 
     def __init__(self, timestamp: str, id: Optional[str] = None):
