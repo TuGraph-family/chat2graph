@@ -285,9 +285,10 @@ class DualModelReasoner(Reasoner):
         """Get the memory."""
         session_id = task.job.session_id
         job_id = task.job.id
-        operator_id = task.operator_config.id
 
         try:
+            assert task.operator_config
+            operator_id = task.operator_config.id
             return self._memories[session_id][job_id][operator_id]
         except KeyError:
             return self.init_memory(task=task)
