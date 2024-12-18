@@ -1,6 +1,6 @@
 # TODO: Configed by the yaml file
 
-OPERATION_CONTEXT_PROMPT_TEMPLATE = """
+TASK_DESCRIPTOR_PROMPT_TEMPLATE = """
 ===== CONTEXT =====
 {context}
 

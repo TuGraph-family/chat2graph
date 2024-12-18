@@ -5,12 +5,14 @@ import pytest
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.workflow.operator.operator import Operator, OperatorConfig
+from app.agent.reasoner.task import Task
+from app.agent.workflow.operator.operator import Operator
+from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.memory.message import WorkflowMessage
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.tool.tool_resource import Query
-from app.toolkit.toolkit import Toolkit
+from app.toolkit.toolkit import Toolkit, ToolkitService
 
 
 @pytest.fixture
@@ -70,20 +72,16 @@ def mock_reasoner():
 
 
 @pytest.fixture
-async def operator(
-    toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]], mock_reasoner: AsyncMock
-):
+async def operator(toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]):
     """Create an operator instance with mock reasoner."""
     toolkit, actions, _ = toolkit_setup
     config = OperatorConfig(
         instruction="Test instruction",
-        toolkit=toolkit,
         actions=[actions[0]],  # start with first action
         threshold=0.7,
         hops=2,
     )
-    operator = Operator(config=config)
-    await operator.init_rec_actions()
+    operator = Operator(config=config, toolkit_service=ToolkitService(toolkit=toolkit))
     return operator
 
 
@@ -98,11 +96,11 @@ async def test_execute_basic_functionality(
         goal="Test goal",
         context="Test context",
     )
-    workflowmessage = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
+    workflow_message = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
 
     op_output = await operator.execute(
         reasoner=mock_reasoner,
-        workflowmessages=[workflowmessage],
+        workflow_messages=[workflow_message],
         job=job,
     )
 
@@ -113,7 +111,8 @@ async def test_execute_basic_functionality(
     assert "task" in call_args
 
     # verify tools were passed correctly
-    tools = call_args["tools"]
+    task: Task = call_args["task"]
+    tools = task.tools
     assert len(tools) == 3
     assert all(isinstance(tool, Query) for tool in tools)
 
@@ -151,12 +150,12 @@ async def test_execute_error_handling(operator: Operator, mock_reasoner: AsyncMo
         session_id="test_session_id",
         goal="Test goal",
     )
-    workflowmessage = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
+    workflow_message = WorkflowMessage(metadata={"scratchpad": "Test scratchpad"})
 
     with pytest.raises(Exception) as excinfo:
         await operator.execute(
             reasoner=mock_reasoner,
-            workflowmessages=[workflowmessage],
+            workflow_messages=[workflow_message],
             job=job,
         )
 
@@ -170,12 +169,11 @@ async def test_get_tools_from_actions_duplicates(
     """Test tool retrieval handles duplicates correctly."""
     # add duplicate tools to actions
     _, _, tools = toolkit_setup
-    for action in operator._actions:
+    for action in operator._config.actions:
         action.tools = tools  # Deliberately add all tools to each action
 
-    operator._threshold = 0.7
-    operator._hops = 1
-    await operator.init_rec_actions()
+    operator._config.threshold = 0.7
+    operator._config.hops = 1
     retrieved_tools = await operator.get_tools_from_actions()
 
     # verify no duplicates

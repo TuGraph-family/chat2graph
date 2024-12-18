@@ -1,6 +1,7 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import List
+from uuid import uuid4
 
 
 class InsightType(Enum):
@@ -15,9 +16,9 @@ class InsightType(Enum):
 class Insight:
     """Insight is an element of the environment."""
 
-    id: str
-    insight_type: InsightType
     tags: List[str]
+
+    id: str = field(default_factory=lambda: str(uuid4()))
 
     def to_json(self):
         """Convert to JSON."""
@@ -28,17 +29,17 @@ class Insight:
 class TextInsight(Insight):
     """Text Insight"""
 
+    content: str = ""
+    entities: List[str] = field(default_factory=list)
     insight_type: InsightType = InsightType.TEXT
-    entities: List[str]
-    content: str
 
 
 @dataclass
 class ImageInsight(Insight):
     """Image Insight"""
 
+    image_url: str = ""
     insight_type: InsightType = InsightType.IMAGE
-    image_url: str
 
     # TODO: add more fields
 

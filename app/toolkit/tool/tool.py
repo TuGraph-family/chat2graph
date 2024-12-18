@@ -14,6 +14,24 @@ class FunctionCallResult:
     output: str
     status: Literal["succeeded", "failed"] = field(default="succeeded")
 
+    @classmethod
+    def error(cls, error_message: str) -> "FunctionCallResult":
+        """Create a FunctionCallResult instance for error cases.
+
+        Args:
+            error_message: The error message to include
+
+        Returns:
+            FunctionCallResult configured for error case.
+        """
+        return cls(
+            func_name="",
+            func_args={},
+            call_objective="",
+            output=error_message,
+            status="failed",
+        )
+
 
 @dataclass
 class Tool(ABC):

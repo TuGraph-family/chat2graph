@@ -1,37 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
-from uuid import uuid4
+from typing import Any
 
 from app.agent.reasoner.task import Task
 from app.memory.reasoner_memory import ReasonerMemory
-from app.toolkit.tool.tool import Tool
-
-
-class ReasonerCaller(ABC):
-    """Reasoner caller.
-
-    Attributes:
-        _id (str): The unique identifier of the caller
-    """
-
-    def __init__(self, id: Optional[str] = None):
-        self._id: str = id or str(uuid4())
-
-    @abstractmethod
-    def get_id(self) -> str:
-        """Get the unique identifier of the caller."""
 
 
 class Reasoner(ABC):
     """Base Reasoner, an env element of the multi-agent system."""
 
     @abstractmethod
-    async def infer(
-        self,
-        task: Task,
-        tools: Optional[List[Tool]] = None,
-        caller: Optional[ReasonerCaller] = None,
-    ) -> str:
+    async def infer(self, task: Task) -> str:
         """Infer by the reasoner."""
 
     @abstractmethod
@@ -47,11 +25,9 @@ class Reasoner(ABC):
         """Conclure the inference results."""
 
     @abstractmethod
-    def init_memory(
-        self, task: Task, caller: Optional[ReasonerCaller] = None
-    ) -> ReasonerMemory:
+    def init_memory(self, task: Task) -> ReasonerMemory:
         """Initialize the memory."""
 
     @abstractmethod
-    def get_memory(self, task: Task, caller: ReasonerCaller) -> ReasonerMemory:
+    def get_memory(self, task: Task) -> ReasonerMemory:
         """Get the memory."""

@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
+from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.toolkit.tool.tool import Tool
 
 
@@ -78,17 +79,12 @@ d) 三年总收益率（用百分比表示）
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
+        context=calculation_context,
     )
-    task = Task(
-        task_description=calulation_task,
-        task_context=calculation_context,
-        job=job,
-    )
+    config = OperatorConfig(instruction=calulation_task, actions=[])
+    task = Task(job=job, operator_config=config, tools=[Calculator()])
 
-    await reasoner.infer(
-        task=task,
-        tools=[Calculator()],
-    )
+    await reasoner.infer(task=task)
 
 
 if __name__ == "__main__":

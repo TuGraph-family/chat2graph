@@ -38,15 +38,7 @@ class ModelService(ABC):
         """
         func_calls, err = self._parse_function_calls(model_response_text)
         if err:
-            return [
-                FunctionCallResult(
-                    func_name="",
-                    call_objective="",
-                    func_args={},
-                    status="failed",
-                    output=err,
-                )
-            ]
+            return [FunctionCallResult.error(err)]
 
         if not func_calls:
             # do not call any functions

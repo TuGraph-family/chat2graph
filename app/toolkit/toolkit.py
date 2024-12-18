@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Optional, Set
 
 import matplotlib.pyplot as plt
 import networkx as nx  # type: ignore
@@ -391,3 +391,29 @@ class Toolkit:
         if show:
             plt.show(block=False)
         return plt.gcf()
+
+
+class ToolkitService:
+    """The toolkit service provides functionalities for the toolkit."""
+
+    def __init__(self, toolkit: Optional[Toolkit] = None):
+        # it manages one toolkit for now, but can be extended to manage multiple toolkits
+        if not toolkit:
+            toolkit = Toolkit()
+        self._toolkit = toolkit
+
+    def create_toolkit(self) -> Toolkit:
+        """Create a new toolkit."""
+        return Toolkit()
+
+    def update_toolkit(self, toolkit: Toolkit) -> None:
+        """Update the toolkit."""
+        self._toolkit = toolkit
+
+    def remove_toolkit(self, args: dict) -> None:
+        """Remove a toolkit."""
+        # since there is only one toolkit, it is not removed for now
+
+    def get_toolkit(self) -> Toolkit:
+        """Get the current toolkit."""
+        return self._toolkit

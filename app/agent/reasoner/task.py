@@ -1,7 +1,11 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from app.agent.job import Job
+from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.env.insight.insight import Insight
+from app.memory.message import WorkflowMessage
+from app.toolkit.tool.tool import Tool
 
 
 @dataclass
@@ -10,56 +14,19 @@ class Task:
 
     Attributes:
         job (Job): The job assigned to the experts.
-        task_description (str): The description of the inference task for the reasoner.
-        task_context (Optional[str]): The context of the inference task for the reasoner.
-        output_schema (Optional[str]): The output schema of the inference task for the reasoner.
+        operator_config (OperatorConfig): The configuration of the operator.
+        workflow_messages (List[WorkflowMessage]): The workflow messages.
+        tools (List[Tool]): The tools can be used by the reasoner.
+        action_rels (str): The action relationships defined in the operator.
+        knowledge (str): The knowledge from the knowledge base.
+        insights (List[Insight]): The insights from the environment.
     """
 
     # TODO: make the job optional. Now the reasoner memory must use the session_id and job_id to store the memory.
     job: Job
-    task_description: str
-    task_context: Optional[str] = None
-    output_schema: str = "Output schema is not determined."
-
-    def get_session_id(self) -> str:
-        """Get the unique identifier of the session."""
-        return self.job.session_id
-
-    def get_job_id(self) -> str:
-        """Get the unique identifier of the job."""
-        return self.job.id
-
-
-class TaskDescriptor:
-    """Task descriptor."""
-
-    def aggregate(
-        self,
-        profile: str,
-        instruction: str,
-        output_schema: str,
-        knowledge: str,
-        env_info: str,
-        action_rels: str,
-        scratchpad: str,
-        job: Job,
-        operator_context_prompt_template: str,
-    ) -> Task:
-        """Format the task."""
-        # it is defined by the operator config
-        task_description = profile + "\n" + instruction
-
-        # input data from the retrieved data, the scratchpad, the toolkit, the job context
-        task_context = operator_context_prompt_template.format(
-            context=job.context + "\n" + env_info,
-            knowledge=knowledge,
-            action_rels=action_rels,
-            scratchpad=scratchpad,
-        )
-
-        return Task(
-            task_description=task_description,
-            task_context=task_context,
-            output_schema=output_schema,
-            job=job,
-        )
+    operator_config: Optional[OperatorConfig] = None
+    workflow_messages: Optional[List[WorkflowMessage]] = None
+    tools: Optional[List[Tool]] = None
+    action_rels: str = ""
+    knowledge: str = ""
+    insights: Optional[List[Insight]] = None

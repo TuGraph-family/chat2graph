@@ -4,7 +4,7 @@ from uuid import uuid4
 
 @dataclass
 class Job:
-    """Job is the dataclass assigned to the experts.
+    """Job is the dataclass assigned to the leader or the experts.
 
     Attributes:
         session_id (str): The unique identifier of the session.

@@ -4,14 +4,11 @@ import matplotlib.pyplot as plt
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.workflow.operator.operator import (
-    Operator,
-    OperatorConfig,
-)
-from app.commom.prompt import OPERATION_CONTEXT_PROMPT_TEMPLATE
+from app.agent.workflow.operator.operator import Operator
+from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool_resource import Query
-from app.toolkit.toolkit import Toolkit
+from app.toolkit.toolkit import Toolkit, ToolkitService
 
 
 async def main():
@@ -50,14 +47,12 @@ async def main():
     toolkit.add_tool(tool=analyze_tool, connected_actions=[(action2, 0.9)])
 
     # set operator properties
-    profile = """
+    instruction = """
 通过查找数据库，分析三国演义中的关键实体，生成对应的实体关系图。(用中文回答)
 Answer in Chinese.
-    """
 
-    instruction = """
- 输入的数据是三国演义全文，需要从中识别出关键实体类型。这些文本包含了丰富的历史信息，涵盖了人物对话、事件描述、地理位置、时间节点等多个维度的内容。
- 文本中的实体之间存在复杂的关联关系，需要系统性地进行识别和分类。
+输入的数据是三国演义全文，需要从中识别出关键实体类型。这些文本包含了丰富的历史信息，涵盖了人物对话、事件描述、地理位置、时间节点等多个维度的内容。
+文本中的实体之间存在复杂的关联关系，需要系统性地进行识别和分类。
 
  在文学文本的实体识别过程中，需要注意以下几点：
 1. 命名实体识别规则
@@ -100,16 +95,12 @@ Answer in Chinese.
     # itialize reasoner
     reasoner = DualModelReasoner()
     operator_config = OperatorConfig(
-        profile=profile,
         instruction=instruction,
-        operator_context_prompt_template=OPERATION_CONTEXT_PROMPT_TEMPLATE,
-        toolkit=toolkit,
         actions=[action1],
         threshold=0.7,
         hops=2,
     )
-    operator = Operator(config=operator_config)
-    await operator.init_rec_actions()
+    operator = Operator(config=operator_config, toolkit_service=ToolkitService(toolkit))
 
     # execute operator (with minimal reasoning rounds for testing)
     job = Job(

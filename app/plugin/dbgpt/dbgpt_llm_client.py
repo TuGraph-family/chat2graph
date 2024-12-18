@@ -5,10 +5,12 @@ from dbgpt.core import (  # type: ignore
     AIMessage,
     BaseMessage,
     HumanMessage,
-    ModelMessage,
     ModelOutput,
     ModelRequest,
     SystemMessage,
+)
+from dbgpt.core import (
+    ModelMessage as DbgptModelMessage,
 )
 from dbgpt.model.proxy.base import LLMClient  # type: ignore
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
@@ -106,7 +108,7 @@ class DbgptLlmClient(ModelService):
             else:
                 base_messages.append(HumanMessage(content=base_message_content))
 
-        model_messages = ModelMessage.from_base_messages(base_messages)
+        model_messages = DbgptModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
             model=SystemEnv.get(SysEnvKey.PROXYLLM_BACKEND),
             messages=model_messages,
