@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, Optional
 
 from app.env.insight.insight import Insight, InsightType
 
@@ -7,7 +7,7 @@ from app.env.insight.insight import Insight, InsightType
 class InsightService(ABC):
     """Insight Service"""
 
-    def __init__(self, insights: List[Insight] = None):
+    def __init__(self, insights: Optional[List[Insight]] = None):
         self._insights: List[Insight] = insights or []
 
     @abstractmethod

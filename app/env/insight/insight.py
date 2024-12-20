@@ -1,15 +1,8 @@
 from dataclasses import asdict, dataclass, field
-from enum import Enum
 from typing import List
 from uuid import uuid4
 
-
-class InsightType(Enum):
-    """Insight Type"""
-
-    TEXT = "text"
-    IMAGE = "image"
-    TABLE = "table"
+from app.commom.type import InsightType
 
 
 @dataclass
