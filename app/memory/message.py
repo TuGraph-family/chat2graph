@@ -90,12 +90,9 @@ class WorkflowMessage(Message):
 
     def __getattr__(self, name: str) -> Any:
         """Dynamic field access through attributes."""
-        try:
+        if name in self._content:
             return self._content[name]
-        except KeyError:
-            raise AttributeError(
-                f"'{self.__class__.__name__}' has no attribute '{name}'"
-            )
+        raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{name}'")
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Dynamic field setting through attributes."""
