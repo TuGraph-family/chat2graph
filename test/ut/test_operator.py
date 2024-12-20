@@ -112,8 +112,9 @@ async def test_execute_basic_functionality(
 
     # verify tools were passed correctly
     task: Task = call_args["task"]
-    tools = task.tools
-    assert len(tools) == 3
+    actions = task.actions
+    assert len(actions) == 3
+    tools = [tool for action in actions for tool in action.tools]
     assert all(isinstance(tool, Query) for tool in tools)
 
     # verify return value

@@ -14,25 +14,6 @@ from app.toolkit.tool.tool import Tool
 
 
 @pytest.fixture
-def operator_config():
-    """Create a test operator for testing."""
-    return OperatorConfig(
-        instruction="Test instruction",
-        actions=[],
-    )
-
-
-@pytest.fixture
-def job():
-    """Create a test Job for testing."""
-    return Job(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="Test goal",
-    )
-
-
-@pytest.fixture
 async def mock_reasoner() -> DualModelReasoner:
     """Create a DualModelReasoner with mocked model responses."""
     reasoner = DualModelReasoner()
@@ -54,13 +35,17 @@ async def mock_reasoner() -> DualModelReasoner:
     return reasoner
 
 
-@pytest.mark.asyncio
-async def test_infer_basic_flow(
-    mock_reasoner: DualModelReasoner, job: Job, operator_config: OperatorConfig
-):
-    """Test basic inference flow with memory management."""
-    task = Task(job=job, operator_config=operator_config)
+@pytest.fixture
+def task():
+    """Create a test Task for testing."""
+    job = Job(session_id="test_session_id", goal="Test goal")
+    config = OperatorConfig(instruction="Test instruction", actions=[])
+    return Task(job=job, operator_config=config)
 
+
+@pytest.mark.asyncio
+async def test_infer_basic_flow(mock_reasoner: DualModelReasoner, task: Task):
+    """Test basic inference flow with memory management."""
     # run inference
     _ = await mock_reasoner.infer(task=task)
 
@@ -81,9 +66,7 @@ async def test_infer_basic_flow(
 
 
 @pytest.mark.asyncio
-async def test_infer_early_stop(
-    mock_reasoner: DualModelReasoner, job: Job, operator_config: OperatorConfig
-):
+async def test_infer_early_stop(mock_reasoner: DualModelReasoner, task: Task):
     """Test inference with early stop condition."""
     # modify actor response to trigger stop condition
     stop_response = ModelMessage(
@@ -94,7 +77,6 @@ async def test_infer_early_stop(
     mock_reasoner._thinker_model.generate = AsyncMock(return_value=stop_response)
     mock_reasoner._actor_model.generate = AsyncMock(return_value=stop_response)
 
-    task = Task(job=job, operator_config=operator_config)
     _ = await mock_reasoner.infer(task=task)
 
     # verify early stop
@@ -103,9 +85,7 @@ async def test_infer_early_stop(
 
 
 @pytest.mark.asyncio
-async def test_infer_multiple_rounds(
-    mock_reasoner: DualModelReasoner, job: Job, operator_config: OperatorConfig
-):
+async def test_infer_multiple_rounds(mock_reasoner: DualModelReasoner, task: Task):
     """Test multiple rounds of inference with message accumulation."""
     round_count = 0
 
@@ -128,7 +108,6 @@ async def test_infer_multiple_rounds(
     mock_reasoner._actor_model.generate = AsyncMock(side_effect=generate_with_rounds)
     mock_reasoner._thinker_model.generate = AsyncMock(side_effect=generate_with_rounds)
 
-    task = Task(job=job, operator_config=operator_config)
     _ = await mock_reasoner.infer(task=task)
 
     # verify message accumulation
@@ -143,9 +122,7 @@ async def test_infer_multiple_rounds(
 
 
 @pytest.mark.asyncio
-async def test_infer_error_handling(
-    mock_reasoner: DualModelReasoner, job: Job, operator_config: OperatorConfig
-):
+async def test_infer_error_handling(mock_reasoner: DualModelReasoner, task: Task):
     """Test inference error handling."""
     # simulate model generation error
     mock_reasoner._thinker_model.generate = AsyncMock(
@@ -153,7 +130,6 @@ async def test_infer_error_handling(
     )
 
     with pytest.raises(Exception) as exc_info:
-        task = Task(job=job, operator_config=operator_config)
         await mock_reasoner.infer(task=task)
 
     assert str(exc_info.value) == "Model error"
@@ -165,12 +141,15 @@ async def test_infer_error_handling(
 
 
 @pytest.mark.asyncio
-async def test_infer_without_operator(mock_reasoner: DualModelReasoner, job: Job):
-    """Test inference without operator (using temporary memory)."""
-    task = Task(job=job)
+async def test_infer_without_operator(mock_reasoner: DualModelReasoner, task: Task):
+    """Test inference without caller (using temporary memory)."""
+    task.operator_config = None
     _ = await mock_reasoner.infer(task=task)
 
-    assert mock_reasoner._actor_model.generate.called
     assert mock_reasoner._thinker_model.generate.called
+    assert mock_reasoner._actor_model.generate.called
 
-    assert len(mock_reasoner._memories) == 0
+    # since there is no operator, the reasoner will not persist the memory
+    reasoner_memory = mock_reasoner.get_memory(task=task)
+    messages = reasoner_memory.get_messages()
+    assert not messages
