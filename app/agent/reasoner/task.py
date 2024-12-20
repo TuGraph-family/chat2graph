@@ -1,11 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from app.agent.job import Job
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.env.insight.insight import Insight
 from app.memory.message import WorkflowMessage
-from app.toolkit.tool.tool import Tool
+from app.toolkit.action.action import Action
 
 
 @dataclass
@@ -16,8 +16,7 @@ class Task:
         job (Job): The job assigned to the experts.
         operator_config (OperatorConfig): The configuration of the operator.
         workflow_messages (List[WorkflowMessage]): The workflow messages.
-        tools (List[Tool]): The tools can be used by the reasoner.
-        action_rels (str): The action relationships defined in the operator.
+        actions (List[Action]): The actions recommended by the toolkit for the operator.
         knowledge (str): The knowledge from the knowledge base.
         insights (List[Insight]): The insights from the environment.
     """
@@ -26,8 +25,6 @@ class Task:
     job: Job
     operator_config: Optional[OperatorConfig] = None
     workflow_messages: Optional[List[WorkflowMessage]] = None
-    tools: Optional[List[Tool]] = None
-    # TODO: action can be related to a tool, move action_rels to action's previous / next fields.
-    action_rels: str = ""
+    actions: List[Action] = field(default_factory=list)
     knowledge: str = ""
     insights: Optional[List[Insight]] = None
