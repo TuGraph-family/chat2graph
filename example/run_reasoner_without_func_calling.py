@@ -3,7 +3,7 @@ import asyncio
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
-from app.agent.workflow.operator.operator import Operator, OperatorConfig
+from app.agent.workflow.operator.operator import OperatorConfig
 
 
 async def main():
@@ -41,6 +41,15 @@ Scratchpad:
 次日，曹操兵至，见新野空虚，乃进兵攻川口。备使关公出战，不敌，退入川口。操兵久不动，备乃引兵出，与操军交战，大败而走。操兵追至川口，备急闭门守之，城中人马皆惊恐。
 城中人马皆惊恐，备曰：“吾有诈，可破之。”遂开门，大呼而出，操兵大败。备乘胜追击，操军大溃，曹操自走脱。备收其军器，仓库，军民无不欢喜。
 """
+    graph_modeling_task = "解决数学解答题，确保推理逻辑是能够经过数学上的严谨检验的。"
+    graph_modeling_context = """
+设m为正整数，数列a₁, a₂, ..., a₄ₘ₊₂是公差非零的等差数列。如果从中删去两项aᵢ,aⱼ(i<j)后，剩余的4m项可以被均分为m组且每组的四个数构成等差数列，则称该数列是(i,j)可分数列。
+问题：
+(1) 当m=1时，写出所有使得该数列(i,j)可分的(i,j)。
+(2) 当m≥3时，证明该数列是(2,13)可分数列。
+(3) 从1~4m+2中任取两个数i<j，求证该数列为(i,j)可分数列的概率pₘ>1/8。
+
+"""
 
     reasoner = DualModelReasoner()
 
@@ -50,13 +59,11 @@ Scratchpad:
         goal="Test goal",
         context=graph_modeling_context,
     )
-    operator = Operator(
-        config=OperatorConfig(
-            instruction=graph_modeling_task,
-            actions=[],
-        )
+    config = OperatorConfig(
+        instruction=graph_modeling_task,
+        actions=[],
     )
-    task = Task(job=job, operator=operator)
+    task = Task(job=job, operator_config=config)
 
     await reasoner.infer(task=task)
 

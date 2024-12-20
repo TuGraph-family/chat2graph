@@ -2,16 +2,14 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from app.agent.job import Job
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.task import Task
-from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 
 
 # example tool
 class Calculator(Tool):
-    """The query tool in the toolkit."""
+    """The tool in the toolkit."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(id=id, function=self.calculator)
@@ -74,24 +72,23 @@ d) 三年总收益率（用百分比表示）
 4. 提供最终答案
 """
 
-    reasoner = DualModelReasoner()
+    reasoner = MonoModelReasoner()
 
     job = Job(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
-        context=calculation_context,
     )
-    config = OperatorConfig(instruction=calulation_task, actions=[])
-    action = Action(
-        id="action_id_1",
-        name="Calculate",
-        description="Calculate the given math problem",
+    task = Task(
+        task_description=calulation_task,
+        task_context=calculation_context,
+        job=job,
+    )
+
+    await reasoner.infer(
+        task=task,
         tools=[Calculator()],
     )
-    task = Task(job=job, operator_config=config, actions=[action])
-
-    await reasoner.infer(task=task)
 
 
 if __name__ == "__main__":
