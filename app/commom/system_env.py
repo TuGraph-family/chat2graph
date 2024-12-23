@@ -30,7 +30,6 @@ class SysEnvKey(str, Enum):
     PROXY_API_KEY = "PROXY_API_KEY"
     REASONING_ROUNDS = "REASONING_ROUNDS"
     PRINT_REASONER_MESSAGES = "PRINT_REASONER_MESSAGES"
-    MAX_RETRIES = "MAX_RETRIES"
 
     def get_default(self) -> Optional[str]:
         """Get default value for the key."""
@@ -41,7 +40,6 @@ class SysEnvKey(str, Enum):
             self.PROXY_API_KEY: None,
             self.REASONING_ROUNDS: "10",
             self.PRINT_REASONER_MESSAGES: "True",
-            self.MAX_RETRIES: "3",
         }
         return defaults.get(self)
 

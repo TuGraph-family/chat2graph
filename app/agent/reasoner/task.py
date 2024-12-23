@@ -27,7 +27,7 @@ class Task:
     job: Job
     operator_config: Optional[OperatorConfig] = None
     workflow_messages: Optional[List[WorkflowMessage]] = None
-    actions: List[Action] = field(default_factory=list)
     tools: List[Tool] = field(default_factory=list)
+    actions: List[Action] = field(default_factory=list)
     knowledge: str = ""
     insights: Optional[List[Insight]] = None
