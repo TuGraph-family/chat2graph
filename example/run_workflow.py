@@ -187,10 +187,11 @@ async def main():
     op3 = AddSuffixOperator(id="merge_op")
     eval_operator = EvalOperator(id="eval_op")
 
-    workflow = DbgptWorkflow(eval_operator=eval_operator)
+    workflow = DbgptWorkflow()
     workflow.add_operator(op1)
     workflow.add_operator(op2)
     workflow.add_operator(op3, previous_ops=[op1, op2])
+    workflow.set_evaluator(eval_operator)
 
     result: WorkflowMessage = await workflow.execute(job=job, reasoner=TestReasoner())
     print(f"Final result: {result.scratchpad}")

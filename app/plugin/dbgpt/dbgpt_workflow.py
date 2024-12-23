@@ -10,82 +10,18 @@ from dbgpt.core.awel import (  # type: ignore
 
 from app.agent.job import Job
 from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.workflow import Workflow
 from app.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_map_operator import DbgptMapOperator
 
 
 class DbgptWorkflow(Workflow):
-    """DB-GPT workflow
+    """DB-GPT workflow"""
 
-    Attributes:
-        _operator_graph (nx.DiGraph): The operator graph of the workflow.
-        _dbgpt_flow (None): The DB-GPT flow.
-
-        _operator_graph schema:
-        {
-            "operator_id": {
-                "operator": Operator,
-                "converted_operator": BaseOperator(DB-GPT)
-            }
-        }
-    """
-
-    def __init__(self, eval_operator: Optional[Operator] = None):
-        super().__init__(eval_operator=eval_operator)
-        self._dbgpt_flow: Optional[DAG] = None
-        self._tail_map_op: Optional[DbgptMapOperator] = None
-
-    async def execute(self, job: Job, reasoner: Reasoner) -> WorkflowMessage:
-        """Execute the workflow.
-
-        Args:
-            job (Job): The job assigned to the agent.
-            reasoner (Reasoner): The reasoner that reasons the operators.
-
-        Returns:
-            WorkflowMessage: The output of the workflow.
-        """
-        if not self._dbgpt_flow or not self._tail_map_op:
-            self.build_workflow(reasoner=reasoner)
-
-        assert self._dbgpt_flow and self._tail_map_op, (
-            "The DB-GPT workflow is not built-in."
-        )
-        return await self._tail_map_op.call(call_data=job)
-
-    def add_operator(
-        self,
-        operator: Operator,
-        previous_ops: Optional[List[Operator]] = None,
-        next_ops: Optional[List[Operator]] = None,
-    ):
-        """Add an operator to the workflow."""
-        self._operator_graph.add_node(operator.get_id(), operator=operator)
-        if previous_ops:
-            for previous_op in previous_ops:
-                if not self._operator_graph.has_node(previous_op.get_id()):
-                    self._operator_graph.add_node(
-                        previous_op.get_id(), operator=previous_op
-                    )
-                self._operator_graph.add_edge(previous_op.get_id(), operator.get_id())
-        if next_ops:
-            for next_op in next_ops:
-                if not self._operator_graph.has_node(next_op.get_id()):
-                    self._operator_graph.add_node(next_op.get_id(), operator=next_op)
-                self._operator_graph.add_edge(operator.get_id(), next_op.get_id())
-
-    def remove_operator(self, operator: Operator) -> None:
-        """Remove an operator from the workflow."""
-        self._operator_graph.remove_node(operator.get_id())
-
-    def build_workflow(self, reasoner: Reasoner) -> None:
+    def _build_workflow(self, reasoner: Reasoner) -> DbgptMapOperator:
         """Build the DB-GPT workflow."""
         if self._operator_graph.number_of_nodes() == 0:
             raise ValueError("There is no operator in the workflow.")
-        if self._dbgpt_flow or self._tail_map_op:
-            raise ValueError("The DB-GPT workflow has been built-in.")
 
         def _merge_workflow_messages(*args) -> Tuple[Job, List[WorkflowMessage]]:
             """Combine the ouputs from the previous MapOPs and the InputOP."""
@@ -105,7 +41,7 @@ class DbgptWorkflow(Workflow):
 
             return job, workflow_messsages
 
-        with DAG("dbgpt_workflow") as dag:
+        with DAG("dbgpt_workflow"):
             input_op = InputOperator(input_source=SimpleCallDataInputSource())
             map_ops: Dict[str, DbgptMapOperator] = {}  # op_id -> map_op
 
@@ -146,9 +82,9 @@ class DbgptWorkflow(Workflow):
             _tail_map_op: DbgptMapOperator = map_ops[tail_map_op_ids[0]]
 
             # fourth step: add the eval operator at the end of the DAG
-            if self._eval_operator:
+            if self._evaluator:
                 eval_map_op = DbgptMapOperator(
-                    operator=self._eval_operator, reasoner=reasoner
+                    operator=self._evaluator, reasoner=reasoner
                 )
                 join_op = JoinOperator(combine_function=_merge_workflow_messages)
 
@@ -161,15 +97,9 @@ class DbgptWorkflow(Workflow):
             else:
                 self._tail_map_op = _tail_map_op
 
-            self._dbgpt_flow = dag
+            return self._tail_map_op
 
-    def get_operator(self, operator_id: str) -> Optional[Operator]:
-        """Get an operator from the workflow."""
-        return None
+    async def _execute_workflow(self, workflow: DbgptMapOperator, job: Job) -> WorkflowMessage:
+        """Execute the workflow."""
+        return await workflow.call(call_data=job)
 
-    def get_operators(self) -> List[Operator]:
-        """Get all operators from the workflow."""
-        return []
-
-    def visualize(self) -> None:
-        """Visualize the workflow."""
