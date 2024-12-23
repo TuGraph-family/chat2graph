@@ -1,36 +1,12 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import networkx as nx  # type: ignore
 
 from app.agent.job import Job
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
-from app.commom.type import WorkflowStatus
 from app.memory.message import WorkflowMessage
-
-
-@dataclass
-class WorkflowResult:
-    """Execution result of the workflow.
-
-    Attributes:
-        job_id (str): The unique identifier of the job.
-        status (str): The status of the job.
-        output (WorkflowMessage): The output of the job.
-        error (Optional[Exception]): The error of the job.
-        job_execution_context (Dict[str, str]): The context of the job.
-        experience (Optional[str]): The experience of the job and the lessons learned.
-    """
-
-    job_id: str
-    status: WorkflowStatus = WorkflowStatus.SUCCESS
-    output: WorkflowMessage = WorkflowMessage(content={"scratchpad": ""})
-    # TODO: remove error and job_execution_context
-    error: Optional[Exception] = None
-    job_execution_context: Dict[str, str] = field(default_factory=dict)
-    experience: Optional[str] = None
 
 
 class Workflow(ABC):
