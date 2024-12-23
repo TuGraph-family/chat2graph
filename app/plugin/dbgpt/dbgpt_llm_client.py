@@ -1,5 +1,5 @@
 import time
-from typing import Any, Callable, List, Optional
+from typing import List, Optional
 
 from dbgpt.core import (  # type: ignore
     AIMessage,
@@ -20,7 +20,7 @@ from app.commom.prompt.model_service import FUNC_CALLING_PROMPT
 from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
-from app.toolkit.tool.tool import FunctionCallResult
+from app.toolkit.tool.tool import FunctionCallResult, Tool
 
 
 class DbgptLlmClient(ModelService):
@@ -44,12 +44,12 @@ class DbgptLlmClient(ModelService):
         self,
         sys_prompt: str,
         messages: List[ModelMessage],
-        funcs: Optional[List[Callable[..., Any]]] = None,
+        tools: Optional[List[Tool]] = None,
     ) -> ModelMessage:
         """Generate a text given a prompt."""
         # prepare model request
         model_request: ModelRequest = self._prepare_model_request(
-            sys_prompt=sys_prompt, messages=messages, funcs=funcs
+            sys_prompt=sys_prompt, messages=messages, tools=tools
         )
 
         # generate response using the llm client
@@ -57,9 +57,9 @@ class DbgptLlmClient(ModelService):
 
         # call functions based on the model output
         func_call_results: Optional[List[FunctionCallResult]] = None
-        if funcs:
+        if tools:
             func_call_results = await self.call_function(
-                funcs=funcs, model_response_text=model_response.text
+                tools=tools, model_response_text=model_response.text
             )
 
         # parse model response to agent message
@@ -75,14 +75,14 @@ class DbgptLlmClient(ModelService):
         self,
         sys_prompt: str,
         messages: List[ModelMessage],
-        funcs: Optional[List[Callable[..., Any]]] = None,
+        tools: Optional[List[Tool]] = None,
     ) -> ModelRequest:
         """Prepare base messages for the LLM client."""
         if len(messages) == 0:
             raise ValueError("No messages provided.")
 
         # convert system prompt to system message
-        if funcs:
+        if tools:
             sys_message = SystemMessage(content=sys_prompt + FUNC_CALLING_PROMPT)
         else:
             sys_message = SystemMessage(content=sys_prompt)

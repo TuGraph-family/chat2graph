@@ -1,6 +1,4 @@
-from typing import List, Optional, Set
-
-import networkx as nx  # type: ignore
+from typing import List, Optional
 
 from app.agent.job import Job
 from app.agent.reasoner.reasoner import Reasoner
@@ -9,9 +7,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.env.insight.insight import Insight, TextInsight
 from app.knowledge_base.knowlege_service import KnowledgeService
 from app.memory.message import WorkflowMessage
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit import Toolkit, ToolkitGraphType, ToolkitService
+from app.toolkit.toolkit import Toolkit, ToolkitService
 
 
 class Operator:
@@ -45,12 +41,20 @@ class Operator:
         workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         """Execute the operator by LLM client."""
-        rec_actions = await self.get_rec_actions()
+        (
+            rec_tools,
+            rec_actions,
+        ) = await self._toolkit_service.get_toolkit().recommend_tools(
+            actions=self._config.actions,
+            threshold=self._config.threshold,
+            hops=self._config.hops,
+        )
 
         task = Task(
             job=job,
             operator_config=self._config,
             workflow_messages=workflow_messages,
+            tools=rec_tools,
             actions=rec_actions,
             knowledge=await self.get_knowledge(),
             insights=await self.get_env_insights(),
@@ -75,59 +79,6 @@ class Operator:
                 content="Do not have provieded any environment information yet.",
             )
         ]
-
-    async def get_rec_actions(self) -> List[Action]:
-        """Get the recommanded actions from the toolkit."""
-
-        # get the subgraph from the toolkit based on the provided actions, threshold, and hops
-        toolkit_subgraph: nx.DiGraph = (
-            await self._toolkit_service.get_toolkit().recommend_tools(
-                actions=self._config.actions,
-                threshold=self._config.threshold,
-                hops=self._config.hops,
-            )
-        )
-
-        # get the recommanded actions from the subgraph
-        recommanded_actions: List[Action] = []
-        for node in nx.topological_sort(toolkit_subgraph):
-            if toolkit_subgraph.nodes[node]["type"] == ToolkitGraphType.ACTION:
-                action: Action = toolkit_subgraph.nodes[node]["data"]
-                next_action_ids = [
-                    toolkit_subgraph.nodes[n]["data"].id
-                    for n in toolkit_subgraph.successors(node)
-                    if toolkit_subgraph.nodes[n]["type"] == ToolkitGraphType.ACTION
-                ]
-                tools = [
-                    toolkit_subgraph.nodes[n]["data"]
-                    for n in toolkit_subgraph.successors(node)
-                    if toolkit_subgraph.nodes[n]["type"] == ToolkitGraphType.TOOL
-                ]
-                recommanded_actions.append(
-                    Action(
-                        id=action.id,
-                        name=action.name,
-                        description=action.description,
-                        next_action_ids=next_action_ids,
-                        tools=tools,
-                    )
-                )
-
-        return recommanded_actions
-
-    async def get_tools_from_actions(self) -> List[Tool]:
-        """Get the tools from the recommanded actions."""
-        seen_ids: Set[str] = set()
-        tools: List[Tool] = []
-        rec_actions = await self.get_rec_actions()
-
-        for action in rec_actions:
-            assert action.tools is not None
-            for tool in action.tools:
-                if tool.id not in seen_ids:
-                    seen_ids.add(tool.id)
-                    tools.append(tool)
-        return tools
 
     def get_id(self) -> str:
         """Get the operator id."""

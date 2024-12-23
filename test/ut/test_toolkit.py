@@ -134,7 +134,7 @@ async def test_recommend_subgraph_no_hops(
 ):
     """Test subgraph recommendation with no hops."""
     action1 = sample_actions[0]
-    subgraph = await populated_toolkit.recommend_tools(
+    subgraph = await populated_toolkit.recommend_subgraph(
         actions=[action1], threshold=0.5, hops=0
     )
 
@@ -149,7 +149,7 @@ async def test_recommend_subgraph_one_hop(
 ):
     """Test subgraph recommendation with one hop."""
     action1 = sample_actions[0]
-    subgraph = await populated_toolkit.recommend_tools(
+    subgraph = await populated_toolkit.recommend_subgraph(
         actions=[action1], threshold=0.5, hops=1
     )
 
@@ -164,7 +164,7 @@ async def test_recommend_subgraph_high_threshold(
 ):
     """Test subgraph recommendation with high threshold."""
     action1 = sample_actions[0]
-    subgraph = await populated_toolkit.recommend_tools(
+    subgraph = await populated_toolkit.recommend_subgraph(
         actions=[action1], threshold=0.8, hops=2
     )
 
@@ -178,7 +178,7 @@ async def test_recommend_subgraph_multiple_start_points(
 ):
     """Test subgraph recommendation with multiple starting actions."""
     action1, _, action3, _ = sample_actions
-    subgraph = await populated_toolkit.recommend_tools(
+    subgraph = await populated_toolkit.recommend_subgraph(
         actions=[action1, action3], threshold=0.6, hops=1
     )
 

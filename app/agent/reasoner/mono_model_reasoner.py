@@ -1,5 +1,5 @@
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
@@ -11,7 +11,7 @@ from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
-from app.toolkit.action.action import Action
+from app.toolkit.tool.tool import Tool
 
 
 class MonoModelReasoner(Reasoner):
@@ -50,14 +50,8 @@ class MonoModelReasoner(Reasoner):
             SystemEnv.get(SysEnvKey.PRINT_REASONER_MESSAGES).lower() == "true"
         )
 
-        # get the function list
-        actions: List[Action] = task.actions or []
-        funcs: List[Callable] = [
-            tool.function for action in actions for tool in action.tools
-        ]
-
         # set the system prompt
-        sys_prompt = self._format_system_prompt(task=task, funcs=funcs)
+        sys_prompt = self._format_system_prompt(task=task, tools=task.tools)
         # logging
         print(f"\033[38;5;245mSystem:\n{sys_prompt}\033[0m\n")
 
@@ -78,7 +72,7 @@ class MonoModelReasoner(Reasoner):
         response = await self._model.generate(
             sys_prompt=sys_prompt,
             messages=reasoner_memory.get_messages(),
-            funcs=funcs,
+            tools=task.tools,
         )
         response.set_source_type(MessageSourceType.MODEL)
         reasoner_memory.add_message(response)
@@ -110,14 +104,14 @@ class MonoModelReasoner(Reasoner):
         """Evaluate the inference process, used to debug the process."""
         # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
-    async def conclure(self, reasoner_memory: ReasonerMemory) -> str:
-        """Conclure the inference results."""
+    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+        """Conclude the inference results."""
         return ""
 
     def _format_system_prompt(
         self,
         task: Task,
-        funcs: Optional[List[Callable]] = None,
+        tools: Optional[List[Tool]] = None,
     ) -> str:
         """Set the system prompt."""
         task_description = (
@@ -125,14 +119,6 @@ class MonoModelReasoner(Reasoner):
         )
 
         # set the task context
-        if task.job.response and task.job.response.experience:
-            experience = (
-                "\n-----\nApplying historical execution insights "
-                f"to optimize current task resolution.\n{task.job.response.experience}"
-                "\n-----"
-            )
-        else:
-            experience = ""
         if task.insights:
             env_info = "\n".join([f"{insight}" for insight in task.insights])
         else:
@@ -149,7 +135,7 @@ class MonoModelReasoner(Reasoner):
         ])
 
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
-            context=task.job.context + experience,
+            context=task.job.context,
             env_info=env_info,
             knowledge=task.knowledge,
             action_rels=action_rels,
@@ -160,9 +146,9 @@ class MonoModelReasoner(Reasoner):
             f"=====\nTASK:\n{task_description}\nCONTEXT:\n{task_context}\n====="
         )
 
-        if funcs:
+        if tools:
             func_description = "\n".join([
-                f"Function: {func.__name__}()\n{func.__doc__}\n" for func in funcs
+                f"Function: {tool.name}()\n{tool.description}\n" for tool in tools
             ])
         else:
             func_description = "No function calling in this round."

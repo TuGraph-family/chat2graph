@@ -114,8 +114,7 @@ async def test_execute_basic_functionality(
     task: Task = call_args["task"]
     actions = task.actions
     assert len(actions) == 3
-    tools = [tool for action in actions for tool in action.tools]
-    assert all(isinstance(tool, Query) for tool in tools)
+    assert all(isinstance(tool, Query) for tool in task.tools)
 
     # verify return value
     assert isinstance(op_output, WorkflowMessage)
@@ -128,7 +127,11 @@ async def test_get_tools_from_actions(
     operator: Operator, toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]
 ):
     """Test tool retrieval from actions."""
-    tools = await operator.get_tools_from_actions()
+    tools, _ = await operator._toolkit_service.get_toolkit().recommend_tools(
+        actions=operator._config.actions,
+        threshold=operator._config.threshold,
+        hops=operator._config.hops,
+    )
 
     # verify correct number and type of tools
     assert len(tools) == 3
@@ -175,8 +178,12 @@ async def test_get_tools_from_actions_duplicates(
 
     operator._config.threshold = 0.7
     operator._config.hops = 1
-    retrieved_tools = await operator.get_tools_from_actions()
+    tools, _ = await operator._toolkit_service.get_toolkit().recommend_tools(
+        actions=operator._config.actions,
+        threshold=operator._config.threshold,
+        hops=operator._config.hops,
+    )
 
     # verify no duplicates
-    tool_ids = [tool.id for tool in retrieved_tools]
+    tool_ids = [tool.id for tool in tools]
     assert len(tool_ids) == len(set(tool_ids))

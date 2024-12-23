@@ -1,4 +1,3 @@
-from abc import ABC
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Literal
 from uuid import uuid4
@@ -34,8 +33,10 @@ class FunctionCallResult:
 
 
 @dataclass
-class Tool(ABC):
+class Tool:
     """Tool in the toolkit."""
 
+    name: str
+    description: str
     function: Callable
     id: str = field(default_factory=lambda: str(uuid4()))

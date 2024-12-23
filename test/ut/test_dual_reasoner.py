@@ -92,7 +92,7 @@ async def test_infer_multiple_rounds(mock_reasoner: DualModelReasoner, task: Tas
     async def generate_with_rounds(
         sys_prompt: str,
         messages: List[ModelMessage],
-        funcs: Optional[List[Tool]] = None,
+        tools: Optional[List[Tool]] = None,
     ) -> ModelMessage:
         nonlocal round_count
         round_count += 1

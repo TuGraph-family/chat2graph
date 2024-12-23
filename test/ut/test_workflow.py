@@ -29,8 +29,8 @@ class TestReasoner(Reasoner):
     async def evaluate(self, data: Any) -> Any:
         """Evaluate the inference process."""
 
-    async def conclure(self, reasoner_memory: ReasonerMemory) -> str:
-        """Conclure the inference results."""
+    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+        """Conclude the inference results."""
 
     def init_memory(self, task: Task) -> ReasonerMemory:
         """Initialize the memory."""

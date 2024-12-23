@@ -24,7 +24,6 @@ class Job:
         id (str): The unique identifier of the task.
         context (str): The context of the task.
         output_schema (str): The output schema of the task.
-        job_execution_context (JobExecutionContext): The context of the job execution.
         response (Optional[WorkflowMessage]): The response of the workflow.
     """
 

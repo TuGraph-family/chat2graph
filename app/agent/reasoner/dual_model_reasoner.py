@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
@@ -15,7 +15,7 @@ from app.commom.system_env import SysEnvKey, SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
-from app.toolkit.action.action import Action
+from app.toolkit.tool.tool import Tool
 
 
 class DualModelReasoner(Reasoner):
@@ -60,16 +60,10 @@ class DualModelReasoner(Reasoner):
             SystemEnv.get(SysEnvKey.PRINT_REASONER_MESSAGES).lower() == "true"
         )
 
-        # get the function list
-        actions: List[Action] = task.actions or []
-        funcs: List[Callable] = [
-            tool.function for action in actions for tool in action.tools
-        ]
-
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(
             task=task,
-            funcs=funcs,
+            tools=task.tools,
         )
         thinker_sys_prompt = self._format_thinker_sys_prompt(task=task)
 
@@ -103,7 +97,7 @@ class DualModelReasoner(Reasoner):
             response = await self._actor_model.generate(
                 sys_prompt=actor_sys_prompt,
                 messages=reasoner_memory.get_messages(),
-                funcs=funcs,
+                tools=task.tools,
             )
             response.set_source_type(MessageSourceType.ACTOR)
             reasoner_memory.add_message(response)
@@ -128,7 +122,7 @@ class DualModelReasoner(Reasoner):
             if self.stop(response):
                 break
 
-        return await self.conclure(reasoner_memory=reasoner_memory)
+        return await self.conclude(reasoner_memory=reasoner_memory)
 
     async def update_knowledge(self, data: Any) -> None:
         """Update the knowledge."""
@@ -138,8 +132,8 @@ class DualModelReasoner(Reasoner):
         """Evaluate the inference process, used to debug the process."""
         # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
-    async def conclure(self, reasoner_memory: ReasonerMemory) -> str:
-        """Conclure the inference results."""
+    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+        """Conclude the inference results."""
 
         content = reasoner_memory.get_message_by_index(-1).get_payload()
 
@@ -165,7 +159,7 @@ class DualModelReasoner(Reasoner):
     def _format_actor_sys_prompt(
         self,
         task: Task,
-        funcs: Optional[List[Callable]] = None,
+        tools: Optional[List[Tool]] = None,
     ) -> str:
         """Set the system prompt."""
         # set the task description
@@ -174,14 +168,6 @@ class DualModelReasoner(Reasoner):
         )
 
         # set the task context
-        if task.job.response and task.job.response.experience:
-            experience = (
-                "\n-----\nApplying historical execution insights "
-                f"to optimize current task resolution.\n{task.job.response.experience}"
-                "\n-----"
-            )
-        else:
-            experience = ""
         if task.insights:
             env_info = "\n".join([f"{insight}" for insight in task.insights])
         else:
@@ -197,7 +183,7 @@ class DualModelReasoner(Reasoner):
             f"[{action.name}: {action.description}] -next-> " for action in task.actions
         ])
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
-            context=task.job.context + experience,
+            context=task.job.context,
             env_info=env_info,
             knowledge=task.knowledge,
             action_rels=action_rels,
@@ -210,9 +196,9 @@ class DualModelReasoner(Reasoner):
         )
 
         # set the function docstrings
-        if funcs:
+        if tools:
             func_description = "\n".join([
-                f"Function: {func.__name__}()\n{func.__doc__}\n" for func in funcs
+                f"Function: {tool.name}()\n{tool.description}\n" for tool in tools
             ])
         else:
             func_description = "No function calling in this round."
@@ -246,14 +232,6 @@ class DualModelReasoner(Reasoner):
             task.operator_config.instruction if task.operator_config else ""
         )
         # set the task context
-        if task.job.response and task.job.response.experience:
-            experience = (
-                "\n-----\nApplying historical execution insights "
-                f"to optimize current task resolution.\n{task.job.response.experience}"
-                "\n-----"
-            )
-        else:
-            experience = ""
         if task.insights:
             env_info = "\n".join([f"{insight}" for insight in task.insights])
         else:
@@ -269,7 +247,7 @@ class DualModelReasoner(Reasoner):
             f"[{action.name}: {action.description}] -next-> " for action in task.actions
         ])
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
-            context=task.job.context + experience,
+            context=task.job.context,
             env_info=env_info,
             knowledge=task.knowledge,
             action_rels=action_rels,

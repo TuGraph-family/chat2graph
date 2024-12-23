@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from app.memory.message import ModelMessage
-from app.toolkit.tool.tool import FunctionCallResult
+from app.toolkit.tool.tool import FunctionCallResult, Tool
 
 
 class ModelService(ABC):
@@ -20,17 +20,17 @@ class ModelService(ABC):
         self,
         sys_prompt: str,
         messages: List[ModelMessage],
-        funcs: Optional[List[Callable[..., Any]]] = None,
+        tools: Optional[List[Tool]] = None,
     ) -> ModelMessage:
         """Generate a text given a prompt non-streaming"""
 
     async def call_function(
-        self, funcs: List[Callable], model_response_text: str
+        self, tools: Optional[List[Tool]], model_response_text: str
     ) -> Optional[List[FunctionCallResult]]:
         """Call functions based on message content.
 
         Args:
-            funcs: List of available functions
+            tools: The list of tools containing functions to call
             model_response_text: The text containing potential function calls
 
         Returns:
@@ -46,7 +46,7 @@ class ModelService(ABC):
 
         func_call_results: List[FunctionCallResult] = []
         for func_name, call_objective, func_args in func_calls:
-            func = self._find_function(func_name, funcs)
+            func = self._find_function(func_name, tools)
             if not func:
                 func_call_results.append(
                     FunctionCallResult(
@@ -118,10 +118,10 @@ class ModelService(ABC):
         return func_calls, err
 
     def _find_function(
-        self, func_name: str, funcs: List[Callable]
-    ) -> Optional[Callable]:
+        self, func_name: str, tools: List[Tool]
+    ) -> Optional[Callable[..., Any]]:
         """Find matching function from the provided list."""
-        for func in funcs:
-            if func.__name__ == func_name:
-                return func
+        for tool in tools:
+            if tool.name == func_name:
+                return tool.function
         return None

@@ -30,8 +30,8 @@ class TestReasoner(Reasoner):
     async def evaluate(self, data: Any) -> Any:
         """Evaluate the inference process."""
 
-    async def conclure(self, reasoner_memory: ReasonerMemory) -> str:
-        """Conclure the inference results."""
+    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+        """Conclude the inference results."""
 
     def init_memory(self, task: Task) -> ReasonerMemory:
         """Initialize the memory."""
@@ -55,7 +55,7 @@ class BaseTestOperator(Operator):
         self,
         reasoner: Reasoner,
         job: Job,
-        workflow_messsages: Optional[List[WorkflowMessage]] = None,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         raise NotImplementedError
 
@@ -70,12 +70,12 @@ class UpperOperator(BaseTestOperator):
         self,
         reasoner: Reasoner,
         job: Job,
-        workflow_messsages: Optional[List[WorkflowMessage]] = None,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         scratchpad_content = ""
-        if workflow_messsages:
+        if workflow_messages:
             scratchpad_content = ""
-            for workflow_message in workflow_messsages:
+            for workflow_message in workflow_messages:
                 scratchpad_content += workflow_message.scratchpad
         result = job.context.upper() + scratchpad_content.upper()
         print(
@@ -95,14 +95,14 @@ class AddPrefixOperator(BaseTestOperator):
         self,
         reasoner: Reasoner,
         job: Job,
-        workflow_messsages: Optional[List[WorkflowMessage]] = None,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         # to avoid the async issue of UpperOperator
         time.sleep(1)
 
         scratchpad_content = ""
-        if workflow_messsages:
-            for workflow_message in workflow_messsages:
+        if workflow_messages:
+            for workflow_message in workflow_messages:
                 scratchpad_content += workflow_message.scratchpad
 
         result = f"Prefix_{scratchpad_content}{job.context}"
@@ -124,11 +124,11 @@ class AddSuffixOperator(BaseTestOperator):
         self,
         reasoner: Reasoner,
         job: Job,
-        workflow_messsages: Optional[List[WorkflowMessage]] = None,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         scratchpad_content = ""
-        if workflow_messsages:
-            for workflow_message in workflow_messsages:
+        if workflow_messages:
+            for workflow_message in workflow_messages:
                 scratchpad_content += workflow_message.scratchpad
 
         result = f"{scratchpad_content}_Suffix"
@@ -149,11 +149,11 @@ class EvalOperator(BaseTestOperator):
         self,
         reasoner: Reasoner,
         job: Job,
-        workflow_messsages: Optional[List[WorkflowMessage]] = None,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         scratchpad_content = ""
-        if workflow_messsages:
-            for workflow_message in workflow_messsages:
+        if workflow_messages:
+            for workflow_message in workflow_messages:
                 scratchpad_content += workflow_message.scratchpad
         assert (
             scratchpad_content

@@ -1,52 +1,92 @@
 import asyncio
 import time
-from typing import List
+from typing import List, Optional
+from uuid import uuid4
 
 from app.agent.reasoner.model_service import ModelService
 from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
+from app.toolkit.tool.tool import Tool
 
 
-# Sample functions for testing
-def sync_add(a: int, b: int) -> int:
-    """A synchronous function that adds two numbers.
+class SyncAdd(Tool):
+    """A synchronous function that adds two numbers."""
 
-    Args:
-        a: The first number.
-        b: The second number.
-    """
-    return a + b
+    def __init__(self, id: Optional[str] = None):
+        name = self.sync_add.__name__
+        description = self.sync_add.__doc__
+        super().__init__(
+            name=name,
+            description=description,
+            function=self.sync_add,
+            id=id or str(uuid4()),
+        )
+
+    def sync_add(self, a: int, b: int) -> int:
+        """A synchronous function that adds two numbers.
+
+        Args:
+            a: The first number.
+            b: The second number.
+        """
+        return a + b
 
 
-async def async_multiply(a: int, b: int) -> int:
-    """An asynchronous function that multiplies two numbers.
+class AsyncMultiply(Tool):
+    """An asynchronous function that multiplies two numbers."""
 
-    Args:
-        a: The first number.
-        b: The second number.
-    """
-    await asyncio.sleep(0.1)
-    return a * b
+    def __init__(self, id: Optional[str] = None):
+        name = self.async_multiply.__name__
+        description = self.async_multiply.__doc__
+        super().__init__(
+            name=name,
+            description=description,
+            function=self.async_multiply,
+            id=id or str(uuid4()),
+        )
+
+    async def async_multiply(self, a: int, b: int) -> int:
+        """An asynchronous function that multiplies two numbers.
+
+        Args:
+            a: The first number.
+            b: The second number.
+        """
+        await asyncio.sleep(0.1)
+        return a * b
 
 
-def process_complex_data(
-    data_dict: dict, nested_list: List[dict], config: dict, special_str: str
-) -> dict:
-    """A function that processes complex nested data structures.
+class ProcessComplexData(Tool):
+    def __init__(self, id: Optional[str] = None):
+        name = self.process_complex_data.__name__
+        description = self.process_complex_data.__doc__
+        super().__init__(
+            name=name,
+            description=description,
+            function=self.process_complex_data,
+            id=id or str(uuid4()),
+        )
 
-    Args:
-        data_dict: A dictionary containing data.
-        nested_list: A list of nested dictionaries.
-        config: A configuration dictionary.
-        special_str: A special string.
-    """
-    result = {
-        "processed_dict": {k.upper(): v for k, v in data_dict.items()},
-        "processed_list": [item["value"] for item in nested_list if "value" in item],
-        "config_status": "valid" if config.get("enabled") else "invalid",
-        "special_str_length": len(special_str),
-    }
-    return result
+    def process_complex_data(
+        self, data_dict: dict, nested_list: List[dict], config: dict, special_str: str
+    ) -> dict:
+        """A function that processes complex nested data structures.
+
+        Args:
+            data_dict: A dictionary containing data.
+            nested_list: A list of nested dictionaries.
+            config: A configuration dictionary.
+            special_str: A special string.
+        """
+        result = {
+            "processed_dict": {k.upper(): v for k, v in data_dict.items()},
+            "processed_list": [
+                item["value"] for item in nested_list if "value" in item
+            ],
+            "config_status": "valid" if config.get("enabled") else "invalid",
+            "special_str_length": len(special_str),
+        }
+        return result
 
 
 class TestModelService(ModelService):
@@ -67,7 +107,7 @@ async def main():
     """Main function"""
     model_service = TestModelService()
 
-    test_funcs = [sync_add, async_multiply, process_complex_data]
+    test_tools = [SyncAdd(), AsyncMultiply(), ProcessComplexData()]
 
     # Create test messages with function calls
     test_cases = [
@@ -92,14 +132,14 @@ async def main():
         # test multiple function calls
         ModelMessage(
             source_type=MessageSourceType.MODEL,
-            content='<function_call>{"name": "sync_add", "args": {"a": 2, "b": 3}}</function_call>\n<function_call>{"name": "async_multiply", '
+            content='<function_call>{"name": "sync_add", "call_objective": "Add two numbers", "args": {"a": 2, "b": 3}}</function_call>\n<function_call>{"name": "async_multiply", '
             '"call_objective": "Multiply two numbers", "args": {"a": 4, "b": 6}}</function_call>',
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test invalid function
         ModelMessage(
             source_type=MessageSourceType.MODEL,
-            content='<function_call>{"name": "invalid_function", "args": {"a": 1, "b": 2}}</function_call>',
+            content='<function_call>{"name": "invalid_function", "call_objective": "Call invalid function", "args": {"a": 1, "b": 2}}</function_call>',
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test complex fuction call
@@ -121,7 +161,7 @@ async def main():
         print(f"\nTest Case {i}:")
 
         func_call_results = await model_service.call_function(
-            funcs=test_funcs, model_response_text=test_msg.get_payload()
+            tools=test_tools, model_response_text=test_msg.get_payload()
         )
         if func_call_results:
             for j, result in enumerate(func_call_results, 1):

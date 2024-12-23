@@ -21,8 +21,8 @@ class Reasoner(ABC):
         """Evaluate the inference process."""
 
     @abstractmethod
-    async def conclure(self, reasoner_memory: ReasonerMemory) -> str:
-        """Conclure the inference results."""
+    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+        """Conclude the inference results."""
 
     @abstractmethod
     def init_memory(self, task: Task) -> ReasonerMemory:

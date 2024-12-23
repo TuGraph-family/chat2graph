@@ -13,7 +13,14 @@ class Query(Tool):
     """The query tool in the toolkit."""
 
     def __init__(self, id: Optional[str] = None):
-        super().__init__(function=self.query, id=id or str(uuid4()))
+        name = self.query.__name__
+        description = self.query.__doc__
+        super().__init__(
+            name=name,
+            description=description,
+            function=self.query,
+            id=id or str(uuid4()),
+        )
 
     async def query(self, text: str) -> str:
         """Query the database/document by the text.

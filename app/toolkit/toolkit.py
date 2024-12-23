@@ -1,4 +1,4 @@
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 
 import matplotlib.pyplot as plt
 import networkx as nx  # type: ignore
@@ -176,7 +176,7 @@ class Toolkit:
         if action_id in self._toolkit_graph:
             self._toolkit_graph.remove_node(action_id)
 
-    async def recommend_tools(
+    async def recommend_subgraph(
         self, actions: List[Action], threshold: float = 0.5, hops: int = 0
     ) -> nx.DiGraph:
         """It is a recommendation engine that extracts a relevant subgraph from a
@@ -252,6 +252,32 @@ class Toolkit:
         self.visualize(graph=toolkit_subgraph, title="Recommended Toolkit")
 
         return toolkit_subgraph
+
+    async def recommend_tools(
+        self, actions: List[Action], threshold: float = 0.5, hops: int = 0
+    ) -> Tuple[List[Tool], List[Action]]:
+        """Recommend tools and actions.
+
+        Args:
+            actions: List of actions to recommend tools for
+            threshold: Minimum score threshold for recommendations
+            hops: Number of hops to search for recommendations
+
+        Returns:
+            nx.DiGraph: The toolkit subgraph with recommended tools
+        """
+        subgraph = await self.recommend_subgraph(actions, threshold, hops)
+        actions = [
+            subgraph.nodes[n]["data"]
+            for n, d in subgraph.nodes(data=True)
+            if d["type"] == ToolkitGraphType.ACTION
+        ]
+        tools = [
+            subgraph.nodes[n]["data"]
+            for n, d in subgraph.nodes(data=True)
+            if d["type"] == ToolkitGraphType.TOOL
+        ]
+        return tools, actions
 
     async def update_action(self, text: str, called_tools: List[Tool]):
         """Update the toolkit graph by reinforcement learning.
