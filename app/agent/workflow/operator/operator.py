@@ -41,6 +41,13 @@ class Operator:
         workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         """Execute the operator by LLM client."""
+        task = await self._build_task(job, workflow_messages)
+
+        result = await reasoner.infer(task=task)
+
+        return WorkflowMessage(content={"scratchpad": result})
+
+    async def _build_task(self, job, workflow_messages):
         (
             rec_tools,
             rec_actions,
@@ -49,7 +56,6 @@ class Operator:
             threshold=self._config.threshold,
             hops=self._config.hops,
         )
-
         task = Task(
             job=job,
             operator_config=self._config,
@@ -59,10 +65,7 @@ class Operator:
             knowledge=await self.get_knowledge(),
             insights=await self.get_env_insights(),
         )
-
-        result = await reasoner.infer(task=task)
-
-        return WorkflowMessage(content={"scratchpad": result})
+        return task
 
     async def get_knowledge(self) -> str:
         """Get the knowledge from the knowledge base."""

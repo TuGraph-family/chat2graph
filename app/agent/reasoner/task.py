@@ -6,6 +6,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.env.insight.insight import Insight
 from app.memory.message import WorkflowMessage
 from app.toolkit.action.action import Action
+from app.toolkit.tool.tool import Tool
 
 
 @dataclass
@@ -26,7 +27,7 @@ class Task:
     job: Job
     operator_config: Optional[OperatorConfig] = None
     workflow_messages: Optional[List[WorkflowMessage]] = None
-    tools: List[Action] = field(default_factory=list)
     actions: List[Action] = field(default_factory=list)
+    tools: List[Tool] = field(default_factory=list)
     knowledge: str = ""
     insights: Optional[List[Insight]] = None

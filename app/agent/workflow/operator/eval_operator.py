@@ -18,24 +18,7 @@ class EvalOperator(Operator):
         workflow_messages: Optional[List[WorkflowMessage]] = None,
     ) -> WorkflowMessage:
         """Execute the operator by LLM client."""
-        (
-            rec_tools,
-            rec_actions,
-        ) = await self._toolkit_service.get_toolkit().recommend_tools(
-            actions=self._config.actions,
-            threshold=self._config.threshold,
-            hops=self._config.hops,
-        )
-
-        task = Task(
-            job=job,
-            operator_config=self._config,
-            workflow_messages=workflow_messages,
-            tools=rec_tools,
-            actions=rec_actions,
-            knowledge=await self.get_knowledge(),
-            insights=await self.get_env_insights(),
-        )
+        task = await self._build_task(job, workflow_messages)
 
         result = await reasoner.infer(task=task)
 
