@@ -144,7 +144,7 @@ DOC_ANALYSIS_OUTPUT_SCHEMA = """
 
 # Operation 2: Concept Modeling
 CONCEPT_MODELING_PROFILE = """
-你是一位知识图谱建模专家,擅长将概念和关系转化为图数据库模式。你需要帮助用户设计合适的实体-关系模型。
+你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要帮助用户设计合适的实体-关系模型。
 """
 
 CONCEPT_MODELING_INSTRUCTION = """
@@ -162,13 +162,14 @@ CONCEPT_MODELING_INSTRUCTION = """
 - 使用TuGraph Cypher语法定义图模式
 - 请注意：Schema 不是在 DB 中插入节点、关系等具体的数据，而是定义图数据库的模式（schema/label）。预期应该是定义是实体的类型、关系的类型、约束等这些东西。
 - 任务的背景是知识图谱，所以，不要具体的某个实体，而是相对通用的实体。比如，人、地点、事件等。
+- 需要验证 schema 格式和语法的正确性，并调用工具执行 Cypher，使得在 TuGraph 上生效建模模式。
 """
 
 CONCEPT_MODELING_OUTPUT_SCHEMA = """
 {
     "stauts": "模型状态，是否通过验证等", 
-    "entity_label": Any_Type,
-    "relation_label": Any_Type,
+    "entity_label": "一些属于实体的标签",
+    "relation_label": "一些属于关系的标签",
     "TuGraph Cypher_code": "TuGraph Cypher代码",
 }
 """
@@ -278,27 +279,28 @@ class SchemaGenerator(Tool):
         return response.get_payload()
 
 
-class SchemaValidator(Tool):
-    """Tool for validating schema definitions."""
+class CypherExecutor(Tool):
+    """Tool for validating and executing TuGraph Cypher schema definitions."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id,
-            name=self.validate_and_run_schema.__name__,
-            description=self.validate_and_run_schema.__doc__,
-            function=self.validate_and_run_schema,
+            name=self.validate_and_execute_cypher.__name__,
+            description=self.validate_and_execute_cypher.__doc__,
+            function=self.validate_and_execute_cypher,
         )
 
-    async def validate_and_run_schema(self, schema: str) -> str:
-        """Validate schema definition.
+    async def validate_and_execute_cypher(self, cypher_schema: str) -> str:
+        """Validate the TuGraph Cypher and execute it in the TuGraph Database.
+        Make sure the input cypher is only the code without any other information including ```Cypher``` or ```TuGraph Cypher```.
+        This function can only execute one cypher schema at a time.
         If the schema is valid, return the validation results. Otherwise, return the error message.
 
-
         Args:
-            schema (str): TuGraph Cypher schema definition
+            cypher_schema (str): TuGraph Cypher schema including only the code.
 
         Returns:
-            Validation results
+            Validation and execution results.
         """
         _model = ModelServiceFactory.create(platform_type=SystemEnv.platform_type())
 
@@ -311,7 +313,7 @@ class SchemaValidator(Tool):
         )
 
         message = ModelMessage(
-            content=schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
+            content=cypher_schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
         )
 
         response = await _model.generate(sys_prompt=prompt, messages=[message])
@@ -321,8 +323,8 @@ class SchemaValidator(Tool):
         else:
             store = get_tugraph()
             try:
-                store.conn.run(schema)
-                return f"TuGraph 成功运行如下 schema：\n{schema}"
+                store.conn.run(cypher_schema)
+                return f"TuGraph 成功运行如下 schema：\n{cypher_schema}"
             except Exception as e:
                 return f"验证失败：{str(e)}"
 
@@ -404,11 +406,11 @@ def get_concept_modeling_operator():
     )
     design_validation = Action(
         id="concept_modeling.design_validation",
-        name="Schema验证",
-        description="验证图数据库schema/label的正确性",
+        name="Schema验证与Cypher执行（必须）",
+        description="验证图数据库schema/label的正确性，并执行",
     )
     schema_generator = SchemaGenerator(id="schema_generator_tool")
-    schema_validator = SchemaValidator(id="schema_validator_tool")
+    cypher_executor = CypherExecutor(id="cypher_executor_tool")
 
     concept_modeling_toolkit = Toolkit()
 
@@ -436,7 +438,7 @@ def get_concept_modeling_operator():
         tool=schema_generator, connected_actions=[(schema_design, 1)]
     )
     concept_modeling_toolkit.add_tool(
-        tool=schema_validator, connected_actions=[(design_validation, 1)]
+        tool=cypher_executor, connected_actions=[(design_validation, 1)]
     )
 
     operator_config = OperatorConfig(
@@ -447,6 +449,7 @@ def get_concept_modeling_operator():
             entity_type_definition,
             relation_type_definition,
             schema_design,
+            design_validation,
         ],
     )
 
@@ -486,7 +489,7 @@ async def main():
         id="test_job_id",
         session_id="test_session_id",
         goal="「任务」",
-        context="目前我们的问题的背景是，通过函数读取文档第10章节的内容，生成知识图谱图数据库的模式（Graph schema/label）。文档的主题是三国演义。"
+        context="目前我们的问题的背景是，通过函数读取文档第10章节的内容，生成知识图谱图数据库的模式（Graph schema/label），最后执行相关的 Cypher 语句。文档的主题是三国演义。"
         "在必要的时候，使用中文来回答。",
     )
     reasoner = DualModelReasoner()
