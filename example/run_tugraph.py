@@ -83,11 +83,11 @@ def init_tugraph(config: Optional[TuGraphStoreConfig] = None) -> TuGraphStore:
     try:
         if not config:
             config = TuGraphStoreConfig(
-                name="test_graph",
+                name="aaa_default_graph",
                 host="127.0.0.1",
                 port=7687,
                 username="admin",
-                password="your_password (tugraph default password)",
+                password="73@TuGraph",
             )
 
         # initialize store
@@ -112,9 +112,11 @@ def main():
         # create_schema(store.conn)
 
         # example: create a test vertex
-        create_query = "CALL db.upsertVertex('entity', [{id: '12', name: 'test_entity', type: 'test', properties: {description: 'test entity'}}])"
+        # create_query = "CALL db.upsertVertex('entity', [{id: '12', name: 'test_entity', type: 'test', properties: {description: 'test entity'}}])"
+        create_query = "CALL db.getLabelSchema('edge', 'HOSTILE')"
         print(create_query)
-        store.conn.run(create_query)
+        records = store.conn.run(create_query)
+        print(records[0].keys())
 
         logger.info("successfully initialized and tested tugraph")
 
