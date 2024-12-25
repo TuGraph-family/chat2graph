@@ -111,8 +111,8 @@ class ModelService(ABC):
                 func_args: Dict[str, Any] = func_data["args"]
                 func_calls.append((func_name, call_objective, func_args))
             except Exception as e:
-                print(f"Error parsing function call: {str(e)}")
-                err = f"Error parsing function call: {str(e)}"
+                print(f"Error json parsing, the json format is not validated: {str(e)}")
+                err = f"Error json parsing, the json format is not validated: {str(e)}"
                 continue
 
         return func_calls, err

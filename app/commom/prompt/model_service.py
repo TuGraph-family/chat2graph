@@ -43,8 +43,8 @@ FUNC_CALLING_PROMPT = """
     - Ensure proper nesting of data structures
     - Remember to escape special characters in strings
     - Use <function_call>...</function_call> to wrap the function call (in the <Action> part). You can use it multiple times to call multiple functions.
-    - When using <function_call>...</function_call>, make sure to provide the "call_objective" field.
-    6. If functions called, the program will execute the functions and paste the results at the end of <Feedback> part.
+    - When using <function_call>...</function_call>, make sure to provide the "call_objective" field, and to generate the correct json format. Use empty dict if no arguments 'args: \{\}' are needed.
+    6. If functions called, the third party (neither you or me) will execute the functions and paste the results at the end of <Feedback> part, so that you and me are NOT permitted to geneerate the mock function results by ourselves.
 
 <function_call>
 {
@@ -66,5 +66,15 @@ FUNC_CALLING_PROMPT = """
         "special_str": "Hello, World! 你好，世界！"
     }
 }
+</function_call>
+<function_call>
+{
+    "name": "another_function_with_no_args",
+    "call_objective": "waht is the objective of calling this function",
+    "args": {}
+}
+</function_call>
+<function_call>
+... // add more function calls if needed
 </function_call>
 """
