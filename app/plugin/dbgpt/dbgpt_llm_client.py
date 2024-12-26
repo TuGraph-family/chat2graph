@@ -33,11 +33,15 @@ class DbgptLlmClient(ModelService):
     def __init__(self):
         super().__init__()
         # use openai llm client by default
-        # TODO: Support other llm clients
+        # TODO: support other llm clients
+        # TODO: support more llm client configurations
         self._llm_client: LLMClient = OpenAILLMClient(
             model_alias=SystemEnv.get(SysEnvKey.PROXYLLM_BACKEND),
             api_base=SystemEnv.get(SysEnvKey.PROXY_SERVER_URL),
             api_key=SystemEnv.get(SysEnvKey.PROXY_API_KEY),
+            openai_kwargs={
+                "temperature": SystemEnv.get(SysEnvKey.TEMPRATURE),
+            },
         )
 
     async def generate(
