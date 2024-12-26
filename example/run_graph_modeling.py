@@ -273,7 +273,7 @@ class VertexLabelGenerator(Tool):
                 And make sure the primary key occurs in the properties list and is not optional.
 
         Returns:
-            str: The complete Cypher statement for creating the vertex label
+            str: The complete Cypher statement for creating the edge label, and it's result.
 
         Example:
             properties = [
@@ -290,7 +290,7 @@ class VertexLabelGenerator(Tool):
                 },
                 // Add more properties as needed
             ]
-            stmt = create_vertex_label_by_json_schema("Person", "id", properties)
+            execution_result = create_vertex_label_by_json_schema("Person", "id", properties)
         """
         # Validate primary key exists in properties
         primary_prop = next((p for p in properties if p["name"] == primary), None)
@@ -349,7 +349,7 @@ class EdgeLabelGenerator(Tool):
                 for example, [["source label", "target label"], ["other source label", "other target label"]]
 
         Returns:
-            str: The complete Cypher statement for creating the edge label
+            str: The complete Cypher statement for creating the edge label, and it's result.
 
         Example:
             properties = [
@@ -360,7 +360,7 @@ class EdgeLabelGenerator(Tool):
                 },
                 // Add more properties as needed
             ]
-            stmt = create_edge_label_by_json_schema(
+            execution_result = create_edge_label_by_json_schema(
                 "KNOWS",
                 "id",
                 properties,
@@ -614,7 +614,7 @@ def get_concept_modeling_operator():
     return operator
 
 
-def get_graph_rag_workflow():
+def get_graph_modeling_workflow():
     """Get the workflow for graph modeling and assemble the operators."""
     analysis_operator = get_analysis_operator()
     concept_modeling_operator = get_concept_modeling_operator()
@@ -636,7 +636,7 @@ def get_graph_rag_workflow():
 
 async def main():
     """Main function"""
-    workflow = get_graph_rag_workflow()
+    workflow = get_graph_modeling_workflow()
 
     job = Job(
         id="test_job_id",
