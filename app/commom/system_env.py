@@ -39,7 +39,7 @@ class SysEnvKey(str, Enum):
             self.PROXYLLM_BACKEND: "gpt-4o-mini",
             self.PROXY_SERVER_URL: None,
             self.PROXY_API_KEY: None,
-            self.TEMPRATURE: "0.7",
+            self.TEMPRATURE: 0.7,
             self.REASONING_ROUNDS: "20",
             self.PRINT_REASONER_MESSAGES: "True",
         }
