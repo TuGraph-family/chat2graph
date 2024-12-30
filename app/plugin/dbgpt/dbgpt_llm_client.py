@@ -40,7 +40,7 @@ class DbgptLlmClient(ModelService):
             api_base=SystemEnv.get(SysEnvKey.PROXY_SERVER_URL),
             api_key=SystemEnv.get(SysEnvKey.PROXY_API_KEY),
             openai_kwargs={
-                "temperature": SystemEnv.get(SysEnvKey.TEMPRATURE),
+                "temperature": float(SystemEnv.get(SysEnvKey.TEMPERATURE)),
             },
         )
 
@@ -98,13 +98,17 @@ class DbgptLlmClient(ModelService):
             base_message_content = message.get_payload()
             func_call_results = message.get_function_calls()
             if func_call_results:
-                for result in func_call_results:
-                    base_message_content += (
-                        f"\n{result.status} called function "
+                base_message_content += (
+                    "<function_call_result>\n"
+                    + "\n".join([
+                        f"{i + 1}. {result.status} called function "
                         f"{result.func_name}:\n"
                         f"Call objective: {result.call_objective}\n"
                         f"Function Output: {result.output}"
-                    )
+                        for i, result in enumerate(func_call_results)
+                    ])
+                    + "\n</function_call_result>"
+                )
 
             # Chat2Graph <-> DB-GPT msg: actor <-> ai & thinker <-> human
             if message.get_source_type() == MessageSourceType.ACTOR:

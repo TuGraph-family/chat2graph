@@ -54,7 +54,9 @@ class ModelService(ABC):
                         call_objective=call_objective,
                         func_args=func_args,
                         status="failed",
-                        output=f"Function {func_name} not found.",
+                        output=f"Error: Function {func_name} does not exist in the current scope."
+                        "You have called a function that does not exist in the system, "
+                        "and have made a mistake of function calling.",
                     )
                 )
                 continue

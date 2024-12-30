@@ -71,8 +71,9 @@ class DualModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
             content=(
-                "Scratchpad: Empty\n"
-                "Action: Empty\nFeedback: I need your help to complete the task\n"
+                "<scratchpad>:\nEmpty\n</scratchpad>\n"
+                "<action>:\nEmpty\n</action>\n"
+                "<feedback>:\nNo feadback\n</feedback>\n"
             ),
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
@@ -108,7 +109,7 @@ class DualModelReasoner(Reasoner):
                 func_call_results = response.get_function_calls()
                 if func_call_results:
                     print(
-                        "\033[92m"
+                        "\033[92m<function_call_result>\n"
                         + "\n".join([
                             f"{i + 1}. {result.status} called function "
                             f"{result.func_name}:\n"
@@ -116,7 +117,7 @@ class DualModelReasoner(Reasoner):
                             f"Function Output: {result.output}"
                             for i, result in enumerate(func_call_results)
                         ])
-                        + "\033[0m\n"
+                        + "\n</function_call_result>\033[0m\n"
                     )
 
             if self.stop(response):
@@ -144,15 +145,21 @@ class DualModelReasoner(Reasoner):
         if match:
             deliverable_content = match.group(1)
             return (
-                deliverable_content.replace("<Scratchpad>:", "")
-                .replace("<Action>:", "")
-                .replace("<Feedback>:", "")
+                deliverable_content.replace("<scratchpad>:", "")
+                .replace("</scratchpad>:", "")
+                .replace("<action>:", "")
+                .replace("</action>:", "")
+                .replace("<feedback>:", "")
+                .replace("</feedback>:", "")
                 .replace("TASK_DONE", "")
             )
         return (
-            content.replace("<Scratchpad>:", "")
-            .replace("<Action>:", "")
-            .replace("<Feedback>:", "")
+            content.replace("<scratchpad>:", "")
+            .replace("</scratchpad>:", "")
+            .replace("<action>:", "")
+            .replace("</action>:", "")
+            .replace("<feedback>:", "")
+            .replace("</feedback>:", "")
             .replace("TASK_DONE", "")
         )
 

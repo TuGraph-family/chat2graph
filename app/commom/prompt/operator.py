@@ -31,7 +31,6 @@ You are a quality evaluation AI. Your task is to analyze the PREVIOUS INPUT and 
    input_data_error: Essential input data missing or malformed
    execution_error: exe1cution, reasoning, or function calling error.
    job_too_complicated_error: The TARGET GOAL is too complicated, and the PREVIOUS INPUT is far from the TARGET GOAL.
-
 """
 
 EVAL_OPERATION_OUTPUT_PROMPT = """

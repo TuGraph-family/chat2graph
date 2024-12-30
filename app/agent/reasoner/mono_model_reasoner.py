@@ -83,7 +83,7 @@ class MonoModelReasoner(Reasoner):
             func_call_results = response.get_function_calls()
             if func_call_results:
                 print(
-                    "\033[92m"
+                    "\033[92m<function_call_result>\n"
                     + "\n".join([
                         f"{i + 1}. {result.status} called function "
                         f"{result.func_name}:\n"
@@ -91,7 +91,7 @@ class MonoModelReasoner(Reasoner):
                         f"Function Output: {result.output}"
                         for i, result in enumerate(func_call_results)
                     ])
-                    + "\033[0m\n"
+                    + "\n</function_call_result>\033[0m\n"
                 )
 
         return response.get_payload()
