@@ -1,7 +1,7 @@
 import asyncio
 import json
 import time
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Set, Union
 
 from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
 
@@ -10,6 +10,7 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.commom.system_env import SystemEnv
+from app.commom.type import PlatformType
 from app.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
@@ -36,7 +37,7 @@ def get_tugraph(
                 host="127.0.0.1",
                 port=7687,
                 username="admin",
-                password="your_password",
+                password="73@TuGraph",
             )
 
         # initialize store
@@ -132,66 +133,99 @@ CALL db.createEdgeLabelByJson('{
 =====
 """
 
-
 # operation 1: Document Analysis
 DOC_ANALYSIS_PROFILE = """
-你是一位专业的文档分析专家。你的工作是，阅读提供的文档材料，给出一些结论，然后为后续的知识图谱的构建做好准备工作。
-你需要帮助用户理解文档内容。你阅读的文档只是一部分，但是你需要管中窥豹，推测全局的数据的样貌。做好准备工作，尽可能地了解文档。
-请注意，你的任务不是 knowledge graph modeling。你的任务是分析文档，为后续的 knowledge graph modeling 做准备。
+你是一位专业的文档分析专家，专注于从文档中提取关键信息，为知识图谱的构建奠定坚实基础。
+你需要理解文档内容。请注意，你分析的文档可能只是全集的一个子集，需要通过局部推断全局。
+请注意，你的任务不是需要操作图数据库。你的任务是分析文档，为后续的 knowledge graph modeling 提供重要信息。
 """
 
 DOC_ANALYSIS_INSTRUCTION = """
-请仔细阅读给定的文档,同时，按要求完成任务：
+请仔细阅读给定的文档，并按以下要求完成任务：
 
-1. 文档内容分析
-- 发现重要的业务规则和逻辑
-- 推理文档的数据全貌
+1. 语义层分析
+   - 显式信息（关键词、主题、术语定义）。隐式信息（深层语义、上下文关联、领域映射）
+   - 知识结构（概念体系、属性特征、约束规则）
+
+2. 关系层分析  
+   - 实体关系（直接关系、间接关系、层次关系）。时序关系（状态变迁、演化规律、因果链条）
+
+3. 知识推理
+   - 模式推理、知识补全
+
+请确保你的分析全面、细致，并为每一个结论提供充分的理由。
 """
 
 DOC_ANALYSIS_OUTPUT_SCHEMA = """
 {
-    "domain": "文档所属领域",
-    "properties": "文档中的属性信息",
-    "business_rules": "推测文档中的业务规则",
-    "data_full_view": "文档数据的全貌是什么样子，填写推测链路（这个 field 应该是几段很长的描述性文本）",
-    "key_concepts": "文档中的关键概念",
-    "protential_relations": "文档中可能存在的（直接/间接）关系",
+    "domain": "文档所属领域的详细描述，解释该领域的主要业务和数据特点",
+    "data_full_view": "对文档数据全貌的详细推测，包括数据结构、规模、实体关系等，并提供思考链路和理由",
+    "concepts": [
+        {"concept": "概念名称", "description": "概念的详细描述", "importance": "概念在文档中的重要性"},
+        ...
+    ],
+    "properties": [
+        {"concept": "所属概念", "property": "属性名称", "description": "属性的详细描述", "data_type": "属性的数据类型"},
+        ...
+    ],
+    "potential_relations": [
+        {"relation": "关系类型", "entities_involved": ["实体1", "实体2", ...], "description": "关系的详细描述", "strength": "关系的强度或重要性"},
+        ...
+    ],
+    "document_insights": "其他重要（多条）信息或（多个）发现，它们独属于本文档的特殊内容，请用分号隔开。",
+    "document_snippets": "文档中的关键片段，用于支撑你的分析结论，提供上下文信息。",
 }
 """
 
 # operation 2: Concept Modeling
 CONCEPT_MODELING_PROFILE = """
-你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要帮助用户设计合适的实体-关系模型。
+你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要设计合适的实体-关系模型，然后操作图数据库，确保任务的顺利完成。
 """
 
 CONCEPT_MODELING_INSTRUCTION = """
-基于文档分析的结果,完成以下概念建模任务:
+你应该基于文档分析的结果，完成概念建模的任务，同时确保图建模的正确性和可达性。
 
 1. 实体类型定义
-- 将相关概念归类为实体类型，确保类型之间具有明确的边界和区分度
+- 从以下维度思考和定义实体类型：
+  * 时间维度：事件、时期、朝代等时序性实体
+  * 空间维度：地点、区域、地理特征等空间性实体
+  * 社会维度：人物、组织、势力等社会性实体（可选）
+  * 文化维度：思想、文化、典故等抽象实体（可选）
+  * 物理维度：物品、资源、建筑等具象实体（可选）
+- 建立实体类型的层次体系：
+  * 定义上下位关系（如：人物-君主-诸侯）
+  * 确定平行关系（如：军事人物、政治人物、谋士）
+  * 设计多重继承关系（如：既是军事人物又是谋士）
+- 为每个实体类型设计丰富的属性集：
+  * 基础属性：标识符、名称、描述等
+  * 类型特有属性：根据实体类型特点定义
+  * 关联属性：引用其他实体的属性
+- 考虑实体的时态性：
+  * 属性的时效性（如：官职随时间变化）（可选）
+  * 状态的可变性（如：阵营的转变）（可选）
 - 为每个实体类型定义完整的属性集，包括必需属性和可选属性
-- 实体类型应具有层次性和可扩展性，支持上下位关系
 - 确保实体类型之间存在潜在的关联路径，但保持概念边界的独立性
 
 2. 关系类型设计
-- 定义实体间的关系类型，包括直接关系和派生关系
+- 定义实体间的关系类型，包括直接关系、派生关系和潜在关系
 - 明确关系的方向性（有向）、设计关系的属性集
-- 通过关系组合确保图的强连通性，支持未来可能出现的多跳查询的需求
+- 通过关系组合，验证关键实体间的可达性
 - （可选）考虑添加反向关系以增强图的表达能力
 
-3. 验证图的连通性
-- 连通性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不连通，将无法在构建一个完整的知识图谱。
-- 通过查询图数据库，获取图的结构信息，验证实体和关系的连通性。
-
 3. Schema生成
-- 使用 graph schema generator 的函数，可以使用该函数生成 schema，为 vertex 和 edge 创建特殊的 schema。你不能直接写 cypher 语句，而是使用工具函数来帮助你操作数据库。
+- 使用 graph schema creator 的函数，可以使用该函数生成 schema，为 vertex 和 edge 创建特殊的 schema。你不能直接写 cypher 语句，而是使用工具函数来帮助你操作数据库。
 - 请注意：Schema 不是在 DB 中插入节点、关系等具体的数据，而是定义图数据库的模式（schema/label）。预期应该是定义是实体的类型、关系的类型、约束等这些东西。
 - 任务的背景是知识图谱，所以，不要具体的某个实体，而是相对通用的实体。比如，可以从时间、抽象概念、物理实体和社会实体等多个主要维度来考虑。
 - 需要多次读取 TuGraph 现有的 Schema，目的是确保根据 DDL 创建的 schema 符合预期。
+
+4. 验证图的可达性
+- 可达性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不可达，将无法在构建一个完整的知识图谱。
+- 通过查询图数据库，获取图的结构信息，验证实体和关系的可达性。
 """
 
 CONCEPT_MODELING_OUTPUT_SCHEMA = """
 {
+    "reachability": "说明实体和关系之间的可达性，是否存在有效的连接路径",
     "stauts": "模型状态，是否通过验证等",
     "entity_label": "成功创建的实体标签",
     "relation_label": "成功创建的关系标签",
@@ -230,7 +264,6 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 却说关云长放了曹操，引军自回。此时诸路军马，皆得马匹、器械、钱粮，已回夏口；独云长不获一人一骑，空身回见玄德。孔明正与玄德作贺，忽报云长至。孔明忙离坐席，执杯相迎曰：“且喜将军立此盖世之功，与普天下除大害。合宜远接庆贺！”云长默然。孔明曰：“将军莫非因吾等不曾远接，故尔不乐？”回顾左右曰：“汝等缘何不先报？”云长曰：“关某特来请死。”孔明曰：“莫非曹操不曾投华容道上来？”云长曰：“是从那里来。关某无能，因此被他走脱。”孔明曰：“拿得甚将士来？”云长曰：“皆不曾拿。”孔明曰：“此是云长想曹操昔日之恩，故意放了。但既有军令状在此，不得不按军法。”遂叱武士推出斩之。正是：
  
 拚将一死酬知己，致令千秋仰义名。
-
 """
 
 
@@ -454,37 +487,39 @@ class CypherExecutor(Tool):
                 content=cypher_schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
             )
 
-            _model = ModelServiceFactory.create(platform_type=SystemEnv.platform_type())
+            _model = ModelServiceFactory.create(
+                platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+            )
             response = await _model.generate(sys_prompt=prompt, messages=[message])
             raise Exception(response.get_payload())
 
 
-class GraphConnectivityGetter(Tool):
-    """Tool for getting the connectivity of the graph database."""
+class GraphReachabilityGetter(Tool):
+    """Tool for getting the reachability information of the graph database."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id,
-            name=self.get_graph_connectivity.__name__,
-            description=self.get_graph_connectivity.__doc__,
-            function=self.get_graph_connectivity,
+            name=self.get_graph_reachability.__name__,
+            description=self.get_graph_reachability.__doc__,
+            function=self.get_graph_reachability,
         )
 
-    async def get_graph_connectivity(self) -> str:
-        """Get the connectivity of the graph database which can help to understand the graph structure.
+    async def get_graph_reachability(self) -> str:
+        """Get the reachability information of the graph database which can help to understand the graph structure.
 
         Args:
             None args required
 
         Returns:
-            str: The connectivity of the graph database in string format
+            str: The reachability of the graph database in string format
 
         Example:
-            connectivity_str = get_graph_connectivity()
+            reachability_str = get_graph_reachability()
         """
         query = "CALL dbms.graph.getGraphSchema()"
-        sstore = get_tugraph()
-        schema = sstore.conn.run(query=query)
+        store = get_tugraph()
+        schema = store.conn.run(query=query)
 
         edges: List = []
         vertexes: List = []
@@ -494,58 +529,100 @@ class GraphConnectivityGetter(Tool):
                 edges.append(element)
             elif element["type"] == "VERTEX":
                 vertexes.append(element)
+        if not edges or not vertexes:
+            return "The graph database schema was not created yet."
 
-        existing_vertexes = "Got all vertexes in the graph database: " + ", ".join([
-            f"({vertex['label']})" for vertex in vertexes
-        ])
+        # check if there are any isolated vertexes
+        constraints: Set[str] = set()
+        for edge in edges:
+            for constraint in edge["constraints"]:
+                constraints.add(constraint[0])
+                constraints.add(constraint[1])
+        vertex_labels = [vertex["label"] for vertex in vertexes]
+        isolated_labels = []
+        for vertex_label in vertex_labels:
+            if vertex_label not in constraints:
+                isolated_labels.append(vertex_label)
 
-        connectivity = "Got the connectivity of the graph:\n" + "\n".join([
-            f"({constraint[0]}) - [edge] -> ({constraint[1]})"
+        # return the reachability information
+        return self._format_reachability_info(vertex_labels, edges, isolated_labels)
+
+    def _format_reachability_info(
+        self,
+        vertex_labels: List[str],
+        edges: List[Dict],
+        isolated_labels: Optional[List[str]] = None,
+    ) -> str:
+        """Format the reachability information of the graph database."""
+        lines = ["Got the reachability of the graph:"]
+        lines.append(f"Vertices: {', '.join(f'({label})' for label in vertex_labels)}")
+
+        edge_lines = [
+            f"({cons[0]})-[edge:{edge['label']}]->({cons[1]})"
             for edge in edges
-            for constraint in edge["constraints"]
-        ])
+            for cons in edge["constraints"]
+        ]
+        lines.extend(edge_lines)
 
-        return existing_vertexes + "\n" + connectivity
+        if isolated_labels:
+            lines.append(
+                "!!! This graph database schema does not have reachability.\n"
+                f"!!! Isolated vertices found: {', '.join(f'({label})' for label in isolated_labels)}"
+            )
+        else:
+            lines.append("After verified, the graph database schema has reachability.")
+
+        return "\n".join(lines)
 
 
 def get_analysis_operator():
     """Get the operator for document analysis."""
     analysis_toolkit = Toolkit()
 
-    content_understanding = Action(
+    content_understanding_action = Action(
         id="doc_analysis.content_understanding",
         name="内容理解",
         description="通过阅读和批注理解文档的主要内容和结构",
     )
-    concept_identification = Action(
+    concept_identification_action = Action(
         id="doc_analysis.concept_identification",
         name="核心概念识别",
-        description="识别并提取文档中的关键概念和术语",
+        description="识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系。",
     )
-    relation_pattern_recognition = Action(
+    relation_pattern_recognition_action = Action(
         id="doc_analysis.relation_pattern",
         name="关系模式识别",
-        description="发现概念间的关系模式和交互方式，以及潜在的关联，越丰富越好",
+        description="发现概念间的关系模式和交互方式（结构模式、语义模式、演化模式）、提取概念网络特征（局部、全局、动态）。",
+    )
+    consistency_check_action = Action(
+        id="doc_analysis.consistency_check",
+        name="一致性检查",
+        description="检查文档中的概念和关系是否一致，确保概念和关系已经对齐。并且没有孤立的概念（即，没有相邻的概念）",
     )
     read_document = DocumentReader(id="read_document_tool")
 
     analysis_toolkit.add_action(
-        action=content_understanding,
-        next_actions=[(concept_identification, 1)],
+        action=content_understanding_action,
+        next_actions=[(concept_identification_action, 1)],
         prev_actions=[],
     )
     analysis_toolkit.add_action(
-        action=concept_identification,
-        next_actions=[(relation_pattern_recognition, 1)],
-        prev_actions=[(content_understanding, 1)],
+        action=concept_identification_action,
+        next_actions=[(relation_pattern_recognition_action, 1)],
+        prev_actions=[(content_understanding_action, 1)],
     )
     analysis_toolkit.add_action(
-        action=relation_pattern_recognition,
+        action=relation_pattern_recognition_action,
+        next_actions=[(consistency_check_action, 1)],
+        prev_actions=[(concept_identification_action, 1)],
+    )
+    analysis_toolkit.add_action(
+        action=consistency_check_action,
         next_actions=[],
-        prev_actions=[(concept_identification, 1)],
+        prev_actions=[(relation_pattern_recognition_action, 1)],
     )
     analysis_toolkit.add_tool(
-        tool=read_document, connected_actions=[(content_understanding, 1)]
+        tool=read_document, connected_actions=[(content_understanding_action, 1)]
     )
 
     operator_config = OperatorConfig(
@@ -553,9 +630,10 @@ def get_analysis_operator():
         instruction=DOC_ANALYSIS_PROFILE + DOC_ANALYSIS_INSTRUCTION,
         output_schema=DOC_ANALYSIS_OUTPUT_SCHEMA,
         actions=[
-            content_understanding,
-            concept_identification,
-            relation_pattern_recognition,
+            content_understanding_action,
+            concept_identification_action,
+            relation_pattern_recognition_action,
+            consistency_check_action,
         ],
     )
     operator = Operator(
@@ -568,72 +646,72 @@ def get_analysis_operator():
 
 def get_concept_modeling_operator():
     """Get the operator for concept modeling."""
-    entity_type_definition = Action(
+    entity_type_definition_action = Action(
         id="concept_modeling.entity_type",
         name="实体类型定义",
         description="定义和分类文档中识别出的核心实体类型，只需要分析即可",
     )
-    relation_type_definition = Action(
+    relation_type_definition_action = Action(
         id="concept_modeling.relation_type",
         name="关系类型定义",
         description="设计实体间的关系类型和属性，只需要分析即可",
     )
-    self_reflection_schema = Action(
+    self_reflection_schema_action = Action(
         id="concept_modeling.reflection_schema",
         name="自我反思目前阶段的概念建模",
         description="不断检查和反思当前概念模型的设计，确保模型的完整性和准确性，并发现潜在概念和关系。最后确保实体关系之间是存在联系的，禁止出现孤立的实体概念（这很重要）。",
     )
-    schema_design = Action(
+    schema_design_action = Action(
         id="concept_modeling.schema_design",
         name="Schema设计创建 TuGraph labels",
         description="将概念模型转化为图数据库 label，并在 TuGraph 中创建 labels",
     )
-    graph_validation = Action(
+    graph_validation_action = Action(
         id="concept_modeling.graph_validation",
-        name="反思和检查图的连通性",
-        description="需要调用相关的工具来检查。连通性指的是每个节点标签和关系标签都有至少一个节点或关系与之关联。如果不连通，则需要在目前的基础上调用工具来解决。",
+        name="反思和检查图的可达性(Reachability)",
+        description="需要调用相关的工具来检查。可达性指的是每个节点标签和关系标签都有至少一个节点或关系与之关联。如果不连通，则需要在目前的基础上调用工具来解决。",
     )
     vertex_label_generator = VertexLabelGenerator(id="vertex_label_generator_tool")
     edge_label_generator = EdgeLabelGenerator(id="edge_label_generator_tool")
-    graph_connectivity_getter = GraphConnectivityGetter(
-        id="graph_connectivity_getter_tool"
+    graph_reachability_getter = GraphReachabilityGetter(
+        id="graph_reachability_getter_tool"
     )
 
     concept_modeling_toolkit = Toolkit()
 
     concept_modeling_toolkit.add_action(
-        action=entity_type_definition,
-        next_actions=[(relation_type_definition, 1)],
+        action=entity_type_definition_action,
+        next_actions=[(relation_type_definition_action, 1)],
         prev_actions=[],
     )
     concept_modeling_toolkit.add_action(
-        action=relation_type_definition,
-        next_actions=[(self_reflection_schema, 1)],
-        prev_actions=[(entity_type_definition, 1)],
+        action=relation_type_definition_action,
+        next_actions=[(self_reflection_schema_action, 1)],
+        prev_actions=[(entity_type_definition_action, 1)],
     )
     concept_modeling_toolkit.add_action(
-        action=self_reflection_schema,
-        next_actions=[(schema_design, 1)],
-        prev_actions=[(relation_type_definition, 1)],
+        action=self_reflection_schema_action,
+        next_actions=[(schema_design_action, 1)],
+        prev_actions=[(relation_type_definition_action, 1)],
     )
     concept_modeling_toolkit.add_action(
-        action=schema_design,
-        next_actions=[(graph_validation, 1)],
-        prev_actions=[(self_reflection_schema, 1)],
+        action=schema_design_action,
+        next_actions=[(graph_validation_action, 1)],
+        prev_actions=[(self_reflection_schema_action, 1)],
     )
     concept_modeling_toolkit.add_action(
-        action=graph_validation,
+        action=graph_validation_action,
         next_actions=[],
-        prev_actions=[(schema_design, 1)],
+        prev_actions=[(schema_design_action, 1)],
     )
     concept_modeling_toolkit.add_tool(
-        tool=vertex_label_generator, connected_actions=[(schema_design, 1)]
+        tool=vertex_label_generator, connected_actions=[(schema_design_action, 1)]
     )
     concept_modeling_toolkit.add_tool(
-        tool=edge_label_generator, connected_actions=[(schema_design, 1)]
+        tool=edge_label_generator, connected_actions=[(schema_design_action, 1)]
     )
     concept_modeling_toolkit.add_tool(
-        tool=graph_connectivity_getter, connected_actions=[(graph_validation, 1)]
+        tool=graph_reachability_getter, connected_actions=[(graph_validation_action, 1)]
     )
 
     operator_config = OperatorConfig(
@@ -641,10 +719,11 @@ def get_concept_modeling_operator():
         instruction=CONCEPT_MODELING_PROFILE + CONCEPT_MODELING_INSTRUCTION,
         output_schema=CONCEPT_MODELING_OUTPUT_SCHEMA,
         actions=[
-            entity_type_definition,
-            relation_type_definition,
-            schema_design,
-            graph_validation,
+            entity_type_definition_action,
+            relation_type_definition_action,
+            self_reflection_schema_action,
+            schema_design_action,
+            graph_validation_action,
         ],
     )
 
