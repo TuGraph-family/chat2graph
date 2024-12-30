@@ -4,7 +4,7 @@ from app.agent.job import Job
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.env.insight.insight import Insight, TextInsight
+from app.env.insight.insight import Insight
 from app.knowledge_base.knowlege_service import KnowledgeService
 from app.memory.message import WorkflowMessage
 from app.toolkit.toolkit import Toolkit, ToolkitService
@@ -72,16 +72,10 @@ class Operator:
         # TODO: get the knowledge from the knowledge base
         return "Do not have provieded any knowledge yet."
 
-    async def get_env_insights(self) -> List[Insight]:
+    async def get_env_insights(self) -> Optional[List[Insight]]:
         """Get the environment information."""
         # TODO: get the environment information
-        return [
-            TextInsight(
-                tags=[],
-                entities=[],
-                content="Do not have provieded any environment information yet.",
-            )
-        ]
+        return None
 
     def get_id(self) -> str:
         """Get the operator id."""

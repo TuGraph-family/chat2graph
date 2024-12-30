@@ -26,7 +26,7 @@ A. Context Definition
     Dependencies: Inter-task data flow and requirements
 
 B. Validation & Standards
-    Input(scrachpad): Format, schema, data, resources, validation rules
+    Input(scratchpad): Format, schema, data, resources, validation rules
     Expected Output: Structure, acceptance criteria
     Completion: Measurable success metricss
 
@@ -35,7 +35,6 @@ B. Validation & Standards
 ## Self-contained: Each subtask includes all necessary information
 ## Role-neutral: Avoid mentioning specific roles unless in TASK
 ## Boundary-aware: Stay within original TASK scope
-
 """
 
 JOB_DECOMPOSITION_OUTPUT_SCHEMA = """

@@ -7,8 +7,8 @@ from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.commom.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
 from app.commom.prompt.reasoner import MONO_PROMPT_TEMPLATE
-from app.commom.system_env import SysEnvKey, SystemEnv
-from app.commom.type import MessageSourceType
+from app.commom.system_env import SystemEnv
+from app.commom.type import MessageSourceType, PlatformType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.toolkit.tool.tool import Tool
@@ -31,7 +31,7 @@ class MonoModelReasoner(Reasoner):
     ):
         self._model_name = model_name
         self._model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.platform_type(),
+            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
         )
 
         self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
@@ -46,9 +46,7 @@ class MonoModelReasoner(Reasoner):
             str: The conclusion and the final resultes of the inference.
         """
         # prepare the variables from the SystemEnv
-        print_messages = (
-            SystemEnv.get(SysEnvKey.PRINT_REASONER_MESSAGES).lower() == "true"
-        )
+        print_messages = SystemEnv.PRINT_REASONER_MESSAGES.lower() == "true"
 
         # set the system prompt
         sys_prompt = self._format_system_prompt(task=task, tools=task.tools)
@@ -83,7 +81,7 @@ class MonoModelReasoner(Reasoner):
             func_call_results = response.get_function_calls()
             if func_call_results:
                 print(
-                    "\033[92m"
+                    "\033[92m<function_call_result>\n"
                     + "\n".join([
                         f"{i + 1}. {result.status} called function "
                         f"{result.func_name}:\n"
@@ -91,7 +89,7 @@ class MonoModelReasoner(Reasoner):
                         f"Function Output: {result.output}"
                         for i, result in enumerate(func_call_results)
                     ])
-                    + "\033[0m\n"
+                    + "\n</function_call_result>\033[0m\n"
                 )
 
         return response.get_payload()

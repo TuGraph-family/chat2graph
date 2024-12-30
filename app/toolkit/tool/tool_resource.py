@@ -3,6 +3,7 @@ from typing import Optional
 from uuid import uuid4
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
+from app.commom.system_env import SystemEnv
 from app.commom.type import PlatformType
 from app.memory.message import ModelMessage
 from app.toolkit.tool.tool import Tool
@@ -14,7 +15,7 @@ class Query(Tool):
 
     def __init__(self, id: Optional[str] = None):
         name = self.query.__name__
-        description = self.query.__doc__
+        description = self.query.__doc__ or ""
         super().__init__(
             name=name,
             description=description,
@@ -32,7 +33,9 @@ class Query(Tool):
             The result of the query from the database/document.
         """
         # TODO: implement the query function
-        model_service = ModelServiceFactory.create(platform_type=PlatformType.DBGPT)
+        model_service = ModelServiceFactory.create(
+            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+        )
         sys_prompt = """Suppose you are the database or the document terminal.
 I will ask you for help. If you don't know the answer, you can make up a reasonable one."""
         message = ModelMessage(
