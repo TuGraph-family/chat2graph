@@ -1,9 +1,8 @@
 import os
-import threading
 from contextvars import ContextVar
 from enum import Enum, unique
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -28,7 +27,7 @@ class SysEnvKey(str, Enum):
     PROXYLLM_BACKEND = "PROXYLLM_BACKEND"
     PROXY_SERVER_URL = "PROXY_SERVER_URL"
     PROXY_API_KEY = "PROXY_API_KEY"
-    TEMPRATURE = "TEMPRATURE"
+    TEMPERATURE = "TEMPERATURE"
     REASONING_ROUNDS = "REASONING_ROUNDS"
     PRINT_REASONER_MESSAGES = "PRINT_REASONER_MESSAGES"
 
@@ -39,42 +38,26 @@ class SysEnvKey(str, Enum):
             self.PROXYLLM_BACKEND: "gpt-4o-mini",
             self.PROXY_SERVER_URL: None,
             self.PROXY_API_KEY: None,
-            self.TEMPRATURE: 0,
+            self.TEMPERATURE: "0.7",
             self.REASONING_ROUNDS: "20",
             self.PRINT_REASONER_MESSAGES: "True",
         }
         return defaults.get(self)
 
 
-class SystemEnv:
+class SystemEnvMeta(type):
     """Singleton class to manage system environment variables"""
 
-    _instance = None
-    _initialized = False
-    _lock = threading.Lock()
+    def __init__(self, name: str, bases: Tuple, dct: Dict):
+        super().__init__(name, bases, dct)
+        env_path = Path(".env")
+        if env_path.exists():
+            load_dotenv(env_path, override=True)
 
-    def __new__(cls) -> "SystemEnv":
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                cls._instance._load_env()
-        return cls._instance
-
-    @classmethod
-    def _load_env(cls):
-        """Load .env file once at initialization
-
-        Store values in _env_cache for priority handling
-        """
-        if not cls._initialized:
-            env_path = Path(".env")
-            if env_path.exists():
-                load_dotenv(env_path)
-            cls._initialized = True
-
-    @staticmethod
-    def get(key: str, default_value: Optional[str] = None) -> str:
+    def __getattr__(self, name: str) -> str:
         """Get value following priority: context cache > .env > os env > default value"""
+        key = name.upper()
+
         context_cache = _context_cache.get()
         if key in context_cache:
             return context_cache[key]
@@ -83,22 +66,20 @@ class SystemEnv:
         if env_value:
             return env_value
 
-        if not default_value:
-            # try to get default from SysEnvKey if it exists
-            try:
-                sys_key = SysEnvKey(key)
-                key_default = sys_key.get_default()
-                if key_default is not None:
-                    return key_default
-                else:
-                    return ""
-            except ValueError:
-                return ""  # Key is not in SysEnvKey enum
+        # try to get default from SysEnvKey if it exists
+        try:
+            sys_key = SysEnvKey(key)
+            key_default = sys_key.get_default()
+            if key_default is not None:
+                return key_default
+            else:
+                raise AttributeError(f"Key {key} not found in system environment")
 
-        return default_value
+        except ValueError:
+            raise AttributeError(f"Key {key} not found in system environment")
 
-    @staticmethod
-    def platform_type() -> PlatformType:
-        """Get platform type with caching and enum conversion"""
-        platform_name = SystemEnv.get(SysEnvKey.PLATFORM_TYPE)
-        return PlatformType[platform_name]
+
+class SystemEnv(metaclass=SystemEnvMeta):
+    """Static class to manage system environment variables"""
+
+    pass
