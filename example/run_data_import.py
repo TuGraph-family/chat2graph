@@ -170,7 +170,7 @@ SCHEMA_TEMPLATE = """
   "schema": [
     {
       "label": "实体类型",
-      "primary": "id",
+      "primary": "实体属性",
       "properties": [
         {
           "name": "实体属性",
@@ -231,8 +231,8 @@ DATA_GENERATION_OUTPUT_DATA = """
             "constraints": [
                 ["实体类型","实体类型"]
             ],
-            "source":"实体属性值",
-            "target":"实体属性值",
+            "source":"primary对应的实体属性的值",
+            "target":"primary对应的实体属性的值",
             "properties":{
                 "关系属性":"属性值",
                 // ...更多关系属性
