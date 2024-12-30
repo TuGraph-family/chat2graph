@@ -3,6 +3,7 @@ import time
 from typing import List
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
+from app.commom.system_env import SystemEnv
 from app.commom.type import MessageSourceType, PlatformType
 from app.memory.message import ModelMessage
 
@@ -10,7 +11,9 @@ from app.memory.message import ModelMessage
 async def main():
     """Main function."""
     # create model service using factory method
-    model_service = ModelServiceFactory.create(platform_type=PlatformType.DBGPT)
+    model_service = ModelServiceFactory.create(
+        platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+    )
 
     # create test messages
     messages: List[ModelMessage] = [

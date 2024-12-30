@@ -164,9 +164,9 @@ async def main():
             tools=test_tools, model_response_text=test_msg.get_payload()
         )
         if func_call_results:
-            for j, result in enumerate(func_call_results, 1):
+            for j, result in enumerate(func_call_results):
                 print(
-                    f"{j}. {result.status} called function {result.func_name}:\n"
+                    f"{j + 1}. {result.status} called function {result.func_name}:\n"
                     f"Call objective: {result.call_objective}\n"
                     f"Function Output: {result.output}"
                 )
