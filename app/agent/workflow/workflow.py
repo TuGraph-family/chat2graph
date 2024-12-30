@@ -1,6 +1,6 @@
 import threading
 from abc import ABC, abstractmethod
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 import networkx as nx  # type: ignore
 
@@ -59,15 +59,16 @@ class Workflow(ABC):
                         self._operator_graph.add_node(
                             previous_op.get_id(), operator=previous_op
                         )
-                    self._operator_graph.add_edge(previous_op.get_id(),
-                                                  operator.get_id())
+                    self._operator_graph.add_edge(
+                        previous_op.get_id(), operator.get_id()
+                    )
             if next_ops:
                 for next_op in next_ops:
                     if not self._operator_graph.has_node(next_op.get_id()):
-                        self._operator_graph.add_node(next_op.get_id(),
-                                                      operator=next_op)
-                    self._operator_graph.add_edge(operator.get_id(),
-                                                  next_op.get_id())
+                        self._operator_graph.add_node(
+                            next_op.get_id(), operator=next_op
+                        )
+                    self._operator_graph.add_edge(operator.get_id(), next_op.get_id())
             self.__workflow = None
 
     def remove_operator(self, operator: Operator) -> None:
@@ -78,13 +79,14 @@ class Workflow(ABC):
 
     def set_evaluator(self, evaluator: Operator):
         """Add an evaluator operator to the workflow."""
-        self._evaluator: Optional[Operator] = evaluator
+        self._evaluator = evaluator
 
     def get_operator(self, operator_id: str) -> Optional[Operator]:
         """Get an operator from the workflow."""
 
     def get_operators(self) -> List[Operator]:
         """Get all operators from the workflow."""
+        return list(self._operator_graph.nodes(data="operator"))
 
     def visualize(self) -> None:
         """Visualize the workflow."""
@@ -94,7 +96,5 @@ class Workflow(ABC):
         """Build the workflow."""
 
     @abstractmethod
-    async def _execute_workflow(
-        self, workflow: Any, job: Job
-    ) -> WorkflowMessage:
+    async def _execute_workflow(self, workflow: Any, job: Job) -> WorkflowMessage:
         """Execute the workflow."""

@@ -17,7 +17,7 @@ from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 
 from app.agent.reasoner.model_service import ModelService
 from app.commom.prompt.model_service import FUNC_CALLING_PROMPT
-from app.commom.system_env import SysEnvKey, SystemEnv
+from app.commom.system_env import SystemEnv
 from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.toolkit.tool.tool import FunctionCallResult, Tool
@@ -36,11 +36,11 @@ class DbgptLlmClient(ModelService):
         # TODO: support other llm clients
         # TODO: support more llm client configurations
         self._llm_client: LLMClient = OpenAILLMClient(
-            model_alias=SystemEnv.get(SysEnvKey.PROXYLLM_BACKEND),
-            api_base=SystemEnv.get(SysEnvKey.PROXY_SERVER_URL),
-            api_key=SystemEnv.get(SysEnvKey.PROXY_API_KEY),
+            model_alias=SystemEnv.PROXYLLM_BACKEND,
+            api_base=SystemEnv.PROXY_SERVER_URL,
+            api_key=SystemEnv.PROXY_API_KEY,
             openai_kwargs={
-                "temperature": float(SystemEnv.get(SysEnvKey.TEMPERATURE)),
+                "temperature": float(SystemEnv.TEMPERATURE),
             },
         )
 
@@ -118,7 +118,7 @@ class DbgptLlmClient(ModelService):
 
         model_messages = DbgptModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
-            model=SystemEnv.get(SysEnvKey.PROXYLLM_BACKEND),
+            model=SystemEnv.PROXYLLM_BACKEND,
             messages=model_messages,
         )
 

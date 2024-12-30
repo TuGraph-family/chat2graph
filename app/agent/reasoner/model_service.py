@@ -25,13 +25,13 @@ class ModelService(ABC):
         """Generate a text given a prompt non-streaming"""
 
     async def call_function(
-        self, tools: Optional[List[Tool]], model_response_text: str
+        self, tools: List[Tool], model_response_text: str
     ) -> Optional[List[FunctionCallResult]]:
         """Call functions based on message content.
 
         Args:
-            tools: The list of tools containing functions to call
-            model_response_text: The text containing potential function calls
+            tools (List[Tool]): The tools to call
+            model_response_text (str): The text containing potential function calls
 
         Returns:
             ModelMessage: Response message containing function results
@@ -46,7 +46,7 @@ class ModelService(ABC):
 
         func_call_results: List[FunctionCallResult] = []
         for func_name, call_objective, func_args in func_calls:
-            func = self._find_function(func_name, tools)
+            func: Optional[Callable[..., Any]] = self._find_function(func_name, tools)
             if not func:
                 func_call_results.append(
                     FunctionCallResult(

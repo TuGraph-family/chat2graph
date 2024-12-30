@@ -15,7 +15,7 @@ class Message(ABC):
         self._id: str = id or str(uuid4())
 
     @abstractmethod
-    def get_payload(self) -> str:
+    def get_payload(self) -> Any:
         """Get the content of the message."""
 
     @abstractmethod

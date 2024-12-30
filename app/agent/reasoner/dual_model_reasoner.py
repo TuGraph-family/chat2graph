@@ -11,8 +11,8 @@ from app.commom.prompt.reasoner import (
     ACTOR_PROMPT_TEMPLATE,
     QUANTUM_THINKER_PROPMT_TEMPLATE,
 )
-from app.commom.system_env import SysEnvKey, SystemEnv
-from app.commom.type import MessageSourceType
+from app.commom.system_env import SystemEnv
+from app.commom.type import MessageSourceType, PlatformType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.toolkit.tool.tool import Tool
@@ -37,10 +37,10 @@ class DualModelReasoner(Reasoner):
         self._actor_name = actor_name
         self._thinker_name = thinker_name
         self._actor_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.platform_type(),
+            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE],
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.platform_type(),
+            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE],
         )
 
         self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
@@ -55,10 +55,8 @@ class DualModelReasoner(Reasoner):
             str: The conclusion and the final resultes of the inference.
         """
         # prepare the variables from the SystemEnv
-        reasoning_rounds = int(SystemEnv.get(SysEnvKey.REASONING_ROUNDS))
-        print_messages = (
-            SystemEnv.get(SysEnvKey.PRINT_REASONER_MESSAGES).lower() == "true"
-        )
+        reasoning_rounds = int(SystemEnv.REASONING_ROUNDS)
+        print_messages = SystemEnv.PRINT_REASONER_MESSAGES.lower() == "true"
 
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(
