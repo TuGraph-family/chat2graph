@@ -309,4 +309,8 @@ class DualModelReasoner(Reasoner):
     @staticmethod
     def stop(message: ModelMessage) -> bool:
         """Stop the reasoner."""
-        return "TASK_DONE" in message.get_payload()
+        # TODO: fix the stop condition
+        return (
+            "TASK_DONE" in message.get_payload()
+            or "DELIVERABLE" in message.get_payload()
+        )

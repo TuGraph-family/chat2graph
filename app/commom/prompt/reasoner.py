@@ -58,7 +58,7 @@ Example:
 
     <instruction> // Must follow this structure
         <YOUR_INSTRUCTION>  // Cannot be None
-        // Do not forget to provide an official answer to the TASK before "TASK_DONE"
+        // Do not forget to instruct me to provide an official answer to the TASK before "TASK_DONE"
     </instruction>
     <input> // Must follow this structure
         <YOUR_INPUT>  // Allowed to use None if no input
@@ -79,7 +79,7 @@ We share a common interest in collaborating to successfully complete the task by
 4. The "<scratchpad>" refers the consideration of yours (not mine, meaning the content is different to my thoughts), which is specific, decisive, comprehensive, and direct, presents your cognitive process that builds upon my instructions. Also, it is the place where you can store the information.
 5. After the part of "<scratchpad>" in your answer, you should perform your <action> in straightforward manner. <action> is the place where you complete/act/execute what you have thought in <scratchpad>.
 6. Before you act you need to know about your ability of function calling. If you are to call the functions in <action>, please make sure the json format for the function calling is correct.
-7. Do not use the <instruction>, <input> in your response.
+7. Do not use the <instruction>, <input>, <function_call_result> in your response.
 8. When I tell you the TASK is completed, you MUST use the "TASK_DONE" in English to terminate the conversation. Although multilingual communication is permissible, usage of "TASK_DONE" MUST be exclusively used in English.
 9. (Optional) The instruction can be wrong that I provided to you, so you can doubt the instruction by providing reasons, during the process of the conversation. 
 10. IMPORTANT: When providing the final DELIVERABLE, you MUST include ALL relevant information from our previous conversation, as the previous context will NOT be available for later processing. Your DELIVERABLE should be completely self-contained and independently understandable.
@@ -101,6 +101,9 @@ We share a common interest in collaborating to successfully complete the task by
     // If you receive the "TASK_DONE" from me, you need to provide the final answer to the TASK.
 </action>
 <feedback>
+    // When I provided you TASK_DONE, you must use TASK_DONE at the end of your feedback of this round.
+    // If I did not provide you TASK_DONE, you should not use TASK_DONE in your feedback of this round.
+    // When you use <DELIVERABLE>, you must include TASK_DONE at the end of your response to indicate task completion.
     <DELIVERABLE>
         1. Task Objective:
             [should be the same as the TASK]
@@ -114,8 +117,6 @@ We share a common interest in collaborating to successfully complete the task by
             [should be the long and verbose]
 {output_schema}
     </DELIVERABLE>
-    // When TASK_DONE is received, you must use TASK_DONE at the end of your feedback.
-    // When you use <DELIVERABLE>, you must add TASK_DONE at the end of your feedback.
 </feedback>
 """
 
