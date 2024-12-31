@@ -64,6 +64,7 @@ class DualModelReasoner(Reasoner):
             tools=task.tools,
         )
         thinker_sys_prompt = self._format_thinker_sys_prompt(task=task)
+        print(f"\033[38;5;245mSystem:\n{actor_sys_prompt}\033[0m\n")
 
         # trigger the reasoning process
         init_message = ModelMessage(
@@ -137,27 +138,31 @@ class DualModelReasoner(Reasoner):
         content = reasoner_memory.get_message_by_index(-1).get_payload()
 
         # find DELIVERABLE content
-        match = re.search(r"<DELIVERABLE>:\s*(.*)", content, re.DOTALL)
+        match = re.search(r"<DELIVERABLE>\s*(.*?)\s*</DELIVERABLE>", content, re.DOTALL)
 
         # If match found, process and return the content
         if match:
             deliverable_content = match.group(1)
+            print(f"\033[38;5;245mReasoner:\n{deliverable_content}\033[0m\n")
+
             return (
-                deliverable_content.replace("<scratchpad>:", "")
-                .replace("</scratchpad>:", "")
-                .replace("<action>:", "")
-                .replace("</action>:", "")
-                .replace("<feedback>:", "")
-                .replace("</feedback>:", "")
+                deliverable_content.replace("<scratchpad>", "")
+                .replace("</scratchpad>", "")
+                .replace("<action>", "")
+                .replace("</action>", "")
+                .replace("<feedback>", "")
+                .replace("</feedback>", "")
+                .replace("</DELIVERABLE>", "")
                 .replace("TASK_DONE", "")
             )
         return (
-            content.replace("<scratchpad>:", "")
-            .replace("</scratchpad>:", "")
-            .replace("<action>:", "")
-            .replace("</action>:", "")
-            .replace("<feedback>:", "")
-            .replace("</feedback>:", "")
+            content.replace("<scratchpad>", "")
+            .replace("</scratchpad>", "")
+            .replace("<action>", "")
+            .replace("</action>", "")
+            .replace("<feedback>", "")
+            .replace("</feedback>", "")
+            .replace("</DELIVERABLE>", "")
             .replace("TASK_DONE", "")
         )
 
@@ -212,7 +217,7 @@ class DualModelReasoner(Reasoner):
             output_schema = "\n".join([
                 "\t    " + schema
                 for schema in (
-                    f"[Follow the final delivery example:]\n{task.operator_config.output_schema}"
+                    f"[Follow the final delivery example:]\n{task.operator_config.output_schema.strip()}"
                 ).split("\n")
             ])
         else:
@@ -304,4 +309,8 @@ class DualModelReasoner(Reasoner):
     @staticmethod
     def stop(message: ModelMessage) -> bool:
         """Stop the reasoner."""
-        return "TASK_DONE" in message.get_payload()
+        # TODO: fix the stop condition
+        return (
+            "TASK_DONE" in message.get_payload()
+            or "DELIVERABLE" in message.get_payload()
+        )

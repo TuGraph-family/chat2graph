@@ -10,6 +10,7 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
+from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
@@ -46,6 +47,63 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 拚将一死酬知己，致令千秋仰义名。
 
 """
+
+
+class DocumentReader(Tool):
+    """Tool for analyzing document content."""
+
+    def __init__(self, id: Optional[str] = None):
+        super().__init__(
+            id=id,
+            name=self.read_document.__name__,
+            description=self.read_document.__doc__,
+            function=self.read_document,
+        )
+
+    async def read_document(self, doc_name: str, chapter_name: str) -> str:
+        """Read the document content given the document name and chapter name.
+
+        Args:
+            doc_name (str): The name of the document.
+            chapter_name (str): The name of the chapter of the document.
+
+        Returns:
+            The content of the document.
+        """
+
+        return ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50
+    
+class SchemaGetter(Tool):
+    """Tool for getting the schema of a graph database."""
+
+    def __init__(self, id: Optional[str] = None):
+        super().__init__(
+            id=id,
+            name=self.get_schema.__name__,
+            description=self.get_schema.__doc__,
+            function=self.get_schema,
+        )
+
+    async def get_schema(self) -> str:
+        """Get the schema of a graph database.
+
+        Args:
+            None args required
+
+        Returns:
+            str: The schema of the graph database in string format
+
+        Example:
+            schema_str = get_schema()
+        """
+        query = "CALL dbms.graph.getGraphSchema()"
+        sstore = get_tugraph()
+        schema = await sstore.conn.run(query=query)
+
+        return json.dumps(
+            json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False
+        )
+
 # VERTEX_COUNT = 10
 EDGE_COUNT = 20
 
@@ -86,11 +144,11 @@ def get_tugraph(
         raise
 
 
-def get_schema() -> str:
-    query = "CALL dbms.graph.getGraphSchema()"
-    db = get_tugraph()
-    schema = db.conn.run(query=query)
-    return json.dumps(json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False)
+# def get_schema() -> str:
+#     query = "CALL dbms.graph.getGraphSchema()"
+#     db = get_tugraph()
+#     schema = db.conn.run(query=query)
+#     return json.dumps(json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False)
 
 
 def nodes_to_cypher_create(nodes):
@@ -165,9 +223,6 @@ def extract_json_from_text(text):
         return json_data
     else:
         raise ValueError("No JSON data found in the text.")
-
-
-SCHEMA = get_schema()
 
 SCHEMA_TEMPLATE = """
 {
@@ -249,14 +304,8 @@ DATA_GENERATION_OUTPUT_DATA = """
 
 DATA_GENERATION_INSTRUCTION = f"""
 请安以下要求完成任务：
-1. 请根据图模型模板‘’‘{SCHEMA_TEMPLATE}’‘’，理解以下图模型
-‘’‘
-{SCHEMA}
-’‘’
-2. 理解以下文本信息：
-‘’‘
-{ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50}
-’‘’
+1. 请根据图模型模板‘’‘{SCHEMA_TEMPLATE}’‘’，理解图模型
+2. 理解文本信息
 3. 根据图模型和文本信息抽取关系数据，关系数据不能少于{EDGE_COUNT}条, 并确保抽取的关系数据属性与对应关系类型的属性一一对应。
 4. 根据抽取出的关系数据、图模型和文本信息抽取实体数据，确保抽取的实体数据属性与对应实体类型的属性一一对应，并且要保证这些实体是从关系数据中得到的。
 5. 严格按照{DATA_GENERATION_OUTPUT_DATA}格式，输出数据
@@ -317,6 +366,16 @@ def get_data_generation_operator():
         action=graph_data_generation_action,
         next_actions=[],
         prev_actions=[(node_data_generation_action, 1)],
+    )
+
+    get_schema = SchemaGetter(id="get_schema_tool")
+    analysis_toolkit.add_tool(
+        tool=get_schema, connected_actions=[(schema_understanding_action, 1)]
+    )
+
+    get_document = DocumentReader(id="get_document_tool")
+    analysis_toolkit.add_tool(
+        tool=get_document, connected_actions=[(content_understanding_action, 1)]
     )
 
     operator_config = OperatorConfig(
