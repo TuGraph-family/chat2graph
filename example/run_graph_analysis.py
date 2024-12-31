@@ -1,6 +1,5 @@
 import asyncio
 import json
-import re
 from typing import Optional
 
 from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
@@ -12,7 +11,6 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-
 
 
 # global function to get tugraph store
@@ -50,37 +48,8 @@ def get_tugraph(
         print(f"failed to initialize tugraph: {str(e)}")
         raise
 
-class AlgorithmsGetter(Tool):
 
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.get_algorithms.__name__,
-            description=self.get_algorithms.__doc__,
-            function=self.get_algorithms,
-        )
-
-    async def get_algorithms() -> str:
-        """
-        Retrieve descriptions of all algorithm plugins of a specified type and version.
-
-        This function queries the database to fetch all algorithm plugins of type 'CPP' and version 'v1', and returns their description information as a JSON formatted string.
-
-        Returns:
-            str: A JSON string containing the description information of all matching algorithm plugins.
-        """
-        plugins = []
-        query = "CALL db.plugin.listPlugin('CPP','v1')"
-        db = get_tugraph()
-        result = db.conn.run(query=query)
-        for item in result:
-            plugins.append(item['plugin_description'])
-        return json.dumps(plugins)
-
-
-def get_parameters() -> str:
-    return ""
-# op1
+# operation 1: Algorithms Intention Analysis
 ALGORITHMS_INTENTION_ANALYSIS_PROFILE = """
 你是一个专业的算法意图分析专家。你的工作是，理解用户的需求，给出一些算法建议，然后为后续的执行算法语句做好准备工作。
 你需要识别用户所说内容为图算法的需求。你的任务是分析用户需求，并给出适合用户需求的算法，为后续的执行算法做准备。
@@ -97,51 +66,15 @@ ALGORITHMS_INTENTION_ANALYSIS_INSTRUCTION = """
 
 ALGORITHMS_INTENTION_ANALYSIS_OUTPUT_SCHEMA = """
 {
-  "analysis":"算法的要求",
-  "algorithms_name":"算法的名称",
-  "algorithms_parameters":"算法的参数"
+    "algorithms": [
+        {
+            "analysis":"算法的要求",
+            "algorithms_name":"算法的名称",
+        },
+    ]
 }
 """
-
-def get_algorithms_intention_analysis_operator():
-    analysis_toolkit = Toolkit()
-    content_understanding_action = Action(
-        id="algorithms_intention_analysis.content_understanding",
-        name="内容理解",
-        description="理解用户所说的所有内容"
-    )
-    algorithms_intention_identification_action = Action(
-        id="query_intention_analysis.query_intention_identification",
-        name="核心算法意图识别",
-        description="识别并理解用户需求中的算法要求，提取出算法的名称和算法的参数",
-    )
-    analysis_toolkit.add_action(
-        action=content_understanding_action,
-        next_actions=[(algorithms_intention_identification_action, 1)],
-        prev_actions=[],
-    )
-    analysis_toolkit.add_action(
-        action=algorithms_intention_identification_action,
-        next_actions=[],
-        prev_actions=[(content_understanding_action, 1)],
-    )
-    operator_config = OperatorConfig(
-        id="algorithms_intention_analysis_operator",
-        instruction=ALGORITHMS_INTENTION_ANALYSIS_PROFILE + ALGORITHMS_INTENTION_ANALYSIS_INSTRUCTION,
-        output_schema=ALGORITHMS_INTENTION_ANALYSIS_OUTPUT_SCHEMA,
-        actions=[
-            content_understanding_action,
-            algorithms_intention_identification_action
-        ],
-    )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=analysis_toolkit),
-    )
-
-    return operator
-
-# op2
+# operation 2: Algorithms Validation
 ALGORITHMS_VALIDATION_PROFILE = """
 你是一个专业的算法检测专家。你的工作是校验用户的算法需求和实际图数据库中的可执行算法是否匹配。
 """
@@ -164,11 +97,123 @@ ALGORITHMS_VALIDATION_OUTPUT_SCHEMA = """
 }
 """
 
+# operation 3: Algorithms Execute
+ALGORITHMS_EXECUTE_PROFILE = """
+你是一个专业的图算法执行专家。你的工作是根据用户的算法需求执行相应的图算法，并返回结果。
+"""
+
+ALGORITHMS_EXECUTE_INSTRUCTION = """
+基于验证过的算法、算法参数，按要求完成算法执行任务：
+
+1.运行算法
+- 按照算法的输入
+"""
+
+ALGORITHMS_EXECUTE_OUTPUT_SCHEMA = """
+{
+    "call_algorithms": "算法的执行命令",
+    "algorithms_result": "算法执行的结果"
+}
+"""
+
+
+class AlgorithmsGetter(Tool):
+    """Tool to get all algorithms from the graph database."""
+
+    def __init__(self, id: Optional[str] = None):
+        super().__init__(
+            id=id,
+            name=self.get_algorithms.__name__,
+            description=self.get_algorithms.__doc__,
+            function=self.get_algorithms,
+        )
+
+    async def get_algorithms(self) -> str:
+        """Retrieve all algorithm plugins of a specified type and version supported by the graph database.
+
+        This function queries the database to fetch all algorithm plugins of type 'CPP' and version 'v1', and returns their description information as a JSON formatted string.
+
+        Returns:
+            str: A JSON string containing the description information of all matching algorithm plugins.
+        """
+        plugins = []
+        query = "CALL db.plugin.listPlugin('CPP','v1')"
+        db = get_tugraph()
+        result = db.conn.run(query=query)
+        for item in result:
+            plugins.append(item["plugin_description"])
+        return json.dumps(plugins)
+
+
+class AlgorithmsExecute(Tool):
+    def __init__(self, id: Optional[str] = None):
+        super().__init__(
+            id=id,
+            name=self.excute_algorithms.__name__,
+            description=self.excute_algorithms.__doc__,
+            function=self.excute_algorithms,
+        )
+
+    async def excute_algorithms(self, algorithms_name: str):
+        query = f"CALL db.plugin.callPlugin('CPP','{algorithms_name}')"
+        db = get_tugraph()
+        result = db.conn.run(query=query)
+
+        return result
+
+
+def get_algorithms_intention_analysis_operator():
+    analysis_toolkit = Toolkit()
+    content_understanding_action = Action(
+        id="algorithms_intention_analysis.content_understanding",
+        name="内容理解",
+        description="理解用户所说的所有内容",
+    )
+    algorithms_intention_identification_action = Action(
+        id="query_intention_analysis.query_intention_identification",
+        name="核心算法意图识别",
+        description="识别并理解用户需求中的算法要求，确定算法的名称和要求",
+    )
+    algorithms_getter = AlgorithmsGetter(id="algorithms_getter_tool")
+
+    analysis_toolkit.add_action(
+        action=content_understanding_action,
+        next_actions=[(algorithms_intention_identification_action, 1)],
+        prev_actions=[],
+    )
+    analysis_toolkit.add_action(
+        action=algorithms_intention_identification_action,
+        next_actions=[],
+        prev_actions=[(content_understanding_action, 1)],
+    )
+    analysis_toolkit.add_tool(
+        tool=algorithms_getter,
+        connected_actions=[(algorithms_intention_identification_action, 1)],
+    )
+
+    operator_config = OperatorConfig(
+        id="algorithms_intention_analysis_operator",
+        instruction=ALGORITHMS_INTENTION_ANALYSIS_PROFILE
+        + ALGORITHMS_INTENTION_ANALYSIS_INSTRUCTION,
+        output_schema=ALGORITHMS_INTENTION_ANALYSIS_OUTPUT_SCHEMA,
+        actions=[
+            content_understanding_action,
+            algorithms_intention_identification_action,
+        ],
+    )
+    operator = Operator(
+        config=operator_config,
+        toolkit_service=ToolkitService(toolkit=analysis_toolkit),
+    )
+
+    return operator
+
+
 def get_algorithms_validation_operator():
     analysis_toolkit = Toolkit()
     algorithms_validation_action = Action(
         id="algorithms_validation.algorithms_validation_action",
-        name="算法验证",
+        name="算法执行验证",
         description="查询当前图数据库中的算法是否和用户的算法需求匹配",
     )
     algorithms_parameters_validation_action = Action(
@@ -176,6 +221,8 @@ def get_algorithms_validation_operator():
         name="算法参数验证",
         description="验证算法的参数和需求匹配",
     )
+    algorithms_getter = AlgorithmsGetter(id="algorithms_getter_tool")
+
     analysis_toolkit.add_action(
         action=algorithms_validation_action,
         next_actions=[(algorithms_parameters_validation_action, 1)],
@@ -186,63 +233,21 @@ def get_algorithms_validation_operator():
         next_actions=[],
         prev_actions=[(algorithms_validation_action, 1)],
     )
+    analysis_toolkit.add_tool(
+        tool=algorithms_getter, connected_actions=[(algorithms_validation_action, 1)]
+    )
+
     operator_config = OperatorConfig(
         id="algorithms_validation_operator",
         instruction=ALGORITHMS_VALIDATION_PROFILE + ALGORITHMS_VALIDATION_INSTRUCTION,
         output_schema=ALGORITHMS_VALIDATION_OUTPUT_SCHEMA,
-        actions=[
-            algorithms_validation_action,
-            algorithms_parameters_validation_action
-        ],
-    )
-    algorithms_getter = AlgorithmsGetter(
-        id="algorithms_getter_tool"
-    )
-    analysis_toolkit.add_tool(
-        tool=algorithms_getter, connected_actions=[(algorithms_validation_action, 1)]
+        actions=[algorithms_validation_action, algorithms_parameters_validation_action],
     )
     operator = Operator(
         config=operator_config,
         toolkit_service=ToolkitService(toolkit=analysis_toolkit),
     )
     return operator
-
-# op3
-ALGORITHMS_EXECUTE_PROFILE = """
-你是一个专业的图算法执行专家。你的工作是根据用户的算法需求执行相应的图算法，并返回结果。
-"""
-
-ALGORITHMS_EXECUTE_INSTRUCTION = """
-基于验证过的算法、算法参数，按要求完成算法执行任务：
-
-1.运行算法
-- 按照算法的输入
-
-"""
-
-ALGORITHMS_EXECUTE_OUTPUT_SCHEMA = """
-{
-    "call_algorithms": "算法的执行命令",
-    "algorithms_result": "算法执行的结果"
-}
-"""
-
-class AlgorithmsExecute(Tool):
-
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.excute_algorithms.__name__,
-            description=self.excute_algorithms.__doc__,
-            function=self.excute_algorithms,
-        )
-
-    async def excute_algorithms(self, algorithms_name:str):
-        query = f"CALL db.plugin.callPlugin('CPP','{algorithms_name}')"
-        db = get_tugraph()
-        result = db.conn.run(query=query)
-        
-        return result
 
 
 def get_algorithms_execute_operator():
@@ -257,9 +262,7 @@ def get_algorithms_execute_operator():
         next_actions=[],
         prev_actions=[],
     )
-    algorithms_excute = AlgorithmsExecute(
-        id="algorithms_excute_tool"
-    )
+    algorithms_excute = AlgorithmsExecute(id="algorithms_excute_tool")
     analysis_toolkit.add_tool(
         tool=algorithms_excute, connected_actions=[(algorithms_execution_aciton, 1)]
     )
@@ -267,9 +270,7 @@ def get_algorithms_execute_operator():
         id="algorithms_execute_operator",
         instruction=ALGORITHMS_EXECUTE_PROFILE + ALGORITHMS_EXECUTE_INSTRUCTION,
         output_schema=ALGORITHMS_EXECUTE_OUTPUT_SCHEMA,
-        actions=[
-            algorithms_execution_aciton
-        ],
+        actions=[algorithms_execution_aciton],
     )
     operator = Operator(
         config=operator_config,
@@ -277,9 +278,12 @@ def get_algorithms_execute_operator():
     )
     return operator
 
+
 def get_graph_analysis_workflow():
     """Get the workflow for graph modeling and assemble the operators."""
-    algorithms_intention_analysis_operator = get_algorithms_intention_analysis_operator()
+    algorithms_intention_analysis_operator = (
+        get_algorithms_intention_analysis_operator()
+    )
     algorithms_validation_operator = get_algorithms_validation_operator()
     algorithms_execute_operator = get_algorithms_execute_operator()
 
@@ -303,6 +307,7 @@ def get_graph_analysis_workflow():
 
     return workflow
 
+
 async def main():
     """Main function"""
     workflow = get_graph_analysis_workflow()
@@ -319,8 +324,7 @@ async def main():
     result = await workflow.execute(job=job, reasoner=reasoner)
 
     print(f"Final result:\n{result.scratchpad}")
-    
-    
+
 
 if __name__ == "__main__":
     asyncio.run(main())
