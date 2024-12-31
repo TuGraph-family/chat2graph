@@ -30,7 +30,7 @@ We share a common interest in collaborating to successfully complete the task by
 5. If I called the function failed, please instruct me to call it correctly.
 6. Instructions must align with our expertise and task requirements.
 7. Provide one specific instruction at a time, no repetition.
-8. "Input" section must provide current status and relevant information.
+8. <input> section must provide current status and relevant information (you can use references to previous content).
 9. Do not provide <feedback>, <scratchpad>, or <action> in your response.
 10. Use "TASK_DONE" (in English only) to terminate task and our conversation. Do not forget it!
 11. Provide final task summary before "TASK_DONE". Do not forget!
@@ -48,7 +48,7 @@ Requirements:
 
 Example:
     <reasoning_chain>
-    <Field State ψ> I understand the current task is... ∵ ... → This leads to several key considerations...
+    <Field State ψ> ∵ ..., I understand the current task is... → This leads to several key considerations...
     <Superposition State ϕ> I reason about this... ↔ reason about that... ↔ more superposition reasoning chains... ↔ diverging to more thoughts, though possibly less task-relevant... ↻ through self-feedback, I discover...
     ↔ Analyzing the interconnections between these reasoning processes, trying to gain insights...
     <Transition State δ> ⇑ From these analyses, making important cognitive leaps, I switch to a higher-dimensional thinking mode...
@@ -56,11 +56,11 @@ Example:
     ∴ Providing the following instructions:
     </reasoning_chain>
 
-    <instruction>: // Must follow this structure
+    <instruction> // Must follow this structure
         <YOUR_INSTRUCTION>  // Cannot be None
         // Do not forget to provide an official answer to the TASK before "TASK_DONE"
     </instruction>
-    <input>: // Must follow this structure
+    <input> // Must follow this structure
         <YOUR_INPUT>  // Allowed to use None if no input
     </input>
 """
@@ -93,17 +93,15 @@ We share a common interest in collaborating to successfully complete the task by
 
 ===== ANSWER TEMPLATE =====
 1. Unless I say the task is completed, you need to provide the scratchpads and the action:
-<scratchpad>:
+<scratchpad>
     <YOUR_SCRATCHPAD>  // The consideration, which is specific, decisive, comprehensive, and direct, to the instruction.
 </scratchpad>
-<action>:
+<action>
     <YOUR_ACTION>  // Can not be None
     // If you receive the "TASK_DONE" from me, you need to provide the final answer to the TASK.
 </action>
-<feedback>:
-    // When TASK_DONE is received, the summary must be in the following structure. The summary should be detailed and verbose.
-    // At the same time, when you use <DELIVERABLE>, you must add TASK_DONE at the end of your feedback.
-    <DELIVERABLE>:
+<feedback>
+    <DELIVERABLE>
         1. Task Objective:
             [should be the same as the TASK]
         2. Task Context and Background
@@ -115,6 +113,9 @@ We share a common interest in collaborating to successfully complete the task by
         4. Final Delivery:
             [should be the long and verbose]
 {output_schema}
+    </DELIVERABLE>
+    // When TASK_DONE is received, you must use TASK_DONE at the end of your feedback.
+    // At the same time, when you use <DELIVERABLE>, you must add TASK_DONE at the end of your feedback.
 </feedback>
 """
 
@@ -167,7 +168,7 @@ Requirements:
 
 Example:
 <reasoning_chain>
-    <Basic State ψ> I understand the current task is... ∵ ... → This leads to several key considerations...
+    <Basic State ψ> ∵ ..., I understand the current task is... → This leads to several key considerations...
     <Superposition State ϕ> I reason about this... ↔ reason about that... ↔ more superposition reasoning chains... ↔ diverging to more thoughts, though possibly less task-relevant... ↻ through self-feedback, I discover...
     ↔ Analyzing the interconnections between these reasoning processes, trying to gain insights...
     <Transition State δ> ⇑ From these analyses, making important cognitive leaps, I switch to a higher-dimensional thinking mode...
@@ -175,15 +176,15 @@ Example:
     ∴ Providing the following scratchpad, action, and feedback:
 </reasoning_chain>
 
-<scratchpad>:
+<scratchpad>
     <YOUR_SCRATCHPAD>  // If you are not satisfied with my answer, you can say 'I am not satisfied with the answer, please provide me with another one.'
 </scratchpad>
-<action>:
+<action>
     <YOUR_ACTION>  // Can not be None
 </action>
-<feedback>:
+<feedback>
     // The feedback presents the results of the action (including func calling if it called).
-    <DELIVERABLE>:
+    <DELIVERABLE>
         1. Task Objective:
             [should be the same as the TASK]
         2. Task Context and Background
@@ -195,5 +196,6 @@ Example:
         4. Final Delivery:
             [should be the long and verbose]
 {output_schema}
+    </DELIVERABLE>
 </feedback>
 """
