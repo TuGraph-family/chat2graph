@@ -1,5 +1,4 @@
 import asyncio
-import json
 from typing import Optional
 
 from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
@@ -51,68 +50,49 @@ def get_tugraph(
 
 # operation 1: Algorithms Intention Analysis
 ALGORITHMS_INTENTION_ANALYSIS_PROFILE = """
-你是一个专业的算法意图分析专家。你的工作是，理解用户的需求，给出一些算法建议，然后为后续的执行算法语句做好准备工作。
-你需要识别用户所说内容为图算法的需求。你的任务是分析用户需求，并给出适合用户需求的算法，为后续的执行算法做准备。
+你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
+你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
+注意，你不需要执行算法，也不能询问用户更多的信息。
 """
 
 ALGORITHMS_INTENTION_ANALYSIS_INSTRUCTION = """
-请理解用户所说的需求，按要求完成任务：
-
 1.算法需求分析
-- 识别用户的需求
-- 理解用户对于算法的具体诉求
-- 确定用户描述的算法需求内容是完整的
+- 分析需求和具体的诉求
+- 确定需要执行的算法和相关的要求
 """
 
 ALGORITHMS_INTENTION_ANALYSIS_OUTPUT_SCHEMA = """
 {
+    "algorithms_supported_by_db": ["图数据库支持的算法列表，算法的名字"],
     "algorithms": [
         {
             "analysis":"算法的要求",
             "algorithms_name":"算法的名称",
+            "call_objective":"调用该算法的目的"
         },
     ]
 }
 """
-# operation 2: Algorithms Validation
-ALGORITHMS_VALIDATION_PROFILE = """
-你是一个专业的算法检测专家。你的工作是校验用户的算法需求和实际图数据库中的可执行算法是否匹配。
-"""
 
-ALGORITHMS_VALIDATION_INSTRUCTION = """
-基于算法需求分析的结果，按要求完成算法检测任务：
-
-1.检测算法是否存在
-- 验证当前图数据库中是否存在相应的算法
-2.检测算法的必要参数
-- 检测用户是否已提供算法的必要参数
-"""
-
-ALGORITHMS_VALIDATION_OUTPUT_SCHEMA = """
-{
-    "status": "算法检测状态：是否通过验证",
-    "supplement": "需要补充的缺少的或无法匹配的信息"
-    "algorithms_name":"通过验证的算法名称",
-    "algorithms_parameters": "通过验证的算法参数"
-}
-"""
-
-# operation 3: Algorithms Execute
+# operation 2: Algorithms Execute
 ALGORITHMS_EXECUTE_PROFILE = """
-你是一个专业的图算法执行专家。你的工作是根据用户的算法需求执行相应的图算法，并返回结果。
+你是一个专业的图算法执行专家。你的工作是根据算法需求执行相应的图算法，并返回结果。
+注意，你不能够询问用户更多的信息。
 """
 
 ALGORITHMS_EXECUTE_INSTRUCTION = """
 基于验证过的算法、算法参数，按要求完成算法执行任务：
 
 1.运行算法
+- 验证算法的可执行性（包括图数据库中是否支持该算法）
 - 按照算法的输入
 """
 
 ALGORITHMS_EXECUTE_OUTPUT_SCHEMA = """
 {
-    "call_algorithms": "算法的执行命令",
-    "algorithms_result": "算法执行的结果"
+    "call_algorithms": "调用的算法和参数",
+    "status": "算法执行的状态",
+    "algorithms_result": "算法执行的结果。如果失败，返回失败原因"
 }
 """
 
@@ -140,12 +120,15 @@ class AlgorithmsGetter(Tool):
         query = "CALL db.plugin.listPlugin('CPP','v1')"
         db = get_tugraph()
         result = db.conn.run(query=query)
-        for item in result:
-            plugins.append(item["plugin_description"])
-        return json.dumps(plugins)
+        for record in result:
+            plugins.append(record["plugin_description"])
+
+        return str(plugins)
 
 
-class AlgorithmsExecute(Tool):
+class AlgorithmsExecutor(Tool):
+    """Tool to execute algorithms on the graph database."""
+
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id,
@@ -154,12 +137,29 @@ class AlgorithmsExecute(Tool):
             function=self.excute_algorithms,
         )
 
-    async def excute_algorithms(self, algorithms_name: str):
-        query = f"CALL db.plugin.callPlugin('CPP','{algorithms_name}')"
+    async def excute_algorithms(self, algorithms_name: str) -> str:
+        """Execute the specified algorithm on the graph database.
+
+        This function calls the specified algorithm plugin on the graph database and returns the result.
+
+        Args:
+            algorithms_name (str): The name of the algorithm to execute.
+
+        Returns:
+            str: The result of the algorithm execution.
+        """
+        query = f"""CALL db.plugin.callPlugin(
+            'CPP', 
+            '{algorithms_name}', 
+            '{{"num_iterations": 100}}', 
+            10000.0, 
+            false
+        )"""
+
         db = get_tugraph()
         result = db.conn.run(query=query)
 
-        return result
+        return str(result)
 
 
 def get_algorithms_intention_analysis_operator():
@@ -167,12 +167,12 @@ def get_algorithms_intention_analysis_operator():
     content_understanding_action = Action(
         id="algorithms_intention_analysis.content_understanding",
         name="内容理解",
-        description="理解用户所说的所有内容",
+        description="理解和分析用户的需求",
     )
     algorithms_intention_identification_action = Action(
         id="query_intention_analysis.query_intention_identification",
         name="核心算法意图识别",
-        description="识别并理解用户需求中的算法要求，确定算法的名称和要求",
+        description="识别并理解用户需求中的算法要求，调用相关工具函数查找图数据库中支持的算法，然后基于此确定算法的名称和要求",
     )
     algorithms_getter = AlgorithmsGetter(id="algorithms_getter_tool")
 
@@ -209,68 +209,43 @@ def get_algorithms_intention_analysis_operator():
     return operator
 
 
-def get_algorithms_validation_operator():
+def get_algorithms_execute_operator():
     analysis_toolkit = Toolkit()
     algorithms_validation_action = Action(
-        id="algorithms_validation.algorithms_validation_action",
+        id="algorithms_execute.algorithms_validation_action",
         name="算法执行验证",
-        description="查询当前图数据库中的算法是否和用户的算法需求匹配",
+        description="确认当前图数据库中的算法是否支持相关的需求",
     )
-    algorithms_parameters_validation_action = Action(
-        id="algorithms_validation.condition_validation_action",
-        name="算法参数验证",
-        description="验证算法的参数和需求匹配",
+    algorithms_execution_aciton = Action(
+        id="algorithms_execute.algorithms_execution_aciton",
+        name="执行查询",
+        description="在对应图上执行查询语句返回结果",
     )
     algorithms_getter = AlgorithmsGetter(id="algorithms_getter_tool")
+    algorithms_excute = AlgorithmsExecutor(id="algorithms_excute_tool")
 
     analysis_toolkit.add_action(
         action=algorithms_validation_action,
-        next_actions=[(algorithms_parameters_validation_action, 1)],
+        next_actions=[(algorithms_execution_aciton, 1)],
         prev_actions=[],
     )
     analysis_toolkit.add_action(
-        action=algorithms_parameters_validation_action,
+        action=algorithms_execution_aciton,
         next_actions=[],
         prev_actions=[(algorithms_validation_action, 1)],
     )
     analysis_toolkit.add_tool(
         tool=algorithms_getter, connected_actions=[(algorithms_validation_action, 1)]
     )
-
-    operator_config = OperatorConfig(
-        id="algorithms_validation_operator",
-        instruction=ALGORITHMS_VALIDATION_PROFILE + ALGORITHMS_VALIDATION_INSTRUCTION,
-        output_schema=ALGORITHMS_VALIDATION_OUTPUT_SCHEMA,
-        actions=[algorithms_validation_action, algorithms_parameters_validation_action],
-    )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=analysis_toolkit),
-    )
-    return operator
-
-
-def get_algorithms_execute_operator():
-    analysis_toolkit = Toolkit()
-    algorithms_execution_aciton = Action(
-        id="algorithms_execute.algorithms_execution_aciton",
-        name="执行查询",
-        description="在对应图上执行查询语句返回结果",
-    )
-    analysis_toolkit.add_action(
-        action=algorithms_execution_aciton,
-        next_actions=[],
-        prev_actions=[],
-    )
-    algorithms_excute = AlgorithmsExecute(id="algorithms_excute_tool")
     analysis_toolkit.add_tool(
         tool=algorithms_excute, connected_actions=[(algorithms_execution_aciton, 1)]
     )
+
     operator_config = OperatorConfig(
         id="algorithms_execute_operator",
         instruction=ALGORITHMS_EXECUTE_PROFILE + ALGORITHMS_EXECUTE_INSTRUCTION,
         output_schema=ALGORITHMS_EXECUTE_OUTPUT_SCHEMA,
-        actions=[algorithms_execution_aciton],
+        actions=[algorithms_validation_action, algorithms_execution_aciton],
     )
     operator = Operator(
         config=operator_config,
@@ -284,24 +259,17 @@ def get_graph_analysis_workflow():
     algorithms_intention_analysis_operator = (
         get_algorithms_intention_analysis_operator()
     )
-    algorithms_validation_operator = get_algorithms_validation_operator()
     algorithms_execute_operator = get_algorithms_execute_operator()
 
     workflow = DbgptWorkflow()
     workflow.add_operator(
         operator=algorithms_intention_analysis_operator,
         previous_ops=[],
-        next_ops=[algorithms_validation_operator],
-    )
-    workflow.add_operator(
-        operator=algorithms_validation_operator,
-        previous_ops=[algorithms_intention_analysis_operator],
         next_ops=[algorithms_execute_operator],
     )
-
     workflow.add_operator(
         operator=algorithms_execute_operator,
-        previous_ops=[algorithms_validation_operator],
+        previous_ops=[algorithms_intention_analysis_operator],
         next_ops=[],
     )
 
@@ -316,8 +284,7 @@ async def main():
         id="test_job_id",
         session_id="test_session_id",
         goal="「任务」",
-        context="目前我们的问题的背景是，理解用户输入的需求，识别出用户想要执行的图算法，并匹配上图数据库已加载的图算法，最后执行该图算法并返回结果。"
-        "基于节点之间的关系结构，对当前图谱的节点进行排序，并找到最重要的节点",
+        context="用户目前的需求是想知道在当前图数据库中，影响力最大的节点是哪个？我需要你通过执行算法来找到这个节点。",
     )
     reasoner = DualModelReasoner()
 
