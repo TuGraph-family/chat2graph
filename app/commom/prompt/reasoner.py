@@ -115,7 +115,7 @@ We share a common interest in collaborating to successfully complete the task by
 {output_schema}
     </DELIVERABLE>
     // When TASK_DONE is received, you must use TASK_DONE at the end of your feedback.
-    // At the same time, when you use <DELIVERABLE>, you must add TASK_DONE at the end of your feedback.
+    // When you use <DELIVERABLE>, you must add TASK_DONE at the end of your feedback.
 </feedback>
 """
 
