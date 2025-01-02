@@ -46,7 +46,7 @@ class ModelService(ABC):
 
         func_call_results: List[FunctionCallResult] = []
         for func_name, call_objective, func_args in func_calls:
-            func: Optional[Callable[..., Any]] = self._find_function(func_name, tools)
+            func = self._find_function(func_name, tools)
             if not func:
                 func_call_results.append(
                     FunctionCallResult(

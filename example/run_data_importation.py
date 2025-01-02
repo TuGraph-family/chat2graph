@@ -1,9 +1,12 @@
 import asyncio
 import json
-import re
 from typing import Optional
+from uuid import uuid4
 
-from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
+from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
+    TuGraphStore,
+    TuGraphStoreConfig,
+)
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
@@ -50,6 +53,7 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 
 """
 
+
 def get_tugraph(
     config: Optional[TuGraphStoreConfig] = None,
 ) -> TuGraphStore:
@@ -84,12 +88,13 @@ def get_tugraph(
         print(f"failed to initialize tugraph: {str(e)}")
         raise
 
+
 class DocumentReader(Tool):
     """Tool for analyzing document content."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.read_document.__name__,
             description=self.read_document.__doc__ or "",
             function=self.read_document,
@@ -107,13 +112,14 @@ class DocumentReader(Tool):
         """
 
         return ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50
-    
+
+
 class SchemaGetter(Tool):
     """Tool for getting the schema of a graph database."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.get_schema.__name__,
             description=self.get_schema.__doc__ or "",
             function=self.get_schema,
@@ -135,23 +141,24 @@ class SchemaGetter(Tool):
         sstore = get_tugraph()
         schema = sstore.conn.run(query=query)
 
-        result = f'参考{SCHEMA_TEMPLATE}进行理解，以下图模型：\n' + json.dumps(
+        result = f"参考{SCHEMA_TEMPLATE}进行理解，以下图模型：\n" + json.dumps(
             json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False
         )
 
         return result
-    
+
+
 class NodesToCypher(Tool):
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.nodes_to_cypher_create.__name__,
             description=self.nodes_to_cypher_create.__doc__ or "",
             function=self.nodes_to_cypher_create,
         )
+
     def nodes_to_cypher_create(self, nodes):
-        """
-        Generate a instruction CREATE statement to create nodes in a TuGraph database.
+        """Generate a instruction CREATE statement to create nodes in a TuGraph database.
 
         Parameters:
             nodes (list of dict): A list of dictionaries, where each dictionary represents a node and contains the following keys:
@@ -167,7 +174,7 @@ class NodesToCypher(Tool):
                     {"label": "Person", "properties": {"name": "Alice", "age": 30}},
                     {"label": "Person", "properties": {"name": "Bob", "age": 25}}
                 ]
-            
+
             Output:
                 ["CREATE (:Person { name: 'Alice', age: '30' }), (:Person { name: 'Bob', age: '25' })"]
         """
@@ -185,18 +192,19 @@ class NodesToCypher(Tool):
         db = get_tugraph()
         res = db.conn.run(cypher_statement)
         return res
-    
+
+
 class EdgesToCypher(Tool):
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.edges_to_cypher_create.__name__,
             description=self.edges_to_cypher_create.__doc__ or "",
             function=self.edges_to_cypher_create,
         )
+
     def edges_to_cypher_create(self, edges):
-        """
-        Generate instruction statements to create edges in a TuGraph database using the `db.upsertEdge` procedure.
+        """Generate instruction statements to create edges in a TuGraph database using the `db.upsertEdge` procedure.
 
         Parameters:
             edges (list of dict): A list of dictionaries, where each dictionary represents an edge and contains the following keys:
@@ -228,7 +236,7 @@ class EdgesToCypher(Tool):
                         "properties": {"year": 1999}
                     }
                 ]
-            
+
             Output:
                 [
                     "CALL db.upsertEdge('ACTED_IN', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ role: 'Hero', source: 'Alice', target: 'TheMatrix' }])",
@@ -254,12 +262,16 @@ class EdgesToCypher(Tool):
                     f"{key}: '{value}'" for key, value in properties.items()
                 )
                 properties_str_list.append(f"{{ {property_str} }}")
-            source_type, target_type = edge["constraints"][0][0], edge["constraints"][0][1]
+            source_type, target_type = (
+                edge["constraints"][0][0],
+                edge["constraints"][0][1],
+            )
             properties_str = ",".join(properties_str_list)
             cypher_statement = f"CALL db.upsertEdge('{edge_type}', {{type: '{source_type}', key: 'source'}}, {{type: '{target_type}', key: 'target'}}, [{properties_str}])"
             res = db.conn.run(cypher_statement)
-            result_list.append(res) 
+            result_list.append(res)
         return result_list
+
 
 SCHEMA_TEMPLATE = """
 {
@@ -435,8 +447,6 @@ def get_data_generation_operator():
     return operator
 
 
-
-
 # operation 2: Data Import
 DATA_IMPORT_PROFILE = """
 你是一位资深的图数据库的管理员。
@@ -450,11 +460,12 @@ DATA_IMPORT_OUTPUT_DATA = """
 }
 """
 
-DATA_IMPORT_INSTRUCTION = f"""
+DATA_IMPORT_INSTRUCTION = """
 请安以下要求完成任务：
 1. 导入数据，将json文本数据，准成对应的导入命令，并执行导入
 2. 输出数据导入结果
 """
+
 
 def get_import_data_operator():
     analysis_toolkit = Toolkit()
@@ -495,10 +506,7 @@ def get_import_data_operator():
         id="import_data_operator",
         instruction=DATA_IMPORT_PROFILE + DATA_IMPORT_INSTRUCTION,
         output_schema=DATA_IMPORT_OUTPUT_DATA,
-        actions=[
-            json_to_cypher_action,
-            output_result_action
-        ],
+        actions=[json_to_cypher_action, output_result_action],
     )
     operator = Operator(
         config=operator_config,
@@ -506,6 +514,7 @@ def get_import_data_operator():
     )
 
     return operator
+
 
 def get_workflow():
     """Get the workflow for graph modeling and assemble the operators."""
@@ -524,6 +533,7 @@ def get_workflow():
     )
 
     return workflow
+
 
 async def main():
     """Main function to run the data import."""
