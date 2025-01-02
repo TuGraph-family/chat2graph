@@ -2,73 +2,12 @@ import json
 import logging
 from typing import Optional
 
-from dbgpt.datasource.conn_tugraph import TuGraphConnector
-from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
+from dbgpt.datasource.conn_tugraph import TuGraphConnector  # type: ignore
+from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig  # type: ignore
 
 # configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def create_schema(connector: TuGraphConnector) -> None:
-    """create basic schema for tugraph including vertices and edges.
-
-    args:
-        connector: initialized tugraph connector
-    """
-    try:
-        # create vertex labels
-        entity_schema = {
-            "label": "entity",
-            "type": "VERTEX",
-            "primary": "id",
-            "properties": [
-                {"name": "id", "type": "STRING", "optional": False},
-                {"name": "description", "type": "STRING", "optional": True},
-            ],
-        }
-
-        document_schema = {
-            "label": "document",
-            "type": "VERTEX",
-            "primary": "id",
-            "properties": [
-                {"name": "id", "type": "STRING", "optional": False},
-                {"name": "content", "type": "STRING", "optional": False},
-            ],
-        }
-
-        relation_schema = {
-            "label": "relation",
-            "type": "EDGE",
-            "properties": [
-                {"name": "type", "type": "STRING", "optional": False},
-                {"name": "weight", "type": "DOUBLE", "optional": True},
-            ],
-        }
-
-        # create vertex and edge labels
-        entity_query = f"CALL db.createVertexLabelByJson('{json.dumps(entity_schema)}')"
-        document_query = (
-            f"CALL db.createVertexLabelByJson('{json.dumps(document_schema)}')"
-        )
-        relation_query = (
-            f"CALL db.createEdgeLabelByJson('{json.dumps(relation_schema)}')"
-        )
-
-        # execute schema creation
-        logger.info("creating entity schema")
-        connector.run(entity_query)
-        logger.info("creating document schema")
-        connector.run(document_query)
-        logger.info("creating relation schema")
-        connector.run(relation_query)
-
-        logger.info("successfully created schema")
-
-    except Exception as e:
-        logger.error(f"failed to create schema: {str(e)}")
-        raise
 
 
 def init_tugraph(config: Optional[TuGraphStoreConfig] = None) -> TuGraphStore:
@@ -83,7 +22,7 @@ def init_tugraph(config: Optional[TuGraphStoreConfig] = None) -> TuGraphStore:
     try:
         if not config:
             config = TuGraphStoreConfig(
-                name="aaa_default_graph",
+                name="default_graph",
                 host="127.0.0.1",
                 port=7687,
                 username="admin",
@@ -111,12 +50,9 @@ def main():
         store = init_tugraph()
         # create_schema(store.conn)
 
-        # example: create a test vertex
-        # create_query = "CALL db.upsertVertex('entity', [{id: '12', name: 'test_entity', type: 'test', properties: {description: 'test entity'}}])"
-        create_query = "CALL db.getLabelSchema('edge', 'HOSTILE')"
-        print(create_query)
-        records = store.conn.run(create_query)
-        print(records[0].keys())
+        query = "CALL db.getLabelSchema('edge', 'HOSTILE')"
+        records = store.conn.run(query)
+        print(records)
 
         logger.info("successfully initialized and tested tugraph")
 

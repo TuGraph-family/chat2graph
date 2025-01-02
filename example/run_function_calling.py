@@ -14,7 +14,7 @@ class SyncAdd(Tool):
 
     def __init__(self, id: Optional[str] = None):
         name = self.sync_add.__name__
-        description = self.sync_add.__doc__
+        description = self.sync_add.__doc__ or ""
         super().__init__(
             name=name,
             description=description,
@@ -37,7 +37,7 @@ class AsyncMultiply(Tool):
 
     def __init__(self, id: Optional[str] = None):
         name = self.async_multiply.__name__
-        description = self.async_multiply.__doc__
+        description = self.async_multiply.__doc__ or ""
         super().__init__(
             name=name,
             description=description,
@@ -59,7 +59,7 @@ class AsyncMultiply(Tool):
 class ProcessComplexData(Tool):
     def __init__(self, id: Optional[str] = None):
         name = self.process_complex_data.__name__
-        description = self.process_complex_data.__doc__
+        description = self.process_complex_data.__doc__ or ""
         super().__init__(
             name=name,
             description=description,

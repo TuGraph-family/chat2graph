@@ -234,7 +234,7 @@ class KnowledgeBaseRetriever(Tool):
         super().__init__(
             id=id,
             name=self.knowledge_base_search.__name__,
-            description=self.knowledge_base_search.__doc__,
+            description=self.knowledge_base_search.__doc__ or "",
             function=self.knowledge_base_search,
         )
 
@@ -257,7 +257,7 @@ class InternetRetriever(Tool):
         super().__init__(
             id=id,
             name=self.internet_search.__name__,
-            description=self.internet_search.__doc__,
+            description=self.internet_search.__doc__ or "",
             function=self.internet_search,
         )
 
@@ -280,7 +280,7 @@ class ReferenceGenerator(Tool):
         super().__init__(
             id=id,
             name=self.reference_listing.__name__,
-            description=self.reference_listing.__doc__,
+            description=self.reference_listing.__doc__ or "",
             function=self.reference_listing,
         )
 

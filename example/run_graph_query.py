@@ -122,7 +122,7 @@ class SchemaGetter(Tool):
         super().__init__(
             id=id,
             name=self.get_schema.__name__,
-            description=self.get_schema.__doc__,
+            description=self.get_schema.__doc__ or "",
             function=self.get_schema,
         )
 
@@ -154,7 +154,7 @@ class GrammerReader(Tool):
         super().__init__(
             id=id,
             name=self.read_grammer.__name__,
-            description=self.read_grammer.__doc__,
+            description=self.read_grammer.__doc__ or "",
             function=self.read_grammer,
         )
 
@@ -180,7 +180,7 @@ class VertexQuerier(Tool):
         super().__init__(
             id=id,
             name=self.query_vertex.__name__,
-            description=self.query_vertex.__doc__,
+            description=self.query_vertex.__doc__ or "",
             function=self.query_vertex,
         )
 

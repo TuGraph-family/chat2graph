@@ -104,7 +104,7 @@ class AlgorithmsGetter(Tool):
         super().__init__(
             id=id,
             name=self.get_algorithms.__name__,
-            description=self.get_algorithms.__doc__,
+            description=self.get_algorithms.__doc__ or "",
             function=self.get_algorithms,
         )
 
@@ -133,7 +133,7 @@ class AlgorithmsExecutor(Tool):
         super().__init__(
             id=id,
             name=self.excute_algorithms.__name__,
-            description=self.excute_algorithms.__doc__,
+            description=self.excute_algorithms.__doc__ or "",
             function=self.excute_algorithms,
         )
 
