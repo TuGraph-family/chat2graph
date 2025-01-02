@@ -10,10 +10,7 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-
-EDGE_COUNT = 20
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回
@@ -49,7 +46,11 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 拚将一死酬知己，致令千秋仰义名。
 
 """
+# VERTEX_COUNT = 10
+EDGE_COUNT = 30
 
+
+# global function to get tugraph store
 def get_tugraph(
     config: Optional[TuGraphStoreConfig] = None,
 ) -> TuGraphStore:
@@ -84,182 +85,89 @@ def get_tugraph(
         print(f"failed to initialize tugraph: {str(e)}")
         raise
 
-class DocumentReader(Tool):
-    """Tool for analyzing document content."""
 
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.read_document.__name__,
-            description=self.read_document.__doc__ or "",
-            function=self.read_document,
+def get_schema() -> str:
+    query = "CALL dbms.graph.getGraphSchema()"
+    db = get_tugraph()
+    schema = db.conn.run(query=query)
+    return json.dumps(json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False)
+
+
+def nodes_to_cypher_create(nodes):
+    node_statements = []
+
+    for node in nodes:
+        node_type = node["label"]
+        properties = node["properties"]
+        property_str = ",".join(
+            f"{key}: '{value}'" for key, value in properties.items()
         )
+        node_statement = f"(:{node_type} {{ {property_str} }})"
+        node_statements.append(node_statement)
 
-    async def read_document(self, doc_name: str, chapter_name: str) -> str:
-        """Read the document content given the document name and chapter name.
+    cypher_statement = f"CREATE {', '.join(node_statements)}"
+    return [cypher_statement]
 
-        Args:
-            doc_name (str): The name of the document.
-            chapter_name (str): The name of the chapter of the document.
 
-        Returns:
-            The content of the document.
-        """
+def edges_to_cypher_create(edges):
+    cypher_statements = []
+    edge_types = {}
 
-        return ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50
-    
-class SchemaGetter(Tool):
-    """Tool for getting the schema of a graph database."""
+    for edge in edges:
+        edge_type = edge["label"]
+        if edge_type not in edge_types:
+            edge_types[edge_type] = []
+        edge_types[edge_type].append(edge)
 
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.get_schema.__name__,
-            description=self.get_schema.__doc__ or "",
-            function=self.get_schema,
-        )
-
-    async def get_schema(self) -> str:
-        """Get the schema of a graph database.
-
-        Args:
-            None args required
-
-        Returns:
-            str: The schema of the graph database in string format
-
-        Example:
-            schema_str = get_schema()
-        """
-        query = "CALL dbms.graph.getGraphSchema()"
-        sstore = get_tugraph()
-        schema = sstore.conn.run(query=query)
-
-        result = f'参考{SCHEMA_TEMPLATE}进行理解，以下图模型：\n' + json.dumps(
-            json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False
-        )
-
-        return result
-    
-class NodesToCypher(Tool):
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.nodes_to_cypher_create.__name__,
-            description=self.nodes_to_cypher_create.__doc__ or "",
-            function=self.nodes_to_cypher_create,
-        )
-    def nodes_to_cypher_create(self, nodes):
-        """
-        Generate a instruction CREATE statement to create nodes in a TuGraph database.
-
-        Parameters:
-            nodes (list of dict): A list of dictionaries, where each dictionary represents a node and contains the following keys:
-                - "label" (str): The label (type) of the node.
-                - "properties" (dict): The properties of the node, represented as key-value pairs.
-
-        Returns:
-            list: A list containing a single instruction CREATE statement to create all the provided nodes.
-
-        Example:
-            Input:
-                nodes = [
-                    {"label": "Person", "properties": {"name": "Alice", "age": 30}},
-                    {"label": "Person", "properties": {"name": "Bob", "age": 25}}
-                ]
-            
-            Output:
-                ["CREATE (:Person { name: 'Alice', age: '30' }), (:Person { name: 'Bob', age: '25' })"]
-        """
-        node_statements = []
-        for node in nodes:
-            node_type = node["label"]
-            properties = node["properties"]
+    for edge_type, edges_list in edge_types.items():
+        properties_str_list = []
+        for edge in edges_list:
+            properties = edge["properties"]
+            properties["source"] = edge["source"]
+            properties["target"] = edge["target"]
             property_str = ",".join(
                 f"{key}: '{value}'" for key, value in properties.items()
             )
-            node_statement = f"(:{node_type} {{ {property_str} }})"
-            node_statements.append(node_statement)
+            properties_str_list.append(f"{{ {property_str} }}")
+        source_type, target_type = edge["constraints"][0][0], edge["constraints"][0][1]
+        properties_str = ",".join(properties_str_list)
+        cypher_statement = f"CALL db.upsertEdge('{edge_type}', {{type: '{source_type}', key: 'source'}}, {{type: '{target_type}', key: 'target'}}, [{properties_str}])"
+        cypher_statements.append(cypher_statement)
 
-        cypher_statement = f"CREATE {', '.join(node_statements)}"
+    return cypher_statements
+
+
+def import_vertex(querys):
+    """Import vertex data to tugraph."""
+    for query in querys:
+        print(query)
         db = get_tugraph()
-        res = db.conn.run(cypher_statement)
-        return res
-    
-class EdgesToCypher(Tool):
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.edges_to_cypher_create.__name__,
-            description=self.edges_to_cypher_create.__doc__ or "",
-            function=self.edges_to_cypher_create,
-        )
-    def edges_to_cypher_create(self, edges):
-        """
-        Generate instruction statements to create edges in a TuGraph database using the `db.upsertEdge` procedure.
+        res = db.conn.run(query)
+        print(res)
 
-        Parameters:
-            edges (list of dict): A list of dictionaries, where each dictionary represents an edge and contains the following keys:
-                - "label" (str): The label (type) of the edge.
-                - "constraints" (list of lists): A list containing a single list with two elements, representing the types of the source and target nodes.
-                Example: [["Person", "Movie"]] indicates that the source node is of type "Person" and the target node is of type "Movie".
-                - "source" (str): The identifier (primary key value) of the source node.
-                - "target" (str): The identifier (primary key value) of the target node.
-                - "properties" (dict): The properties of the edge, represented as key-value pairs.
 
-        Returns:
-            list: A list of instruction statements, each calling the `db.upsertEdge` procedure to create the specified edges.
-
-        Example:
-            Input:
-                edges = [
-                    {
-                        "label": "ACTED_IN",
-                        "constraints": [["Person", "Movie"]],
-                        "source": "Alice",
-                        "target": "TheMatrix",
-                        "properties": {"role": "Hero"}
-                    },
-                    {
-                        "label": "DIRECTED",
-                        "constraints": [["Person", "Movie"]],
-                        "source": "Wachowski",
-                        "target": "TheMatrix",
-                        "properties": {"year": 1999}
-                    }
-                ]
-            
-            Output:
-                [
-                    "CALL db.upsertEdge('ACTED_IN', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ role: 'Hero', source: 'Alice', target: 'TheMatrix' }])",
-                    "CALL db.upsertEdge('DIRECTED', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ year: '1999', source: 'Wachowski', target: 'TheMatrix' }])"
-                ]
-        """
-        edge_types = {}
+def import_edge(querys):
+    """Import edge data to tugraph."""
+    for query in querys:
+        print(query)
         db = get_tugraph()
-        result_list = []
-        for edge in edges:
-            edge_type = edge["label"]
-            if edge_type not in edge_types:
-                edge_types[edge_type] = []
-            edge_types[edge_type].append(edge)
+        res = db.conn.run(query)
+        print(res)
 
-        for edge_type, edges_list in edge_types.items():
-            properties_str_list = []
-            for edge in edges_list:
-                properties = edge["properties"]
-                properties["source"] = edge["source"]
-                properties["target"] = edge["target"]
-                property_str = ",".join(
-                    f"{key}: '{value}'" for key, value in properties.items()
-                )
-                properties_str_list.append(f"{{ {property_str} }}")
-            source_type, target_type = edge["constraints"][0][0], edge["constraints"][0][1]
-            properties_str = ",".join(properties_str_list)
-            cypher_statement = f"CALL db.upsertEdge('{edge_type}', {{type: '{source_type}', key: 'source'}}, {{type: '{target_type}', key: 'target'}}, [{properties_str}])"
-            res = db.conn.run(cypher_statement)
-            result_list.append(res) 
-        return result_list
+
+def extract_json_from_text(text):
+    """Extract JSON data from text."""
+    json_match = re.search(r"\{.*\}", text, re.DOTALL)
+    if json_match:
+        json_str = json_match.group(0)
+        json_data = json.loads(json_str)
+
+        return json_data
+    else:
+        raise ValueError("No JSON data found in the text.")
+
+
+SCHEMA = get_schema()
 
 SCHEMA_TEMPLATE = """
 {
@@ -341,8 +249,14 @@ DATA_GENERATION_OUTPUT_DATA = """
 
 DATA_GENERATION_INSTRUCTION = f"""
 请安以下要求完成任务：
-1. 理解图模型
-2. 理解文本信息
+1. 请根据图模型模板‘’‘{SCHEMA_TEMPLATE}’‘’，理解以下图模型
+‘’‘
+{SCHEMA}
+’‘’
+2. 理解以下文本信息：
+‘’‘
+{ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50}
+’‘’
 3. 根据图模型和文本信息抽取关系数据，关系数据不能少于{EDGE_COUNT}条, 并确保抽取的关系数据属性与对应关系类型的属性一一对应。
 4. 根据抽取出的关系数据、图模型和文本信息抽取实体数据，确保抽取的实体数据属性与对应实体类型的属性一一对应，并且要保证这些实体是从关系数据中得到的。
 5. 严格按照{DATA_GENERATION_OUTPUT_DATA}格式，输出数据
@@ -354,12 +268,12 @@ def get_data_generation_operator():
     schema_understanding_action = Action(
         id="data_generattion.schema_understanding",
         name="图模型理解",
-        description="调用相关工具获取真实图模型，并理解图模型结构",
+        description="通过阅读和注释理解图模型结构",
     )
     content_understanding_action = Action(
         id="data_generattion.content_understanding",
         name="文本内容理解",
-        description="调用相关工具, 结合图模型, 对文本内容进行充分理解和解析",
+        description="结合图模型对文本内容进行充分理解和解析",
     )
     edge_data_generation_action = Action(
         id="data_generattion.edge_data_generation_action",
@@ -405,18 +319,8 @@ def get_data_generation_operator():
         prev_actions=[(node_data_generation_action, 1)],
     )
 
-    get_schema = SchemaGetter(id="get_schema_tool")
-    analysis_toolkit.add_tool(
-        tool=get_schema, connected_actions=[(schema_understanding_action, 1)]
-    )
-
-    get_document = DocumentReader(id="get_document_tool")
-    analysis_toolkit.add_tool(
-        tool=get_document, connected_actions=[(content_understanding_action, 1)]
-    )
-
     operator_config = OperatorConfig(
-        id="data_generation_operator",
+        id="analysis_operator",
         instruction=DATA_GENERATION_PROFILE + DATA_GENERATION_INSTRUCTION,
         output_schema=DATA_GENERATION_OUTPUT_DATA,
         actions=[
@@ -435,110 +339,63 @@ def get_data_generation_operator():
     return operator
 
 
-
-
-# operation 2: Data Import
-DATA_IMPORT_PROFILE = """
-你是一位资深的图数据库的管理员。
-你的使命是，将标准的json结构化文本，转换成可执行的导入命令。
-你的目标是执行这些命令，完成数据的导入。
-"""
-
-DATA_IMPORT_OUTPUT_DATA = """
-{
-    result:"导入的结果，成功导入点边数量，点边导入失败的数量，失败的原因。"
-}
-"""
-
-DATA_IMPORT_INSTRUCTION = f"""
-请安以下要求完成任务：
-1. 导入数据，将json文本数据，准成对应的导入命令，并执行导入
-2. 输出数据导入结果
-"""
-
-def get_import_data_operator():
-    analysis_toolkit = Toolkit()
-    json_to_cypher_action = Action(
-        id="data_import.json_to_cypher",
-        name="数据导入",
-        description="调用相关工具，将json数据转换成导入命令，并执行对应命令",
-    )
-    output_result_action = Action(
-        id="data_import.output_result",
-        name="输出结果",
-        description="输出数据导入的结果",
-    )
-
-    analysis_toolkit.add_action(
-        action=json_to_cypher_action,
-        next_actions=[(output_result_action, 1)],
-        prev_actions=[],
-    )
-
-    analysis_toolkit.add_action(
-        action=output_result_action,
-        next_actions=[],
-        prev_actions=[(json_to_cypher_action, 1)],
-    )
-
-    nodes_to_cypher = NodesToCypher(id="nodes_to_cypher")
-    analysis_toolkit.add_tool(
-        tool=nodes_to_cypher, connected_actions=[(json_to_cypher_action, 1)]
-    )
-
-    edges_to_cypher = EdgesToCypher(id="edges_to_cypher")
-    analysis_toolkit.add_tool(
-        tool=edges_to_cypher, connected_actions=[(json_to_cypher_action, 1)]
-    )
-
-    operator_config = OperatorConfig(
-        id="import_data_operator",
-        instruction=DATA_IMPORT_PROFILE + DATA_IMPORT_INSTRUCTION,
-        output_schema=DATA_IMPORT_OUTPUT_DATA,
-        actions=[
-            json_to_cypher_action,
-            output_result_action
-        ],
-    )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=analysis_toolkit),
-    )
-
-    return operator
-
-def get_workflow():
+def generate_data_workflow():
     """Get the workflow for graph modeling and assemble the operators."""
     data_generation_operator = get_data_generation_operator()
-    data_import_operator = get_import_data_operator()
     workflow = DbgptWorkflow()
     workflow.add_operator(
         operator=data_generation_operator,
         previous_ops=[],
-        next_ops=[data_import_operator],
-    )
-    workflow.add_operator(
-        operator=data_import_operator,
-        previous_ops=[data_generation_operator],
         next_ops=[],
     )
 
     return workflow
 
-async def main():
-    """Main function to run the data import."""
-    workflow = get_workflow()
+
+async def generate_data():
+    """Generate data by the workflow."""
+    MAX_COUNT = 3
+    workflow = generate_data_workflow()
     job = Job(
         id="test_job_id",
         session_id="test_session_id",
         goal="「任务」",
-        context="目前我们的问题的背景是，根据用户提供的内容和当前图数据库中的图模型完成实体和关系的数据抽取，执行数据的导入，并输出导入结果",
+        context="目前我们的问题的背景是，根据用户提供的内容和当前图数据库中的图模型完成实体和关系的数据抽取。",
     )
     reasoner = DualModelReasoner()
+    while MAX_COUNT > 0:
+        try:
+            MAX_COUNT -= 1
+            result = await workflow.execute(job=job, reasoner=reasoner)
+            print(result.scratchpad)
+            data_json = extract_json_from_text(result.scratchpad)
+            entities = data_json.get("entities", None)
+            relationships = data_json.get("relationships", None)
+            break
+        except Exception as e:
+            if MAX_COUNT == 0:
+                print(f"Max retries reached. Error: {e}")
+                break
+            print(f"Exception: {e}")
+            print(f"Attempt failed, retrying... Remaining attempts: {MAX_COUNT}")
 
-    result = await workflow.execute(job=job, reasoner=reasoner)
+    return {"entities": entities, "relationships": relationships}
 
-    print(f"Final result:\n{result.scratchpad}")
+
+def import_data(entities, relationships):
+    """Import the data to tugraph."""
+    if entities:
+        node_cyphers = nodes_to_cypher_create(nodes=entities)
+        import_vertex(node_cyphers)
+    if relationships:
+        edge_cyphers = edges_to_cypher_create(edges=relationships)
+        import_edge(edge_cyphers)
+
+
+async def main():
+    """Main function to run the data import."""
+    result = await generate_data()
+    import_data(result["entities"], result["relationships"])
 
 
 if __name__ == "__main__":
