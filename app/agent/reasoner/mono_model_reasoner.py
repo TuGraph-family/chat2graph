@@ -57,8 +57,9 @@ class MonoModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.MODEL,
             content=(
-                "Scratchpad: Empty\n"
-                "Action: Empty\nFeedback: I need your help to complete the task\n"
+                "<scratchpad>\nEmpty\n</scratchpad>\n"
+                "<action>\nEmpty\n</action>\n"
+                "<feedback>\nNo feadback\n</feedback>\n"
             ),
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )

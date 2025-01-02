@@ -26,7 +26,7 @@ async def mock_reasoner() -> MonoModelReasoner:
 
     response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
-        content="Scratchpad: Testing\nAction: Proceed\nFeedback: Success",
+        content="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
 
@@ -50,7 +50,7 @@ async def test_infer_basic_flow(mock_reasoner: MonoModelReasoner, task: Task):
 
     # check initial message
     assert messages[0].get_source_type() == MessageSourceType.MODEL
-    assert "Scratchpad: Empty" in messages[0].get_payload()
+    assert "<scratchpad>\nEmpty" in messages[0].get_payload()
 
     # check message flow
     assert len(messages) == 2

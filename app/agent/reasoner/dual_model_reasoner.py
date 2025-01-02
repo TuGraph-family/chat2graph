@@ -70,9 +70,9 @@ class DualModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
             content=(
-                "<scratchpad>:\nEmpty\n</scratchpad>\n"
-                "<action>:\nEmpty\n</action>\n"
-                "<feedback>:\nNo feadback\n</feedback>\n"
+                "<scratchpad>\nEmpty\n</scratchpad>\n"
+                "<action>\nEmpty\n</action>\n"
+                "<feedback>\nNo feadback\n</feedback>\n"
             ),
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )

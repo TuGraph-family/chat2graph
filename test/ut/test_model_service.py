@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
-from app.commom.system_env import SystenEnv
+from app.commom.system_env import SystemEnv
 from app.commom.type import MessageSourceType, PlatformType
 from app.memory.message import ModelMessage
 
@@ -92,14 +92,14 @@ async def test_model_service_factory():
 
         # create service using factory
         service = ModelServiceFactory.create(
-            platform_type=PlatformType[SystenEnv.PLATFORM_TYPE]
+            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
         )
 
         # Assertions
         assert service is not None
         assert service == mock_service
         mock_create.assert_called_once_with(
-            platform_type=PlatformType[SystenEnv.PLATFORM_TYPE]
+            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
         )
 
 

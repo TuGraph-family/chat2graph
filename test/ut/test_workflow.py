@@ -56,7 +56,7 @@ def mock_reasoner():
     return TestReasoner()
 
 
-class TestOperator(Operator):
+class MockOperator(Operator):
     """Test operator that tracks execution order."""
 
     def __init__(self, id: str, execution_order: List[str]):
@@ -79,8 +79,8 @@ async def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):
     execution_order = []
 
     # create operators
-    op1 = TestOperator("op1", execution_order)
-    op2 = TestOperator("op2", execution_order)
+    op1 = MockOperator("op1", execution_order)
+    op2 = MockOperator("op2", execution_order)
 
     # create and configure workflow
     workflow = DbgptWorkflow()
@@ -101,9 +101,9 @@ async def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
     execution_order = []
 
     # create operators
-    op1 = TestOperator("op1", execution_order)
-    op2 = TestOperator("op2", execution_order)
-    op3 = TestOperator("op3", execution_order)
+    op1 = MockOperator("op1", execution_order)
+    op2 = MockOperator("op2", execution_order)
+    op3 = MockOperator("op3", execution_order)
 
     # create workflow with parallel paths
     workflow = DbgptWorkflow()
@@ -125,7 +125,7 @@ async def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
 async def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
     """Test workflow error handling."""
 
-    class ErrorOperator(TestOperator):
+    class ErrorOperator(MockOperator):
         """Operator that raises an error during execution."""
 
         async def execute(self, reasoner, job, workflow_messages=None):
@@ -146,11 +146,11 @@ async def test_complex_workflow_topology(job: Job, mock_reasoner: Reasoner):
     execution_order = []
 
     # create operators
-    op1 = TestOperator("op1", execution_order)
-    op2 = TestOperator("op2", execution_order)
-    op3 = TestOperator("op3", execution_order)
-    op4 = TestOperator("op4", execution_order)
-    op5 = TestOperator("op5", execution_order)
+    op1 = MockOperator("op1", execution_order)
+    op2 = MockOperator("op2", execution_order)
+    op3 = MockOperator("op3", execution_order)
+    op4 = MockOperator("op4", execution_order)
+    op5 = MockOperator("op5", execution_order)
 
     # create workflow with complex topology
     workflow = DbgptWorkflow()
