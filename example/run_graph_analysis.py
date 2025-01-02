@@ -1,7 +1,11 @@
 import asyncio
 from typing import Optional
+from uuid import uuid4
 
-from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
+from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
+    TuGraphStore,
+    TuGraphStoreConfig,
+)
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
@@ -102,7 +106,7 @@ class AlgorithmsGetter(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.get_algorithms.__name__,
             description=self.get_algorithms.__doc__ or "",
             function=self.get_algorithms,
@@ -131,7 +135,7 @@ class AlgorithmsExecutor(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.excute_algorithms.__name__,
             description=self.excute_algorithms.__doc__ or "",
             function=self.excute_algorithms,

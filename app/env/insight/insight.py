@@ -10,7 +10,6 @@ class Insight:
     """Insight is an element of the environment."""
 
     tags: List[str]
-
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def to_json(self):

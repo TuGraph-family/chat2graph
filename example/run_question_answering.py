@@ -1,16 +1,10 @@
 import asyncio
-import json
-import time
-from typing import Dict, List, Optional, Union
-
-from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
+from typing import List, Optional, Tuple
+from uuid import uuid4
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
-from app.commom.system_env import SystemEnv
-from app.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
@@ -74,7 +68,7 @@ DOC_SUMMARIZING_OUTPUT_SCHEMA = """
 """
 
 TUGRAPH_DOC = [
-"""
+    """
 TuGraph 是蚂蚁集团自主研发的大规模图计算系统，提供图数据库引擎和图分析引擎。
 其主要特点是大数据量存储和计算，高吞吐率，以及灵活的 API，同时支持高效的在线事务处理（OLTP）和在线分析处理（OLAP）。
 LightGraph、GeaGraph 是 TuGraph 的曾用名。
@@ -97,19 +91,19 @@ TB 级大容量
 高性能批量导入
 在线/离线备份
 """,
-"""
+    """
 TuGraph 可以通过 Docker Image 快速安装，或者通过 rpm/deb 包本地安装。另外TuGraph在阿里云计算巢上提供了社区版服务，您无需自行购置云主机，即可在计算巢上快速部署TuGraph服务、实现运维监控，从而搭建您自己的图应用。
 
 安装包/镜像下载：参考下载地址中的“TuGraph最新版本”章节。
 
 计算巢部署：可以在阿里云计算巢自行搜索，也可以通过部署链接快速访问。
-"""
+""",
 ]
 
 TUGRAPH_REF = ["快速上手-简介", "快速上手-安装"]
 
 INTERNET_DOC = [
-"""
+    """
 Contents:
 本文主要介绍TuGraph社区版的主要功能和特性，以及TuGraph企业版和社区版的差异。
 TuGraph图数据库由蚂蚁集团与清华大学联合研发，构建了一套包含图存储、图计算、图学习、图研发平台的完善的图技术体系，拥有业界领先规模的图集群，解决了图数据分析面临的大数据量、高吞吐率和低延迟等重大挑战，是蚂蚁集团金融风控能力的重要基础设施，显著提升了欺诈洗钱等金融风险的实时识别能力和审理分析效率，并面向金融、工业、政务服务等行业客户。
@@ -161,7 +155,7 @@ INT8
 -128
 127
 """,
-"""
+    """
 Contents:
 此文档主要用于新用户快速上手，其中包含了 TuGraph 的简介、特征、安装和使用。
 TuGraph 是蚂蚁集团自主研发的大规模图计算系统，提供图数据库引擎和图分析引擎。其主要特点是大数据量存储和计算，高吞吐率，以及灵活的 API，同时支持高效的在线事务处理（OLTP）和在线分析处理（OLAP）。 LightGraph、GeaGraph 是 TuGraph 的曾用名。
@@ -212,15 +206,15 @@ None
 None
 None
 © 版权所有 2023, Ant Group.
-"""
+""",
 ]
 
 INTERNET_REF = [
-"https://tugraph-db.readthedocs.io/zh-cn/v4.0.0/2.introduction/3.what-is-tugraph.html",
-"https://tugraph-db.readthedocs.io/zh-cn/latest/3.quick-start/1.preparation.html"
+    "https://tugraph-db.readthedocs.io/zh-cn/v4.0.0/2.introduction/3.what-is-tugraph.html",
+    "https://tugraph-db.readthedocs.io/zh-cn/latest/3.quick-start/1.preparation.html",
 ]
 
-REFERENCE_LIST ="""
+REFERENCE_LIST = """
 [引用1](https://tugraph-db.readthedocs.io/zh-cn/latest/2.introduction/3.what-is-tugraph.html)
 [引用2](https://tugraph-db.readthedocs.io/zh-cn/latest/2.introduction/4.schema.html)
 [引用3](https://tugraph-db.readthedocs.io/zh-cn/latest/2.introduction/5.characteristics/1.performance-oriented.html)
@@ -232,13 +226,13 @@ class KnowledgeBaseRetriever(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.knowledge_base_search.__name__,
             description=self.knowledge_base_search.__doc__ or "",
             function=self.knowledge_base_search,
         )
 
-    async def knowledge_base_search(self, question: str) -> (List[str], List[str]):
+    async def knowledge_base_search(self, question: str) -> Tuple[List[str], List[str]]:
         """Retrive a list of related contents and a list of their reference name from knowledge base given the question.
 
         Args:
@@ -250,41 +244,45 @@ class KnowledgeBaseRetriever(Tool):
 
         return TUGRAPH_DOC, TUGRAPH_REF
 
+
 class InternetRetriever(Tool):
     """Tool for retrieving webpage contents from Internet."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.internet_search.__name__,
             description=self.internet_search.__doc__ or "",
             function=self.internet_search,
         )
 
-    async def internet_search(self, question: str) -> List[str]:
+    async def internet_search(self, question: str) -> Tuple[List[str], List[str]]:
         """Retrive a list of related webpage contents and a list of their URL references from Internet given the question.
 
         Args:
             question (str): The question asked by user.
 
         Returns:
-            (List[str], List[str]): The list of related webpage contents and the list of their URL.
+            Tuple[List[str], List[str]]: The list of related webpage contents and the list of URL references.
         """
 
         return INTERNET_DOC, INTERNET_REF
+
 
 class ReferenceGenerator(Tool):
     """Tool for generating rich text references."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.reference_listing.__name__,
             description=self.reference_listing.__doc__ or "",
             function=self.reference_listing,
         )
 
-    async def reference_listing(self, knowledge_base_references: List[str], internet_references: List[str]) -> List[str]:
+    async def reference_listing(
+        self, knowledge_base_references: List[str], internet_references: List[str]
+    ) -> List[str]:
         """Return a rich text references list for better presentation given the list of references.
 
         Args:
@@ -295,13 +293,14 @@ class ReferenceGenerator(Tool):
             str: The rich text to demonstrate all references.
         """
 
-        reference_list = []
+        reference_list: List[str] = []
         for knowledge_base_ref in knowledge_base_references:
-            reference_list.append[f"[{knowledge_base_ref}]()"]
+            reference_list.append(f"[{knowledge_base_ref}]()")
         for inernet_ref in internet_references:
-            reference_list.append[f"[网页链接]({inernet_ref})"]
+            reference_list.append(f"[网页链接]({inernet_ref})")
 
         return reference_list
+
 
 def get_retrieving_operator():
     """Get the operator for document retrieving."""
@@ -353,6 +352,7 @@ def get_retrieving_operator():
 
     return operator
 
+
 def get_summarizing_operator():
     """Get the operator for document summarizing."""
     summarizing_toolkit = Toolkit()
@@ -377,9 +377,7 @@ def get_summarizing_operator():
         id="summarizing_operator",
         instruction=DOC_SUMMARIZING_PROFILE + DOC_SUMMARIZING_INSTRUCTION,
         output_schema=DOC_SUMMARIZING_OUTPUT_SCHEMA,
-        actions=[
-            reference_listing
-        ],
+        actions=[reference_listing],
     )
     operator = Operator(
         config=operator_config,
@@ -387,6 +385,7 @@ def get_summarizing_operator():
     )
 
     return operator
+
 
 def get_question_answering_workflow():
     """Get the workflow for question_answering and assemble the operators."""

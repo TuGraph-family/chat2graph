@@ -1,8 +1,12 @@
 import asyncio
 import json
 from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
-from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
+from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
+    TuGraphStore,
+    TuGraphStoreConfig,
+)
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
@@ -120,7 +124,7 @@ class SchemaGetter(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.get_schema.__name__,
             description=self.get_schema.__doc__ or "",
             function=self.get_schema,
@@ -152,7 +156,7 @@ class GrammerReader(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.read_grammer.__name__,
             description=self.read_grammer.__doc__ or "",
             function=self.read_grammer,
@@ -178,7 +182,7 @@ class VertexQuerier(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.query_vertex.__name__,
             description=self.query_vertex.__doc__ or "",
             function=self.query_vertex,

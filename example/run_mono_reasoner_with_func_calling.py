@@ -1,5 +1,6 @@
 import asyncio
 from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
 from app.agent.job import Job
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
@@ -12,7 +13,12 @@ class Calculator(Tool):
     """The tool in the toolkit."""
 
     def __init__(self, id: Optional[str] = None):
-        super().__init__(id=id, function=self.calculator)
+        super().__init__(
+            id=id or str(uuid4()),
+            name=self.calculator.__name__,
+            description=self.calculator.__doc__ or "",
+            function=self.calculator,
+        )
 
     async def calculator(self, operation: str, numbers: List[float]) -> Dict[str, Any]:
         """Perform basic math operations.
@@ -24,11 +30,11 @@ class Calculator(Tool):
         Returns:
             Dict[str, Any]: The calculation result.
         """
-        result = 0
+        result = 0.0
         if operation == "add":
             result = sum(numbers)
         elif operation == "subtract":
-            result = numbers[0] - sum(numbers[1:])
+            result = float(numbers[0] - sum(numbers[1:]))
         elif operation == "multiply":
             result = 1
             for num in numbers:

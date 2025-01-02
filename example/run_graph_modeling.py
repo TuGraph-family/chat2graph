@@ -2,8 +2,12 @@ import asyncio
 import json
 import time
 from typing import Dict, List, Optional, Set, Union
+from uuid import uuid4
 
-from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig
+from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
+    TuGraphStore,
+    TuGraphStoreConfig,
+)
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
@@ -272,7 +276,7 @@ class DocumentReader(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.read_document.__name__,
             description=self.read_document.__doc__ or "",
             function=self.read_document,
@@ -297,7 +301,7 @@ class VertexLabelGenerator(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.create_vertex_label_by_json_schema.__name__,
             description=self.create_vertex_label_by_json_schema.__doc__ or "",
             function=self.create_vertex_label_by_json_schema,
@@ -371,7 +375,7 @@ class EdgeLabelGenerator(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.create_edge_label_by_json_schema.__name__,
             description=self.create_edge_label_by_json_schema.__doc__ or "",
             function=self.create_edge_label_by_json_schema,
@@ -447,7 +451,7 @@ class CypherExecutor(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.validate_and_execute_cypher.__name__,
             description=self.validate_and_execute_cypher.__doc__ or "",
             function=self.validate_and_execute_cypher,
@@ -499,7 +503,7 @@ class GraphReachabilityGetter(Tool):
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
-            id=id,
+            id=id or str(uuid4()),
             name=self.get_graph_reachability.__name__,
             description=self.get_graph_reachability.__doc__ or "",
             function=self.get_graph_reachability,

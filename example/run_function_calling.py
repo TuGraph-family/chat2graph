@@ -93,7 +93,10 @@ class TestModelService(ModelService):
     """Test implementation of ModelService."""
 
     async def generate(
-        self, system_prompt: str, messages: List[ModelMessage]
+        self,
+        system_prompt: str,
+        messages: List[ModelMessage],
+        tools: Optional[List[Tool]] = None,
     ) -> ModelMessage:
         """Implement abstract method."""
         return ModelMessage(
