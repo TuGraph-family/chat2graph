@@ -47,22 +47,22 @@ Requirements:
 - Narration style should be natural, divergent thinking, like having a dialogue with oneself
 
 Example:
-    <reasoning_chain>
-    <Field State ψ> ∵ ..., I understand the current task is... → This leads to several key considerations...
+<reasoning_chain>
+    <Basic State ψ> ∵ ..., I understand the current task is... → This leads to several key considerations...
     <Superposition State ϕ> I reason about this... ↔ reason about that... ↔ more superposition reasoning chains... ↔ diverging to more thoughts, though possibly less task-relevant... ↻ through self-feedback, I discover...
     ↔ Analyzing the interconnections between these reasoning processes, trying to gain insights...
     <Transition State δ> ⇑ From these analyses, making important cognitive leaps, I switch to a higher-dimensional thinking mode...
     <Field State Ω> ⇑ Thought depth upgraded, discovering... ⊕ Considering consistency, integrating these viewpoints...
-    ∴ Providing the following instructions:
-    </reasoning_chain>
+    ∴ Providing the following instructions and inputs:
+</reasoning_chain>
 
-    <instruction> // Must follow this structure
-        <YOUR_INSTRUCTION>  // Cannot be None
-        // Do not forget to instruct me to provide an official answer to the TASK before "TASK_DONE"
-    </instruction>
-    <input> // Must follow this structure
-        <YOUR_INPUT>  // Allowed to use None if no input
-    </input>
+<instruction> // Must follow this structure
+    <YOUR_INSTRUCTION>  // Cannot be None
+    // Do not forget to instruct me to provide an official answer to the TASK before "TASK_DONE"
+</instruction>
+<input> // Must follow this structure
+    <YOUR_INPUT>  // Allowed to use None if no input
+</input>
 """
 
 
