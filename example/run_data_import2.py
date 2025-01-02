@@ -151,7 +151,7 @@ class NodesToCypher(Tool):
         )
     def nodes_to_cypher_create(self, nodes):
         """
-        Generate a instruction CREATE statement to create nodes in a Neo4j database.
+        Generate a instruction CREATE statement to create nodes in a TuGraph database.
 
         Parameters:
             nodes (list of dict): A list of dictionaries, where each dictionary represents a node and contains the following keys:
@@ -196,7 +196,7 @@ class EdgesToCypher(Tool):
         )
     def edges_to_cypher_create(self, edges):
         """
-        Generate instruction statements to create edges in a Neo4j database using the `db.upsertEdge` procedure.
+        Generate instruction statements to create edges in a TuGraph database using the `db.upsertEdge` procedure.
 
         Parameters:
             edges (list of dict): A list of dictionaries, where each dictionary represents an edge and contains the following keys:
