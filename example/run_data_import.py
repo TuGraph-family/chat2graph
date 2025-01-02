@@ -47,7 +47,7 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 
 """
 # VERTEX_COUNT = 10
-EDGE_COUNT = 20
+EDGE_COUNT = 30
 
 
 # global function to get tugraph store

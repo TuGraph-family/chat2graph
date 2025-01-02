@@ -151,7 +151,7 @@ class NodesToCypher(Tool):
         )
     def nodes_to_cypher_create(self, nodes):
         """
-        Generate a Cypher CREATE statement to create nodes in a Neo4j database.
+        Generate a instruction CREATE statement to create nodes in a Neo4j database.
 
         Parameters:
             nodes (list of dict): A list of dictionaries, where each dictionary represents a node and contains the following keys:
@@ -159,7 +159,7 @@ class NodesToCypher(Tool):
                 - "properties" (dict): The properties of the node, represented as key-value pairs.
 
         Returns:
-            list: A list containing a single Cypher CREATE statement to create all the provided nodes.
+            list: A list containing a single instruction CREATE statement to create all the provided nodes.
 
         Example:
             Input:
@@ -182,7 +182,9 @@ class NodesToCypher(Tool):
             node_statements.append(node_statement)
 
         cypher_statement = f"CREATE {', '.join(node_statements)}"
-        return [cypher_statement]
+        db = get_tugraph()
+        res = db.conn.run(cypher_statement)
+        return res
     
 class EdgesToCypher(Tool):
     def __init__(self, id: Optional[str] = None):
@@ -194,7 +196,7 @@ class EdgesToCypher(Tool):
         )
     def edges_to_cypher_create(self, edges):
         """
-        Generate Cypher statements to create edges in a Neo4j database using the `db.upsertEdge` procedure.
+        Generate instruction statements to create edges in a Neo4j database using the `db.upsertEdge` procedure.
 
         Parameters:
             edges (list of dict): A list of dictionaries, where each dictionary represents an edge and contains the following keys:
@@ -206,7 +208,7 @@ class EdgesToCypher(Tool):
                 - "properties" (dict): The properties of the edge, represented as key-value pairs.
 
         Returns:
-            list: A list of Cypher statements, each calling the `db.upsertEdge` procedure to create the specified edges.
+            list: A list of instruction statements, each calling the `db.upsertEdge` procedure to create the specified edges.
 
         Example:
             Input:
@@ -233,9 +235,9 @@ class EdgesToCypher(Tool):
                     "CALL db.upsertEdge('DIRECTED', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ year: '1999', source: 'Wachowski', target: 'TheMatrix' }])"
                 ]
         """
-        cypher_statements = []
         edge_types = {}
-
+        db = get_tugraph()
+        result_list = []
         for edge in edges:
             edge_type = edge["label"]
             if edge_type not in edge_types:
@@ -255,83 +257,9 @@ class EdgesToCypher(Tool):
             source_type, target_type = edge["constraints"][0][0], edge["constraints"][0][1]
             properties_str = ",".join(properties_str_list)
             cypher_statement = f"CALL db.upsertEdge('{edge_type}', {{type: '{source_type}', key: 'source'}}, {{type: '{target_type}', key: 'target'}}, [{properties_str}])"
-            cypher_statements.append(cypher_statement)
-
-        return cypher_statements
-
-
-class ImportVertex(Tool):
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.import_vertex.__name__,
-            description=self.import_vertex.__doc__,
-            function=self.import_vertex,
-        )
-    def import_vertex(self, querys):
-        """
-        Execute a list of Cypher queries to import vertices (nodes) into a Neo4j database.
-
-        Parameters:
-            querys (list of str): A list of Cypher queries, where each query is a string representing a Cypher statement to create or update nodes in the database.
-
-        Returns:
-            neo4j.Result: The result of the last executed Cypher query. If there are multiple queries, only the result of the last one is returned.
-
-        Example:
-            Input:
-                querys = [
-                    "CREATE (:Person { name: 'Alice', age: '30' })",
-                    "CREATE (:Person { name: 'Bob', age: '25' })"
-                ]
-            
-            Output:
-                The result of the last Cypher query, which in this case would be the result of creating the node for 'Bob'.
-
-        Note:
-            - The function `get_tugraph()` is assumed to return a valid connection to the Neo4j database.
-            - The `db.conn.run(query)` method is assumed to execute the Cypher query and return the result.
-        """
-        for query in querys:
-            print(query)
-            db = get_tugraph()
-            res = db.conn.run(query)
-            return res
-     
-class ImportEdge(Tool):
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id,
-            name=self.import_edge.__name__,
-            description=self.import_edge.__doc__,
-            function=self.import_edge,
-        )
-
-    def import_edge(self, querys):
-        """
-        Execute a list of Cypher queries to import edges into a Neo4j database.
-
-        Parameters:
-            querys (list of str): A list of Cypher queries, where each query is a string representing a Cypher statement to create or update edges in the database.
-
-        Returns:
-            neo4j.Result: The result of the last executed Cypher query. If there are multiple queries, only the result of the last one is returned.
-
-        Example:
-            Input:
-                querys = [
-                    "CALL db.upsertEdge('ACTED_IN', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ role: 'Hero', source: 'Alice', target: 'TheMatrix' }])",
-                    "CALL db.upsertEdge('DIRECTED', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ year: '1999', source: 'Wachowski', target: 'TheMatrix' }])"
-                ]
-            
-            Output:
-                The result of the last Cypher query, which in this case would be the result of the `DIRECTED` edge creation.
-        """
-        for query in querys:
-            print(query)
-            db = get_tugraph()
-            res = db.conn.run(query)
-            return res
+            res = db.conn.run(cypher_statement)
+            result_list.append(res) 
+        return result_list
 
 SCHEMA_TEMPLATE = """
 {
@@ -512,70 +440,46 @@ def get_data_generation_operator():
 # operation 2: Data Import
 DATA_IMPORT_PROFILE = """
 你是一位资深的图数据库的管理员。
-你的使命是， 将标准的json结构化文本，转换成可执行的图导入语句。
-你的目标是执行这些生成的语句，完成数据的导入。
+你的使命是，将标准的json结构化文本，转换成可执行的导入命令。
+你的目标是执行这些命令，完成数据的导入。
 """
 
 DATA_IMPORT_OUTPUT_DATA = """
 {
-    result:"导入的结果\n成功导入点边数量\n点边导入失败的数量\n失败的原因"
+    result:"导入的结果，成功导入点边数量，点边导入失败的数量，失败的原因。"
 }
 """
 
 DATA_IMPORT_INSTRUCTION = f"""
 请安以下要求完成任务：
-1. 将json文本转换成，数据导入语句
-2. 执行点数据导入函数，导入点
-3. 执行边数据导入函数，导入边
-4. 输出数据导入结果
+1. 导入数据，将json文本数据，准成对应的导入命令，并执行导入
+2. 输出数据导入结果
 """
 
 def get_import_data_operator():
     analysis_toolkit = Toolkit()
     json_to_cypher_action = Action(
         id="data_import.json_to_cypher",
-        name="将JSON结果，转换成执行语句",
-        description="调用相关工具，将json数据转换成执行语句",
-    )
-    import_vertex_action = Action(
-        id="data_import.import_vertex",
-        name="导入点数据",
-        description="调用相关工具，导入点数据",
-    )
-    import_edge_action = Action(
-        id="data_import.import_edge",
-        name="导入边数据",
-        description="调用相关工具，导入边数据",
+        name="数据导入",
+        description="调用相关工具，将json数据转换成导入命令，并执行对应命令",
     )
     output_result_action = Action(
         id="data_import.output_result",
         name="输出结果",
-        description="将执行结果输出",
+        description="输出数据导入的结果",
     )
 
     analysis_toolkit.add_action(
         action=json_to_cypher_action,
-        next_actions=[(import_vertex_action, 1)],
-        prev_actions=[],
-    )
-    analysis_toolkit.add_action(
-        action=import_vertex_action,
-        next_actions=[(import_edge_action, 1)],
-        prev_actions=[(json_to_cypher_action, 1)],
-    )
-
-    analysis_toolkit.add_action(
-        action=import_edge_action,
         next_actions=[(output_result_action, 1)],
-        prev_actions=[(import_vertex_action, 1)],
+        prev_actions=[],
     )
 
     analysis_toolkit.add_action(
         action=output_result_action,
         next_actions=[],
-        prev_actions=[(import_edge_action, 1)],
+        prev_actions=[(json_to_cypher_action, 1)],
     )
-
 
     nodes_to_cypher = NodesToCypher(id="nodes_to_cypher")
     analysis_toolkit.add_tool(
@@ -587,24 +491,12 @@ def get_import_data_operator():
         tool=edges_to_cypher, connected_actions=[(json_to_cypher_action, 1)]
     )
 
-    import_vertex = ImportVertex(id="import_vertex")
-    analysis_toolkit.add_tool(
-        tool=import_vertex, connected_actions=[(import_vertex_action, 1)]
-    )
-
-    import_edge = ImportEdge(id="import_edge")
-    analysis_toolkit.add_tool(
-        tool=import_edge, connected_actions=[(import_edge_action, 1)]
-    )
-
     operator_config = OperatorConfig(
         id="import_data_operator",
         instruction=DATA_IMPORT_PROFILE + DATA_IMPORT_INSTRUCTION,
         output_schema=DATA_IMPORT_OUTPUT_DATA,
         actions=[
             json_to_cypher_action,
-            import_vertex_action,
-            import_edge_action,
             output_result_action
         ],
     )
@@ -640,7 +532,7 @@ async def main():
         id="test_job_id",
         session_id="test_session_id",
         goal="「任务」",
-        context="目前我们的问题的背景是，根据用户提供的内容和当前图数据库中的图模型完成实体和关系的数据抽取。执行数据的带入，并输出导入结果",
+        context="目前我们的问题的背景是，根据用户提供的内容和当前图数据库中的图模型完成实体和关系的数据抽取，执行数据的导入，并输出导入结果",
     )
     reasoner = DualModelReasoner()
 
