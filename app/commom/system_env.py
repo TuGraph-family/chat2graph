@@ -75,8 +75,8 @@ class SystemEnvMeta(type):
             else:
                 raise AttributeError(f"Key {key} not found in system environment")
 
-        except ValueError:
-            raise AttributeError(f"Key {key} not found in system environment")
+        except ValueError as e:
+            raise AttributeError(f"Key {key} not found in system environment") from e
 
 
 class SystemEnv(metaclass=SystemEnvMeta):
