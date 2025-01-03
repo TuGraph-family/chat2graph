@@ -39,9 +39,7 @@ class DbgptLlmClient(ModelService):
             model_alias=SystemEnv.PROXYLLM_BACKEND,
             api_base=SystemEnv.PROXY_SERVER_URL,
             api_key=SystemEnv.PROXY_API_KEY,
-            openai_kwargs={
-                "temperature": SystemEnv.TEMPERATURE
-            },
+            openai_kwargs={"temperature": SystemEnv.TEMPERATURE},
         )
 
     async def generate(

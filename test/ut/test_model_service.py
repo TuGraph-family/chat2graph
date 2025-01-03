@@ -6,7 +6,7 @@ import pytest
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.commom.system_env import SystemEnv
-from app.commom.type import MessageSourceType, PlatformType
+from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
 
 
@@ -91,16 +91,12 @@ async def test_model_service_factory():
         mock_create.return_value = mock_service
 
         # create service using factory
-        service = ModelServiceFactory.create(
-            platform_type=SystemEnv.PLATFORM_TYPE
-        )
+        service = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
 
         # Assertions
         assert service is not None
         assert service == mock_service
-        mock_create.assert_called_once_with(
-            platform_type=SystemEnv.PLATFORM_TYPE
-        )
+        mock_create.assert_called_once_with(platform_type=SystemEnv.PLATFORM_TYPE)
 
 
 def test_agent_message_creation():

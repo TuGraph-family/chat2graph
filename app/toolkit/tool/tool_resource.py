@@ -4,7 +4,6 @@ from uuid import uuid4
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.commom.system_env import SystemEnv
-from app.commom.type import PlatformType
 from app.memory.message import ModelMessage
 from app.toolkit.tool.tool import Tool
 

@@ -99,7 +99,8 @@ class DbgptWorkflow(Workflow):
 
             return self._tail_map_op
 
-    async def _execute_workflow(self, workflow: DbgptMapOperator, job: Job) -> WorkflowMessage:
+    async def _execute_workflow(
+        self, workflow: DbgptMapOperator, job: Job
+    ) -> WorkflowMessage:
         """Execute the workflow."""
         return await workflow.call(call_data=job)
-

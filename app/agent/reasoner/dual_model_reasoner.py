@@ -12,7 +12,7 @@ from app.commom.prompt.reasoner import (
     QUANTUM_THINKER_PROPMT_TEMPLATE,
 )
 from app.commom.system_env import SystemEnv
-from app.commom.type import MessageSourceType, PlatformType
+from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.toolkit.tool.tool import Tool

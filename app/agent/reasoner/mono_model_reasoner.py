@@ -8,7 +8,7 @@ from app.agent.reasoner.task import Task
 from app.commom.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
 from app.commom.prompt.reasoner import MONO_PROMPT_TEMPLATE
 from app.commom.system_env import SystemEnv
-from app.commom.type import MessageSourceType, PlatformType
+from app.commom.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.toolkit.tool.tool import Tool

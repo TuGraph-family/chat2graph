@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from app.commom.type import PlatformType
 
-"""System environment variable keys."""
+# system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {
     "PLATFORM_TYPE": (PlatformType, PlatformType.DBGPT),
     "PROXYLLM_BACKEND": (str, "gpt-4o-mini"),
@@ -17,7 +17,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "PRINT_REASONER_MESSAGES": (bool, True),
 }
 
-"""System environment variable value cache."""
+# system environment variable value cache.
 _env_values: Dict[str, Any] = {}
 
 
