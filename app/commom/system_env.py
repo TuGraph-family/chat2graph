@@ -48,13 +48,13 @@ class SysEnvKey(str, Enum):
 class SystemEnvMeta(type):
     """Singleton class to manage system environment variables"""
 
-    def __init__(self, name: str, bases: Tuple, dct: Dict):
+    def __init__(cls, name: str, bases: Tuple, dct: Dict):
         super().__init__(name, bases, dct)
         env_path = Path(".env")
         if env_path.exists():
             load_dotenv(env_path, override=True)
 
-    def __getattr__(self, name: str) -> str:
+    def __getattr__(cls, name: str) -> str:
         """Get value following priority: context cache > .env > os env > default value"""
         key = name.upper()
 
@@ -81,5 +81,3 @@ class SystemEnvMeta(type):
 
 class SystemEnv(metaclass=SystemEnvMeta):
     """Static class to manage system environment variables"""
-
-    pass
