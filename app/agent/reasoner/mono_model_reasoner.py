@@ -31,7 +31,7 @@ class MonoModelReasoner(Reasoner):
     ):
         self._model_name = model_name
         self._model: ModelService = ModelServiceFactory.create(
-            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+            platform_type=SystemEnv.PLATFORM_TYPE
         )
 
         self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
@@ -46,7 +46,7 @@ class MonoModelReasoner(Reasoner):
             str: The conclusion and the final resultes of the inference.
         """
         # prepare the variables from the SystemEnv
-        print_messages = SystemEnv.PRINT_REASONER_MESSAGES.lower() == "true"
+        print_messages = SystemEnv.PRINT_REASONER_MESSAGES
 
         # set the system prompt
         sys_prompt = self._format_system_prompt(task=task, tools=task.tools)

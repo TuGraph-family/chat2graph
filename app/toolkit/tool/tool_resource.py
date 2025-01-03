@@ -34,7 +34,7 @@ class Query(Tool):
         """
         # TODO: implement the query function
         model_service = ModelServiceFactory.create(
-            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+            platform_type=SystemEnv.PLATFORM_TYPE
         )
         sys_prompt = """Suppose you are the database or the document terminal.
 I will ask you for help. If you don't know the answer, you can make up a reasonable one."""

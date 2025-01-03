@@ -1,48 +1,24 @@
 import os
-from contextvars import ContextVar
-from enum import Enum, unique
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple, Type
 
 from dotenv import load_dotenv
 
 from app.commom.type import PlatformType
 
-_context_cache: ContextVar[Dict[str, Any]] = ContextVar("env_cache", default={})
+"""System environment variable keys."""
+_env_vars: Dict[str, Tuple[Type, Any]] = {
+    "PLATFORM_TYPE": (PlatformType, PlatformType.DBGPT),
+    "PROXYLLM_BACKEND": (str, "gpt-4o-mini"),
+    "PROXY_SERVER_URL": (str, None),
+    "PROXY_API_KEY": (str, None),
+    "TEMPERATURE": (float, 0.7),
+    "REASONING_ROUNDS": (int, 20),
+    "PRINT_REASONER_MESSAGES": (bool, True),
+}
 
-
-@unique
-class SysEnvKey(str, Enum):
-    """System environment variable keys.
-
-    Attributes:
-        PLATFORM_TYPE: The type of platform
-        PROXYLLM_BACKEND: The backend of ProxLLM
-        PROXY_SERVER_URL: The URL of the proxy server
-        PROXY_API_KEY: The API key of the proxy server
-        REASONING_ROUNDS: The rounds of reasoning in the reasoner
-    """
-
-    PLATFORM_TYPE = "PLATFORM_TYPE"
-    PROXYLLM_BACKEND = "PROXYLLM_BACKEND"
-    PROXY_SERVER_URL = "PROXY_SERVER_URL"
-    PROXY_API_KEY = "PROXY_API_KEY"
-    TEMPERATURE = "TEMPERATURE"
-    REASONING_ROUNDS = "REASONING_ROUNDS"
-    PRINT_REASONER_MESSAGES = "PRINT_REASONER_MESSAGES"
-
-    def get_default(self) -> Optional[str]:
-        """Get default value for the key."""
-        defaults = {
-            self.PLATFORM_TYPE: PlatformType.DBGPT.name,
-            self.PROXYLLM_BACKEND: "gpt-4o-mini",
-            self.PROXY_SERVER_URL: None,
-            self.PROXY_API_KEY: None,
-            self.TEMPERATURE: "0.7",
-            self.REASONING_ROUNDS: "20",
-            self.PRINT_REASONER_MESSAGES: "True",
-        }
-        return defaults.get(self)
+"""System environment variable value cache."""
+_env_values: Dict[str, Any] = {}
 
 
 class SystemEnvMeta(type):
@@ -54,29 +30,31 @@ class SystemEnvMeta(type):
         if env_path.exists():
             load_dotenv(env_path, override=True)
 
-    def __getattr__(cls, name: str) -> str:
-        """Get value following priority: context cache > .env > os env > default value"""
+    def __getattr__(cls, name: str) -> Any:
+        """Get value following priority: .env > os env > default value"""
         key = name.upper()
 
-        context_cache = _context_cache.get()
-        if key in context_cache:
-            return context_cache[key]
+        # get value from .env
+        val = _env_values.get(key, None)
+        if val:
+            return val
 
-        env_value = os.getenv(key)
-        if env_value:
-            return env_value
+        # get value from system env
+        val = os.getenv(key, None)
 
-        # try to get default from SysEnvKey if it exists
-        try:
-            sys_key = SysEnvKey(key)
-            key_default = sys_key.get_default()
-            if key_default is not None:
-                return key_default
-            else:
-                raise AttributeError(f"Key {key} not found in system environment")
+        # get key declaration
+        (key_type, default_value) = _env_vars.get(key, (None, None))
+        if not key_type:
+            _env_values[key] = val
+            return val
 
-        except ValueError as e:
-            raise AttributeError(f"Key {key} not found in system environment") from e
+        # use default value
+        val = val if val else default_value
+
+        # cast value by type
+        val = key_type(val) if val else None
+        _env_values[key] = val
+        return val
 
 
 class SystemEnv(metaclass=SystemEnvMeta):

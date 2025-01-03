@@ -92,14 +92,14 @@ async def test_model_service_factory():
 
         # create service using factory
         service = ModelServiceFactory.create(
-            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+            platform_type=SystemEnv.PLATFORM_TYPE
         )
 
         # Assertions
         assert service is not None
         assert service == mock_service
         mock_create.assert_called_once_with(
-            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+            platform_type=SystemEnv.PLATFORM_TYPE
         )
 
 

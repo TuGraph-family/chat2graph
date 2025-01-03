@@ -37,10 +37,10 @@ class DualModelReasoner(Reasoner):
         self._actor_name = actor_name
         self._thinker_name = thinker_name
         self._actor_model: ModelService = ModelServiceFactory.create(
-            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE],
+            platform_type=SystemEnv.PLATFORM_TYPE
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
-            platform_type=PlatformType[SystemEnv.PLATFORM_TYPE],
+            platform_type=SystemEnv.PLATFORM_TYPE
         )
 
         self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
@@ -55,8 +55,8 @@ class DualModelReasoner(Reasoner):
             str: The conclusion and the final resultes of the inference.
         """
         # prepare the variables from the SystemEnv
-        reasoning_rounds = int(SystemEnv.REASONING_ROUNDS)
-        print_messages = SystemEnv.PRINT_REASONER_MESSAGES.lower() == "true"
+        reasoning_rounds = SystemEnv.REASONING_ROUNDS
+        print_messages = SystemEnv.PRINT_REASONER_MESSAGE
 
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(

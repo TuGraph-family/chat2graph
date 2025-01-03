@@ -40,7 +40,7 @@ class DbgptLlmClient(ModelService):
             api_base=SystemEnv.PROXY_SERVER_URL,
             api_key=SystemEnv.PROXY_API_KEY,
             openai_kwargs={
-                "temperature": float(SystemEnv.TEMPERATURE),
+                "temperature": SystemEnv.TEMPERATURE
             },
         )
 

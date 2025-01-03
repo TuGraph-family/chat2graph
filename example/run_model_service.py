@@ -12,7 +12,7 @@ async def main():
     """Main function."""
     # create model service using factory method
     model_service = ModelServiceFactory.create(
-        platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+        platform_type=SystemEnv.PLATFORM_TYPE
     )
 
     # create test messages

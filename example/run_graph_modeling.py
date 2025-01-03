@@ -492,7 +492,7 @@ class CypherExecutor(Tool):
             )
 
             _model = ModelServiceFactory.create(
-                platform_type=PlatformType[SystemEnv.PLATFORM_TYPE]
+                platform_type=SystemEnv.PLATFORM_TYPE
             )
             response = await _model.generate(sys_prompt=prompt, messages=[message])
             raise Exception(response.get_payload())
