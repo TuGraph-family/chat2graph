@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Optional
+from typing import Optional, Dict, Any, List, Set
 from uuid import uuid4
 
 from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
@@ -16,7 +16,6 @@ from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
 
-EDGE_COUNT = 20
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回
@@ -53,7 +52,6 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 
 """
 
-
 def get_tugraph(
     config: Optional[TuGraphStoreConfig] = None,
 ) -> TuGraphStore:
@@ -88,7 +86,6 @@ def get_tugraph(
         print(f"failed to initialize tugraph: {str(e)}")
         raise
 
-
 class DocumentReader(Tool):
     """Tool for analyzing document content."""
 
@@ -112,8 +109,7 @@ class DocumentReader(Tool):
         """
 
         return ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50
-
-
+    
 class SchemaGetter(Tool):
     """Tool for getting the schema of a graph database."""
 
@@ -148,105 +144,230 @@ class SchemaGetter(Tool):
         return result
 
 
-class NodesToCypher(Tool):
+class DataImport(Tool):
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id or str(uuid4()),
-            name=self.nodes_to_cypher_create.__name__,
-            description=self.nodes_to_cypher_create.__doc__ or "",
-            function=self.nodes_to_cypher_create,
+            name=self.import_data.__name__,
+            description=self.import_data.__doc__ or "",
+            function=self.import_data,
         )
 
-    def nodes_to_cypher_create(self, nodes):
-        """Generate a instruction CREATE statement to create nodes in a TuGraph database.
-
-        Parameters:
-            nodes (list of dict): A list of dictionaries, where each dictionary represents a node and contains the following keys:
-                - "label" (str): The label (type) of the node.
-                - "properties" (dict): The properties of the node, represented as key-value pairs.
-
-        Returns:
-            list: A list containing a single instruction CREATE statement to create all the provided nodes.
-
-        Example:
-            Input:
-                nodes = [
-                    {"label": "Person", "properties": {"name": "Alice", "age": 30}},
-                    {"label": "Person", "properties": {"name": "Bob", "age": 25}}
-                ]
-
-            Output:
-                ["CREATE (:Person { name: 'Alice', age: '30' }), (:Person { name: 'Bob', age: '25' })"]
+    def validate_and_clean_graph(self, graph: Dict[str, Any]) -> str:
         """
-        node_statements = []
-        for node in nodes:
-            node_type = node["label"]
-            properties = node["properties"]
-            property_str = ",".join(
-                f"{key}: '{value}'" for key, value in properties.items()
-            )
-            node_statement = f"(:{node_type} {{ {property_str} }})"
-            node_statements.append(node_statement)
+        验证并清理图数据，确保其符合预期的结构。
+        """
+        if not isinstance(graph, dict) or "entities" not in graph or "relationships" not in graph:
+            raise ValueError("Invalid graph structure. Expected 'entities' and 'relationships' keys.")
+            # 大模型给修改建议
 
-        cypher_statement = f"CREATE {', '.join(node_statements)}"
+        cleaned_graph = {
+            "entities": [],
+            "relationships": []
+        }
+
+        query = "CALL dbms.graph.getGraphSchema()"
         db = get_tugraph()
-        res = db.conn.run(cypher_statement)
-        return res
+        res = db.conn.run(query=query)
+        schema = json.loads(res[0][0])["schema"]
 
+        # 获取实体类型的主键
+        entity_primary_keys = {entity["label"]: entity["primary"] for entity in schema if entity.get("type") == "VERTEX"}
+        relationship_labels = {relationship["label"] for relationship in schema if relationship.get("type") == "EDGE"}
 
-class EdgesToCypher(Tool):
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id or str(uuid4()),
-            name=self.edges_to_cypher_create.__name__,
-            description=self.edges_to_cypher_create.__doc__ or "",
-            function=self.edges_to_cypher_create,
-        )
+        # 验证并清理实体
+        for entity in graph.get("entities", []):
+            if not isinstance(entity, dict) or "label" not in entity or "properties" not in entity:
+                continue
+            if not isinstance(entity["properties"], dict):
+                continue
+            if entity["label"] not in entity_primary_keys:
+                continue
+            primary_key = entity_primary_keys[entity["label"]]
+            if primary_key not in entity["properties"]:
+                continue
 
-    def edges_to_cypher_create(self, edges):
-        """Generate instruction statements to create edges in a TuGraph database using the `db.upsertEdge` procedure.
+            cleaned_graph["entities"].append(entity)
+        
+        # 验证并修复关系数据
 
-        Parameters:
-            edges (list of dict): A list of dictionaries, where each dictionary represents an edge and contains the following keys:
-                - "label" (str): The label (type) of the edge.
-                - "constraints" (list of lists): A list containing a single list with two elements, representing the types of the source and target nodes.
-                Example: [["Person", "Movie"]] indicates that the source node is of type "Person" and the target node is of type "Movie".
-                - "source" (str): The identifier (primary key value) of the source node.
-                - "target" (str): The identifier (primary key value) of the target node.
-                - "properties" (dict): The properties of the edge, represented as key-value pairs.
+        def find_matching_entity(cleaned_graph, source_type, relationship_source):
+            for other_entity in cleaned_graph["entities"]:
+                if other_entity["label"] == source_type and any(value == relationship_source for value in other_entity["properties"].values()):
+                    return other_entity
+            return None
+        
+        relationship_labels = {relationship["label"] for relationship in schema if relationship.get("type") == "EDGE"}
+        for relationship in graph.get("relationships", []):
+            if not isinstance(relationship, dict) or "label" not in relationship or "constraints" not in relationship or "source" not in relationship or "target" not in relationship or "properties" not in relationship:
+                continue
+            if not isinstance(relationship["properties"], dict) or not isinstance(relationship["constraints"], list) or len(relationship["constraints"]) != 1 or not isinstance(relationship["constraints"][0], list) or len(relationship["constraints"][0]) != 2:
+                continue
+            source_type, target_type = relationship["constraints"][0]
+            if source_type not in entity_primary_keys or target_type not in entity_primary_keys:
+                continue
+            source_primary_key = entity_primary_keys[source_type]
+            target_primary_key = entity_primary_keys[target_type]
+
+            # 检查 relationship["label"] 是否在 relationship_labels 中
+            if relationship["label"] not in relationship_labels:
+                continue
+
+            # 检查 source 和 target 是否存在于实体数据中
+            # if not any(entity["label"] == source_type and entity["properties"].get(source_primary_key) == relationship["source"] for entity in cleaned_graph["entities"]):
+            #     continue
+
+            # 检查 source 是否存在于实体数据中
+            for entity in cleaned_graph["entities"]:
+                if entity["label"] == source_type:
+                    if entity["properties"].get(source_primary_key) == relationship["source"]:
+                        break
+                    else:
+                        # 在所有 label 为 source_type 的实体中查找 properties 中是否存在与 relationship["source"] 相同的值
+                        for other_entity in cleaned_graph["entities"]:
+                            if other_entity["label"] == source_type and any(value == relationship["source"] for value in other_entity["properties"].values()):
+                                n = find_matching_entity(cleaned_graph, source_type, relationship["source"])
+                                if n:
+                                    relationship["source"] = n["properties"].get(source_primary_key)
+                                    break
+                
+            # if not any(entity["label"] == target_type and entity["properties"].get(target_primary_key) == relationship["target"] for entity in cleaned_graph["entities"]):
+            #     continue
+           
+
+            # 检查 target 是否存在于实体数据中
+            for entity in cleaned_graph["entities"]:
+                if entity["label"] == target_type:
+                    if entity["properties"].get(target_primary_key) == relationship["target"]:
+                        break
+                    else:
+                        # 在所有 label 为 target_type 的实体中查找 properties 中是否存在与 relationship["target"] 相同的值
+                        for other_entity in cleaned_graph["entities"]:
+                            if other_entity["label"] == target_type and any(value == relationship["target"] for value in other_entity["properties"].values()):
+                                n = find_matching_entity(cleaned_graph, target_type, relationship["target"])
+                                if n:
+                                    relationship["source"] = n["properties"].get(source_primary_key)
+                                    break
+
+            cleaned_graph["relationships"].append(relationship)
+        return cleaned_graph
+    
+    async def import_data(self, graph: Dict[str, Any])->str:
+        """
+        Import the graph data into the database. This function validates and cleans the input graph data, 
+        then creates nodes (entities) and edges (relationships) in the database.
+        then return the result
+
+        Args:
+            graph (Dict[str, Any]): The graph data to be imported. It must contain the following keys:
+                - 'entities' (List[Dict[str, Any]]): A list of entities, where each entity is a dictionary with the following structure:
+                    - 'label' (str): The label of the entity.
+                    - 'properties' (Dict[str, Any]): A dictionary of properties for the entity.
+                - 'relationships' (List[Dict[str, Any]]): A list of relationships, where each relationship is a dictionary with the following structure:
+                    - 'label' (str): The label of the relationship.
+                    - 'constraints' (List[List[str]]): A list containing a single list of two strings, representing the source and target entity labels.
+                    - 'source' (str): The identifier of the source entity.
+                    - 'target' (str): The identifier of the target entity.
+                    - 'properties' (Dict[str, Any]): A dictionary of properties for the relationship.
 
         Returns:
-            list: A list of instruction statements, each calling the `db.upsertEdge` procedure to create the specified edges.
+            str: import data result.
 
         Example:
-            Input:
-                edges = [
+            # Example input
+            graph = {
+                "entities": [
                     {
-                        "label": "ACTED_IN",
-                        "constraints": [["Person", "Movie"]],
-                        "source": "Alice",
-                        "target": "TheMatrix",
-                        "properties": {"role": "Hero"}
+                        "label": "Person",
+                        "properties": {
+                            "name": "Alice",
+                            "age": 30
+                        }
                     },
                     {
-                        "label": "DIRECTED",
-                        "constraints": [["Person", "Movie"]],
-                        "source": "Wachowski",
-                        "target": "TheMatrix",
-                        "properties": {"year": 1999}
+                        "label": "Person",
+                        "properties": {
+                            "name": "Bob",
+                            "age": 25
+                        }
+                    }
+                ],
+                "relationships": [
+                    {
+                        "label": "KNOWS",
+                        "constraints": [["Person", "Person"]],
+                        "source": "Alice",
+                        "target": "Bob",
+                        "properties": {
+                            "since": 2015
+                        }
                     }
                 ]
+            }
 
-            Output:
-                [
-                    "CALL db.upsertEdge('ACTED_IN', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ role: 'Hero', source: 'Alice', target: 'TheMatrix' }])",
-                    "CALL db.upsertEdge('DIRECTED', {type: 'Person', key: 'source'}, {type: 'Movie', key: 'target'}, [{ year: '1999', source: 'Wachowski', target: 'TheMatrix' }])"
-                ]
+        Note:
+            - The function first validates and cleans the input graph data.
+            - It then constructs and executes Cypher statements to create nodes and edges in the database.
+            - The `get_tugraph` function is assumed to return a connection to the database.
+            - The `db.conn.run` method is used to execute the Cypher statements.
         """
-        edge_types = {}
+        # 验证并清理图数据
+        graph = self.validate_and_clean_graph(graph)
+
+        entities = graph["entities"]
+        relationships = graph["relationships"]
         db = get_tugraph()
-        result_list = []
-        for edge in edges:
+        
+        node_types = {}
+        total_entities = 0
+        total_inserted_entities = 0
+        total_update_entities = 0
+
+
+        def format_property(key, value):
+            if isinstance(value, (int, float)):
+                return f"{key}: {value}"
+            else:
+                return f"{key}: '{value}'" 
+                   
+        for entity in entities:
+            node_type = entity["label"]
+            if node_type not in node_types:
+                node_types[node_type] = []
+            node_types[node_type].append(entity["properties"])
+
+        for node_type, nodes_list in node_types.items():
+            properties_str_list = []
+            for node in nodes_list:
+                # 对于每个键值对，根据值的类型格式化输出
+                property_str = ", ".join(format_property(key, value) for key, value in node.items())
+                properties_str_list.append(f"{{ {property_str} }}")
+            properties_str = ",".join(properties_str_list)
+            cypher_statement = f"CALL db.upsertVertex('{node_type}', [{properties_str}])"
+            print(cypher_statement)
+            res = db.conn.run(cypher_statement)
+            if res:
+                # 获取第一个 Record 对象
+                record = res[0]
+                
+                # 尝试将 Record 对象转换为字典
+                if isinstance(record, dict):
+                    record_dict = record
+                elif hasattr(record, 'as_dict'):
+                    record_dict = record.as_dict()
+                else:
+                    # 如果没有 as_dict 方法，直接使用 Record 对象的键值
+                    record_dict = {key: record[key] for key in record.keys()}
+                
+                # 更新计数器
+                total_entities += record_dict.get('total', 0)
+                total_inserted_entities += record_dict.get('insert', 0)
+                total_update_entities += record_dict.get('update', 0)
+        edge_types = {}
+        total_relationships = 0
+        total_inserted_relationships = 0
+        total_update_relationships = 0 
+        for edge in relationships:
             edge_type = edge["label"]
             if edge_type not in edge_types:
                 edge_types[edge_type] = []
@@ -258,9 +379,7 @@ class EdgesToCypher(Tool):
                 properties = edge["properties"]
                 properties["source"] = edge["source"]
                 properties["target"] = edge["target"]
-                property_str = ",".join(
-                    f"{key}: '{value}'" for key, value in properties.items()
-                )
+                property_str = ", ".join(format_property(key, value) for key, value in properties.items())
                 properties_str_list.append(f"{{ {property_str} }}")
             source_type, target_type = (
                 edge["constraints"][0][0],
@@ -268,9 +387,28 @@ class EdgesToCypher(Tool):
             )
             properties_str = ",".join(properties_str_list)
             cypher_statement = f"CALL db.upsertEdge('{edge_type}', {{type: '{source_type}', key: 'source'}}, {{type: '{target_type}', key: 'target'}}, [{properties_str}])"
+            print(cypher_statement)
             res = db.conn.run(cypher_statement)
-            result_list.append(res)
-        return result_list
+            # 检查 res 是否非空
+            if res:
+                # 获取第一个 Record 对象
+                record = res[0]
+                
+                # 尝试将 Record 对象转换为字典
+                if hasattr(record, 'as_dict'):
+                    record_dict = record.as_dict()
+                else:
+                    # 如果没有 as_dict 方法，直接使用 Record 对象
+                    record_dict = {key: record[key] for key in record.keys()}
+                
+                # 更新计数器
+                total_relationships += record_dict.get('total', 0)
+                total_inserted_relationships += record_dict.get('insert', 0)
+                total_update_relationships += record_dict.get('update', 0)
+        result = f"""执行导入实体总个数：{total_entities}；成功导入实体数：{total_inserted_entities};成功更新实体数：{total_update_entities}; 执行导入关系总数：{total_relationships}；成功导入关系数：{total_inserted_relationships}；成功更新关系数：{total_update_relationships}"""
+        return result
+
+
 
 
 SCHEMA_TEMPLATE = """
@@ -282,14 +420,14 @@ SCHEMA_TEMPLATE = """
       "properties": [
         {
           "name": "实体属性",
-          "optional": false,
+          "optional": False,
           "type": "STRING"
         },
-        // ... 更多实体属性
+        //  更多实体属性
       ],
       "type": "VERTEX"
     },
-    // ... 更多实体类型
+    //  更多实体类型
     {
       "constraints": [
         [
@@ -297,41 +435,43 @@ SCHEMA_TEMPLATE = """
           "实体类型"
         ]
       ],
-      "detach_property": true,
+      "detach_property": True,
       "label": "关系类型",
       "properties": [
         {
           "name": "关系属性",
-          "optional": true,
+          "optional": True,
           "type": "STRING"
         },
-        // ... 更多关系属性
+        //  更多关系属性
       ],
       "type": "EDGE"
     },
-    // // ... 更多关系类型
+    // //  更多关系类型
   ]
 }
 """
-# operation 1: Data Generation
+
 DATA_GENERATION_PROFILE = """
 你是一位资深的图数据抽取专家。
 你的使命是，基于已分析的文档内容和图模型，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。
 在这一阶段，你不是在创造知识，而是在发掘隐藏在文档中的事实。
 你的目标是从文本中提取实体、关系和属性，请确保数据的准确、丰富、完整，因为后续的知识图谱构建将直接依赖于你抽取的数据质量。
+抽取数据完成后，你需要调用指定的工具，完成数据的导入。
+最后，你需要输出导入的结果。
 """
 
-DATA_GENERATION_OUTPUT_DATA = """
+DATA_GENERATION_OUTPUT = """
 {
     "entities":[
         {
             "label":"实体类型",
             "properties":{
                 "实体属性":"属性值",
-                // ...更多实体属性
+                // 更多实体属性
             }
         }
-        // ...更多实体
+        // 更多实体
     ],
     "relationships":[
         {
@@ -343,52 +483,78 @@ DATA_GENERATION_OUTPUT_DATA = """
             "target":"primary对应的实体属性的值",
             "properties":{
                 "关系属性":"属性值",
-                // ...更多关系属性
+                // 更多关系属性
             }           
         },
-        // ... 更多关系
+        //  更多关系
     ]
 }
 """
 
 DATA_GENERATION_INSTRUCTION = f"""
-请安以下要求完成任务：
-1. 理解图模型
-2. 理解文本信息
-3. 根据图模型和文本信息抽取关系数据，关系数据不能少于{EDGE_COUNT}条, 并确保抽取的关系数据属性与对应关系类型的属性一一对应。
+必须执行以下全部步骤：
+1. 调用相关工具获取图模型，并对图模型进行分析和理解
+2. 调用相关工具获取文本内容，并结合图模型进行分析和理解
+3. 根据图模型和文本信息抽取关系数据，并确保抽取的关系数据属性与对应关系类型的属性一一对应。
 4. 根据抽取出的关系数据、图模型和文本信息抽取实体数据，确保抽取的实体数据属性与对应实体类型的属性一一对应，并且要保证这些实体是从关系数据中得到的。
-5. 严格按照{DATA_GENERATION_OUTPUT_DATA}格式，输出数据
+5. 整合实体和关系数据，并严格按照{DATA_GENERATION_OUTPUT}格式，只保留数据部分，不要输出无关的信息。
+6. 调用相关工具，完成实体和关系数据的导入导入任务。
+7. 输出数据导入结果。
 """
 
+RESULT_OUTPUT = """
+{
+    "result":"导入结果：1. 成功导入实体的数量；2. 成功导入关系的数量；"
+}
+"""
 
-def get_data_generation_operator():
+COUNT = 20
+
+def get_data_generation_and_import_operator():
     analysis_toolkit = Toolkit()
+    
     schema_understanding_action = Action(
-        id="data_generattion.schema_understanding",
+        id="data_generattion_and_import.schema_understanding_action",
         name="图模型理解",
-        description="调用相关工具获取真实图模型，并理解图模型结构",
+        description="调用相关工具获取图模型，并对图模型进行分析和理解，充分理解后，进行下一步'文本内容理解'操作",
     )
+    
     content_understanding_action = Action(
-        id="data_generattion.content_understanding",
+        id="data_generattion_and_import.content_understanding_action",
         name="文本内容理解",
-        description="调用相关工具, 结合图模型, 对文本内容进行充分理解和解析",
+        description="调用相关工具获取文本内容，并结合图模型进行分析和理解，充分理解后，进行下一步'关系数据抽取'操作",
     )
+
     edge_data_generation_action = Action(
-        id="data_generattion.edge_data_generation_action",
+        id="data_generattion_and_import.edge_data_generation_action",
         name="关系数据抽取",
-        description="根据对图模型理解和文本内容理解的理解，进行关系数据的抽取，输出的格式要严格符合输出模板",
+        description=f"根据对图模型理解和文本内容理解的理解，进行关系数据的抽取，关系的数量不能少于{COUNT}条，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。关系数据抽取完成后，进行下一步'实体数据抽取'操作。",
     )
+
     node_data_generation_action = Action(
-        id="data_generattion.node_data_generation_action",
+        id="data_generattion_and_import.node_data_generation_action",
         name="实体数据抽取",
-        description="根据关系数据，图模型和文本内容，进行实体数据的抽取，输出的格式要严格符合输出模板",
+        description="根据关系数据，图模型和文本内容，进行实体数据的抽取，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。实体数据抽取完成后，进行下一步'整合实体和关系数据'操作。",
     )
 
     graph_data_generation_action = Action(
-        id="data_generattion.graph_data_generation_action",
-        name="图数据输出",
-        description="严格按照输出格式输出数据",
+        id="data_generattion_and_import.graph_data_generation_action",
+        name="整合实体和关系数据",
+        description=f"严格按照{DATA_GENERATION_OUTPUT}格式输出数据，并保证整合后的数据符合正确的json格式，不要输出其他无关信息，并且不要在数据中出现 '// '这样的省略字符。数据整合完成后，进行下一步'导入实体和关系数据'操作。",
     )
+
+    import_data_action = Action(
+        id="data_generattion_and_import.import_data_action",
+        name="导入实体和关系数据",
+        description="调用导入数据函数，将json数据转换成导入命令，并执行导入。数据导入成功后，进行下一步'输出结果'操作。",
+    )
+
+    output_result_action = Action(
+        id="data_generattion_and_import.output_result",
+        name="输出结果",
+        description="输出数据导入的结果",
+    )
+
     analysis_toolkit.add_action(
         action=schema_understanding_action,
         next_actions=[(content_understanding_action, 1)],
@@ -413,8 +579,20 @@ def get_data_generation_operator():
 
     analysis_toolkit.add_action(
         action=graph_data_generation_action,
-        next_actions=[],
+        next_actions=[(import_data_action, 1)],
         prev_actions=[(node_data_generation_action, 1)],
+    )
+
+    analysis_toolkit.add_action(
+        action=import_data_action,
+        next_actions=[(output_result_action, 1)],
+        prev_actions=[(graph_data_generation_action, 1)],
+    )
+
+    analysis_toolkit.add_action(
+        action=output_result_action,
+        next_actions=[],
+        prev_actions=[(import_data_action, 1)],
     )
 
     get_schema = SchemaGetter(id="get_schema_tool")
@@ -427,16 +605,23 @@ def get_data_generation_operator():
         tool=get_document, connected_actions=[(content_understanding_action, 1)]
     )
 
+    import_data = DataImport(id="import_data_tool")
+    analysis_toolkit.add_tool(
+        tool=import_data, connected_actions=[(import_data_action, 1)]
+    )
+
     operator_config = OperatorConfig(
         id="data_generation_operator",
         instruction=DATA_GENERATION_PROFILE + DATA_GENERATION_INSTRUCTION,
-        output_schema=DATA_GENERATION_OUTPUT_DATA,
+        output_schema=RESULT_OUTPUT,
         actions=[
             schema_understanding_action,
             content_understanding_action,
             edge_data_generation_action,
             node_data_generation_action,
             graph_data_generation_action,
+            import_data_action,
+            output_result_action
         ],
     )
     operator = Operator(
@@ -446,103 +631,20 @@ def get_data_generation_operator():
 
     return operator
 
-
-# operation 2: Data Import
-DATA_IMPORT_PROFILE = """
-你是一位资深的图数据库的管理员。
-你的使命是，将标准的json结构化文本，转换成可执行的导入命令。
-你的目标是执行这些命令，完成数据的导入。
-"""
-
-DATA_IMPORT_OUTPUT_DATA = """
-{
-    result:"导入的结果，成功导入点边数量，点边导入失败的数量，失败的原因。"
-}
-"""
-
-DATA_IMPORT_INSTRUCTION = """
-请安以下要求完成任务：
-1. 导入数据，将json文本数据，准成对应的导入命令，并执行导入
-2. 输出数据导入结果
-"""
-
-
-def get_import_data_operator():
-    analysis_toolkit = Toolkit()
-    json_to_cypher_action = Action(
-        id="data_import.json_to_cypher",
-        name="数据导入",
-        description="调用相关工具，将json数据转换成导入命令，并执行对应命令",
-    )
-    output_result_action = Action(
-        id="data_import.output_result",
-        name="输出结果",
-        description="输出数据导入的结果",
-    )
-
-    analysis_toolkit.add_action(
-        action=json_to_cypher_action,
-        next_actions=[(output_result_action, 1)],
-        prev_actions=[],
-    )
-
-    analysis_toolkit.add_action(
-        action=output_result_action,
-        next_actions=[],
-        prev_actions=[(json_to_cypher_action, 1)],
-    )
-
-    nodes_to_cypher = NodesToCypher(id="nodes_to_cypher")
-    analysis_toolkit.add_tool(
-        tool=nodes_to_cypher, connected_actions=[(json_to_cypher_action, 1)]
-    )
-
-    edges_to_cypher = EdgesToCypher(id="edges_to_cypher")
-    analysis_toolkit.add_tool(
-        tool=edges_to_cypher, connected_actions=[(json_to_cypher_action, 1)]
-    )
-
-    operator_config = OperatorConfig(
-        id="import_data_operator",
-        instruction=DATA_IMPORT_PROFILE + DATA_IMPORT_INSTRUCTION,
-        output_schema=DATA_IMPORT_OUTPUT_DATA,
-        actions=[json_to_cypher_action, output_result_action],
-    )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=analysis_toolkit),
-    )
-
-    return operator
-
-
-def get_workflow():
-    """Get the workflow for graph modeling and assemble the operators."""
-    data_generation_operator = get_data_generation_operator()
-    data_import_operator = get_import_data_operator()
-    workflow = DbgptWorkflow()
-    workflow.add_operator(
-        operator=data_generation_operator,
-        previous_ops=[],
-        next_ops=[data_import_operator],
-    )
-    workflow.add_operator(
-        operator=data_import_operator,
-        previous_ops=[data_generation_operator],
-        next_ops=[],
-    )
-
-    return workflow
-
-
 async def main():
     """Main function to run the data import."""
-    workflow = get_workflow()
+    data_generation_and_import_operator = get_data_generation_and_import_operator()
+    workflow = DbgptWorkflow()
+    workflow.add_operator(
+        operator=data_generation_and_import_operator,
+        previous_ops=[],
+        next_ops=[],
+    )
     job = Job(
         id="test_job_id",
         session_id="test_session_id",
         goal="「任务」",
-        context="目前我们的问题的背景是，根据用户提供的内容和当前图数据库中的图模型完成实体和关系的数据抽取，执行数据的导入，并输出导入结果",
+        context="目前我们的问题的背景是：阅读《三国演义》的第50回，结合当前图数据库中的图模型完成实体和关系的数据抽取和数据的导入，并输出导入结果。",
     )
     reasoner = DualModelReasoner()
 
