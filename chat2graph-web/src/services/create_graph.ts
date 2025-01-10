@@ -93,20 +93,20 @@ export const createGraphService = {
                 const decoder = new TextDecoder('utf-8');
                 let message = '';
 
-                async function handleStream(result: ReadableStreamReadResult<Uint8Array>): Promise<void> {
-                    if (result.done) {
-                        console.log('Stream completed.');
-                        return;
-                    }
-                    const text = decoder.decode(result.value);
-                    message += text;
-                    onMessage(message);  // 通过回调函数传递消息
-                    const nextResult = await reader.read();
-                    return handleStream(nextResult);
-                }
+                // async function handleStream(result: ReadableStreamReadResult<Uint8Array>): Promise<void> {
+                //     if (result.done) {
+                //         console.log('Stream completed.');
+                //         return;
+                //     }
+                //     const text = decoder.decode(result.value);
+                //     message += text;
+                //     onMessage(message);  // 通过回调函数传递消息
+                //     const nextResult = await reader.read();
+                //     return handleStream(nextResult);
+                // }
 
-                const initialResult = await reader.read();
-                await handleStream(initialResult);
+                // const initialResult = await reader.read();
+                // await handleStream(initialResult);
 
                 return { success: true, data: message }; // 返回最终数据
             }
