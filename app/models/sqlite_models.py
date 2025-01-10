@@ -1,0 +1,18 @@
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timezone
+
+db = SQLAlchemy()
+
+class Session(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    name = db.Column(db.String(80), nullable=True)
+
+    messages = db.relationship('Message', backref='session', lazy=True)
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('session.id'), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
