@@ -2,12 +2,14 @@ from flask import Flask
 from config.chat2graph_sqilte_config import Config
 from app.models.sqlite_models import db
 from app.api import register_blueprints
+from flask_cors import CORS
 import os
 from app.toolkit.api_tool import make_error_response, BaseException
 
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object(Config)
 
     # 确保 instance 文件夹存在
