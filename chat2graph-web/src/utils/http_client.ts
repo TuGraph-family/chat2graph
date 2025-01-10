@@ -1,9 +1,4 @@
-function getDefaultUrl() {
-    const { protocol, hostname, port } = window.location;
-    return `${protocol}//${hostname}:${port}`;
-}
-
-const baseUrl = import.meta.env.VITE_API_BASE_URL === 'http://placeholder' ? getDefaultUrl() : import.meta.env.VITE_API_BASE_URL;
+const baseUrl = '/api';
 
 export interface HttpResponse {
     "data": any,

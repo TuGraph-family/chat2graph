@@ -50,7 +50,7 @@ export const createGraphService = {
         }
     },
     getSessions: async (): Promise<Array<SessionItem>> => {
-        let { success, data, message } = await httpClient.get('/assistant/sessions', {
+        let { success, data, message } = await httpClient.get('/sessions', {
             headers: {
                 'Content-Type': 'application/json',
             }
