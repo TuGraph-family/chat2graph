@@ -102,9 +102,6 @@ watch(message_list, async () => {
     chatMessageDom.value.scrollTop = chatMessageDom.value.scrollHeight;
   }
 });
-let assistant = computed(() => {
-  return assistantStore.assistant
-})
 let showModal = ref(false)
 let value = ref<string>('')
 
@@ -116,10 +113,10 @@ async function sendMessage() {
     isLoadingMessage.value = true
     messages.push({ content: value.value, parse_content: parseContent(data), isTemporary: false, role: 'user' });
     createGraphStore.updateMessageList(messages)
-    await createGraphService.sendMessage({ message: data, assistant_id: assistant.value.id, thread_id: current_session.value.thread_id }, (msg: string) => {
-      updateMessageList(msg);
-    });
-    finalizeMessage()
+    // await createGraphService.sendMessage({ message: data, assistant_id: assistant.value.id, thread_id: current_session.value.thread_id }, (msg: string) => {
+    //   updateMessageList(msg);
+    // });
+    // finalizeMessage()
   }
 }
 function updateMessageList(newMessage: string) {

@@ -20,11 +20,6 @@
                 </div>
             </n-card>
         </div>
-        <n-modal v-model:show="showModal">
-            <n-card style="width: 37.5rem" :bordered="false" size="medium" role="dialog" aria-modal="true">
-                <ImportModal :schema="importData" v-model:show="showModal" />
-            </n-card>
-        </n-modal>
     </div>
 </template>
 
@@ -36,7 +31,6 @@ import hljs from 'highlight.js'
 import { marked } from 'marked'
 import 'highlight.js/styles/monokai-sublime.css'
 import 'github-markdown-css/github-markdown.css'
-import ImportModal from '@/components/import_modal.vue'
 const props = defineProps<{
     content: { type: 'text' | 'schema' | 'vertex' | 'edge', content: string }[]
 }>()
