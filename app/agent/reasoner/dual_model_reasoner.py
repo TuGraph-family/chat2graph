@@ -109,13 +109,15 @@ class DualModelReasoner(Reasoner):
                 if func_call_results:
                     print(
                         "\033[92m<function_call_result>\n"
-                        + "\n".join([
-                            f"{i + 1}. {result.status} called function "
-                            f"{result.func_name}:\n"
-                            f"Call objective: {result.call_objective}\n"
-                            f"Function Output: {result.output}"
-                            for i, result in enumerate(func_call_results)
-                        ])
+                        + "\n".join(
+                            [
+                                f"{i + 1}. {result.status} called function "
+                                f"{result.func_name}:\n"
+                                f"Call objective: {result.call_objective}\n"
+                                f"Function Output: {result.output}"
+                                for i, result in enumerate(func_call_results)
+                            ]
+                        )
                         + "\n</function_call_result>\033[0m\n"
                     )
 
@@ -183,15 +185,20 @@ class DualModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            scratchpad = "\n".join([
-                f"{workflow_message.scratchpad}"
-                for workflow_message in task.workflow_messages
-            ])
+            scratchpad = "\n".join(
+                [
+                    f"{workflow_message.scratchpad}"
+                    for workflow_message in task.workflow_messages
+                ]
+            )
         else:
             scratchpad = "No scratchpad provided in this round."
-        action_rels = "\n".join([
-            f"[{action.name}: {action.description}] -next-> " for action in task.actions
-        ])
+        action_rels = "\n".join(
+            [
+                f"[{action.name}: {action.description}] -next-> "
+                for action in task.actions
+            ]
+        )
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
             context=task.job.context,
             env_info=env_info,
@@ -207,19 +214,21 @@ class DualModelReasoner(Reasoner):
 
         # set the function docstrings
         if tools:
-            func_description = "\n".join([
-                f"Function: {tool.name}()\n{tool.description}\n" for tool in tools
-            ])
+            func_description = "\n".join(
+                [f"Function: {tool.name}()\n{tool.description}\n" for tool in tools]
+            )
         else:
             func_description = "No function calling in this round."
 
         if task.operator_config and task.operator_config.output_schema:
-            output_schema = "\n".join([
-                "\t    " + schema
-                for schema in (
-                    f"[Follow the final delivery example:]\n{task.operator_config.output_schema.strip()}"
-                ).split("\n")
-            ])
+            output_schema = "\n".join(
+                [
+                    "\t    " + schema
+                    for schema in (
+                        f"[Follow the final delivery example:]\n{task.operator_config.output_schema.strip()}"
+                    ).split("\n")
+                ]
+            )
         else:
             output_schema = ""
 
@@ -247,15 +256,20 @@ class DualModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            scratchpad = "\n".join([
-                f"{str(workflow_message.scratchpad)}"
-                for workflow_message in task.workflow_messages
-            ])
+            scratchpad = "\n".join(
+                [
+                    f"{str(workflow_message.scratchpad)}"
+                    for workflow_message in task.workflow_messages
+                ]
+            )
         else:
             scratchpad = "No scratchpad provided in this round."
-        action_rels = "\n".join([
-            f"[{action.name}: {action.description}] -next-> " for action in task.actions
-        ])
+        action_rels = "\n".join(
+            [
+                f"[{action.name}: {action.description}] -next-> "
+                for action in task.actions
+            ]
+        )
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
             context=task.job.context,
             env_info=env_info,
@@ -312,5 +326,5 @@ class DualModelReasoner(Reasoner):
         # TODO: fix the stop condition
         return (
             "TASK_DONE" in message.get_payload()
-            or "DELIVERABLE" in message.get_payload()
+            and "DELIVERABLE" in message.get_payload()
         )
