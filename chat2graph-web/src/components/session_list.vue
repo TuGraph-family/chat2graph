@@ -4,7 +4,7 @@
             <n-card size="small" :class="{ 'active': item.id == current_session.id }"
                 @click="selectSession(item)">
                 标题：{{ item.name }}<br>
-                时间：{{ new Date(parseInt(item.created_at) * 1000).toLocaleString() }}
+                时间：{{ item.created_at }}
             </n-card>
             <div class="del-btn" @click="deleteSession(item.id)">
                 <n-icon size="20" color="red">

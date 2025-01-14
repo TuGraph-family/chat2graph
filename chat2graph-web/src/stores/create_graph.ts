@@ -41,23 +41,7 @@ export const useCreateGraphStore = defineStore('createGraph', {
         },
         async getSessionHistory(params: { session_id: string }) {
             let res = await createGraphService.getMessagesBySessionID(params.session_id)
-            let mergedData = res.reduce((acc, item, index) => {
-                if (index > 0 && item.role === acc[acc.length - 1].role && item.role !== 'user') {
-                    acc[acc.length - 1].content += `\n${item.content}`
-                } else {
-                    acc.push({ ...item }) // 创建新的对象避免引用问题
-                }
-                return acc
-            }, [])
-
-            // 处理 parse_content
-            let data = mergedData.map((item: any) => {
-                item.parse_content = parseContent(item.content)
-                return item
-            })
-
-            this.updateMessageList(data)
-            return data
+            return res
         },
         updateMessageList(data: any[]) {
             this.message_list = data

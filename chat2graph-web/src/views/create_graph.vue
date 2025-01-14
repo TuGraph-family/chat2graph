@@ -3,21 +3,21 @@
     <n-flex vertical size="large">
       <n-layout has-sider sider-placement="right">
         <n-layout-content content-style="padding: 10px;position:relative;z-index: 0;">
-          <div class="chat-container" v-if="current_session.thread_id">
+          <div class="chat-container" v-if="current_session.id">
             <div class="chat-message" ref="chatMessageDom">
               <div>
                 <div v-for="item in message_list">
                   <div :class="item.role" v-if="item.role === 'user'">
-                    <UserMessage :content="item.parse_content" />
+                    <UserMessage :content="[{type:'text',content:item.message}]" />
                   </div>
-                  <div :class="item.role" v-if="item.role === 'assistant'">
-                    <AssistantMessage :content="item.parse_content" />
+                  <div :class="item.role" v-if="item.role === 'system'">
+                    <AssistantMessage :content="[{type:'text',content:item.message}]" />
                   </div>
                 </div>
               </div>
             </div>
             <div class="chat-box">
-              <n-input v-model:value="value" round type="textarea" placeholder="给“ChatTuGraph”发送消息..."
+              <n-input v-model:value="textValue" round type="textarea" placeholder="给“ChatTuGraph”发送消息..."
                 :autosize="{ minRows: 3, maxRows: 6 }" @keyup="handleKeydown" />
               <div class="send-btn">
                 <n-button v-if="isLoadingMessage" circle icon-placement="right" @click="stopLoadMessage">
@@ -86,8 +86,8 @@ let current_session = computed(() => {
   return createGraphStore.current_session
 })
 watch(current_session, async (newVal) => {
-  let res = await createGraphStore.getSessionHistory({ session_id: newVal.thread_id })
-  if (newVal.thread_id) {
+  if (newVal.id) {
+    let res = await createGraphStore.getSessionHistory({ session_id: newVal.id })
     createGraphStore.updateMessageList(res)
   }
 })
@@ -103,57 +103,34 @@ watch(message_list, async () => {
   }
 });
 let showModal = ref(false)
-let value = ref<string>('')
+let textValue = ref<string>('')
 
 async function sendMessage() {
   const messages = [...message_list.value];
-  const data = value.value
-  value.value = ''
-  if (data) {
+  const question = textValue.value
+  textValue.value = ''
+  if (question) {
     isLoadingMessage.value = true
-    messages.push({ content: value.value, parse_content: parseContent(data), isTemporary: false, role: 'user' });
+    messages.push({ message: question, role: 'user' });
     createGraphStore.updateMessageList(messages)
-    // await createGraphService.sendMessage({ message: data, assistant_id: assistant.value.id, thread_id: current_session.value.thread_id }, (msg: string) => {
-    //   updateMessageList(msg);
-    // });
-    // finalizeMessage()
+    let { data } = await createGraphService.sendMessage({ message: question, session_id: current_session.value.id });
+    createGraphStore.updateMessageList([...messages,data.assistant_message])
+    isLoadingMessage.value = false
   }
-}
-function updateMessageList(newMessage: string) {
-  const messages = [...message_list.value];
-  if (messages.length === 0 || messages[messages.length - 1].isTemporary !== true) {
-    messages.push({ content: newMessage, parse_content: parseContent(newMessage), isTemporary: true, role: 'assistant' });
-  } else {
-    messages[messages.length - 1].content = newMessage;
-    messages[messages.length - 1].parse_content = parseContent(newMessage);
-  }
-  createGraphStore.updateMessageList(messages)
-}
-
-// 将 isTemporary 标志设置为 false 表示消息已经完成
-function finalizeMessage() {
-  const messages = message_list.value;
-  isLoadingMessage.value = false
-  if (messages.length > 0 && messages[messages.length - 1].isTemporary) {
-    messages[messages.length - 1].isTemporary = false;
-  }
-  createGraphStore.updateMessageList(messages)
 }
 
 function handleKeydown(event: KeyboardEvent) {
   const textarea = event.target as HTMLTextAreaElement;
   if (event.key === 'Enter') {
     if (event.altKey || event.metaKey) {
-      // Alt + Enter 或 Option + Enter 换行
+      sendMessage()
+    } else {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const value = textarea.value;
       textarea.value = value.slice(0, start) + '\n' + value.slice(end);
       textarea.selectionStart = textarea.selectionEnd = start + 1;
       event.preventDefault()
-    } else {
-      // 仅 Enter 发送消息
-      sendMessage()
     }
   }
 }

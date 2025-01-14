@@ -42,7 +42,7 @@ export const createGraphService = {
         });
         return {
             name: data.name,
-            id: data.thread_id
+            id: data.id
         }
     },
     getSessions: async (): Promise<Array<SessionItem>> => {
@@ -62,7 +62,7 @@ export const createGraphService = {
         return data
     },
     deleteSession: async (session_id: string): Promise<{ success: boolean, message: string }> => {
-        let { success, data, message } = await httpClient.delete(`/assistant/session/${session_id}`, {
+        let { success, data, message } = await httpClient.delete(`/sessions/${session_id}`, {
             headers: {
                 'Content-Type': 'application/json',
             }
@@ -72,44 +72,15 @@ export const createGraphService = {
             message
         }
     },
-    sendMessage: async (params: { assistant_id: string, thread_id: string, message: string }, onMessage: (message: string) => void) => {
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(params)
-            });
-            if (response.body) {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                let message = '';
-
-                // async function handleStream(result: ReadableStreamReadResult<Uint8Array>): Promise<void> {
-                //     if (result.done) {
-                //         console.log('Stream completed.');
-                //         return;
-                //     }
-                //     const text = decoder.decode(result.value);
-                //     message += text;
-                //     onMessage(message);  // 通过回调函数传递消息
-                //     const nextResult = await reader.read();
-                //     return handleStream(nextResult);
-                // }
-
-                // const initialResult = await reader.read();
-                // await handleStream(initialResult);
-
-                return { success: true, data: message }; // 返回最终数据
-            }
-        } catch (error: any) {
-            console.error('Error:', error);
-            return { success: false, message: error.message };
-        }
+    sendMessage: async (params: { session_id: string, message: string }): Promise<{ success: boolean, message: string, data:any }> => {
+        let { success, message, data } = await httpClient.post('/messages', {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params)
+        });
+        return { success, message, data }
+                  
     },
     importSchema: async (params: SchemaConfig): Promise<{ success: boolean, message: string }> => {
         let { success, message } = await httpClient.post('/db/import_schema', {
