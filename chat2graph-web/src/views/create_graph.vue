@@ -1,7 +1,17 @@
 <template>
   <div class="create-graph-view">
     <n-flex vertical size="large">
-      <n-layout has-sider sider-placement="right">
+      <n-layout has-sider sider-placement="left">
+        <n-layout-sider collapse-mode="width" :collapsed-width="0" :width="200" show-trigger="arrow-circle" bordered>
+          <div class="create-graph-view-sidebar">
+            <n-button strong secondary type="primary" @click="showModal = true">
+              创建对话
+            </n-button>
+            <div>
+              <SessinList />
+            </div>
+          </div>
+        </n-layout-sider>
         <n-layout-content content-style="padding: 10px;position:relative;z-index: 0;">
           <div class="chat-container" v-if="current_session.id">
             <div class="chat-message" ref="chatMessageDom">
@@ -47,16 +57,7 @@
             </n-empty>
           </div>
         </n-layout-content>
-        <n-layout-sider collapse-mode="width" :collapsed-width="0" :width="200" show-trigger="arrow-circle" bordered>
-          <div class="create-graph-view-sidebar">
-            <n-button strong secondary type="primary" @click="showModal = true">
-              创建对话
-            </n-button>
-            <div>
-              <SessinList />
-            </div>
-          </div>
-        </n-layout-sider>
+       
       </n-layout>
     </n-flex>
     <n-modal v-model:show="showModal">
