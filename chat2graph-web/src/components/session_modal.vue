@@ -1,7 +1,7 @@
 <template>
   <div class="session-modal-component">
     <div class="session-modal-name">会话名称</div>
-    <n-input v-model:value="session_name" type="text" placeholder="请输入会话名称" />
+    <n-input v-model:value="name" type="text" placeholder="请输入会话名称" />
     <div class="session-modal-btns">
       <n-button strong secondary type="success" @click="createNewSession"> 创建 </n-button>
       <n-button strong secondary type="warning" @click="cancel"> 取消 </n-button>
@@ -13,18 +13,18 @@
 import { ref, defineEmits } from 'vue'
 import { NInput, NButton, useMessage } from 'naive-ui'
 import { useCreateGraphStore } from '@/stores/create_graph'
-let session_name = ref('')
+let name = ref('')
 const message = useMessage()
 const createGraphStore = useCreateGraphStore()
 const emit = defineEmits(['update:show'])
 async function createNewSession() {
   try {
-    if (!session_name.value) {
+    if (!name.value) {
       message.warning('会话名称不能为空！')
       return
     }
-    const sessionData = await createGraphStore.createSession({ session_name: session_name.value })
-    if (sessionData.thread_id) {
+    const sessionData = await createGraphStore.createSession({ name: name.value })
+    if (sessionData.id) {
       let list = await createGraphStore.getSessions()
       createGraphStore.updateSessions(list)
       await createGraphStore.updateCurrentSession(sessionData)

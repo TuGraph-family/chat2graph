@@ -1,9 +1,9 @@
 <template>
     <div class="session-list">
         <div class="session-card" v-for="item in sessions">
-            <n-card size="small" :class="{ 'active': item.id == current_session.thread_id }"
+            <n-card size="small" :class="{ 'active': item.id == current_session.id }"
                 @click="selectSession(item)">
-                标题：{{ item.metadata.session_name }}<br>
+                标题：{{ item.name }}<br>
                 时间：{{ new Date(parseInt(item.created_at) * 1000).toLocaleString() }}
             </n-card>
             <div class="del-btn" @click="deleteSession(item.id)">
@@ -32,15 +32,15 @@ const createGraphStore = useCreateGraphStore()
 async function initSessionsList() {
     let list = await createGraphStore.getSessions()
     createGraphStore.updateSessions(list)
-    if (!current_session.value.thread_id && sessions.value.length) {
-        createGraphStore.updateCurrentSession({ session_name: list[0].metadata.session_name, thread_id: list[0].id })
+    if (!current_session.value.id && sessions.value.length) {
+        createGraphStore.updateCurrentSession({ name: list[0].name, id: list[0].id })
     }
 
 }
 initSessionsList()
 async function selectSession(item: SessionItem) {
     createGraphStore.updateMessageList([])
-    createGraphStore.updateCurrentSession({ session_name: item.metadata.session_name, thread_id: item.id })
+    createGraphStore.updateCurrentSession({ name: item.name, id: item.id })
 }
 
 async function deleteSession(session_id: string) {
@@ -49,11 +49,11 @@ async function deleteSession(session_id: string) {
         let list = await createGraphStore.getSessions()
         createGraphStore.updateSessions(list)
         createGraphStore.updateMessageList([])
-        if (current_session.value.thread_id == session_id && sessions.value.length) {
-            createGraphStore.updateCurrentSession({ session_name: list[0].metadata.session_name, thread_id: list[0].id })
+        if (current_session.value.id == session_id && sessions.value.length) {
+            createGraphStore.updateCurrentSession({ name: list[0].name, id: list[0].id })
         }
         if (!sessions.value.length) {
-            createGraphStore.updateCurrentSession({ session_name: '', thread_id: '' })
+            createGraphStore.updateCurrentSession({ name: '', id: '' })
         }
     }
 }

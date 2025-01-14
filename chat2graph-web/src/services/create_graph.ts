@@ -1,12 +1,12 @@
 import { httpClient } from '@/utils/http_client';
 let url = '/assistant/message'
 interface SessionRequest {
-    session_name: string;
+    name: string;
 }
 
 interface SessionResponse {
-    session_name: string
-    thread_id: string
+    name: string
+    id: string
 }
 
 export interface SchemaConfig {
@@ -30,23 +30,19 @@ export interface DataConfig {
 export interface SessionItem {
     "created_at": string,
     "id": string,
-    "metadata": {
-        "session_name": string
-    },
-    "object": string
+    "name": string
 }
 export const createGraphService = {
-    // 创建会话
     createSession: async (sessionRequest: SessionRequest): Promise<SessionResponse> => {
-        let { success, data, message } = await httpClient.post('/assistant/session', {
+        let { success, data, message } = await httpClient.post('/sessions', {
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(sessionRequest),
         });
         return {
-            session_name: data.session_name,
-            thread_id: data.thread_id
+            name: data.name,
+            id: data.thread_id
         }
     },
     getSessions: async (): Promise<Array<SessionItem>> => {
@@ -55,10 +51,10 @@ export const createGraphService = {
                 'Content-Type': 'application/json',
             }
         });
-        return data.sessions
+        return data
     },
     getMessagesBySessionID: async (session_id: string): Promise<any[]> => {
-        let { success, data, message } = await httpClient.get(`/assistant/session_history/${session_id}`, {
+        let { success, data, message } = await httpClient.get(`/messages/${session_id}`, {
             headers: {
                 'Content-Type': 'application/json',
             }

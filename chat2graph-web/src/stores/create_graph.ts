@@ -5,8 +5,8 @@ import { parseContent } from '@/utils/parse_content'
 
 interface CreateGraphState {
     current_session: {
-        session_name: string,
-        thread_id: string,
+        name: string,
+        id: string,
     },
     sessions: Array<SessionItem>,
     message_list: any[]
@@ -15,21 +15,21 @@ interface CreateGraphState {
 export const useCreateGraphStore = defineStore('createGraph', {
     state: (): CreateGraphState => ({
         current_session: {
-            session_name: '',
-            thread_id: ''
+            name: '',
+            id: ''
         },
         sessions: [],
         message_list: []
     }),
     getters: {},
     actions: {
-        async createSession(params: { session_name: string }): Promise<{ session_name: string, thread_id: string }> {
-            let { session_name, thread_id } = await createGraphService.createSession({ session_name: params.session_name })
+        async createSession(params: { name: string }): Promise<{ name: string, id: string }> {
+            let { name, id } = await createGraphService.createSession({ name: params.name })
             return {
-                session_name, thread_id
+                name, id
             }
         },
-        updateCurrentSession(params: { session_name: string, thread_id: string }) {
+        updateCurrentSession(params: { name: string, id: string }) {
             this.current_session = params
         },
         async getSessions(): Promise<Array<SessionItem>> {
