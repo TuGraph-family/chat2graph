@@ -56,9 +56,7 @@ class LeaderState(ABC):
 
         return dict(self._expert_assignments)
 
-    def add_task(
-        self, task: Task, predecessors: List[Task], successors: List[Task]
-    ) -> None:
+    def add_task(self, task: Task, predecessors: List[Task], successors: List[Task]) -> None:
         """Add a task to the task registry."""
         self._tasks.add_node(task.id, task=task)
         for predecessor in predecessors:

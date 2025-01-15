@@ -203,6 +203,7 @@ INTERNET_REF = [
     "https://cloud.tencent.com/developer/news/1294500",
 ]
 
+
 class KnowledgeBaseRetriever(Tool):
     """Tool for retrieving document content from knowledge base."""
 
@@ -314,9 +315,7 @@ def get_retrieving_operator():
     retrieving_toolkit.add_tool(
         tool=knowledge_base_search, connected_actions=[(knowledge_base_retrieving, 1)]
     )
-    retrieving_toolkit.add_tool(
-        tool=internet_search, connected_actions=[(internet_retrieving, 1)]
-    )
+    retrieving_toolkit.add_tool(tool=internet_search, connected_actions=[(internet_retrieving, 1)])
 
     operator_config = OperatorConfig(
         id="retrieving_operator",
@@ -351,9 +350,7 @@ def get_summarizing_operator():
         next_actions=[],
         prev_actions=[],
     )
-    summarizing_toolkit.add_tool(
-        tool=reference_list, connected_actions=[(reference_listing, 1)]
-    )
+    summarizing_toolkit.add_tool(tool=reference_list, connected_actions=[(reference_listing, 1)])
 
     operator_config = OperatorConfig(
         id="summarizing_operator",
@@ -388,6 +385,7 @@ def get_question_answering_workflow():
 
     return workflow
 
+
 QUESTION = """
 我在执行Cypher语句
 CALL db.createVertexLabelByJson('{
@@ -404,6 +402,7 @@ CALL db.createVertexLabelByJson('{
 的时候，遇到报错：执行失败 unknown keyword str: [INT12]，
 请问原因是什么，该如何修改？
 """
+
 
 async def main():
     """Main function"""

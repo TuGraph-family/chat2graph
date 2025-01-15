@@ -98,13 +98,15 @@ class DbgptLlmClient(ModelService):
             if func_call_results:
                 base_message_content += (
                     "<function_call_result>\n"
-                    + "\n".join([
-                        f"{i + 1}. {result.status} called function "
-                        f"{result.func_name}:\n"
-                        f"Call objective: {result.call_objective}\n"
-                        f"Function Output: {result.output}"
-                        for i, result in enumerate(func_call_results)
-                    ])
+                    + "\n".join(
+                        [
+                            f"{i + 1}. {result.status} called function "
+                            f"{result.func_name}:\n"
+                            f"Call objective: {result.call_objective}\n"
+                            f"Function Output: {result.output}"
+                            for i, result in enumerate(func_call_results)
+                        ]
+                    )
                     + "\n</function_call_result>"
                 )
 

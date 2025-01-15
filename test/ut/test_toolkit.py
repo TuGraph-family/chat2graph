@@ -30,9 +30,7 @@ def toolkit():
 
 
 @pytest.fixture
-def populated_toolkit(
-    toolkit: Toolkit, sample_actions: List[Action], sample_tools: List[Query]
-):
+def populated_toolkit(toolkit: Toolkit, sample_actions: List[Action], sample_tools: List[Query]):
     """Create a toolkit populated with sample data."""
     action1, action2, action3, action4 = sample_actions
     tool1, tool2, tool3, tool4 = sample_tools
@@ -99,12 +97,8 @@ def test_graph_structure(populated_toolkit):
     graph = populated_toolkit._toolkit_graph
 
     # verify node counts
-    action_nodes = [
-        n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.ACTION
-    ]
-    tool_nodes = [
-        n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.TOOL
-    ]
+    action_nodes = [n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.ACTION]
+    tool_nodes = [n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.TOOL]
 
     assert len(action_nodes) == 4
     assert len(tool_nodes) == 4
@@ -129,14 +123,10 @@ def test_graph_structure(populated_toolkit):
 
 
 @pytest.mark.asyncio
-async def test_recommend_subgraph_no_hops(
-    populated_toolkit: Toolkit, sample_actions: List[Action]
-):
+async def test_recommend_subgraph_no_hops(populated_toolkit: Toolkit, sample_actions: List[Action]):
     """Test subgraph recommendation with no hops."""
     action1 = sample_actions[0]
-    subgraph = await populated_toolkit.recommend_subgraph(
-        actions=[action1], threshold=0.5, hops=0
-    )
+    subgraph = await populated_toolkit.recommend_subgraph(actions=[action1], threshold=0.5, hops=0)
 
     expected_nodes = {action1.id, "tool1"}
     assert set(subgraph.nodes()) == expected_nodes
@@ -144,14 +134,10 @@ async def test_recommend_subgraph_no_hops(
 
 
 @pytest.mark.asyncio
-async def test_recommend_subgraph_one_hop(
-    populated_toolkit: Toolkit, sample_actions: List[Action]
-):
+async def test_recommend_subgraph_one_hop(populated_toolkit: Toolkit, sample_actions: List[Action]):
     """Test subgraph recommendation with one hop."""
     action1 = sample_actions[0]
-    subgraph = await populated_toolkit.recommend_subgraph(
-        actions=[action1], threshold=0.5, hops=1
-    )
+    subgraph = await populated_toolkit.recommend_subgraph(actions=[action1], threshold=0.5, hops=1)
 
     expected_nodes = {"action1", "action2", "action3", "tool1", "tool2", "tool3"}
     assert set(subgraph.nodes()) == expected_nodes
@@ -164,9 +150,7 @@ async def test_recommend_subgraph_high_threshold(
 ):
     """Test subgraph recommendation with high threshold."""
     action1 = sample_actions[0]
-    subgraph = await populated_toolkit.recommend_subgraph(
-        actions=[action1], threshold=0.8, hops=2
-    )
+    subgraph = await populated_toolkit.recommend_subgraph(actions=[action1], threshold=0.8, hops=2)
 
     # only high-score edges should be included
     assert all(d["score"] >= 0.8 for _, _, d in subgraph.edges(data=True))

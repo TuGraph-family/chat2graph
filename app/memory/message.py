@@ -1,5 +1,5 @@
-import time
 from abc import ABC, abstractmethod
+import time
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
@@ -77,9 +77,7 @@ class WorkflowMessage(Message):
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
-        super().__init__(
-            timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id
-        )
+        super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
         self._content: Dict[str, Any] = content
         for key, value in content.items():
             setattr(self, key, value)

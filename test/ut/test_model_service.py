@@ -13,9 +13,7 @@ from app.memory.message import ModelMessage
 @pytest.fixture
 def mock_model_service():
     """Fixture to create a mock model service."""
-    with patch(
-        "app.agent.reasoner.model_service_factory.ModelServiceFactory"
-    ) as mock_factory:
+    with patch("app.agent.reasoner.model_service_factory.ModelServiceFactory") as mock_factory:
         # create a mock model service instance
         mock_service = AsyncMock()
 

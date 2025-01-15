@@ -125,9 +125,7 @@ async def test_infer_multiple_rounds(mock_reasoner: DualModelReasoner, task: Tas
 async def test_infer_error_handling(mock_reasoner: DualModelReasoner, task: Task):
     """Test inference error handling."""
     # simulate model generation error
-    mock_reasoner._thinker_model.generate = AsyncMock(
-        side_effect=Exception("Model error")
-    )
+    mock_reasoner._thinker_model.generate = AsyncMock(side_effect=Exception("Model error"))
 
     with pytest.raises(Exception) as exc_info:
         await mock_reasoner.infer(task=task)

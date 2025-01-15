@@ -72,20 +72,14 @@ class DbgptWorkflow(Workflow):
 
             # third step: get the tail of the workflow which contains the operators
             tail_map_op_ids = [
-                n
-                for n in self._operator_graph.nodes()
-                if self._operator_graph.out_degree(n) == 0
+                n for n in self._operator_graph.nodes() if self._operator_graph.out_degree(n) == 0
             ]
-            assert len(tail_map_op_ids) == 1, (
-                "The workflow should have only one tail operator."
-            )
+            assert len(tail_map_op_ids) == 1, "The workflow should have only one tail operator."
             _tail_map_op: DbgptMapOperator = map_ops[tail_map_op_ids[0]]
 
             # fourth step: add the eval operator at the end of the DAG
             if self._evaluator:
-                eval_map_op = DbgptMapOperator(
-                    operator=self._evaluator, reasoner=reasoner
-                )
+                eval_map_op = DbgptMapOperator(operator=self._evaluator, reasoner=reasoner)
                 join_op = JoinOperator(combine_function=_merge_workflow_messages)
 
                 _tail_map_op >> join_op
@@ -99,8 +93,6 @@ class DbgptWorkflow(Workflow):
 
             return self._tail_map_op
 
-    async def _execute_workflow(
-        self, workflow: DbgptMapOperator, job: Job
-    ) -> WorkflowMessage:
+    async def _execute_workflow(self, workflow: DbgptMapOperator, job: Job) -> WorkflowMessage:
         """Execute the workflow."""
         return await workflow.call(call_data=job)

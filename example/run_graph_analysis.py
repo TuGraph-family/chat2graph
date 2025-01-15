@@ -260,9 +260,7 @@ def get_algorithms_execute_operator():
 
 def get_graph_analysis_workflow():
     """Get the workflow for graph modeling and assemble the operators."""
-    algorithms_intention_analysis_operator = (
-        get_algorithms_intention_analysis_operator()
-    )
+    algorithms_intention_analysis_operator = get_algorithms_intention_analysis_operator()
     algorithms_execute_operator = get_algorithms_execute_operator()
 
     workflow = DbgptWorkflow()

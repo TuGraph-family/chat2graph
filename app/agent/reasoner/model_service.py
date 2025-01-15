@@ -119,9 +119,7 @@ class ModelService(ABC):
 
         return func_calls, err
 
-    def _find_function(
-        self, func_name: str, tools: List[Tool]
-    ) -> Optional[Callable[..., Any]]:
+    def _find_function(self, func_name: str, tools: List[Tool]) -> Optional[Callable[..., Any]]:
         """Find matching function from the provided list."""
         for tool in tools:
             if tool.name == func_name:

@@ -37,9 +37,7 @@ async def main():
 
     # add actions to toolkit
     toolkit.add_action(action=action1, next_actions=[(action2, 0.9)], prev_actions=[])
-    toolkit.add_action(
-        action=action2, next_actions=[(action3, 0.8)], prev_actions=[(action1, 0.9)]
-    )
+    toolkit.add_action(action=action2, next_actions=[(action3, 0.8)], prev_actions=[(action1, 0.9)])
     toolkit.add_action(action=action3, next_actions=[], prev_actions=[(action2, 0.8)])
 
     # add tools to toolkit

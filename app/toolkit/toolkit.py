@@ -107,9 +107,7 @@ class Toolkit:
         """
         # add action node if not exists
         if action.id not in self._toolkit_graph:
-            self._toolkit_graph.add_node(
-                action.id, type=ToolkitGraphType.ACTION, data=action
-            )
+            self._toolkit_graph.add_node(action.id, type=ToolkitGraphType.ACTION, data=action)
 
         # add edges to next actions
         for next_action, score in next_actions:
@@ -237,16 +235,12 @@ class Toolkit:
                 ):
                     node_ids_to_keep.add(tool_id)
 
-        original_toolkit_subgraph: nx.DiGraph = self._toolkit_graph.subgraph(
-            node_ids_to_keep
-        )
+        original_toolkit_subgraph: nx.DiGraph = self._toolkit_graph.subgraph(node_ids_to_keep)
         toolkit_subgraph = original_toolkit_subgraph.copy()
 
         # remove edges that don't meet the threshold
         edges_to_remove = [
-            (u, v)
-            for u, v, d in toolkit_subgraph.edges(data=True)
-            if d["score"] < threshold
+            (u, v) for u, v, d in toolkit_subgraph.edges(data=True) if d["score"] < threshold
         ]
         toolkit_subgraph.remove_edges_from(edges_to_remove)
         self.visualize(graph=toolkit_subgraph, title="Recommended Toolkit")
@@ -311,9 +305,7 @@ class Toolkit:
         action_nodes = [
             n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.ACTION
         ]
-        tool_nodes = [
-            n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.TOOL
-        ]
+        tool_nodes = [n for n, d in graph.nodes(data=True) if d["type"] == ToolkitGraphType.TOOL]
 
         # draw action nodes in blue
         nx.draw_networkx_nodes(
@@ -370,9 +362,7 @@ class Toolkit:
         )
 
         # add edge labels (scores) with adjusted positions for curved edges
-        edge_labels = {
-            (u, v): f"{d['score']:.2f}" for (u, v, d) in graph.edges(data=True)
-        }
+        edge_labels = {(u, v): f"{d['score']:.2f}" for (u, v, d) in graph.edges(data=True)}
         nx.draw_networkx_edge_labels(
             graph,
             pos,

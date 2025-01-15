@@ -80,9 +80,7 @@ class ProcessComplexData(Tool):
         """
         result = {
             "processed_dict": {k.upper(): v for k, v in data_dict.items()},
-            "processed_list": [
-                item["value"] for item in nested_list if "value" in item
-            ],
+            "processed_list": [item["value"] for item in nested_list if "value" in item],
             "config_status": "valid" if config.get("enabled") else "invalid",
             "special_str_length": len(special_str),
         }

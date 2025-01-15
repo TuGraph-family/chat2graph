@@ -8,9 +8,7 @@ from app.agent.workflow.operator.operator import Operator
 from app.memory.message import WorkflowMessage
 
 
-class DbgptMapOperator(
-    MapOperator[Tuple[Job, Optional[List[WorkflowMessage]]], WorkflowMessage]
-):
+class DbgptMapOperator(MapOperator[Tuple[Job, Optional[List[WorkflowMessage]]], WorkflowMessage]):
     """DB-GPT map operator"""
 
     def __init__(self, operator: Operator, reasoner: Reasoner, **kwargs):

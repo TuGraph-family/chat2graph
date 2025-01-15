@@ -1,8 +1,6 @@
-import json
 import logging
 from typing import Optional
 
-from dbgpt.datasource.conn_tugraph import TuGraphConnector  # type: ignore
 from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig  # type: ignore
 
 # configure logging
@@ -48,7 +46,6 @@ def main():
     try:
         # initialize tugraph store
         store = init_tugraph()
-        # create_schema(store.conn)
 
         query = "CALL db.getLabelSchema('edge', 'HOSTILE')"
         records = store.conn.run(query)

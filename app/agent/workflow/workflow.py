@@ -56,18 +56,12 @@ class Workflow(ABC):
             if previous_ops:
                 for previous_op in previous_ops:
                     if not self._operator_graph.has_node(previous_op.get_id()):
-                        self._operator_graph.add_node(
-                            previous_op.get_id(), operator=previous_op
-                        )
-                    self._operator_graph.add_edge(
-                        previous_op.get_id(), operator.get_id()
-                    )
+                        self._operator_graph.add_node(previous_op.get_id(), operator=previous_op)
+                    self._operator_graph.add_edge(previous_op.get_id(), operator.get_id())
             if next_ops:
                 for next_op in next_ops:
                     if not self._operator_graph.has_node(next_op.get_id()):
-                        self._operator_graph.add_node(
-                            next_op.get_id(), operator=next_op
-                        )
+                        self._operator_graph.add_node(next_op.get_id(), operator=next_op)
                     self._operator_graph.add_edge(operator.get_id(), next_op.get_id())
             self.__workflow = None
 

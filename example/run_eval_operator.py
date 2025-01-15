@@ -37,9 +37,7 @@ async def main():
         output_schema=EVAL_OPERATION_OUTPUT_PROMPT,
     )
 
-    operator = EvalOperator(
-        config=operator_config, toolkit_service=ToolkitService(toolkit)
-    )
+    operator = EvalOperator(config=operator_config, toolkit_service=ToolkitService(toolkit))
 
     # execute operator (with minimal reasoning rounds for testing)
     job = Job(

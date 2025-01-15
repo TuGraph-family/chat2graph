@@ -146,9 +146,7 @@ class SchemaGetter(Tool):
         store = get_tugraph()
         schema = store.conn.run(query=query)
 
-        return json.dumps(
-            json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False
-        )
+        return json.dumps(json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False)
 
 
 class GrammerReader(Tool):
@@ -286,9 +284,7 @@ RETURN {distinct_keyword}n
         """
 
         store = get_tugraph()
-        result = "\n".join([
-            str(record.get("n", "")) for record in store.conn.run(query=query)
-        ])
+        result = "\n".join([str(record.get("n", "")) for record in store.conn.run(query=query)])
         return f"查询图数据库成功。\n查询语句：\n{query}：\n查询结果：\n{result}"
 
 
@@ -348,8 +344,7 @@ def get_query_intention_analysis_operator():
 
     operator_config = OperatorConfig(
         id="query_intention_analysis_operator",
-        instruction=QUERY_INSTRUCTION_AYNALYSIS_PROFILE
-        + QUERY_INTENTION_ANALYSIS_INSTRUCTION,
+        instruction=QUERY_INSTRUCTION_AYNALYSIS_PROFILE + QUERY_INTENTION_ANALYSIS_INSTRUCTION,
         output_schema=QUERY_INTENTION_ANALYSIS_OUTPUT_SCHEMA,
         actions=[
             query_intention_identification_action,

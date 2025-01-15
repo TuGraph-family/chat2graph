@@ -43,20 +43,16 @@ def toolkit_setup():
     tools = [Query(id=f"{action.id}_tool") for action in actions]
 
     # add actions to toolkit
-    toolkit.add_action(
-        action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[]
-    )
+    toolkit.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
     toolkit.add_action(
         action=actions[1],
         next_actions=[(actions[2], 0.8)],
         prev_actions=[(actions[0], 0.9)],
     )
-    toolkit.add_action(
-        action=actions[2], next_actions=[], prev_actions=[(actions[1], 0.8)]
-    )
+    toolkit.add_action(action=actions[2], next_actions=[], prev_actions=[(actions[1], 0.8)])
 
     # add tools to toolkit
-    for tool, action in zip(tools, actions):
+    for tool, action in zip(tools, actions, strict=False):
         toolkit.add_tool(tool=tool, connected_actions=[(action, 0.9)])
 
     return toolkit, actions, tools
@@ -86,9 +82,7 @@ async def operator(toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]):
 
 
 @pytest.mark.asyncio
-async def test_execute_basic_functionality(
-    operator: Operator, mock_reasoner: AsyncMock
-):
+async def test_execute_basic_functionality(operator: Operator, mock_reasoner: AsyncMock):
     """Test basic execution functionality."""
     job = Job(
         id="test_job_id",

@@ -11,9 +11,7 @@ from app.memory.message import ModelMessage
 async def main():
     """Main function."""
     # create model service using factory method
-    model_service = ModelServiceFactory.create(
-        platform_type=SystemEnv.PLATFORM_TYPE
-    )
+    model_service = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
 
     # create test messages
     messages: List[ModelMessage] = [

@@ -82,9 +82,7 @@ class UpperOperator(BaseTestOperator):
             for workflow_message in workflow_messages:
                 scratchpad_content += workflow_message.scratchpad
         result = job.context.upper() + scratchpad_content.upper()
-        print(
-            f"UpperOperator input - context: {job.context}, scratchpad: {scratchpad_content}"
-        )
+        print(f"UpperOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"UpperOperator output: {result}\n\n")
         return WorkflowMessage(content={"scratchpad": result})
 
@@ -110,10 +108,7 @@ class AddPrefixOperator(BaseTestOperator):
                 scratchpad_content += workflow_message.scratchpad
 
         result = f"Prefix_{scratchpad_content}{job.context}"
-        print(
-            f"AddPrefixOperator input - context: {job.context}, "
-            f"scratchpad: {scratchpad_content}"
-        )
+        print(f"AddPrefixOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"AddPrefixOperator output: {result}\n\n")
         return WorkflowMessage(content={"scratchpad": result})
 
@@ -136,9 +131,7 @@ class AddSuffixOperator(BaseTestOperator):
                 scratchpad_content += workflow_message.scratchpad
 
         result = f"{scratchpad_content}_Suffix"
-        print(
-            f"AddSuffixOperator input - context: {job.context}, scratchpad: {scratchpad_content}"
-        )
+        print(f"AddSuffixOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"AddSuffixOperator output: {result}\n\n")
         return WorkflowMessage(content={"scratchpad": result})
 
@@ -164,9 +157,7 @@ class EvalOperator(BaseTestOperator):
             == "WE ARE TESTING PARALLEL WORKFLOWPrefix_We are testing parallel workflow_Suffix"
         )
         result = f"Eval_{scratchpad_content}"
-        print(
-            f"EvalOperator input - context: {job.context}, scratchpad: {scratchpad_content}"
-        )
+        print(f"EvalOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"EvalOperator output: {result}\n\n")
         return WorkflowMessage(
             content={

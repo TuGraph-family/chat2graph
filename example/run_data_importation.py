@@ -52,6 +52,7 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 
 """
 
+
 def get_tugraph(
     config: Optional[TuGraphStoreConfig] = None,
 ) -> TuGraphStore:
@@ -86,6 +87,7 @@ def get_tugraph(
         print(f"failed to initialize tugraph: {str(e)}")
         raise
 
+
 class DocumentReader(Tool):
     """Tool for analyzing document content."""
 
@@ -109,7 +111,8 @@ class DocumentReader(Tool):
         """
 
         return ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50
-    
+
+
 class SchemaGetter(Tool):
     """Tool for getting the schema of a graph database."""
 
@@ -158,13 +161,12 @@ class DataImport(Tool):
         验证并清理图数据，确保其符合预期的结构。
         """
         if not isinstance(graph, dict) or "entities" not in graph or "relationships" not in graph:
-            raise ValueError("Invalid graph structure. Expected 'entities' and 'relationships' keys.")
+            raise ValueError(
+                "Invalid graph structure. Expected 'entities' and 'relationships' keys."
+            )
             # 大模型给修改建议
 
-        cleaned_graph = {
-            "entities": [],
-            "relationships": []
-        }
+        cleaned_graph = {"entities": [], "relationships": []}
 
         query = "CALL dbms.graph.getGraphSchema()"
         db = get_tugraph()
@@ -172,8 +174,14 @@ class DataImport(Tool):
         schema = json.loads(res[0][0])["schema"]
 
         # 获取实体类型的主键
-        entity_primary_keys = {entity["label"]: entity["primary"] for entity in schema if entity.get("type") == "VERTEX"}
-        relationship_labels = {relationship["label"] for relationship in schema if relationship.get("type") == "EDGE"}
+        entity_primary_keys = {
+            entity["label"]: entity["primary"]
+            for entity in schema
+            if entity.get("type") == "VERTEX"
+        }
+        relationship_labels = {
+            relationship["label"] for relationship in schema if relationship.get("type") == "EDGE"
+        }
 
         # 验证并清理实体
         for entity in graph.get("entities", []):
@@ -188,20 +196,37 @@ class DataImport(Tool):
                 continue
 
             cleaned_graph["entities"].append(entity)
-        
+
         # 验证并修复关系数据
 
         def find_matching_entity(cleaned_graph, source_type, relationship_source):
             for other_entity in cleaned_graph["entities"]:
-                if other_entity["label"] == source_type and any(value == relationship_source for value in other_entity["properties"].values()):
+                if other_entity["label"] == source_type and any(
+                    value == relationship_source for value in other_entity["properties"].values()
+                ):
                     return other_entity
             return None
-        
-        relationship_labels = {relationship["label"] for relationship in schema if relationship.get("type") == "EDGE"}
+
+        relationship_labels = {
+            relationship["label"] for relationship in schema if relationship.get("type") == "EDGE"
+        }
         for relationship in graph.get("relationships", []):
-            if not isinstance(relationship, dict) or "label" not in relationship or "constraints" not in relationship or "source" not in relationship or "target" not in relationship or "properties" not in relationship:
+            if (
+                not isinstance(relationship, dict)
+                or "label" not in relationship
+                or "constraints" not in relationship
+                or "source" not in relationship
+                or "target" not in relationship
+                or "properties" not in relationship
+            ):
                 continue
-            if not isinstance(relationship["properties"], dict) or not isinstance(relationship["constraints"], list) or len(relationship["constraints"]) != 1 or not isinstance(relationship["constraints"][0], list) or len(relationship["constraints"][0]) != 2:
+            if (
+                not isinstance(relationship["properties"], dict)
+                or not isinstance(relationship["constraints"], list)
+                or len(relationship["constraints"]) != 1
+                or not isinstance(relationship["constraints"][0], list)
+                or len(relationship["constraints"][0]) != 2
+            ):
                 continue
             source_type, target_type = relationship["constraints"][0]
             if source_type not in entity_primary_keys or target_type not in entity_primary_keys:
@@ -225,15 +250,19 @@ class DataImport(Tool):
                     else:
                         # 在所有 label 为 source_type 的实体中查找 properties 中是否存在与 relationship["source"] 相同的值
                         for other_entity in cleaned_graph["entities"]:
-                            if other_entity["label"] == source_type and any(value == relationship["source"] for value in other_entity["properties"].values()):
-                                n = find_matching_entity(cleaned_graph, source_type, relationship["source"])
+                            if other_entity["label"] == source_type and any(
+                                value == relationship["source"]
+                                for value in other_entity["properties"].values()
+                            ):
+                                n = find_matching_entity(
+                                    cleaned_graph, source_type, relationship["source"]
+                                )
                                 if n:
                                     relationship["source"] = n["properties"].get(source_primary_key)
                                     break
-                
+
             # if not any(entity["label"] == target_type and entity["properties"].get(target_primary_key) == relationship["target"] for entity in cleaned_graph["entities"]):
             #     continue
-           
 
             # 检查 target 是否存在于实体数据中
             for entity in cleaned_graph["entities"]:
@@ -243,18 +272,23 @@ class DataImport(Tool):
                     else:
                         # 在所有 label 为 target_type 的实体中查找 properties 中是否存在与 relationship["target"] 相同的值
                         for other_entity in cleaned_graph["entities"]:
-                            if other_entity["label"] == target_type and any(value == relationship["target"] for value in other_entity["properties"].values()):
-                                n = find_matching_entity(cleaned_graph, target_type, relationship["target"])
+                            if other_entity["label"] == target_type and any(
+                                value == relationship["target"]
+                                for value in other_entity["properties"].values()
+                            ):
+                                n = find_matching_entity(
+                                    cleaned_graph, target_type, relationship["target"]
+                                )
                                 if n:
                                     relationship["source"] = n["properties"].get(source_primary_key)
                                     break
 
             cleaned_graph["relationships"].append(relationship)
         return cleaned_graph
-    
-    async def import_data(self, graph: Dict[str, Any])->str:
+
+    async def import_data(self, graph: Dict[str, Any]) -> str:
         """
-        Import the graph data into the database. This function validates and cleans the input graph data, 
+        Import the graph data into the database. This function validates and cleans the input graph data,
         then creates nodes (entities) and edges (relationships) in the database.
         then return the result
 
@@ -317,19 +351,18 @@ class DataImport(Tool):
         entities = graph["entities"]
         relationships = graph["relationships"]
         db = get_tugraph()
-        
+
         node_types = {}
         total_entities = 0
         total_inserted_entities = 0
         total_update_entities = 0
 
-
         def format_property(key, value):
             if isinstance(value, (int, float)):
                 return f"{key}: {value}"
             else:
-                return f"{key}: '{value}'" 
-                   
+                return f"{key}: '{value}'"
+
         for entity in entities:
             node_type = entity["label"]
             if node_type not in node_types:
@@ -349,24 +382,24 @@ class DataImport(Tool):
             if res:
                 # 获取第一个 Record 对象
                 record = res[0]
-                
+
                 # 尝试将 Record 对象转换为字典
                 if isinstance(record, dict):
                     record_dict = record
-                elif hasattr(record, 'as_dict'):
+                elif hasattr(record, "as_dict"):
                     record_dict = record.as_dict()
                 else:
                     # 如果没有 as_dict 方法，直接使用 Record 对象的键值
                     record_dict = {key: record[key] for key in record.keys()}
-                
+
                 # 更新计数器
-                total_entities += record_dict.get('total', 0)
-                total_inserted_entities += record_dict.get('insert', 0)
-                total_update_entities += record_dict.get('update', 0)
+                total_entities += record_dict.get("total", 0)
+                total_inserted_entities += record_dict.get("insert", 0)
+                total_update_entities += record_dict.get("update", 0)
         edge_types = {}
         total_relationships = 0
         total_inserted_relationships = 0
-        total_update_relationships = 0 
+        total_update_relationships = 0
         for edge in relationships:
             edge_type = edge["label"]
             if edge_type not in edge_types:
@@ -379,7 +412,9 @@ class DataImport(Tool):
                 properties = edge["properties"]
                 properties["source"] = edge["source"]
                 properties["target"] = edge["target"]
-                property_str = ", ".join(format_property(key, value) for key, value in properties.items())
+                property_str = ", ".join(
+                    format_property(key, value) for key, value in properties.items()
+                )
                 properties_str_list.append(f"{{ {property_str} }}")
             source_type, target_type = (
                 edge["constraints"][0][0],
@@ -393,22 +428,20 @@ class DataImport(Tool):
             if res:
                 # 获取第一个 Record 对象
                 record = res[0]
-                
+
                 # 尝试将 Record 对象转换为字典
-                if hasattr(record, 'as_dict'):
+                if hasattr(record, "as_dict"):
                     record_dict = record.as_dict()
                 else:
                     # 如果没有 as_dict 方法，直接使用 Record 对象
                     record_dict = {key: record[key] for key in record.keys()}
-                
+
                 # 更新计数器
-                total_relationships += record_dict.get('total', 0)
-                total_inserted_relationships += record_dict.get('insert', 0)
-                total_update_relationships += record_dict.get('update', 0)
+                total_relationships += record_dict.get("total", 0)
+                total_inserted_relationships += record_dict.get("insert", 0)
+                total_update_relationships += record_dict.get("update", 0)
         result = f"""执行导入实体总个数：{total_entities}；成功导入实体数：{total_inserted_entities};成功更新实体数：{total_update_entities}; 执行导入关系总数：{total_relationships}；成功导入关系数：{total_inserted_relationships}；成功更新关系数：{total_update_relationships}"""
         return result
-
-
 
 
 SCHEMA_TEMPLATE = """
@@ -510,15 +543,16 @@ RESULT_OUTPUT = """
 
 COUNT = 20
 
+
 def get_data_generation_and_import_operator():
     analysis_toolkit = Toolkit()
-    
+
     schema_understanding_action = Action(
         id="data_generattion_and_import.schema_understanding_action",
         name="图模型理解",
         description="调用相关工具获取图模型，并对图模型进行分析和理解，充分理解后，进行下一步'文本内容理解'操作",
     )
-    
+
     content_understanding_action = Action(
         id="data_generattion_and_import.content_understanding_action",
         name="文本内容理解",
@@ -596,9 +630,7 @@ def get_data_generation_and_import_operator():
     )
 
     get_schema = SchemaGetter(id="get_schema_tool")
-    analysis_toolkit.add_tool(
-        tool=get_schema, connected_actions=[(schema_understanding_action, 1)]
-    )
+    analysis_toolkit.add_tool(tool=get_schema, connected_actions=[(schema_understanding_action, 1)])
 
     get_document = DocumentReader(id="get_document_tool")
     analysis_toolkit.add_tool(
@@ -606,9 +638,7 @@ def get_data_generation_and_import_operator():
     )
 
     import_data = DataImport(id="import_data_tool")
-    analysis_toolkit.add_tool(
-        tool=import_data, connected_actions=[(import_data_action, 1)]
-    )
+    analysis_toolkit.add_tool(tool=import_data, connected_actions=[(import_data_action, 1)])
 
     operator_config = OperatorConfig(
         id="data_generation_operator",
@@ -621,7 +651,7 @@ def get_data_generation_and_import_operator():
             node_data_generation_action,
             graph_data_generation_action,
             import_data_action,
-            output_result_action
+            output_result_action,
         ],
     )
     operator = Operator(
@@ -630,6 +660,7 @@ def get_data_generation_and_import_operator():
     )
 
     return operator
+
 
 async def main():
     """Main function to run the data import."""

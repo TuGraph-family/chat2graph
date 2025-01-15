@@ -349,11 +349,13 @@ class VertexLabelGenerator(Tool):
         # Validate primary key exists in properties
         primary_prop = next((p for p in properties if p["name"] == primary), None)
         if not primary_prop or primary_prop.get("optional", False):
-            properties.append({
-                "name": primary,
-                "type": "STRING",
-                "optional": False,
-            })
+            properties.append(
+                {
+                    "name": primary,
+                    "type": "STRING",
+                    "optional": False,
+                }
+            )
 
         # Prepare the JSON structure
         label_json = {
@@ -426,11 +428,13 @@ class EdgeLabelGenerator(Tool):
         """
         primary_prop = next((p for p in properties if p["name"] == primary), None)
         if not primary_prop or primary_prop.get("optional", False):
-            properties.append({
-                "name": primary,
-                "type": "STRING",
-                "optional": False,
-            })
+            properties.append(
+                {
+                    "name": primary,
+                    "type": "STRING",
+                    "optional": False,
+                }
+            )
 
         # prepare the JSON structure
         label_json = {
@@ -491,9 +495,7 @@ class CypherExecutor(Tool):
                 content=cypher_schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
             )
 
-            _model = ModelServiceFactory.create(
-                platform_type=SystemEnv.PLATFORM_TYPE
-            )
+            _model = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
             response = await _model.generate(sys_prompt=prompt, messages=[message])
             raise Exception(response.get_payload())
 
@@ -677,9 +679,7 @@ def get_concept_modeling_operator():
     )
     vertex_label_generator = VertexLabelGenerator(id="vertex_label_generator_tool")
     edge_label_generator = EdgeLabelGenerator(id="edge_label_generator_tool")
-    graph_reachability_getter = GraphReachabilityGetter(
-        id="graph_reachability_getter_tool"
-    )
+    graph_reachability_getter = GraphReachabilityGetter(id="graph_reachability_getter_tool")
 
     concept_modeling_toolkit = Toolkit()
 
