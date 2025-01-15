@@ -27,9 +27,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
-black = "*"
-isort = "*"
-flake8 = "*"
+ruff = "*"
 mypy = "*"
 
 [tool.poetry.group.test.dependencies]
@@ -41,14 +39,36 @@ pytest-cov = "*"
 dbgpt = { version = "0.6.3", extras = ["framework", "rag"] }
 typing-inspect = ">=0.8.0"
 
-[tool.black]
-line-length = 88
-target-version = ['py310']
-include = '\.pyi?$'
+[tool.ruff]
+line-length = 100
+target-version = "py310"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle error
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "EXE",
+]
+ignore = [
+    "UP006",    # use List not list
+    "UP035",
+    "UP007",
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-sort-within-sections = true
+known-first-party = ["app"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
