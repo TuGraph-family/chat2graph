@@ -29,7 +29,7 @@ Here's the PREVIOUS INPUT:
 {scratchpad}
 
 ==========
-"""
+"""  # noqa: E501
 
 FUNC_CALLING_PROMPT = """
     // When you need to call the function(s), use the following format in the <Feedback>. Or else you can skip this part.
@@ -77,4 +77,4 @@ FUNC_CALLING_PROMPT = """
 <function_call>
 ... // add more function calls if needed
 </function_call>
-"""
+"""  # noqa: E501

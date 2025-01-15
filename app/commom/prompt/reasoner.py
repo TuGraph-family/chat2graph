@@ -63,7 +63,7 @@ Example:
 <input> // Must follow this structure
     <YOUR_INPUT>  // Allowed to use None if no input
 </input>
-"""
+"""  # noqa: E501
 
 
 ACTOR_PROMPT_TEMPLATE = """
@@ -118,7 +118,7 @@ We share a common interest in collaborating to successfully complete the task by
 {output_schema}
     </DELIVERABLE>
 </feedback>
-"""
+"""  # noqa: E501
 
 MONO_PROMPT_TEMPLATE = """
 ===== QUANTUM COGNITIVE FRAMEWORK =====
@@ -199,4 +199,4 @@ Example:
 {output_schema}
     </DELIVERABLE>
 </feedback>
-"""
+"""  # noqa: E501
