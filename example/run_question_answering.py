@@ -12,9 +12,10 @@ from app.toolkit.toolkit import Toolkit, ToolkitService
 
 # operation 1: Document Retrieving
 DOC_RETRIEVING_PROFILE = """
-你是一位专业的文档检索专家。你的工作是，阅读提供的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
+你是一位专业的文档检索专家。你的工作是，从知识库以及互联网两个信息来源检索与问题相关的文档，
+仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
 你阅读的文档未必与用户的问题直接相关，但是你仍然需要进行清晰全面的总结。
-你的任务是总结文档，为后续推理得到最终的答案做铺垫。
+你的任务是检索并总结文档，为后续推理得到最终的答案做铺垫。
 """
 
 DOC_RETRIEVING_INSTRUCTION = """
@@ -38,7 +39,7 @@ DOC_RETRIEVING_OUTPUT_SCHEMA = """
 }
 """
 
-# operation 1: Document Summarizing
+# operation 2: Document Summarizing
 DOC_SUMMARIZING_PROFILE = """
 你是一位文档总结专家,擅长总结归纳不同来源的文档。你需要根据用户的问题，总结归纳出用户需要的答案。
 """
@@ -292,12 +293,12 @@ def get_retrieving_operator():
     knowledge_base_retrieving = Action(
         id="doc_retrieving.vector_retrieving",
         name="知识库检索",
-        description="从外接知识库中检索问题得到相关内容",
+        description="调用knowledge_base_search工具，从外接知识库中检索得到问题相关的文档",
     )
     internet_retrieving = Action(
         id="doc_retrieving.internet_retrieving",
         name="互联网检索",
-        description="从互联网搜索引擎中检索得到问题相关内容",
+        description="调用internet_search工具，从互联网搜索引擎中检索得到问题相关的文档",
     )
     knowledge_base_search = KnowledgeBaseRetriever(id="knowledge_base_search_tool")
     internet_search = InternetRetriever(id="internet_search_tool")
@@ -341,7 +342,7 @@ def get_summarizing_operator():
     reference_listing = Action(
         id="doc_summarizing.reference_listing",
         name="原文出处列举",
-        description="调用工具，以markdown格式返回推理过程中所涉及的原文出处链接，方便展示",
+        description="调用reference_list工具，以markdown格式返回推理过程中所涉及的原文出处链接，方便展示",
     )
     reference_list = ReferenceGenerator(id="reference_list_tool")
 
