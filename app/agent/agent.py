@@ -2,13 +2,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from uuid import uuid4
 
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.workflow import Workflow
+from app.memory.message import AgentMessage
 
 
 @dataclass
 class Profile:
-    """The profile of the agent.
+    """Profile of the agent.
 
     Attributes:
         name (str): The name of the agent.
@@ -25,11 +26,13 @@ class AgentConfig:
 
     Attributes:
         profile (Profile): The profile of the agent.
-        workflow (Workflow): The workflow of the agent.
+        reasoner (Reasoner): The reasoner of the agent.
+        workflow (Optional[Workflow]): The workflow of the agent.
     """
 
-    # TODO: to be refactored (yaml)
+    # TODO: to be refactored (by yaml)
     profile: Profile
+    reasoner: Reasoner
     workflow: Workflow
 
 
@@ -40,8 +43,8 @@ class Agent(ABC):
         id (str): The unique identifier of the agent.
         profile (Profile): The profile of the agent.
         workflow (Workflow): The workflow of the agent.
-        reasoner (DualModelReasoner): The reasoner of the agent.
-        task (Task): The task assigned to the agent.
+        reasoner (Reasoner): The reasoner of the agent.
+        job (Job): The job assigned to the agent.
     """
 
     def __init__(
@@ -49,10 +52,14 @@ class Agent(ABC):
         agent_config: AgentConfig,
     ):
         self._id = str(uuid4())
-        self._profile = agent_config.profile
-        self._workflow = agent_config.workflow
-        self._reasoner: DualModelReasoner = DualModelReasoner()
+        self._profile: Profile = agent_config.profile
+        self._workflow: Workflow = agent_config.workflow
+        self._reasoner: Reasoner = agent_config.reasoner
+
+    def get_id(self) -> str:
+        """Get the unique identifier of the agent."""
+        return self._id
 
     @abstractmethod
-    async def execute(self):
+    async def execute(self, agent_message: AgentMessage) -> AgentMessage:
         """Execute the agent."""
