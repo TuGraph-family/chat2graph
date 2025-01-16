@@ -5,7 +5,7 @@ from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.env.insight.insight import Insight
-from app.knowledge.knowlege_service import KnowledgeService
+from app.knowledge_base.knowlege_service import KnowledgeService
 from app.memory.message import WorkflowMessage
 from app.toolkit.toolkit import Toolkit, ToolkitService
 
@@ -24,13 +24,13 @@ class Operator:
     def __init__(
         self,
         config: OperatorConfig,
-        toolkit_service: ToolkitService = ToolkitService(Toolkit()),
+        toolkit_service: Optional[ToolkitService] = None,
         knowledge_service: Optional[KnowledgeService] = None,
         environment_service: Optional[KnowledgeService] = None,
     ):
         self._config: OperatorConfig = config
         # TODO: need to start the service firstly
-        self._toolkit_service: ToolkitService = toolkit_service
+        self._toolkit_service: ToolkitService = toolkit_service or ToolkitService(Toolkit())
         self._knowledge_service: Optional[KnowledgeService] = knowledge_service
         self._environment_service: Optional[KnowledgeService] = environment_service
 
@@ -39,19 +39,19 @@ class Operator:
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         """Execute the operator by LLM client."""
-        task = await self._build_task(job, workflow_messages)
+        task = await self._build_task(job, workflow_messages, lesson)
 
         result = await reasoner.infer(task=task)
 
         return WorkflowMessage(content={"scratchpad": result})
 
-    async def _build_task(self, job, workflow_messages):
-        (
-            rec_tools,
-            rec_actions,
-        ) = await self._toolkit_service.get_toolkit().recommend_tools(
+    async def _build_task(
+        self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]
+    ) -> Task:
+        rec_tools, rec_actions = await self._toolkit_service.get_toolkit().recommend_tools(
             actions=self._config.actions,
             threshold=self._config.threshold,
             hops=self._config.hops,
@@ -64,6 +64,7 @@ class Operator:
             actions=rec_actions,
             knowledge=await self.get_knowledge(),
             insights=await self.get_env_insights(),
+            lesson=lesson,
         )
         return task
 
