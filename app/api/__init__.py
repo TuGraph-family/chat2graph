@@ -1,5 +1,6 @@
-from .sessions import sessions_bp
-from .messages import messages_bp
+from app.api.message_api import messages_bp
+from app.api.session_api import sessions_bp
+
 
 def register_blueprints(app):
     app.register_blueprint(sessions_bp, url_prefix='/api/sessions')

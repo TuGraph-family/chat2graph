@@ -5,10 +5,10 @@ from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
-from app.commom.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
-from app.commom.prompt.reasoner import MONO_PROMPT_TEMPLATE
-from app.commom.system_env import SystemEnv
-from app.commom.type import MessageSourceType
+from app.common.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
+from app.common.prompt.reasoner import MONO_PROMPT_TEMPLATE
+from app.common.system_env import SystemEnv
+from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.toolkit.tool.tool import Tool

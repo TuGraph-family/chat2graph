@@ -6,7 +6,7 @@ from app.agent.job import Job
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.eval_operator import EvalOperator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.commom.prompt.operator import (
+from app.common.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )

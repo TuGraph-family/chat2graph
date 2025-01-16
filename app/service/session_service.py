@@ -1,4 +1,4 @@
-from app.models.sqlite_models import Session, db
+from app.model.sqlite_model import Session, db
 from app.toolkit.api_tool import ParameterException, ServiceException
 
 def get_all_sessions():

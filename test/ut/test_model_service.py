@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
-from app.commom.system_env import SystemEnv
-from app.commom.type import MessageSourceType
+from app.common.system_env import SystemEnv
+from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
 
 

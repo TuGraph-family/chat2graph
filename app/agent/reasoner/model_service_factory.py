@@ -1,7 +1,7 @@
 from abc import ABC
 
 from app.agent.reasoner.model_service import ModelService
-from app.commom.type import PlatformType
+from app.common.type import PlatformType
 from app.plugin.dbgpt.dbgpt_llm_client import DbgptLlmClient
 
 

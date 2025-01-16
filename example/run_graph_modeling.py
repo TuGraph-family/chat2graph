@@ -13,8 +13,8 @@ from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
-from app.commom.system_env import SystemEnv
-from app.commom.type import PlatformType
+from app.common.system_env import SystemEnv
+from app.common.type import PlatformType
 from app.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
