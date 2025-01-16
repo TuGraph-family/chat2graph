@@ -1,16 +1,13 @@
 import re
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.common.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
-from app.common.prompt.reasoner import (
-    ACTOR_PROMPT_TEMPLATE,
-    QUANTUM_THINKER_PROPMT_TEMPLATE,
-)
+from app.common.prompt.reasoner import ACTOR_PROMPT_TEMPLATE, QUANTUM_THINKER_PROPMT_TEMPLATE
 from app.common.system_env import SystemEnv
 from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
@@ -59,12 +56,10 @@ class DualModelReasoner(Reasoner):
         print_messages = SystemEnv.PRINT_REASONER_MESSAGES
 
         # set the system prompt
-        actor_sys_prompt = self._format_actor_sys_prompt(
-            task=task,
-            tools=task.tools,
-        )
+        actor_sys_prompt = self._format_actor_sys_prompt(task=task, tools=task.tools)
         thinker_sys_prompt = self._format_thinker_sys_prompt(task=task)
-        print(f"\033[38;5;245mSystem:\n{actor_sys_prompt}\033[0m\n")
+        if SystemEnv.PRINT_SYSTEM_PROMPT:
+            print(f"\033[38;5;245mSystem:\n{actor_sys_prompt}\033[0m\n")
 
         # trigger the reasoning process
         init_message = ModelMessage(
@@ -145,9 +140,7 @@ class DualModelReasoner(Reasoner):
         # If match found, process and return the content
         if match:
             deliverable_content = match.group(1)
-            print(f"\033[38;5;245mReasoner:\n{deliverable_content}\033[0m\n")
-
-            return (
+            reasoner_output = (
                 deliverable_content.replace("<scratchpad>", "")
                 .replace("</scratchpad>", "")
                 .replace("<action>", "")
@@ -157,21 +150,26 @@ class DualModelReasoner(Reasoner):
                 .replace("</DELIVERABLE>", "")
                 .replace("TASK_DONE", "")
             )
-        return (
-            content.replace("<scratchpad>", "")
-            .replace("</scratchpad>", "")
-            .replace("<action>", "")
-            .replace("</action>", "")
-            .replace("<feedback>", "")
-            .replace("</feedback>", "")
-            .replace("</DELIVERABLE>", "")
-            .replace("TASK_DONE", "")
-        )
+        else:
+            reasoner_output = (
+                content.replace("<scratchpad>", "")
+                .replace("</scratchpad>", "")
+                .replace("<action>", "")
+                .replace("</action>", "")
+                .replace("<feedback>", "")
+                .replace("</feedback>", "")
+                .replace("</DELIVERABLE>", "")
+                .replace("TASK_DONE", "")
+            )
+        if SystemEnv.PRINT_REASONER_OUTPUT:
+            print(f"\033[38;5;245mReasoner:\n{reasoner_output}\033[0m\n")
+
+        return reasoner_output
 
     def _format_actor_sys_prompt(
         self,
         task: Task,
-        tools: Optional[List[Tool]] = None,
+        tools: List[Tool] | None = None,
     ) -> str:
         """Set the system prompt."""
         # set the task description
@@ -183,7 +181,7 @@ class DualModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            scratchpad = "\n".join(
+            scratchpad = "Here is the previous job execution's output:\n" + "\n".join(
                 [f"{workflow_message.scratchpad}" for workflow_message in task.workflow_messages]
             )
         else:
@@ -197,6 +195,7 @@ class DualModelReasoner(Reasoner):
             knowledge=task.knowledge,
             action_rels=action_rels,
             scratchpad=scratchpad,
+            lesson=task.lesson or "No lesson learned in this round.",
         )
 
         # set the reasoning task
@@ -261,6 +260,7 @@ class DualModelReasoner(Reasoner):
             knowledge=task.knowledge,
             action_rels=action_rels,
             scratchpad=scratchpad,
+            lesson=task.lesson or "No lesson learned in this round.",
         )
 
         # set the reasoning task
@@ -307,4 +307,4 @@ class DualModelReasoner(Reasoner):
     def stop(message: ModelMessage) -> bool:
         """Stop the reasoner."""
         # TODO: fix the stop condition
-        return "TASK_DONE" in message.get_payload() and "DELIVERABLE" in message.get_payload()
+        return "DELIVERABLE" in message.get_payload()

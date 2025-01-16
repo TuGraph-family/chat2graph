@@ -21,9 +21,11 @@ class Task:
         actions (List[Action]): The actions recommended by the toolkit for the operator.
         knowledge (str): The knowledge from the knowledge base.
         insights (List[Insight]): The insights from the environment.
+        lesson (str): The lesson learned from the job execution.
     """
 
-    # TODO: make the job optional. Now the reasoner memory must use the session_id and job_id to store the memory.
+    # TODO: make the job optional. Now the reasoner memory must use the session_id and
+    # job_id to store the memory.
     job: Job
     operator_config: Optional[OperatorConfig] = None
     workflow_messages: Optional[List[WorkflowMessage]] = None
@@ -31,3 +33,4 @@ class Task:
     actions: List[Action] = field(default_factory=list)
     knowledge: str = ""
     insights: Optional[List[Insight]] = None
+    lesson: Optional[str] = None

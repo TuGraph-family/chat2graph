@@ -51,7 +51,8 @@ class MonoModelReasoner(Reasoner):
         # set the system prompt
         sys_prompt = self._format_system_prompt(task=task, tools=task.tools)
         # logging
-        print(f"\033[38;5;245mSystem:\n{sys_prompt}\033[0m\n")
+        if SystemEnv.PRINT_SYSTEM_PROMPT:
+            print(f"\033[38;5;245mSystem:\n{sys_prompt}\033[0m\n")
 
         # trigger the reasoning process
         init_message = ModelMessage(
@@ -138,6 +139,7 @@ class MonoModelReasoner(Reasoner):
             knowledge=task.knowledge,
             action_rels=action_rels,
             scratchpad=scratchpad,
+            lesson=task.lesson or "No lesson learned in this round.",
         )
 
         reasoning_task = f"=====\nTASK:\n{task_description}\nCONTEXT:\n{task_context}\n====="
