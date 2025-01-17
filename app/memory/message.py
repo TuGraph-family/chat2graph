@@ -3,6 +3,7 @@ import time
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.agent.job import Job
 from app.common.type import MessageSourceType
 from app.toolkit.tool.tool import FunctionCallResult
 
@@ -109,6 +110,56 @@ class WorkflowMessage(Message):
     def get_id(self) -> str:
         """Get the message id."""
         return self._id
+
+
+class AgentMessage(Message):
+    """Agent message"""
+
+    def __init__(
+        self,
+        job: Job,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
+        timestamp: Optional[str] = None,
+        id: Optional[str] = None,
+    ):
+        super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
+        self._job: Job = job
+        self._workflow_messages: List[WorkflowMessage] = workflow_messages or []
+        self._lesson: Optional[str] = lesson
+
+    def get_payload(self) -> Job:
+        """Get the content of the message."""
+        return self._job
+
+    def get_workflow_messages(self) -> List[WorkflowMessage]:
+        """Get the workflow messages of the execution results of the previous jobs."""
+        return self._workflow_messages
+
+    def get_workflow_result_message(self) -> WorkflowMessage:
+        """Get the workflow result message of the execution results of the previous jobs.
+        Only one workflow result message is expected, because the message represents the result of
+        the workflow of the agent.
+        """
+        if len(self._workflow_messages) != 1:
+            raise ValueError("The agent message received no or multiple workflow result messages.")
+        return self._workflow_messages[0]
+
+    def get_lesson(self) -> Optional[str]:
+        """Get the lesson of the execution of the job."""
+        return self._lesson
+
+    def get_timestamp(self) -> str:
+        """Get the timestamp of the message."""
+        return self._timestamp
+
+    def get_id(self) -> str:
+        """Get the message id."""
+        return self._id
+
+    def set_lesson(self, lesson: str):
+        """Set the lesson of the execution of the job."""
+        self._lesson = lesson
 
 
 class UserMessage(Message):

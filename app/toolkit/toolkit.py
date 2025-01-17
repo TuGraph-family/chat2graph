@@ -1,8 +1,8 @@
 from typing import List, Optional, Set, Tuple
 
+from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import networkx as nx  # type: ignore
-from matplotlib.lines import Line2D
 
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool

@@ -5,7 +5,7 @@ from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.env.insight.insight import Insight
-from app.knowledge_base.knowlege_service import KnowledgeService
+from app.knowledge.knowlege_service import KnowledgeService
 from app.memory.message import WorkflowMessage
 from app.toolkit.toolkit import Toolkit, ToolkitService
 

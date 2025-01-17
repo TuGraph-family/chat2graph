@@ -28,6 +28,12 @@ Here's the PREVIOUS INPUT:
 
 {scratchpad}
 
+===== LESSONS LEARNED =====
+This section contains historical error cases and their corresponding lessons, helping LLM to avoid similar mistakes in current task execution.
+Here are the LESSONS LEARNED:
+
+{lesson}
+
 ==========
 """  # noqa: E501
 

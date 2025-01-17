@@ -15,6 +15,10 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "TEMPERATURE": (float, 0.7),
     "REASONING_ROUNDS": (int, 20),
     "PRINT_REASONER_MESSAGES": (bool, True),
+    "PRINT_SYSTEM_PROMPT": (bool, True),
+    "PRINT_REASONER_OUTPUT": (bool, True),
+    "LIFE_CYCLE": (int, 3),
+    "MAX_RETRY_COUNT": (int, 3),
 }
 
 # system environment variable value cache.
@@ -52,7 +56,10 @@ class SystemEnvMeta(type):
         val = val if val else default_value
 
         # cast value by type
-        val = key_type(val) if val else None
+        if key_type is bool:
+            val = str(val).lower() in ("true", "TRUE", "True", "1", "yes") if val else None
+        else:
+            val = key_type(val) if val else None
         _env_values[key] = val
         return val
 

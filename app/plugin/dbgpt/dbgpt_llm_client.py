@@ -5,12 +5,10 @@ from dbgpt.core import (  # type: ignore
     AIMessage,
     BaseMessage,
     HumanMessage,
+    ModelMessage as DbgptModelMessage,
     ModelOutput,
     ModelRequest,
     SystemMessage,
-)
-from dbgpt.core import (
-    ModelMessage as DbgptModelMessage,
 )
 from dbgpt.model.proxy.base import LLMClient  # type: ignore
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore

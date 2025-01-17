@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 from dbgpt.core.awel import MapOperator  # type: ignore
 
@@ -17,18 +17,10 @@ class DbgptMapOperator(MapOperator[Tuple[Job, Optional[List[WorkflowMessage]]], 
         self._reasoner: Reasoner = reasoner
 
     async def map(
-        self, input_value: Union[Tuple[Job, Optional[List[WorkflowMessage]]], Job]
+        self, input_value: Tuple[Job, Optional[List[WorkflowMessage]], Optional[str]]
     ) -> WorkflowMessage:
         """Execute the operator."""
-
-        # if the operator is an initial operator in DAG
-        if isinstance(input_value, Job):
-            job = input_value
-            return await self._operator.execute(reasoner=self._reasoner, job=job)
-
-        # else, the operator receives the output of the previous operator
-        # since the workflow_messages are not None
-        job, workflow_messages = input_value
+        job, workflow_messages, lesson = input_value
         return await self._operator.execute(
-            reasoner=self._reasoner, job=job, workflow_messages=workflow_messages
+            reasoner=self._reasoner, job=job, workflow_messages=workflow_messages, lesson=lesson
         )
