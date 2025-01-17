@@ -60,6 +60,7 @@ class BaseTestOperator(Operator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         raise NotImplementedError
 
@@ -75,6 +76,7 @@ class UpperOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         scratchpad_content = ""
         if workflow_messages:
@@ -98,6 +100,7 @@ class AddPrefixOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         # to avoid the async issue of UpperOperator
         time.sleep(1)
@@ -108,7 +111,10 @@ class AddPrefixOperator(BaseTestOperator):
                 scratchpad_content += workflow_message.scratchpad
 
         result = f"Prefix_{scratchpad_content}{job.context}"
-        print(f"AddPrefixOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
+        print(
+            f"AddPrefixOperator input - context: {job.context}, "
+            f"scratchpad: {scratchpad_content}"
+        )
         print(f"AddPrefixOperator output: {result}\n\n")
         return WorkflowMessage(content={"scratchpad": result})
 
@@ -124,6 +130,7 @@ class AddSuffixOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         scratchpad_content = ""
         if workflow_messages:
@@ -147,6 +154,7 @@ class EvalOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         scratchpad_content = ""
         if workflow_messages:

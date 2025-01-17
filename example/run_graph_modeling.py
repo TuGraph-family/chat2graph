@@ -4,59 +4,17 @@ import time
 from typing import Dict, List, Optional, Set, Union
 from uuid import uuid4
 
-from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
-    TuGraphStore,
-    TuGraphStoreConfig,
-)
-
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.common.system_env import SystemEnv
-from app.common.type import PlatformType
 from app.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-
-
-# global function to get tugraph store
-def get_tugraph(
-    config: Optional[TuGraphStoreConfig] = None,
-) -> TuGraphStore:
-    """initialize tugraph store with configuration.
-
-    args:
-        config: optional tugraph store configuration
-
-    returns:
-        initialized tugraph store instance
-    """
-    try:
-        if not config:
-            config = TuGraphStoreConfig(
-                name="default_graph",
-                host="127.0.0.1",
-                port=7687,
-                username="admin",
-                password="73@TuGraph",
-            )
-
-        # initialize store
-        store = TuGraphStore(config)
-
-        # ensure graph exists
-        print(f"[log] get graph: {config.name}")
-        store.conn.create_graph(config.name)
-
-        return store
-
-    except Exception as e:
-        print(f"failed to initialize tugraph: {str(e)}")
-        raise
-
+from example.run_tugraph import get_tugraph
 
 CYPHER_GRAMMER = """
 ===== TuGraph Cypher 语法书 =====

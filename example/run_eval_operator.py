@@ -10,6 +10,7 @@ from app.common.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
+from app.common.type import WorkflowStatus
 from app.memory.message import WorkflowMessage
 from app.toolkit.action.action import Action
 from app.toolkit.toolkit import Toolkit, ToolkitService
@@ -43,8 +44,8 @@ async def main():
     job = Job(
         id="test_job_id",
         session_id="test_session_id",
-        goal="Generate a list of prime numbers between 1 and 20.",
-        context="prime_numbers in list string",
+        goal="Generate some numbers",
+        context="Generate a list of prime numbers between 1 and 20.",
     )
     workflow_message = WorkflowMessage(
         content={"scratchpad": "[2, 3, 5, 7, 11, 13, 17, 19]"},
@@ -55,7 +56,7 @@ async def main():
         workflow_messages=[workflow_message],
     )
 
-    assert result.status == "success"
+    assert result.status == WorkflowStatus.SUCCESS
     assert result.experience
     assert result.scratchpad
     print(

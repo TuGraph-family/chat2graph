@@ -1,12 +1,7 @@
 import asyncio
 import json
-from typing import Optional, Dict, Any, List, Set
+from typing import Any, Dict, Optional
 from uuid import uuid4
-
-from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
-    TuGraphStore,
-    TuGraphStoreConfig,
-)
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
@@ -15,7 +10,7 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-
+from example.run_tugraph import get_tugraph
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回
@@ -51,41 +46,6 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 拚将一死酬知己，致令千秋仰义名。
 
 """
-
-
-def get_tugraph(
-    config: Optional[TuGraphStoreConfig] = None,
-) -> TuGraphStore:
-    """initialize tugraph store with configuration.
-
-    args:
-        config: optional tugraph store configuration
-
-    returns:
-        initialized tugraph store instance
-    """
-    try:
-        if not config:
-            config = TuGraphStoreConfig(
-                name="default_graph",
-                host="127.0.0.1",
-                port=7687,
-                username="admin",
-                password="73@TuGraph",
-            )
-
-        # initialize store
-        store = TuGraphStore(config)
-
-        # ensure graph exists
-        print(f"[log] get graph: {config.name}")
-        store.conn.create_graph(config.name)
-
-        return store
-
-    except Exception as e:
-        print(f"failed to initialize tugraph: {str(e)}")
-        raise
 
 
 class DocumentReader(Tool):
@@ -157,14 +117,11 @@ class DataImport(Tool):
         )
 
     def validate_and_clean_graph(self, graph: Dict[str, Any]) -> str:
-        """
-        验证并清理图数据，确保其符合预期的结构。
-        """
+        """Validate and clean the graph data to ensure it conforms to the expected structure."""
         if not isinstance(graph, dict) or "entities" not in graph or "relationships" not in graph:
             raise ValueError(
                 "Invalid graph structure. Expected 'entities' and 'relationships' keys."
             )
-            # 大模型给修改建议
 
         cleaned_graph = {"entities": [], "relationships": []}
 
@@ -173,7 +130,7 @@ class DataImport(Tool):
         res = db.conn.run(query=query)
         schema = json.loads(res[0][0])["schema"]
 
-        # 获取实体类型的主键
+        # get the primary keys of the entities
         entity_primary_keys = {
             entity["label"]: entity["primary"]
             for entity in schema
@@ -183,7 +140,7 @@ class DataImport(Tool):
             relationship["label"] for relationship in schema if relationship.get("type") == "EDGE"
         }
 
-        # 验证并清理实体
+        # check and fix entity data
         for entity in graph.get("entities", []):
             if not isinstance(entity, dict) or "label" not in entity or "properties" not in entity:
                 continue
@@ -197,8 +154,7 @@ class DataImport(Tool):
 
             cleaned_graph["entities"].append(entity)
 
-        # 验证并修复关系数据
-
+        # check and fix relationship data
         def find_matching_entity(cleaned_graph, source_type, relationship_source):
             for other_entity in cleaned_graph["entities"]:
                 if other_entity["label"] == source_type and any(
@@ -234,21 +190,22 @@ class DataImport(Tool):
             source_primary_key = entity_primary_keys[source_type]
             target_primary_key = entity_primary_keys[target_type]
 
-            # 检查 relationship["label"] 是否在 relationship_labels 中
+            # checks whether relationship["label"] is in relationship_labels
             if relationship["label"] not in relationship_labels:
                 continue
 
-            # 检查 source 和 target 是否存在于实体数据中
+            # checks if source and target exist in the entity data
             # if not any(entity["label"] == source_type and entity["properties"].get(source_primary_key) == relationship["source"] for entity in cleaned_graph["entities"]):
             #     continue
 
-            # 检查 source 是否存在于实体数据中
+            # check if source exists in the entity data
             for entity in cleaned_graph["entities"]:
                 if entity["label"] == source_type:
                     if entity["properties"].get(source_primary_key) == relationship["source"]:
                         break
                     else:
-                        # 在所有 label 为 source_type 的实体中查找 properties 中是否存在与 relationship["source"] 相同的值
+                        # look for a value in properties that is the same as relationship["source"]
+                        # in all entities whose label is source_type.
                         for other_entity in cleaned_graph["entities"]:
                             if other_entity["label"] == source_type and any(
                                 value == relationship["source"]
@@ -261,16 +218,21 @@ class DataImport(Tool):
                                     relationship["source"] = n["properties"].get(source_primary_key)
                                     break
 
-            # if not any(entity["label"] == target_type and entity["properties"].get(target_primary_key) == relationship["target"] for entity in cleaned_graph["entities"]):
+            # if not any(
+            #     entity["label"] == target_type
+            #     and entity["properties"].get(target_primary_key) == relationship["target"]
+            #     for entity in cleaned_graph["entities"]
+            # ):
             #     continue
 
-            # 检查 target 是否存在于实体数据中
+            # check if target exists in the entity data
             for entity in cleaned_graph["entities"]:
                 if entity["label"] == target_type:
                     if entity["properties"].get(target_primary_key) == relationship["target"]:
                         break
                     else:
-                        # 在所有 label 为 target_type 的实体中查找 properties 中是否存在与 relationship["target"] 相同的值
+                        # look for the same value as relationship["target"] in properties in all
+                        # entities whose label is target_type
                         for other_entity in cleaned_graph["entities"]:
                             if other_entity["label"] == target_type and any(
                                 value == relationship["target"]
@@ -345,7 +307,6 @@ class DataImport(Tool):
             - The `get_tugraph` function is assumed to return a connection to the database.
             - The `db.conn.run` method is used to execute the Cypher statements.
         """
-        # 验证并清理图数据
         graph = self.validate_and_clean_graph(graph)
 
         entities = graph["entities"]
@@ -372,7 +333,7 @@ class DataImport(Tool):
         for node_type, nodes_list in node_types.items():
             properties_str_list = []
             for node in nodes_list:
-                # 对于每个键值对，根据值的类型格式化输出
+                # for each key-value pair, format the output according to the value type
                 property_str = ", ".join(format_property(key, value) for key, value in node.items())
                 properties_str_list.append(f"{{ {property_str} }}")
             properties_str = ",".join(properties_str_list)
@@ -380,19 +341,19 @@ class DataImport(Tool):
             print(cypher_statement)
             res = db.conn.run(cypher_statement)
             if res:
-                # 获取第一个 Record 对象
+                # get the first Record object
                 record = res[0]
 
-                # 尝试将 Record 对象转换为字典
+                # try converting the Record object to a dictionary
                 if isinstance(record, dict):
                     record_dict = record
                 elif hasattr(record, "as_dict"):
                     record_dict = record.as_dict()
                 else:
-                    # 如果没有 as_dict 方法，直接使用 Record 对象的键值
+                    # if there is no as_dict method, use the key values ​​of the Record object directly
                     record_dict = {key: record[key] for key in record.keys()}
 
-                # 更新计数器
+                # update counter
                 total_entities += record_dict.get("total", 0)
                 total_inserted_entities += record_dict.get("insert", 0)
                 total_update_entities += record_dict.get("update", 0)
@@ -421,27 +382,33 @@ class DataImport(Tool):
                 edge["constraints"][0][1],
             )
             properties_str = ",".join(properties_str_list)
-            cypher_statement = f"CALL db.upsertEdge('{edge_type}', {{type: '{source_type}', key: 'source'}}, {{type: '{target_type}', key: 'target'}}, [{properties_str}])"
+            cypher_statement = (
+                f"CALL db.upsertEdge('{edge_type}', {{type: '{source_type}', key: 'source'}}, "
+                f"{{type: '{target_type}', key: 'target'}}, [{properties_str}])"
+            )
             print(cypher_statement)
             res = db.conn.run(cypher_statement)
-            # 检查 res 是否非空
+
             if res:
-                # 获取第一个 Record 对象
                 record = res[0]
 
-                # 尝试将 Record 对象转换为字典
                 if hasattr(record, "as_dict"):
                     record_dict = record.as_dict()
                 else:
-                    # 如果没有 as_dict 方法，直接使用 Record 对象
                     record_dict = {key: record[key] for key in record.keys()}
 
-                # 更新计数器
+                # update counter
                 total_relationships += record_dict.get("total", 0)
                 total_inserted_relationships += record_dict.get("insert", 0)
                 total_update_relationships += record_dict.get("update", 0)
-        result = f"""执行导入实体总个数：{total_entities}；成功导入实体数：{total_inserted_entities};成功更新实体数：{total_update_entities}; 执行导入关系总数：{total_relationships}；成功导入关系数：{total_inserted_relationships}；成功更新关系数：{total_update_relationships}"""
-        return result
+                result = f"""Total number of entities imported: {total_entities};
+Number of entities successfully imported: {total_inserted_entities};
+Number of entities successfully updated: {total_update_entities};
+Total number of relationships imported: {total_relationships};
+Number of relationships successfully imported: {total_inserted_relationships};
+Number of relationships successfully updated: {total_update_relationships}"""
+
+                return result
 
 
 SCHEMA_TEMPLATE = """

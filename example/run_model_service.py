@@ -4,7 +4,7 @@ from typing import List
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.common.system_env import SystemEnv
-from app.common.type import MessageSourceType, PlatformType
+from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
 
 

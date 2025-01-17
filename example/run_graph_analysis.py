@@ -1,11 +1,7 @@
 import asyncio
-from typing import Optional
+import json
+from typing import Dict, List, Optional
 from uuid import uuid4
-
-from dbgpt.storage.graph_store.tugraph_store import (  # type: ignore
-    TuGraphStore,
-    TuGraphStoreConfig,
-)
 
 from app.agent.job import Job
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
@@ -14,43 +10,7 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-
-
-# global function to get tugraph store
-def get_tugraph(
-    config: Optional[TuGraphStoreConfig] = None,
-) -> TuGraphStore:
-    """initialize tugraph store with configuration.
-
-    args:
-        config: optional tugraph store configuration
-
-    returns:
-        initialized tugraph store instance
-    """
-    try:
-        if not config:
-            config = TuGraphStoreConfig(
-                name="default_graph",
-                host="127.0.0.1",
-                port=7687,
-                username="admin",
-                password="73@TuGraph",
-            )
-
-        # initialize store
-        store = TuGraphStore(config)
-
-        # ensure graph exists
-        print(f"[log] get graph: {config.name}")
-        store.conn.create_graph(config.name)
-
-        return store
-
-    except Exception as e:
-        print(f"failed to initialize tugraph: {str(e)}")
-        raise
-
+from example.run_tugraph import get_tugraph
 
 # operation 1: Algorithms Intention Analysis
 ALGORITHMS_INTENTION_ANALYSIS_PROFILE = """
@@ -67,11 +27,11 @@ ALGORITHMS_INTENTION_ANALYSIS_INSTRUCTION = """
 
 ALGORITHMS_INTENTION_ANALYSIS_OUTPUT_SCHEMA = """
 {
-    "algorithms_supported_by_db": ["图数据库支持的算法列表，算法的名字"],
-    "algorithms": [
+    "algorithms_supported_by_db": ["图数据库支持的算法列表，算法的名字（（名称和数据库中支持的算法名称保持一致）"],
+    "selected_algorithms": [
         {
             "analysis":"算法的要求",
-            "algorithms_name":"算法的名称",
+            "algorithm_name":"算法的名称（名称和数据库中支持的算法名称保持一致）",
             "call_objective":"调用该算法的目的"
         },
     ]
@@ -94,7 +54,7 @@ ALGORITHMS_EXECUTE_INSTRUCTION = """
 
 ALGORITHMS_EXECUTE_OUTPUT_SCHEMA = """
 {
-    "call_algorithms": "调用的算法和参数",
+    "called_algorithms": "调用的算法和参数",
     "status": "算法执行的状态",
     "algorithms_result": "算法执行的结果。如果失败，返回失败原因"
 }
@@ -115,19 +75,37 @@ class AlgorithmsGetter(Tool):
     async def get_algorithms(self) -> str:
         """Retrieve all algorithm plugins of a specified type and version supported by the graph database.
 
-        This function queries the database to fetch all algorithm plugins of type 'CPP' and version 'v1', and returns their description information as a JSON formatted string.
+        This function queries the database to fetch all algorithm plugins of type 'CPP' and version 'v1' or 'v2', and returns their description information as a JSON formatted string.
 
         Returns:
             str: A JSON string containing the description information of all matching algorithm plugins.
         """
-        plugins = []
-        query = "CALL db.plugin.listPlugin('CPP','v1')"
+        plugins: List[Dict[str, str]] = []
+        query_v1 = "CALL db.plugin.listPlugin('CPP','v1')"
+        query_v2 = "CALL db.plugin.listPlugin('CPP','v2')"
         db = get_tugraph()
-        result = db.conn.run(query=query)
-        for record in result:
-            plugins.append(record["plugin_description"])
+        records_1 = db.conn.run(query=query_v1)
+        records_2 = db.conn.run(query=query_v2)
+        for record in records_1:
+            plugin_str = str(record["plugin_description"])
+            plugin_json = json.loads(plugin_str)
+            plugins.append(
+                {
+                    "algorithm_name": plugin_json["name"],
+                    "algorithm_description": plugin_json["description"],
+                }
+            )
+        for record in records_2:
+            plugin_str = str(record["plugin_description"])
+            plugin_json = json.loads(plugin_str)
+            plugins.append(
+                {
+                    "algorithm_name": plugin_json["name"],
+                    "algorithm_description": plugin_json["description"],
+                }
+            )
 
-        return str(plugins)
+        return json.dumps(plugins, indent=4)
 
 
 class AlgorithmsExecutor(Tool):
@@ -136,18 +114,18 @@ class AlgorithmsExecutor(Tool):
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id or str(uuid4()),
-            name=self.excute_algorithms.__name__,
-            description=self.excute_algorithms.__doc__ or "",
-            function=self.excute_algorithms,
+            name=self.execute_algorithms.__name__,
+            description=self.execute_algorithms.__doc__ or "",
+            function=self.execute_algorithms,
         )
 
-    async def excute_algorithms(self, algorithms_name: str) -> str:
+    async def execute_algorithms(self, algorithms_name: str) -> str:
         """Execute the specified algorithm on the graph database.
 
         This function calls the specified algorithm plugin on the graph database and returns the result.
 
         Args:
-            algorithms_name (str): The name of the algorithm to execute.
+            algorithms_name (str): The name of the algorithm to execute. Pay attention to the format of the algorithm name.
 
         Returns:
             str: The result of the algorithm execution.

@@ -99,9 +99,9 @@ async def main():
     assert len(tool_call_edges) == 4, "Should have 4 action-to-tool edges"
 
     # verify all edge scores are within valid range
-    assert all(0 <= d["score"] <= 1 for _, _, d in toolkit._toolkit_graph.edges(data=True)), (
-        "All edge scores should be between 0 and 1"
-    )
+    assert all(
+        0 <= d["score"] <= 1 for _, _, d in toolkit._toolkit_graph.edges(data=True)
+    ), "All edge scores should be between 0 and 1"
 
     # visualize the full graph
     toolkit.visualize(toolkit._toolkit_graph, "Full Toolkit Graph")
@@ -182,7 +182,7 @@ async def main():
         # verify subgraph properties
         actual_nodes = set(subgraph.nodes())
         assert actual_nodes == case["expected_nodes"], (
-            f"Test case {i + 1}: Expected nodes {case['expected_nodes']}, got {actual_nodes}"
+            f"Test case {i + 1}: Expected nodes {case['expected_nodes']}, " f"got {actual_nodes}"
         )
 
         assert len(subgraph.edges()) == case["expected_edges"], (
@@ -191,9 +191,9 @@ async def main():
         )
 
         # verify edge properties in subgraph
-        assert all(d["score"] >= case["threshold"] for _, _, d in subgraph.edges(data=True)), (
-            f"Test case {i + 1}: All edges should have score >= {case['threshold']}"
-        )
+        assert all(
+            d["score"] >= case["threshold"] for _, _, d in subgraph.edges(data=True)
+        ), f"Test case {i + 1}: All edges should have score >= {case['threshold']}"
 
         plt.figure(i + 2)
         toolkit.visualize(subgraph, case["title"])

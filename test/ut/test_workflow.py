@@ -67,7 +67,8 @@ class MockOperator(Operator):
         self,
         reasoner: Reasoner,
         job: Job,
-        workflow_messages: List[WorkflowMessage] = None,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         self._execution_order.append(self._config.id)
         return WorkflowMessage(content={"scratchpad": f"Output from {self._config.id}"})
@@ -128,7 +129,13 @@ async def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
     class ErrorOperator(MockOperator):
         """Operator that raises an error during execution."""
 
-        async def execute(self, reasoner, job, workflow_messages=None):
+        async def execute(
+            self,
+            reasoner: Reasoner,
+            job: Job,
+            workflow_messages: Optional[List[WorkflowMessage]] = None,
+            lesson: Optional[str] = None,
+        ) -> WorkflowMessage:
             raise ValueError("Test error")
 
     # create workflow with error operator
