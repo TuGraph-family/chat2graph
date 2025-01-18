@@ -10,11 +10,11 @@ from app.agent.job import Job
 from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.type import WorkflowStatus
-from app.common.util import parse_json
+from app.common.util import Singleton, parse_json
 from app.memory.message import AgentMessage, WorkflowMessage
 
 
-class Leader(Agent):
+class Leader(Agent, metaclass=Singleton):
     """Leader is a role that can manage a group of agents and the jobs."""
 
     def __init__(self, agent_config: AgentConfig, id: Optional[str] = None):
@@ -186,7 +186,7 @@ class Leader(Agent):
                 {
                     "job_id": {
                         "job": Job,
-                        "expert_id": expert_id
+                        "expert_id": expert_id,
                     }
                 }
         """
@@ -217,7 +217,8 @@ class Leader(Agent):
 
         # extract the subtasks from the json block
         try:
-            job_dict = parse_json(text=workflow_message.scratchpad)
+            job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
+            assert job_dict is not None
         except Exception as e:
             raise ValueError(
                 f"Failed to decompose the subtasks by json format: {str(e)}\n"

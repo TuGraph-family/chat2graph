@@ -6,9 +6,10 @@ import networkx as nx  # type: ignore
 from app.agent.agent import AgentConfig
 from app.agent.expert import Expert
 from app.agent.job import Job
+from app.common.util import Singleton
 
 
-class LeaderState:
+class LeaderState(metaclass=Singleton):
     """Leader State is uesd to manage expert agent and jobs.
 
     attributes:

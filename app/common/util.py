@@ -1,5 +1,17 @@
+from abc import ABCMeta
 import json
 from typing import Dict
+
+
+class Singleton(ABCMeta):
+    """Singleton metaclass for creating singleton classes."""
+
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
 
 
 def parse_json(

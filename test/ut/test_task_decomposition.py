@@ -7,12 +7,14 @@ import pytest
 from app.agent.agent import AgentConfig, Profile
 from app.agent.job import Job
 from app.agent.leader import Leader
+from app.agent.leader_state import LeaderState
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.agent.workflow.workflow import Workflow
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.common.util import Singleton
 from app.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -81,6 +83,13 @@ def mock_reasoner():
 @pytest.fixture
 def leader(mock_reasoner: Reasoner):
     """Create a leader instance with mock reasoner."""
+    # clear the singleton instance
+    if LeaderState in Singleton._instances:
+        del Singleton._instances[LeaderState]
+
+    if Leader in Singleton._instances:
+        del Singleton._instances[Leader]
+
     decomp_operator_config = OperatorConfig(
         id="job_decomp_operator_id",
         instruction="",
@@ -180,36 +189,9 @@ Final Delivery:
 
 
 @pytest.mark.asyncio
-async def test_execute_basic(leader: Leader, mock_reasoner: AsyncMock):
-    """Test basic execution functionality."""
-    mock_response = """Initial state <ψ>
-Understanding the task...
-
-∴ OK, let's start
-
-Final Delivery:
-为了完成这一目标，我将为我们确定三个具体的子任务：
-
-    ===== Subtasks Template =====
-    ```json
-    {
-        "subtask_1": 
-        {
-            "goal": "信息收集, 获取原始文本数据。",
-            "context": "需要从各个数据源收集相关文本。",
-            "completion_criteria": "成功收集到至少100个有效文本样本。",
-            "assigned_expert": "Expert 1"
-        },
-    }
-    ```
-"""
-    mock_reasoner.infer.return_value = mock_response
-
-
-@pytest.mark.asyncio
 async def test_execute_error_handling(leader: Leader, mock_reasoner: AsyncMock):
     """Test job decomposition with empty job."""
-    mock_response = """Initial state <ψ>
+    mock_response = """<Initial state ψ>
 Analyzing the task...
 
 ∴ Ops! No subtasks found.
@@ -218,6 +200,9 @@ Analyzing the task...
 
     job = Job(session_id="test_session_id", goal="")
 
-    with pytest.raises(ValueError, match="Failed to decompose the subtasks by json format"):
+    with pytest.raises(Exception) as exc_info:
         jobs_graph = await leader._execute_decomp_workflow(job=job, num_subjobs=3)
         leader._leader_state.replace_subgraph(new_subgraph=jobs_graph)
+
+    assert "Failed to decompose the subtasks by json format" in str(exc_info.value)
+    assert mock_response in str(exc_info.value)
