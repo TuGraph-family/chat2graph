@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Optional
 from uuid import uuid4
 
 from app.agent.reasoner.reasoner import Reasoner
@@ -40,18 +41,18 @@ class Agent(ABC):
     """Agent implementation.
 
     Attributes:
-        id (str): The unique identifier of the agent.
-        profile (Profile): The profile of the agent.
-        workflow (Workflow): The workflow of the agent.
-        reasoner (Reasoner): The reasoner of the agent.
-        job (Job): The job assigned to the agent.
+        _id (str): The unique identifier of the agent.
+        _profile (Profile): The profile of the agent.
+        _workflow (Workflow): The workflow of the agent.
+        _reasoner (Reasoner): The reasoner of the agent.
     """
 
     def __init__(
         self,
         agent_config: AgentConfig,
+        id: Optional[str] = None,
     ):
-        self._id = str(uuid4())
+        self._id = id or str(uuid4())
         self._profile: Profile = agent_config.profile
         self._workflow: Workflow = agent_config.workflow
         self._reasoner: Reasoner = agent_config.reasoner
@@ -61,5 +62,5 @@ class Agent(ABC):
         return self._id
 
     @abstractmethod
-    async def execute(self, agent_message: AgentMessage) -> AgentMessage:
+    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> AgentMessage:
         """Execute the agent."""

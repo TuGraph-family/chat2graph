@@ -40,7 +40,7 @@ class DbgptWorkflow(Workflow):
                             else:
                                 raise ValueError(
                                     "Unknown data type in workflow message list: "
-                                    f"{', '.join(type(i) for i in item)}"
+                                    f"{', '.join(str(type(i)) for i in item)}"
                                 )
                         elif isinstance(item, str):
                             lesson = item

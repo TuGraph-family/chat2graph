@@ -8,28 +8,26 @@ from app.agent.agent import Agent, AgentConfig
 from app.agent.expert import Expert
 from app.agent.job import Job
 from app.agent.leader_state import LeaderState
-from app.agent.workflow.operator.operator import (
-    WorkflowMessage,
-)
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.type import WorkflowStatus
 from app.common.util import parse_json
-from app.memory.message import AgentMessage
+from app.memory.message import AgentMessage, WorkflowMessage
 
 
 class Leader(Agent):
     """Leader is a role that can manage a group of agents and the jobs."""
 
-    def __init__(self, agent_config: AgentConfig):
+    def __init__(self, agent_config: AgentConfig, id: Optional[str] = None):
         # self._workflow of the leader is used to decompose the job
 
-        super().__init__(agent_config=agent_config)
+        super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = LeaderState()
-        self.job_results: Dict[str, WorkflowMessage] = {}
 
-    async def execute(self, agent_message: AgentMessage) -> List[AgentMessage]:
+    async def execute(
+        self, agent_message: AgentMessage, retry_count: int = 0
+    ) -> List[AgentMessage]:
         """Given a job, execute the leader workflow."""
-        # TODO: add a judgment to check if the job needs to be decomposed
+        # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
         jobs_graph = await self._execute_decomp_workflow(job=agent_message.get_payload())
 
         self._leader_state.replace_subgraph(new_subgraph=jobs_graph)
@@ -37,15 +35,25 @@ class Leader(Agent):
         return await self.execute_jobs_graph(jobs_graph=jobs_graph)
 
     async def execute_jobs_graph(self, jobs_graph: nx.DiGraph) -> List[AgentMessage]:
-        """Execute job graph with dependency-based parallel execution.
+        """Asynchronously execute the job graph with dependency-based parallel execution.
 
-        Please make sure the job graph is a directed acyclic graph (DAG), and the job graph has
-        only one tail node (the node without any successors).
+        Jobs are represented in a directed graph (jobs_graph) where edges define dependencies.
+        Please make sure the job graph is a directed acyclic graph (DAG).
+
+        Args:
+            jobs_graph (nx.DiGraph): The job graph to be executed.
+
+        Returns:
+            List[AgentMessage]: The list of agent messages with the workflow result
         """
+        # TODO: move the router functionality to the experts, and make the experts be able to
+        # dispatch the agent messages to the corresponding agents. The objective is to make the
+        # multi-agent system more flexible, scalable, and distributed.
+
         pending_job_ids: Set[str] = set(jobs_graph.nodes())
         running_jobs: Dict[str, asyncio.Task] = {}  # job_id -> asyncio.Task
-        job_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage
-        job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage
+        job_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (result)
+        job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)
 
         while pending_job_ids:
             # find jobs that are ready to execute (all dependencies completed)
@@ -109,6 +117,7 @@ class Leader(Agent):
 
                                     # update the lesson in the agent message
                                     input_agent_message = job_inputs[pred_id]
+                                    assert agent_result.get_lesson() is not None
                                     input_agent_message.set_lesson(agent_result.get_lesson())
                                     job_inputs[pred_id] = input_agent_message
                         else:
@@ -154,7 +163,6 @@ class Leader(Agent):
             # reexecute all the dependent jobs (predecessors)
             return agent_result_message
         elif workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
-            # TODO: decompose the job into N subjobs, not just 2
             # TODO: implement the decompose job method
             # jobs_graph, expert_assignments = await self._execute_decomp_workflow(
             #     job=job, num_subjobs=2
@@ -172,13 +180,22 @@ class Leader(Agent):
             job (Job): The job to be decomposed.
             num_subjobs (Optional[int]): The number of subjobs to decompose the job into.
                 If not specified, the default value will be determined by the LLM itself.
+
+        returns:
+            nx.DiGraph: The job graph with subjobs and dependencies.
+                {
+                    "job_id": {
+                        "job": Job,
+                        "expert_id": expert_id
+                    }
+                }
         """
 
         # get the expert list
         expert_configs = self._leader_state.get_expert_configs()
         role_list = "\n".join(
             [
-                f"Expert name: {config.profile.name}\n" f"Description: {config.profile.description}"
+                f"Expert name: {config.profile.name}\nDescription: {config.profile.description}"
                 for config in expert_configs.values()
             ]
         )

@@ -20,6 +20,9 @@ class EvalOperator(Operator):
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         """Execute the operator by LLM client."""
+        assert workflow_messages is not None and len(workflow_messages) > 0, (
+            "There is no workflow message(s) to be evaluated."
+        )
 
         job.context = "TARGET GOAL:\n" + job.goal + "\n" + job.context
         task = await self._build_task(job, workflow_messages, lesson)
@@ -32,7 +35,7 @@ class EvalOperator(Operator):
             # not validated json format
             # color: red
             print(f"\033[38;5;196m[JSON]: {str(e)}\033[0m")
-            task.lesson = lesson + (
+            task.lesson = lesson or "" + (
                 "LLM output format (json format for example) specification is crucial for "
                 "reliable parsing. And do not forget ```json prefix and ``` suffix when "
                 "you generate the json block in <DELIVERABLE>...</DELIVERABLE>. Error info: "
@@ -44,7 +47,7 @@ class EvalOperator(Operator):
         return WorkflowMessage(
             content={
                 "scratchpad": workflow_messages[0].scratchpad,
-                "status": WorkflowStatus[result_dict["status"]],
+                "status": WorkflowStatus[str(result_dict["status"])],
                 "evaluation": result_dict["evaluation"],
                 "lesson": result_dict["lesson"],
             }
