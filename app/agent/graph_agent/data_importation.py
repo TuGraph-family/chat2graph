@@ -1,16 +1,16 @@
-import asyncio
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.agent.job import Job
+from app.agent.agent import AgentConfig, Profile
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.plugin.tugraph.tugraph_store import get_tugraph
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-from example.run_tugraph import get_tugraph
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回
@@ -108,6 +108,8 @@ class SchemaGetter(Tool):
 
 
 class DataImport(Tool):
+    """Tool for importing data into a graph database."""
+
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id or str(uuid4()),
@@ -116,14 +118,14 @@ class DataImport(Tool):
             function=self.import_data,
         )
 
-    def validate_and_clean_graph(self, graph: Dict[str, Any]) -> str:
+    def validate_and_clean_graph(self, graph: Dict[str, Any]) -> Dict[str, List]:
         """Validate and clean the graph data to ensure it conforms to the expected structure."""
         if not isinstance(graph, dict) or "entities" not in graph or "relationships" not in graph:
             raise ValueError(
                 "Invalid graph structure. Expected 'entities' and 'relationships' keys."
             )
 
-        cleaned_graph = {"entities": [], "relationships": []}
+        cleaned_graph: Dict[str, List] = {"entities": [], "relationships": []}
 
         query = "CALL dbms.graph.getGraphSchema()"
         db = get_tugraph()
@@ -313,7 +315,7 @@ class DataImport(Tool):
         relationships = graph["relationships"]
         db = get_tugraph()
 
-        node_types = {}
+        node_types: Dict = {}
         total_entities = 0
         total_inserted_entities = 0
         total_update_entities = 0
@@ -357,7 +359,7 @@ class DataImport(Tool):
                 total_entities += record_dict.get("total", 0)
                 total_inserted_entities += record_dict.get("insert", 0)
                 total_update_entities += record_dict.get("update", 0)
-        edge_types = {}
+        edge_types: Dict = {}
         total_relationships = 0
         total_inserted_relationships = 0
         total_update_relationships = 0
@@ -409,6 +411,8 @@ Number of relationships successfully imported: {total_inserted_relationships};
 Number of relationships successfully updated: {total_update_relationships}"""
 
                 return result
+
+        return "No data imported"
 
 
 SCHEMA_TEMPLATE = """
@@ -511,7 +515,8 @@ RESULT_OUTPUT = """
 COUNT = 20
 
 
-def get_data_generation_and_import_operator():
+def get_data_importation_operator():
+    """Get the data importation operator."""
     analysis_toolkit = Toolkit()
 
     schema_understanding_action = Action(
@@ -629,27 +634,26 @@ def get_data_generation_and_import_operator():
     return operator
 
 
-async def main():
-    """Main function to run the data import."""
-    data_generation_and_import_operator = get_data_generation_and_import_operator()
+def get_data_importation_workflow():
+    """Get the data importation workflow."""
+    data_importation_operator = get_data_importation_operator()
     workflow = DbgptWorkflow()
     workflow.add_operator(
-        operator=data_generation_and_import_operator,
+        operator=data_importation_operator,
         previous_ops=[],
         next_ops=[],
     )
-    job = Job(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="「任务」",
-        context="目前我们的问题的背景是：阅读《三国演义》的第50回，结合当前图数据库中的图模型完成实体和关系的数据抽取和数据的导入，并输出导入结果。",
+
+    return workflow
+
+
+def get_data_importation_expert_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
+    """Get the expert configuration for data importation."""
+
+    expert_config = AgentConfig(
+        profile=Profile(name="Data Importation Expert", description=DATA_GENERATION_PROFILE),
+        reasoner=reasoner or DualModelReasoner(),
+        workflow=get_data_importation_workflow(),
     )
-    reasoner = DualModelReasoner()
 
-    result = await workflow.execute(job=job, reasoner=reasoner)
-
-    print(f"Final result:\n{result.scratchpad}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    return expert_config

@@ -9,7 +9,7 @@ from app.agent.leader import Leader
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.memory.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -20,7 +20,7 @@ async def main():
     reasoner = MonoModelReasoner()
     decomp_operator_config = OperatorConfig(
         id="job_decomp_operator_id",
-        instruction="",
+        instruction=JOB_DECOMPOSITION_PROMPT,
         actions=[],
         output_schema=JOB_DECOMPOSITION_OUTPUT_SCHEMA,
     )
@@ -30,6 +30,7 @@ async def main():
     leader_workflow.add_operator(decomposition_operator)
     config = AgentConfig(profile="test", reasoner=reasoner, workflow=leader_workflow)
     leader = Leader(agent_config=config)
+
     goal = """从文本中提取出关键实体类型，为后续的图数据库模型构建奠定基础。"""
     job = Job(session_id="test_session_id", id="test_task_id", goal=goal, context="")
 
@@ -57,9 +58,9 @@ async def main():
         reasoner=reasoner,
         workflow=DbgptWorkflow(),
     )
-    leader._leader_state.add_expert_config("Data Collector", expert_profile_1)
-    leader._leader_state.add_expert_config("Entity Classifier", expert_profile_2)
-    leader._leader_state.add_expert_config("Result Analyst", expert_profile_3)
+    leader._leader_state.add_expert_config(expert_profile_1)
+    leader._leader_state.add_expert_config(expert_profile_2)
+    leader._leader_state.add_expert_config(expert_profile_3)
 
     # decompose the job
     jobs_graph = await leader.execute(agent_message=AgentMessage(job=job))

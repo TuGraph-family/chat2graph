@@ -118,9 +118,9 @@ class LeaderState(metaclass=Singleton):
             self._job_graphs[session_id] = nx.DiGraph()
         return self._job_graphs[session_id]
 
-    def add_expert_config(self, expert_name: str, agent_config: AgentConfig) -> None:
+    def add_expert_config(self, agent_config: AgentConfig) -> None:
         """Add an expert profile to the registry."""
-        self._expert_configs[expert_name] = agent_config
+        self._expert_configs[agent_config.profile.name] = agent_config
 
     def remove_expert_config(self, expert_name: str) -> None:
         """Remove an expert profile from the registry."""

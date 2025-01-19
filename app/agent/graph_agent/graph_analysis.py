@@ -1,16 +1,16 @@
-import asyncio
 import json
 from typing import Dict, List, Optional
 from uuid import uuid4
 
-from app.agent.job import Job
+from app.agent.agent import AgentConfig, Profile
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.plugin.tugraph.tugraph_store import get_tugraph
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-from example.run_tugraph import get_tugraph
 
 # operation 1: Algorithms Intention Analysis
 ALGORITHMS_INTENTION_ANALYSIS_PROFILE = """
@@ -256,22 +256,13 @@ def get_graph_analysis_workflow():
     return workflow
 
 
-async def main():
-    """Main function"""
-    workflow = get_graph_analysis_workflow()
+def get_graph_analysis_expert_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
+    """Get the expert configuration for graph analysis."""
 
-    job = Job(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="「任务」",
-        context="用户目前的需求是想知道在当前图数据库中，影响力最大的节点是哪个？我需要你通过执行算法来找到这个节点。",
+    expert_config = AgentConfig(
+        profile=Profile(name="Graph Analysis Expert", description=ALGORITHMS_EXECUTE_PROFILE),
+        reasoner=reasoner or DualModelReasoner(),
+        workflow=get_graph_analysis_workflow(),
     )
-    reasoner = DualModelReasoner()
 
-    result = await workflow.execute(job=job, reasoner=reasoner)
-
-    print(f"Final result:\n{result.scratchpad}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    return expert_config

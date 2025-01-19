@@ -202,7 +202,6 @@ async def main():
     # create expert profiles
     for i, workflow in enumerate(workflows):
         leader._leader_state.add_expert_config(
-            expert_name=f"Expert {i + 1}",
             agent_config=AgentConfig(
                 profile=Profile(name=f"Expert {i + 1}", description=f"Expert {i + 1}"),
                 reasoner=reasoner,

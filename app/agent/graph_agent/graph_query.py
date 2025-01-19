@@ -1,16 +1,16 @@
-import asyncio
 import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.agent.job import Job
+from app.agent.agent import AgentConfig, Profile
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.plugin.tugraph.tugraph_store import get_tugraph
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-from example.run_tugraph import get_tugraph
 
 QUERY_GRAMMER = """
 ===== 图vertex查询语法书 =====
@@ -396,23 +396,13 @@ def get_graph_query_workflow():
     return workflow
 
 
-async def main():
-    """Main function"""
-    workflow = get_graph_query_workflow()
+def get_graph_query_expert_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
+    """Get the expert configuration for graph modeling."""
 
-    job = Job(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="「任务」",
-        context="查询节点，vertex_type为entity，查询条件为节点的属性description包含'github用户'"
-        "图数据库的主题是TuGraph。可能需要调用相关的工具（通过函数调用）来操作图数据库。",
+    expert_config = AgentConfig(
+        profile=Profile(name="Graph Query Expert", description=QUERY_DESIGN_PROFILE),
+        reasoner=reasoner or DualModelReasoner(),
+        workflow=get_graph_query_workflow(),
     )
-    reasoner = DualModelReasoner()
 
-    result = await workflow.execute(job=job, reasoner=reasoner)
-
-    print(f"Final result:\n{result.scratchpad}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    return expert_config

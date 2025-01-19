@@ -114,7 +114,6 @@ async def test_agent_job_graph():
         workflow.add_operator(TestAgentOperator(op_id))
 
         leader._leader_state.add_expert_config(
-            expert_name=expert_name,
             agent_config=AgentConfig(
                 profile=Profile(name=expert_name, description=f"Expert for {op_id}"),
                 reasoner=reasoner,

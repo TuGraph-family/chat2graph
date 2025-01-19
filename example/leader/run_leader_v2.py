@@ -153,7 +153,6 @@ async def main():
         workflow.set_evaluator(evaluator)
 
         leader._leader_state.add_expert_config(
-            expert_name=f"Expert {i + 1}",
             agent_config=AgentConfig(
                 profile=Profile(name=role, description=desc),
                 reasoner=reasoner,

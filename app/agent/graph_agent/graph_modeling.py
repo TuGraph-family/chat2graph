@@ -1,20 +1,20 @@
-import asyncio
 import json
 import time
 from typing import Dict, List, Optional, Set, Union
 from uuid import uuid4
 
-from app.agent.job import Job
+from app.agent.agent import AgentConfig, Profile
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
+from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.common.system_env import SystemEnv
 from app.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.plugin.tugraph.tugraph_store import get_tugraph
 from app.toolkit.action.action import Action
 from app.toolkit.tool.tool import Tool
 from app.toolkit.toolkit import Toolkit, ToolkitService
-from example.run_tugraph import get_tugraph
 
 CYPHER_GRAMMER = """
 ===== TuGraph Cypher 语法书 =====
@@ -717,23 +717,13 @@ def get_graph_modeling_workflow():
     return workflow
 
 
-async def main():
-    """Main function"""
-    workflow = get_graph_modeling_workflow()
+def get_graph_modeling_expert_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
+    """Get the expert configuration for graph modeling."""
 
-    job = Job(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="「任务」",
-        context="目前我们的问题的背景是，通过函数读取文档第50章节的内容，生成知识图谱图数据库的模式（Graph schema/label），最后调用相关函数来帮助在图数据库中创建 labels。"
-        "文档的主题是三国演义。可能需要调用相关的工具（通过函数调用）来操作图数据库。",
+    expert_config = AgentConfig(
+        profile=Profile(name="Graph Modeling Expert", description=CONCEPT_MODELING_PROFILE),
+        reasoner=reasoner or DualModelReasoner(),
+        workflow=get_graph_modeling_workflow(),
     )
-    reasoner = DualModelReasoner()
 
-    result = await workflow.execute(job=job, reasoner=reasoner)
-
-    print(f"Final result:\n{result.scratchpad}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    return expert_config

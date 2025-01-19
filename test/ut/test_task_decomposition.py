@@ -173,9 +173,9 @@ Final Delivery:
         reasoner=mock_reasoner,
         workflow=MockWorkflow(),
     )
-    leader._leader_state.add_expert_config("Expert 1", expert_profile_1)
-    leader._leader_state.add_expert_config("Expert 2", expert_profile_2)
-    leader._leader_state.add_expert_config("Expert 3", expert_profile_3)
+    leader._leader_state.add_expert_config(expert_profile_1)
+    leader._leader_state.add_expert_config(expert_profile_2)
+    leader._leader_state.add_expert_config(expert_profile_3)
 
     job_graph = await leader.execute(AgentMessage(job=job))
     print(f"job_graph: {job_graph.nodes}")

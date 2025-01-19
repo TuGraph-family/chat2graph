@@ -1,9 +1,9 @@
-import asyncio
 from typing import List, Optional, Tuple
 from uuid import uuid4
 
-from app.agent.job import Job
+from app.agent.agent import AgentConfig, Profile
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.toolkit.action.action import Action
@@ -387,40 +387,13 @@ def get_question_answering_workflow():
     return workflow
 
 
-QUESTION = """
-我在执行Cypher语句
-CALL db.createVertexLabelByJson('{
-    "label": "州",
-    "primary": "state",
-    "type": "VERTEX",
-    "properties": [
-        {
-            "name": "state",
-            "type": "INT12"
-        }
-    ]
-}');
-的时候，遇到报错：执行失败 unknown keyword str: [INT12]，
-请问原因是什么，该如何修改？
-"""
+def get_graph_question_answeing_expert_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
+    """Get the expert configuration for graph Q&A."""
 
-
-async def main():
-    """Main function"""
-    workflow = get_question_answering_workflow()
-
-    job = Job(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="「任务」",
-        context=QUESTION,
+    expert_config = AgentConfig(
+        profile=Profile(name="Graph Q&A Expert", description=DOC_SUMMARIZING_PROFILE),
+        reasoner=reasoner or DualModelReasoner(),
+        workflow=get_question_answering_workflow(),
     )
-    reasoner = DualModelReasoner()
 
-    result = await workflow.execute(job=job, reasoner=reasoner)
-
-    print(f"Final result:\n{result.scratchpad}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    return expert_config
