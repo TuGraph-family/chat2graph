@@ -1,4 +1,5 @@
 import asyncio
+import time
 import traceback
 from typing import Dict, List, Optional, Set
 
@@ -11,7 +12,7 @@ from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.type import WorkflowStatus
 from app.common.util import Singleton, parse_json
-from app.memory.message import AgentMessage, WorkflowMessage
+from app.memory.message import AgentMessage, UserMessage, WorkflowMessage
 
 
 class Leader(Agent, metaclass=Singleton):
@@ -23,34 +24,141 @@ class Leader(Agent, metaclass=Singleton):
         super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = LeaderState()
 
-    async def execute(
-        self, agent_message: AgentMessage, retry_count: int = 0
-    ) -> List[AgentMessage]:
-        """Given a job, execute the leader workflow."""
+    async def receive_message(self, user_message: UserMessage) -> None:
+        """Receive a message from the user."""
+
+        content = user_message.get_payload()
+        context = user_message.get_context()
+        job = Job(session_id=user_message.get_session_id(), goal=content, context=context)
+        agent_message = AgentMessage(job=job)
+
+        job_graph = await self.execute(agent_message=agent_message)
+
+        executed_job_graph = await self.execute_job_graph(job_graph=job_graph)
+
+        self._leader_state.replace_subgraph(
+            session_id=job.session_id, new_subgraph=executed_job_graph
+        )
+
+    async def query_state(self, session_id: str) -> UserMessage:
+        """Query the state of the leader."""
+        job_graph = self._leader_state.get_job_graph(session_id=session_id)
+
+        # get the tail nodes of the job graph (DAG)
+        tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
+        mutli_agent_content = ""
+        for tail_node in tail_nodes:
+            mutli_agent_content += job_graph.nodes[tail_node]["workflow_result"].scratchpad + "\n"
+
+        return UserMessage(
+            content=mutli_agent_content,
+            context="",
+            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            session_id=session_id,
+        )
+
+    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> nx.DiGraph:
+        """Decompose the job and execute the job.
+
+        Args:
+            agent_message (AgentMessage): The agent message including the job to be decomposed.
+            retry_count (int): The number of retries.
+
+        Returns:
+            nx.DiGraph: The job graph with subjobs and dependencies.
+                {
+                    "job_id": {
+                        "job": Job,
+                        "expert_id": expert_id,
+                    }
+                }
+        """
         # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
-        jobs_graph = await self._execute_decomp_workflow(job=agent_message.get_payload())
 
-        self._leader_state.replace_subgraph(new_subgraph=jobs_graph)
+        job = agent_message.get_payload()
 
-        return await self.execute_jobs_graph(jobs_graph=jobs_graph)
+        # get the expert list
+        expert_configs = self._leader_state.get_expert_configs()
+        role_list = "\n".join(
+            [
+                f"Expert name: {config.profile.name}\nDescription: {config.profile.description}"
+                for config in expert_configs.values()
+            ]
+        )
 
-    async def execute_jobs_graph(self, jobs_graph: nx.DiGraph) -> List[AgentMessage]:
+        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(
+            num_subtasks="N (by default)",
+            num_roles=3,
+            task=job.goal,
+            role_list=role_list,
+        )
+        decompsed_job = Job(
+            session_id=job.session_id,
+            goal=job.goal,
+            context=job.context + f"\n\n{job_decomp_prompt}",
+        )
+
+        # decompose the job by the reasoner in the workflow
+        workflow_message = await self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
+
+        # extract the subtasks from the json block
+        try:
+            job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
+            assert job_dict is not None
+        except Exception as e:
+            raise ValueError(
+                f"Failed to decompose the subtasks by json format: {str(e)}\n"
+                f"Input content:\n{workflow_message.scratchpad}"
+            ) from e
+
+        job_graph = nx.DiGraph()
+
+        for job_id, subjob_dict in job_dict.items():
+            subjob = Job(
+                id=job_id,
+                session_id=job.session_id,
+                goal=subjob_dict.get("goal", ""),
+                context=(
+                    subjob_dict.get("context", "")
+                    + "\n"
+                    + subjob_dict.get("completion_criteria", "")
+                ),
+            )
+            # add the subjob to the job graph
+            job_graph.add_node(
+                job_id,
+                job=subjob,
+                expert_id=self._leader_state.get_or_create_expert_by_name(
+                    subjob_dict.get("assigned_expert", "")
+                ).get_id(),
+            )
+
+            # add edges for dependencies
+            for dep_id in subjob_dict.get("dependencies", []):
+                job_graph.add_edge(dep_id, job_id)  # dep_id -> job_id shows dependency
+
+        if not nx.is_directed_acyclic_graph(job_graph):
+            raise ValueError("The job graph is not a directed acyclic graph.")
+
+        return job_graph
+
+    async def execute_job_graph(self, job_graph: nx.DiGraph) -> nx.DiGraph:
         """Asynchronously execute the job graph with dependency-based parallel execution.
 
-        Jobs are represented in a directed graph (jobs_graph) where edges define dependencies.
+        Jobs are represented in a directed graph (job_graph) where edges define dependencies.
         Please make sure the job graph is a directed acyclic graph (DAG).
 
         Args:
-            jobs_graph (nx.DiGraph): The job graph to be executed.
+            job_graph (nx.DiGraph): The job graph to be executed.
 
         Returns:
-            List[AgentMessage]: The list of agent messages with the workflow result
+            nx.DiGraph: The job graph with the results of the jobs.
         """
         # TODO: move the router functionality to the experts, and make the experts be able to
         # dispatch the agent messages to the corresponding agents. The objective is to make the
         # multi-agent system more flexible, scalable, and distributed.
 
-        pending_job_ids: Set[str] = set(jobs_graph.nodes())
+        pending_job_ids: Set[str] = set(job_graph.nodes())
         running_jobs: Dict[str, asyncio.Task] = {}  # job_id -> asyncio.Task
         job_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (result)
         job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)
@@ -62,13 +170,13 @@ class Leader(Agent, metaclass=Singleton):
                 # check if all predecessors are completed
                 all_predecessors_completed = all(
                     pred not in pending_job_ids and pred not in running_jobs
-                    for pred in jobs_graph.predecessors(job_id)
+                    for pred in job_graph.predecessors(job_id)
                 )
                 if all_predecessors_completed:
                     # form the agent message to the agent
-                    job: Job = jobs_graph.nodes[job_id]["job"]
+                    job: Job = job_graph.nodes[job_id]["job"]
                     pred_messages: List[WorkflowMessage] = [
-                        job_results[pred_id] for pred_id in jobs_graph.predecessors(job_id)
+                        job_results[pred_id] for pred_id in job_graph.predecessors(job_id)
                     ]
                     job_inputs[job.id] = AgentMessage(job=job, workflow_messages=pred_messages)
 
@@ -77,7 +185,7 @@ class Leader(Agent, metaclass=Singleton):
             # execute ready jobs
             for job_id in ready_job_ids:
                 expert = self._leader_state.get_or_create_expert_by_id(
-                    jobs_graph.nodes[job_id]["expert_id"]
+                    job_graph.nodes[job_id]["expert_id"]
                 )
 
                 running_jobs[job_id] = asyncio.create_task(
@@ -104,7 +212,7 @@ class Leader(Agent, metaclass=Singleton):
                             == WorkflowStatus.INPUT_DATA_ERROR
                         ):
                             pending_job_ids.add(completed_job_id)
-                            predecessors = list(jobs_graph.predecessors(completed_job_id))
+                            predecessors = list(job_graph.predecessors(completed_job_id))
 
                             # add the predecessors back to pending jobs
                             pending_job_ids.update(predecessors)
@@ -117,8 +225,9 @@ class Leader(Agent, metaclass=Singleton):
 
                                     # update the lesson in the agent message
                                     input_agent_message = job_inputs[pred_id]
-                                    assert agent_result.get_lesson() is not None
-                                    input_agent_message.set_lesson(agent_result.get_lesson())
+                                    lesson = agent_result.get_lesson()
+                                    assert lesson is not None
+                                    input_agent_message.set_lesson(lesson)
                                     job_inputs[pred_id] = input_agent_message
                         else:
                             job_results[completed_job_id] = (
@@ -140,17 +249,9 @@ class Leader(Agent, metaclass=Singleton):
             elif pending_job_ids:
                 await asyncio.sleep(0.5)
 
-        # find the tail node, and return the result message
-        tail_nodes = [node for node in jobs_graph.nodes if jobs_graph.out_degree(node) == 0]
-        agent_result_messages: List[AgentMessage] = []
-        for tail_node in tail_nodes:
-            agent_result_messages.append(
-                AgentMessage(
-                    job=jobs_graph.nodes[tail_node]["job"],
-                    workflow_messages=[job_results[tail_node]],
-                )
-            )
-        return agent_result_messages
+        for job_id, job_result in job_results.items():
+            job_graph.nodes[job_id]["workflow_result"] = job_result
+        return job_graph
 
     async def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
         """Execute single job for the first time."""
@@ -164,94 +265,91 @@ class Leader(Agent, metaclass=Singleton):
             return agent_result_message
         elif workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # TODO: implement the decompose job method
-            # jobs_graph, expert_assignments = await self._execute_decomp_workflow(
+            # job_graph, expert_assignments = await self._decompse_job(
             #     job=job, num_subjobs=2
             # )
             raise NotImplementedError("Decompose the job into subjobs is not implemented.")
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 
-    # TODO: rename the method _execute_decomp_workflow to _execute_workflow
-    async def _execute_decomp_workflow(
-        self, job: Job, num_subjobs: Optional[int] = None
-    ) -> nx.DiGraph:
-        """Decompose the job into n subjobs.
+    # async def _decompse_job(self, job: Job, num_subjobs: Optional[int] = None) -> nx.DiGraph:
+    #     """Decompose the job into n subjobs.
 
-        Args:
-            job (Job): The job to be decomposed.
-            num_subjobs (Optional[int]): The number of subjobs to decompose the job into.
-                If not specified, the default value will be determined by the LLM itself.
+    #     Args:
+    #         job (Job): The job to be decomposed.
+    #         num_subjobs (Optional[int]): The number of subjobs to decompose the job into.
+    #             If not specified, the default value will be determined by the LLM itself.
 
-        returns:
-            nx.DiGraph: The job graph with subjobs and dependencies.
-                {
-                    "job_id": {
-                        "job": Job,
-                        "expert_id": expert_id,
-                    }
-                }
-        """
+    #     returns:
+    #         nx.DiGraph: The job graph with subjobs and dependencies.
+    #             {
+    #                 "job_id": {
+    #                     "job": Job,
+    #                     "expert_id": expert_id,
+    #                 }
+    #             }
+    #     """
 
-        # get the expert list
-        expert_configs = self._leader_state.get_expert_configs()
-        role_list = "\n".join(
-            [
-                f"Expert name: {config.profile.name}\nDescription: {config.profile.description}"
-                for config in expert_configs.values()
-            ]
-        )
+    #     # get the expert list
+    #     expert_configs = self._leader_state.get_expert_configs()
+    #     role_list = "\n".join(
+    #         [
+    #             f"Expert name: {config.profile.name}\nDescription: {config.profile.description}"
+    #             for config in expert_configs.values()
+    #         ]
+    #     )
 
-        decomp_job_prompt = JOB_DECOMPOSITION_PROMPT.format(
-            num_subtasks=num_subjobs or "N (by default)",
-            num_roles=3,
-            task=job.goal,
-            role_list=role_list,
-        )
-        decomp_job = Job(
-            session_id=job.session_id,
-            goal=job.goal,
-            context=job.context + f"\n\n{decomp_job_prompt}",
-        )
+    #     job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(
+    #         num_subtasks=num_subjobs or "N (by default)",
+    #         num_roles=3,
+    #         task=job.goal,
+    #         role_list=role_list,
+    #     )
+    #     decompsed_job = Job(
+    #         session_id=job.session_id,
+    #         goal=job.goal,
+    #         context=job.context + f"\n\n{job_decomp_prompt}",
+    #     )
 
-        # decompose the job by the reasoner in the workflow
-        workflow_message = await self._workflow.execute(job=decomp_job, reasoner=self._reasoner)
+    #     # decompose the job by the reasoner in the workflow
+    #     workflow_message = await self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
 
-        # extract the subtasks from the json block
-        try:
-            job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
-            assert job_dict is not None
-        except Exception as e:
-            raise ValueError(
-                f"Failed to decompose the subtasks by json format: {str(e)}\n"
-                f"Input content:\n{workflow_message.scratchpad}"
-            ) from e
+    #     # extract the subtasks from the json block
+    #     try:
+    #         job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
+    #         assert job_dict is not None
+    #     except Exception as e:
+    #         raise ValueError(
+    #             f"Failed to decompose the subtasks by json format: {str(e)}\n"
+    #             f"Input content:\n{workflow_message.scratchpad}"
+    #         ) from e
 
-        jobs_graph = nx.DiGraph()
+    #     job_graph = nx.DiGraph()
 
-        for job_id, subjob_dict in job_dict.items():
-            subjob = Job(
-                id=job_id,
-                session_id=job.session_id,
-                goal=subjob_dict.get("goal", ""),
-                context=(
-                    subjob_dict.get("context", "")
-                    + "\n"
-                    + subjob_dict.get("completion_criteria", "")
-                ),
-            )
-            # add the subjob to the job graph
-            jobs_graph.add_node(
-                job_id,
-                job=subjob,
-                expert_id=self._leader_state.get_or_create_expert_by_name(
-                    subjob_dict.get("assigned_expert", "")
-                ).get_id(),
-            )
+    #     for job_id, subjob_dict in job_dict.items():
+    #         subjob = Job(
+    #             id=job_id,
+    #             session_id=job.session_id,
+    #             goal=subjob_dict.get("goal", ""),
+    #             context=(
+    #                 subjob_dict.get("context", "")
+    #                 + "\n"
+    #                 + subjob_dict.get("completion_criteria", "")
+    #             ),
+    #         )
+    #         # add the subjob to the job graph
+    #         job_graph.add_node(
+    #             job_id,
+    #             job=subjob,
+    #             expert_id=self._leader_state.get_or_create_expert_by_name(
+    #                 subjob_dict.get("assigned_expert", "")
+    #             ).get_id(),
+    #         )
 
-            # add edges for dependencies
-            for dep_id in subjob_dict.get("dependencies", []):
-                jobs_graph.add_edge(dep_id, job_id)  # dep_id -> job_id shows dependency
+    #         # add edges for dependencies
+    #         for dep_id in subjob_dict.get("dependencies", []):
+    #             job_graph.add_edge(dep_id, job_id)  # dep_id -> job_id shows dependency
 
-        if not nx.is_directed_acyclic_graph(jobs_graph):
-            raise ValueError("The job graph is not a directed acyclic graph.")
+    #     if not nx.is_directed_acyclic_graph(job_graph):
+    #         raise ValueError("The job graph is not a directed acyclic graph.")
 
-        return jobs_graph
+    #     return job_graph

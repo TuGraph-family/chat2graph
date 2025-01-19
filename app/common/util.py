@@ -1,12 +1,12 @@
 from abc import ABCMeta
 import json
-from typing import Dict
+from typing import Any, Dict
 
 
 class Singleton(ABCMeta):
     """Singleton metaclass for creating singleton classes."""
 
-    _instances = {}
+    _instances: Dict[type, Any] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

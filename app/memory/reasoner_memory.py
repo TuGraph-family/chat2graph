@@ -7,19 +7,19 @@ from app.memory.message import ModelMessage
 class ReasonerMemory(ABC):
     """Agent message memory."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._history_messages: List[ModelMessage] = []
 
     @abstractmethod
-    def add_message(self, message: ModelMessage):
+    def add_message(self, message: ModelMessage) -> None:
         """Add a message to the memory."""
 
     @abstractmethod
-    def remove_message(self):
+    def remove_message(self) -> None:
         """Remove a message from the memory."""
 
     @abstractmethod
-    def upsert_message(self, index: int, message: ModelMessage):
+    def upsert_message(self, index: int, message: ModelMessage) -> None:
         """Update a message in the memory."""
 
     @abstractmethod
@@ -27,7 +27,7 @@ class ReasonerMemory(ABC):
         """Get a message from the memory."""
 
     @abstractmethod
-    def clear_messages(self):
+    def clear_messages(self) -> None:
         """Clear all the messages in the memory."""
 
     @abstractmethod

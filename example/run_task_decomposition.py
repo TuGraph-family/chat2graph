@@ -10,6 +10,7 @@ from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.memory.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 
@@ -61,7 +62,7 @@ async def main():
     leader._leader_state.add_expert_config("Result Analyst", expert_profile_3)
 
     # decompose the job
-    jobs_graph = await leader._execute_decomp_workflow(job=job, num_subjobs=3)
+    jobs_graph = await leader.execute(agent_message=AgentMessage(job=job))
 
     print("=== Decomposed Subtasks ===")
     for subjob_id in nx.topological_sort(jobs_graph):

@@ -15,7 +15,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.agent.workflow.workflow import Workflow
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.common.util import Singleton
-from app.memory.message import WorkflowMessage
+from app.memory.message import AgentMessage, WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 
@@ -177,15 +177,17 @@ Final Delivery:
     leader._leader_state.add_expert_config("Expert 2", expert_profile_2)
     leader._leader_state.add_expert_config("Expert 3", expert_profile_3)
 
-    jobs_graph = await leader._execute_decomp_workflow(job=job, num_subjobs=3)
-    print(f"jobs_graph: {jobs_graph.nodes}")
-    leader._leader_state.replace_subgraph(new_subgraph=jobs_graph)
+    job_graph = await leader.execute(AgentMessage(job=job))
+    print(f"job_graph: {job_graph.nodes}")
+    leader._leader_state.replace_subgraph(session_id="test_session_id", new_subgraph=job_graph)
 
-    assert isinstance(jobs_graph, nx.DiGraph)
-    assert all(isinstance(node_data["job"], Job) for _, node_data in jobs_graph.nodes(data=True))
+    assert isinstance(job_graph, nx.DiGraph)
+    assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes(data=True))
 
-    assert len(leader._leader_state._jobs_graph.nodes) == 3
-    assert len(leader._leader_state._jobs_graph.edges) == 3  # 3 dependencies
+    assert len(leader._leader_state.get_job_graph(session_id="test_session_id").nodes) == 3
+    assert (
+        len(leader._leader_state.get_job_graph(session_id="test_session_id").edges) == 3
+    )  # 3 dependencies
 
 
 @pytest.mark.asyncio
@@ -201,8 +203,8 @@ Analyzing the task...
     job = Job(session_id="test_session_id", goal="")
 
     with pytest.raises(Exception) as exc_info:
-        jobs_graph = await leader._execute_decomp_workflow(job=job, num_subjobs=3)
-        leader._leader_state.replace_subgraph(new_subgraph=jobs_graph)
+        job_graph = await leader.execute(AgentMessage(job=job))
+        leader._leader_state.replace_subgraph(new_subgraph=job_graph)
 
     assert "Failed to decompose the subtasks by json format" in str(exc_info.value)
     assert mock_response in str(exc_info.value)

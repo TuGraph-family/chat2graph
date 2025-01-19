@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import networkx as nx  # type: ignore
 import pytest
 
 from app.agent.agent import AgentConfig, Profile
@@ -92,7 +93,7 @@ async def test_agent_job_graph():
         jobs.append(
             Job(
                 id=id,
-                session_id="test_session",
+                session_id="test_session_id",
                 goal=goal,
                 context=initial_numbers if i == 0 else "",
                 output_schema="string",
@@ -158,12 +159,20 @@ async def test_agent_job_graph():
     )
 
     # execute job graph
-    terminal_messages: List[AgentMessage] = await leader.execute_jobs_graph(
-        jobs_graph=leader._leader_state.get_jobs_graph()
+    job_graph: nx.DiGraph = await leader.execute_job_graph(
+        job_graph=leader._leader_state.get_job_graph(session_id="test_session_id")
     )
+    tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
+    terminal_messages: List[AgentMessage] = []
+    for node in tail_nodes:
+        agent_message = AgentMessage(
+            job=job_graph.nodes[node]["job"],
+            workflow_messages=[job_graph.nodes[node]["workflow_result"]],
+        )
+        terminal_messages.append(agent_message)
 
     # verify we only get messages from terminal nodes (job4 and job5)
-    assert len(terminal_messages) == 2, "Should receive 2 messages from terminal nodes"
+    assert len(tail_nodes) == 2, "Should receive 2 messages from terminal nodes"
 
     # extract job4 (sum) and job5 (format) results
     job4_msg = next(msg for msg in terminal_messages if msg.get_payload().id == "job_4")

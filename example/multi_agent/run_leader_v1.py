@@ -1,6 +1,8 @@
 import asyncio
 from typing import List, Optional
 
+import networkx as nx  # type: ignore
+
 from app.agent.agent import AgentConfig, Profile
 from app.agent.job import Job
 from app.agent.leader import Leader
@@ -8,7 +10,7 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.memory.message import AgentMessage, WorkflowMessage
+from app.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 
@@ -200,9 +202,9 @@ async def main():
     # create expert profiles
     for i, workflow in enumerate(workflows):
         leader._leader_state.add_expert_config(
-            expert_name=f"Expert {i +1}",
+            expert_name=f"Expert {i + 1}",
             agent_config=AgentConfig(
-                profile=Profile(name=f"Expert {i+1}", description=f"Expert {i+1}"),
+                profile=Profile(name=f"Expert {i + 1}", description=f"Expert {i + 1}"),
                 reasoner=reasoner,
                 workflow=workflow,
             ),
@@ -247,15 +249,18 @@ async def main():
     print("\n=== Starting Leader Execute TestTest ===")
 
     # get the job graph and expert assignments
-    agent_messages: List[AgentMessage] = await leader.execute_jobs_graph(
-        jobs_graph=leader._leader_state.get_jobs_graph()
+    job_graph: nx.DiGraph = await leader.execute_job_graph(
+        job_graph=leader._leader_state.get_job_graph(session_id="test_session_id")
     )
+    tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
 
     print("\n=== Execution Results ===")
-    for agent_message in agent_messages:
-        print(f"\nTask {agent_message.get_payload().id}:")
-        print(f"Status: {agent_message.get_workflow_result_message().status}")
-        print(f"Output: {agent_message.get_workflow_result_message().scratchpad}")
+    for tail_node in tail_nodes:
+        job = job_graph.nodes[tail_node]["job"]
+        workflow_message = job_graph.nodes[tail_node]["workflow_result"]
+        print(f"\nTask {job.id}:")
+        print(f"Status: {workflow_message.status}")
+        print(f"Output: {workflow_message.scratchpad}")
         print("-" * 50)
 
 

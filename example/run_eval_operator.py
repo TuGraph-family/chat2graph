@@ -57,11 +57,12 @@ async def main():
     )
 
     assert result.status == WorkflowStatus.SUCCESS
-    assert result.experience
+    assert result.evaluation
     assert result.scratchpad
     print(
         f"Operator execution result:\nstaus: {result.status}\n"
-        f"experience: {result.experience}\n"
+        f"evaluation: {result.evaluation}\n"
+        f"lesson: {result.lesson}\n"
         f"scratchpad: {result.scratchpad}"
     )
     print("Operator execution completed successfully")

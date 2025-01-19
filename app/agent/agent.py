@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from app.agent.reasoner.reasoner import Reasoner
@@ -62,5 +62,5 @@ class Agent(ABC):
         return self._id
 
     @abstractmethod
-    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> AgentMessage:
+    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> Any:
         """Execute the agent."""

@@ -13,21 +13,22 @@ class LeaderState(metaclass=Singleton):
     """Leader State is uesd to manage expert agent and jobs.
 
     attributes:
-        _jobs_graph: the oriented graph of the jobs.
+        _job_graph: the oriented graph of the jobs.
         _expert_assignments: the expert dictionary (Job_id -> expert).
 
         Jobs schema
             {
                 "job_id": {
                     "job": job,
-                    "expert_id": expert_id
+                    "expert_id": expert_id,
+                    "workflow_result": workflow_message,
                 }
             }
     """
 
     def __init__(self):
         # Store class and config information, not instances
-        self._jobs_graph: nx.DiGraph = nx.DiGraph()
+        self._job_graphs: Dict[str, nx.DiGraph] = {}  # session_id -> nx.DiGraph
         self._expert_configs: Dict[str, AgentConfig] = {}  # name -> agent_config
         self._expert_instances: Dict[str, Expert] = {}  # expert_id -> expert
 
@@ -79,34 +80,43 @@ class LeaderState(metaclass=Singleton):
         expert = self.get_or_create_expert_by_name(expert_name)
 
         # add job to the jobs graph
-        self._jobs_graph.add_node(job.id, job=job, expert_id=expert.get_id())
+        job_graph = self.get_job_graph(job.session_id)
+        job_graph.add_node(job.id, job=job, expert_id=expert.get_id())
 
         if not predecessors:
             predecessors = []
         if not successors:
             successors = []
         for predecessor in predecessors:
-            self._jobs_graph.add_edge(predecessor.id, job.id)
+            job_graph.add_edge(predecessor.id, job.id)
         for successor in successors:
-            self._jobs_graph.add_edge(job.id, successor.id)
+            job_graph.add_edge(job.id, successor.id)
+
+        self._job_graphs[job.session_id] = job_graph
 
         return expert
 
-    def remove_job(self, job_id: str) -> None:
+    def remove_job(self, session_id: str, job_id: str) -> None:
         """Remove a Job from the Job registry."""
-        self._jobs_graph.remove_node(job_id)
+        job_graph = self.get_job_graph(session_id)
+        job_graph.remove_node(job_id)
+        self._job_graphs[session_id] = job_graph
 
-    def get_job(self, job_id: str) -> Job:
+    def get_job(self, session_id: str, job_id: str) -> Job:
         """Get a Job from the Job registry."""
-        return self._jobs_graph.nodes[job_id]["job"]
+        return self.get_job_graph(session_id).nodes[job_id]["job"]
 
-    def get_expert_by_job_id(self, job_id: str) -> Expert:
+    def get_expert_by_job_id(self, session_id: str, job_id: str) -> Expert:
         """Get an expert from the expert registry."""
-        return self.get_or_create_expert_by_name(self._jobs_graph.nodes[job_id]["expert_id"])
+        return self.get_or_create_expert_by_id(
+            self.get_job_graph(session_id).nodes[job_id]["expert_id"]
+        )
 
-    def get_jobs_graph(self) -> nx.DiGraph:
+    def get_job_graph(self, session_id: str) -> nx.DiGraph:
         """Get the Jobs graph."""
-        return self._jobs_graph
+        if session_id not in self._job_graphs:
+            self._job_graphs[session_id] = nx.DiGraph()
+        return self._job_graphs[session_id]
 
     def add_expert_config(self, expert_name: str, agent_config: AgentConfig) -> None:
         """Add an expert profile to the registry."""
@@ -126,6 +136,7 @@ class LeaderState(metaclass=Singleton):
 
     def replace_subgraph(
         self,
+        session_id: str,
         new_subgraph: nx.DiGraph,
         old_subgraph: Optional[nx.DiGraph] = None,
     ) -> None:
@@ -160,6 +171,7 @@ class LeaderState(metaclass=Singleton):
                      \ ->   E    -/
 
         Args:
+            session_id (str): The session ID of the jobs DAG to update.
             new_subgraph (nx.DiGraph): The new subgraph to insert. Must have all nodes containing
                 'job' and 'expert_id' attributes.
             old_subgraph (Optional[nx.DiGraph]): The subgraph to be replaced. Must be a connected
@@ -172,8 +184,10 @@ class LeaderState(metaclass=Singleton):
             if "expert_id" not in data:
                 raise ValueError(f"Node {node} missing required 'expert_id' attribute")
 
+        job_graph = self.get_job_graph(session_id)
+
         if old_subgraph is None:
-            self._jobs_graph.update(new_subgraph)
+            job_graph.update(new_subgraph)
             return
 
         old_subgraph_nodes = set(old_subgraph.nodes())
@@ -182,12 +196,12 @@ class LeaderState(metaclass=Singleton):
 
         # find the entry and exit node of the old subgraph
         for node in old_subgraph_nodes:
-            _predecessors = list(self._jobs_graph.predecessors(node))
+            _predecessors = list(job_graph.predecessors(node))
             for _predecessor in _predecessors:
                 if _predecessor not in old_subgraph_nodes:
                     entry_nodes.append(node)
 
-            _successors = list(self._jobs_graph.successors(node))
+            _successors = list(job_graph.successors(node))
             for _successor in _successors:
                 if _successor not in old_subgraph_nodes:
                     exit_nodes.append(node)
@@ -198,25 +212,27 @@ class LeaderState(metaclass=Singleton):
 
         # collect all edges pointing to and from the old subgraph
         predecessors = []
-        for node in self._jobs_graph.predecessors(entry_node):
+        for node in job_graph.predecessors(entry_node):
             if node not in old_subgraph_nodes:
                 predecessors.append(node)
         successors = []
-        for node in self._jobs_graph.successors(exit_node):
+        for node in job_graph.successors(exit_node):
             if node not in old_subgraph_nodes:
                 successors.append(node)
 
         # remove old subgraph
-        self._jobs_graph.remove_nodes_from(old_subgraph_nodes)
+        job_graph.remove_nodes_from(old_subgraph_nodes)
 
         # add the new subgraph without connecting it to the rest of the graph
-        self._jobs_graph.update(new_subgraph)
+        job_graph.update(new_subgraph)
 
         # connect the new subgraph with the rest of the graph
         _topological_sorted_nodes = list(nx.topological_sort(new_subgraph))
         head_node = _topological_sorted_nodes[0]
         tail_node = _topological_sorted_nodes[-1]
         for predecessor in predecessors:
-            self._jobs_graph.add_edge(predecessor, head_node)
+            job_graph.add_edge(predecessor, head_node)
         for successor in successors:
-            self._jobs_graph.add_edge(tail_node, successor)
+            job_graph.add_edge(tail_node, successor)
+
+        self._job_graphs[session_id] = job_graph

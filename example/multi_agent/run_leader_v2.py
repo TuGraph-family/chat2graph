@@ -1,5 +1,6 @@
 import asyncio
-from typing import List
+
+import networkx as nx  # type: ignore
 
 from app.agent.agent import AgentConfig, Profile
 from app.agent.job import Job
@@ -12,7 +13,6 @@ from app.common.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
-from app.memory.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 
@@ -153,7 +153,7 @@ async def main():
         workflow.set_evaluator(evaluator)
 
         leader._leader_state.add_expert_config(
-            expert_name=f"Expert {i+1}",
+            expert_name=f"Expert {i + 1}",
             agent_config=AgentConfig(
                 profile=Profile(name=role, description=desc),
                 reasoner=reasoner,
@@ -205,16 +205,17 @@ async def main():
 
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
-    agent_messages: List[AgentMessage] = await leader.execute_jobs_graph(
-        jobs_graph=leader._leader_state.get_jobs_graph()
+    job_graph: nx.DiGraph = await leader.execute_job_graph(
+        job_graph=leader._leader_state.get_job_graph(session_id="paper_analysis_session")
     )
+    tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
 
-    # print results from terminal nodes
-    print("\n=== Analysis Results ===")
-    for agent_message in agent_messages:
-        print(f"\nTask {agent_message.get_payload().id}:")
-        print(f"Status: {agent_message.get_workflow_result_message().status}")
-        print(f"Output: {agent_message.get_workflow_result_message().scratchpad}")
+    for tail_node in tail_nodes:
+        job = job_graph.nodes[tail_node]["job"]
+        workflow_message = job_graph.nodes[tail_node]["workflow_result"]
+        print(f"\nTask {job.id}:")
+        print(f"Status: {workflow_message.status}")
+        print(f"Output: {workflow_message.scratchpad}")
         print("-" * 50)
 
 
