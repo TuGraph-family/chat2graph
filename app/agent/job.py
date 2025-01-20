@@ -23,3 +23,7 @@ class Job:
     output_schema: str = "Output schema is not determined."
     id: str = field(default_factory=lambda: str(uuid4()))
     life_cycle: int = SystemEnv.LIFE_CYCLE
+
+
+class SubJob(Job):
+    """Sub job"""

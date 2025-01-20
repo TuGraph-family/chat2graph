@@ -12,7 +12,7 @@ from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.type import WorkflowStatus
 from app.common.util import Singleton, parse_json
-from app.memory.message import AgentMessage, UserMessage, WorkflowMessage
+from app.memory.message import AgentMessage, ChatMessage, WorkflowMessage
 
 
 class Leader(Agent, metaclass=Singleton):
@@ -24,7 +24,7 @@ class Leader(Agent, metaclass=Singleton):
         super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = LeaderState()
 
-    async def receive_message(self, user_message: UserMessage) -> None:
+    async def receive_message(self, user_message: ChatMessage) -> None:
         """Receive a message from the user."""
 
         content = user_message.get_payload()
@@ -40,7 +40,7 @@ class Leader(Agent, metaclass=Singleton):
             session_id=job.session_id, new_subgraph=executed_job_graph
         )
 
-    async def query_state(self, session_id: str) -> UserMessage:
+    async def query_state(self, session_id: str) -> ChatMessage:
         """Query the state of the leader."""
         job_graph = self._leader_state.get_job_graph(session_id=session_id)
 
@@ -50,7 +50,7 @@ class Leader(Agent, metaclass=Singleton):
         for tail_node in tail_nodes:
             workflow_result = job_graph.nodes[tail_node]["workflow_result"]
             if not workflow_result:
-                return UserMessage(
+                return ChatMessage(
                     content="The job is not completed yet.",
                     context="",
                     timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -58,7 +58,7 @@ class Leader(Agent, metaclass=Singleton):
                 )
             mutli_agent_content += job_graph.nodes[tail_node]["workflow_result"].scratchpad + "\n"
 
-        return UserMessage(
+        return ChatMessage(
             content=mutli_agent_content,
             context="",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),

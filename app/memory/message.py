@@ -162,8 +162,8 @@ class AgentMessage(Message):
         self._lesson = lesson
 
 
-class UserMessage(Message):
-    """User message"""
+class ChatMessage(Message):
+    """Chat message"""
 
     def __init__(
         self,
@@ -199,8 +199,8 @@ class UserMessage(Message):
         return self._id
 
 
-class UserTextMessage(UserMessage):
-    """User message"""
+class TextMessage(ChatMessage):
+    """Text message"""
 
     # TODO: Add user message attributes
 
@@ -220,3 +220,6 @@ class UserTextMessage(UserMessage):
         """Get the string content of the message."""
         # TODO: Implement get_text
         return ""
+
+class ErrorMessage(TextMessage):
+    """Error message"""
