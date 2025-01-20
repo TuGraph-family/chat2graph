@@ -488,7 +488,6 @@ class GraphReachabilityGetter(Tool):
         edges: List = []
         vertexes: List = []
         for element in json.loads(schema[0][0])["schema"]:
-            # print(element)
             if element["type"] == "EDGE":
                 edges.append(element)
             elif element["type"] == "VERTEX":

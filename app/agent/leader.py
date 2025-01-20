@@ -113,7 +113,6 @@ class Leader(Agent, metaclass=Singleton):
         try:
             job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
             assert job_dict is not None
-            print(f"Decomposed subtasks:\n{job_dict}")
         except Exception as e:
             raise ValueError(
                 f"Failed to decompose the subtasks by json format: {str(e)}\n"
