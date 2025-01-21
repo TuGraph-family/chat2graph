@@ -17,17 +17,18 @@ class JobManager(metaclass=Singleton):
         self._jobs: Dict[str, Job] = {}  # job_id -> job (main job)
         self._job_results: Dict[str, JobResult] = {}  # job_id -> job_result
 
-    async def execute_job(self, leader: Leader, job: Job) -> JobResult:
+    async def execute_job(self, job: Job) -> JobResult:
         """Execute the job"""
-        await leader.receive_submission(job=job)
-        return await self.query_job_result(leader=leader, job_id=job.id)
 
-    async def submit_job(self, leader: Leader, job: Job) -> None:
+        await Leader().receive_submission(job=job)
+        return await self.query_job_result(job_id=job.id)
+
+    async def submit_job(self, job: Job) -> None:
         """Submit the job"""
         self._jobs[job.id] = job
-        asyncio.create_task(leader.receive_submission(job=job))
+        asyncio.create_task(Leader().receive_submission(job=job))
 
-    async def query_job_result(self, leader: Leader, job_id: str) -> JobResult:
+    async def query_job_result(self, job_id: str) -> JobResult:
         """Query the result of the multi-agent system."""
         if job_id not in self._jobs:
             raise ValueError(f"Job with ID {job_id} not found in the job registry.")
@@ -35,7 +36,7 @@ class JobManager(metaclass=Singleton):
             return self._job_results[job_id]
 
         # query the state to get the job execution information
-        job_graph = leader.get_leader_state().get_job_graph(main_job_id=job_id)
+        job_graph = Leader().get_leader_state().get_job_graph(main_job_id=job_id)
 
         # get the tail nodes of the job graph (DAG)
         tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
@@ -45,7 +46,6 @@ class JobManager(metaclass=Singleton):
             if not workflow_result:
                 chat_message = ChatMessage(
                     content="The job is not completed yet.",
-                    context="",
                     timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 )
                 job_result = JobResult(
@@ -58,7 +58,6 @@ class JobManager(metaclass=Singleton):
             mutli_agent_content += job_graph.nodes[tail_node]["workflow_result"].scratchpad + "\n"
         chat_message = ChatMessage(
             content=mutli_agent_content,
-            context="",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
         job_result = JobResult(

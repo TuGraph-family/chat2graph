@@ -17,10 +17,15 @@ from app.memory.message import AgentMessage, WorkflowMessage
 class Leader(Agent, metaclass=AbcSingleton):
     """Leader is a role that can manage a group of agents and the jobs."""
 
-    def __init__(self, agent_config: AgentConfig, id: Optional[str] = None):
+    def __init__(self, agent_config: Optional[AgentConfig] = None, id: Optional[str] = None):
         # self._workflow of the leader is used to decompose the job
 
-        super().__init__(agent_config=agent_config, id=id)
+        if agent_config:
+            Leader._instance_config = agent_config
+        elif not Leader._instance_config:
+            raise ValueError("The Leader instance config is not set.")
+
+        super().__init__(agent_config=Leader._instance_config, id=id)
         self._leader_state: LeaderState = LeaderState()
 
     async def receive_submission(self, job: Job) -> None:

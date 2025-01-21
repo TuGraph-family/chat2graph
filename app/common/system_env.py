@@ -26,7 +26,7 @@ _env_values: Dict[str, Any] = {}
 
 
 class SystemEnvMeta(type):
-    """AbcSingleton class to manage system environment variables"""
+    """Singleton class to manage system environment variables"""
 
     def __init__(cls, name: str, bases: Tuple, dct: Dict):
         super().__init__(name, bases, dct)

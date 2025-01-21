@@ -1,9 +1,9 @@
-from typing import Dict, Optional, Tuple
+import asyncio
+from typing import Dict, Optional
 
 from app.agent.core.session import Session
 from app.agent.job import Job
 from app.agent.job_result import JobResult
-from app.agent.leader import Leader
 from app.common.type import JobStatus
 from app.common.util import Singleton
 from app.manager.job_manager import JobManager
@@ -32,23 +32,29 @@ class SessionManager(metaclass=Singleton):
         """Delete a session"""
         self._sessions.pop(session_id, None)
 
-    async def submit(
-        self, job_manager: JobManager, leader: Leader, session_id: str, user_message: ChatMessage
-    ) -> None:
+    async def submit(self, session_id: str, user_message: ChatMessage) -> Job:
         """Submit the service"""
         if session_id not in self._sessions:
             await self.create_session(session_id=session_id)
 
         job = Job(
             goal=user_message.get_payload(),
-            context=user_message.get_context(),
             session_id=session_id,
         )
-        await job_manager.submit_job(leader=leader, job=job)
+        await JobManager().submit_job(job=job)
 
-    async def query_state(
-        self, job_manager: JobManager, leader: Leader, session_id: str
-    ) -> Tuple[JobStatus, ChatMessage]:
-        """Query the result"""
-        job_result: JobResult = await job_manager.query_job_result(leader=leader, job_id=session_id)
-        return job_result.status, job_result.result
+        return job
+
+    async def wait(self, job_id: str, interval: int = 5) -> ChatMessage:
+        """Wait for the result"""
+        while 1:
+            # query the result every n seconds
+            job_result: JobResult = await JobManager().query_job_result(job_id=job_id)
+
+            # check if the job is finished
+            if job_result.status == JobStatus.FINISHED:
+                # print the result
+                return job_result.result
+
+            # sleep for `interval` seconds
+            await asyncio.sleep(interval)

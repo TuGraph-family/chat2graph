@@ -168,21 +168,15 @@ class ChatMessage(Message):
     def __init__(
         self,
         content: str,
-        context: str,
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
         self._content: str = content
-        self._context: str = context
 
     def get_payload(self) -> str:
         """Get the content of the message."""
         return self._content
-
-    def get_context(self) -> str:
-        """Get the context of the message."""
-        return self._context
 
     def get_timestamp(self) -> str:
         """Get the timestamp of the message."""
