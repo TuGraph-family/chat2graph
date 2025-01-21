@@ -4,7 +4,7 @@ import networkx as nx
 
 from app.agent.agent import AgentConfig, Profile
 from app.agent.expert import Expert
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.leader import Leader
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.operator import Operator
@@ -32,7 +32,7 @@ async def main():
     leader = Leader(agent_config=config)
 
     goal = """从文本中提取出关键实体类型，为后续的图数据库模型构建奠定基础。"""
-    job = Job(session_id="test_session_id", id="test_task_id", goal=goal, context="")
+    job = SubJob(session_id="test_session_id", id="test_task_id", goal=goal, context="")
 
     expert_profile_1 = AgentConfig(
         profile=Profile(

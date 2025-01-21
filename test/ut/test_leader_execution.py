@@ -4,7 +4,7 @@ import networkx as nx  # type: ignore
 import pytest
 
 from app.agent.agent import AgentConfig, Profile
-from app.agent.job import Job
+from app.agent.job import Job, SubJob
 from app.agent.leader import Leader
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator
@@ -91,7 +91,7 @@ async def test_agent_job_graph():
         ]
     ):
         jobs.append(
-            Job(
+            SubJob(
                 id=id,
                 session_id="test_session_id",
                 goal=goal,
@@ -123,6 +123,7 @@ async def test_agent_job_graph():
 
     # build job graph
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=jobs[0],
         expert_name="Expert 1",
         predecessors=[],
@@ -130,6 +131,7 @@ async def test_agent_job_graph():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=jobs[1],
         expert_name="Expert 2",
         predecessors=[jobs[0]],
@@ -137,6 +139,7 @@ async def test_agent_job_graph():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=jobs[2],
         expert_name="Expert 3",
         predecessors=[jobs[0]],
@@ -144,6 +147,7 @@ async def test_agent_job_graph():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=jobs[3],
         expert_name="Expert 4",
         predecessors=[jobs[2]],
@@ -151,6 +155,7 @@ async def test_agent_job_graph():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=jobs[4],
         expert_name="Expert 5",
         predecessors=[jobs[1], jobs[2]],
@@ -159,7 +164,7 @@ async def test_agent_job_graph():
 
     # execute job graph
     job_graph: nx.DiGraph = await leader.execute_job_graph(
-        job_graph=leader._leader_state.get_job_graph(session_id="test_session_id")
+        job_graph=leader._leader_state.get_job_graph(main_job_id="test_main_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
     terminal_messages: List[AgentMessage] = []

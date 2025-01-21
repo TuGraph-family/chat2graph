@@ -2,7 +2,7 @@ import asyncio
 import time
 from typing import Any, List, Optional
 
-from app.agent.job import Job
+from app.agent.job import Job, SubJob
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator import Operator
@@ -111,10 +111,7 @@ class AddPrefixOperator(BaseTestOperator):
                 scratchpad_content += workflow_message.scratchpad
 
         result = f"Prefix_{scratchpad_content}{job.context}"
-        print(
-            f"AddPrefixOperator input - context: {job.context}, "
-            f"scratchpad: {scratchpad_content}"
-        )
+        print(f"AddPrefixOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"AddPrefixOperator output: {result}\n\n")
         return WorkflowMessage(content={"scratchpad": result})
 
@@ -178,7 +175,7 @@ class EvalOperator(BaseTestOperator):
 
 async def main():
     """Test parallel workflow: Upper -> Join <- Prefix"""
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",

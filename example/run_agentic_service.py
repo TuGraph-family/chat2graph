@@ -19,7 +19,7 @@ async def main():
 
     while 1:
         # query the result every n seconds
-        service_message: ChatMessage = await agentic_service.query_result(session_id=session_id)
+        service_message: ChatMessage = await agentic_service.query_result(main_job_id=session_id)
         print(f"Service Result:\n{service_message.get_payload()}\n{service_message.get_context()}")
         await asyncio.sleep(5)
 

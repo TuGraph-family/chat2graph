@@ -1,7 +1,7 @@
 import asyncio
 
 from app.agent.graph_agent.data_importation import get_data_importation_workflow
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 
 
@@ -9,7 +9,7 @@ async def main():
     """Main function to run the data import."""
     workflow = get_data_importation_workflow()
 
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="「任务」",

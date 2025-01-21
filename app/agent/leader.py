@@ -1,5 +1,4 @@
 import asyncio
-import time
 import traceback
 from typing import Dict, List, Optional, Set
 
@@ -7,12 +6,12 @@ import networkx as nx  # type: ignore
 
 from app.agent.agent import Agent, AgentConfig
 from app.agent.expert import Expert
-from app.agent.job import Job
+from app.agent.job import Job, SubJob
 from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.type import WorkflowStatus
 from app.common.util import Singleton, parse_json
-from app.memory.message import AgentMessage, ChatMessage, WorkflowMessage
+from app.memory.message import AgentMessage, WorkflowMessage
 
 
 class Leader(Agent, metaclass=Singleton):
@@ -24,12 +23,9 @@ class Leader(Agent, metaclass=Singleton):
         super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = LeaderState()
 
-    async def receive_message(self, user_message: ChatMessage) -> None:
+    async def receive_submission(self, job: Job) -> None:
         """Receive a message from the user."""
 
-        content = user_message.get_payload()
-        context = user_message.get_context()
-        job = Job(session_id=user_message.get_session_id(), goal=content, context=context)
         agent_message = AgentMessage(job=job)
 
         job_graph = await self.execute(agent_message=agent_message)
@@ -38,31 +34,6 @@ class Leader(Agent, metaclass=Singleton):
 
         self._leader_state.replace_subgraph(
             session_id=job.session_id, new_subgraph=executed_job_graph
-        )
-
-    async def query_state(self, session_id: str) -> ChatMessage:
-        """Query the state of the leader."""
-        job_graph = self._leader_state.get_job_graph(session_id=session_id)
-
-        # get the tail nodes of the job graph (DAG)
-        tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
-        mutli_agent_content = ""
-        for tail_node in tail_nodes:
-            workflow_result = job_graph.nodes[tail_node]["workflow_result"]
-            if not workflow_result:
-                return ChatMessage(
-                    content="The job is not completed yet.",
-                    context="",
-                    timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    session_id=session_id,
-                )
-            mutli_agent_content += job_graph.nodes[tail_node]["workflow_result"].scratchpad + "\n"
-
-        return ChatMessage(
-            content=mutli_agent_content,
-            context="",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            session_id=session_id,
         )
 
     async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> nx.DiGraph:
@@ -100,7 +71,7 @@ class Leader(Agent, metaclass=Singleton):
             task=job.goal,
             role_list=role_list,
         )
-        decompsed_job = Job(
+        decompsed_job = SubJob(
             session_id=job.session_id,
             goal=job.goal,
             context=job.context + f"\n\n{job_decomp_prompt}",
@@ -122,7 +93,7 @@ class Leader(Agent, metaclass=Singleton):
         job_graph = nx.DiGraph()
 
         for job_id, subjob_dict in job_dict.items():
-            subjob = Job(
+            subjob = SubJob(
                 id=job_id,
                 session_id=job.session_id,
                 goal=subjob_dict.get("goal", ""),

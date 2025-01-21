@@ -169,12 +169,10 @@ class ChatMessage(Message):
         self,
         content: str,
         context: str,
-        session_id: str,
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
-        self._session_id = session_id
         self._content: str = content
         self._context: str = context
 
@@ -185,10 +183,6 @@ class ChatMessage(Message):
     def get_context(self) -> str:
         """Get the context of the message."""
         return self._context
-
-    def get_session_id(self) -> str:
-        """Get the session id of the message."""
-        return self._session_id
 
     def get_timestamp(self) -> str:
         """Get the timestamp of the message."""
@@ -220,6 +214,7 @@ class TextMessage(ChatMessage):
         """Get the string content of the message."""
         # TODO: Implement get_text
         return ""
+
 
 class ErrorMessage(TextMessage):
     """Error message"""

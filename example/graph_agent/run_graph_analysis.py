@@ -1,7 +1,7 @@
 import asyncio
 
 from app.agent.graph_agent.graph_analysis import get_graph_analysis_workflow
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 
 
@@ -9,7 +9,7 @@ async def main():
     """Main function"""
     workflow = get_graph_analysis_workflow()
 
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="「任务」",

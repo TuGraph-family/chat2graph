@@ -179,15 +179,13 @@ Final Delivery:
 
     job_graph = await leader.execute(AgentMessage(job=job))
     print(f"job_graph: {job_graph.nodes}")
-    leader._leader_state.replace_subgraph(session_id="test_session_id", new_subgraph=job_graph)
+    leader._leader_state.replace_subgraph(main_job_id=job.id, new_subgraph=job_graph)
 
     assert isinstance(job_graph, nx.DiGraph)
     assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes(data=True))
 
-    assert len(leader._leader_state.get_job_graph(session_id="test_session_id").nodes) == 3
-    assert (
-        len(leader._leader_state.get_job_graph(session_id="test_session_id").edges) == 3
-    )  # 3 dependencies
+    assert len(leader._leader_state.get_job_graph(main_job_id=job.id).nodes) == 3
+    assert len(leader._leader_state.get_job_graph(main_job_id=job.id).edges) == 3  # 3 dependencies
 
 
 @pytest.mark.asyncio

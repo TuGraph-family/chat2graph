@@ -2,7 +2,7 @@ import asyncio
 
 import matplotlib.pyplot as plt
 
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
@@ -101,7 +101,7 @@ Answer in Chinese.
     operator = Operator(config=operator_config, toolkit_service=ToolkitService(toolkit))
 
     # execute operator (with minimal reasoning rounds for testing)
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",

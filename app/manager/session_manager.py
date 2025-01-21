@@ -1,13 +1,24 @@
-import asyncio
+from typing import Dict
 
-from app.agent.job_result import JobResult
-from app.memory.message import ChatMessage
+from app.agent.core.session import Session
 
 
 class SessionManager:
+    """Session manager"""
 
-    async def submit(self, session_id: str,
-        user_message: ChatMessage) -> JobResult:
-        """Submit the service"""
-        asyncio.create_task(
-            self._leader.receive_message(user_message=user_message))
+    def __init__(self):
+        self._sessions: Dict[str, Session] = {}
+
+    async def craete_session(self) -> Session:
+        """Create a session"""
+        session = Session()
+        self._sessions[session.id] = session
+        return session
+
+    async def get_session(self, session_id: str) -> Session:
+        """Get a session"""
+        return self._sessions.get(session_id)
+
+    async def delete_session(self, session_id: str):
+        """Delete a session"""
+        self._sessions.pop(session_id, None)

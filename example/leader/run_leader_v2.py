@@ -3,7 +3,7 @@ import asyncio
 import networkx as nx  # type: ignore
 
 from app.agent.agent import AgentConfig, Profile
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.leader import Leader
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.eval_operator import EvalOperator
@@ -36,7 +36,7 @@ async def main():
     """  # noqa: E501
 
     # create jobs for paper analysis
-    job_1 = Job(
+    job_1 = SubJob(
         id="extract_key_info",
         session_id="paper_analysis_session",
         goal="Extract key information from the paper including research goals, methods, and main findings",
@@ -44,7 +44,7 @@ async def main():
         output_schema="string",
     )
 
-    job_2 = Job(
+    job_2 = SubJob(
         id="analyze_methodology",
         session_id="paper_analysis_session",
         goal="Analyze the research methodology, including study design, data collection, and analytical approaches",
@@ -52,7 +52,7 @@ async def main():
         output_schema="string",
     )
 
-    job_3 = Job(
+    job_3 = SubJob(
         id="analyze_results",
         session_id="paper_analysis_session",
         goal="Analyze the results and their implications, including statistical significance and practical impact",
@@ -60,7 +60,7 @@ async def main():
         output_schema="string",
     )
 
-    job_4 = Job(
+    job_4 = SubJob(
         id="technical_review",
         session_id="paper_analysis_session",
         goal="Review technical soundness of the methodology and statistical analysis",
@@ -68,7 +68,7 @@ async def main():
         output_schema="string",
     )
 
-    job_5 = Job(
+    job_5 = SubJob(
         id="generate_summary",
         session_id="paper_analysis_session",
         goal="Generate a comprehensive summary combining methodology analysis and results analysis",
@@ -129,12 +129,12 @@ async def main():
         ),
     ]
 
-    for i, (role, desc, instruction) in enumerate(expert_configs):
+    for name, desc, instruction in expert_configs:
         workflow = DbgptWorkflow()
 
         op = Operator(
             config=OperatorConfig(
-                id=f"{role.lower().replace(' ', '_')}_operator",
+                id=f"{name.lower().replace(' ', '_')}_operator",
                 instruction=instruction,
                 actions=[],
                 output_schema="detalied delivery in string",
@@ -154,7 +154,7 @@ async def main():
 
         leader._leader_state.add_expert_config(
             agent_config=AgentConfig(
-                profile=Profile(name=role, description=desc),
+                profile=Profile(name=name, description=desc),
                 reasoner=reasoner,
                 workflow=workflow,
             ),
@@ -168,36 +168,41 @@ async def main():
     #            job_3 (Results)
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_1,
-        expert_name="Expert 1",
+        expert_name="Information Extractor",
         predecessors=[],
         successors=[job_2, job_3],
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_2,
-        expert_name="Expert 2",
+        expert_name="Methodology Expert",
         predecessors=[job_1],
         successors=[job_4],
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_3,
-        expert_name="Expert 3",
+        expert_name="Results Analyst",
         predecessors=[job_1],
         successors=[job_5],
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_4,
-        expert_name="Expert 4",
+        expert_name="Technical Reviewer",
         predecessors=[job_2],
         successors=[job_5],
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_5,
-        expert_name="Expert 5",
+        expert_name="Research Synthesizer",
         predecessors=[job_3, job_4],
         successors=[],
     )
@@ -205,7 +210,7 @@ async def main():
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
     job_graph: nx.DiGraph = await leader.execute_job_graph(
-        job_graph=leader._leader_state.get_job_graph(session_id="paper_analysis_session")
+        job_graph=leader._leader_state.get_job_graph(main_job_id="test_main_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
 

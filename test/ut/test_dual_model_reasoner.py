@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
@@ -38,7 +38,7 @@ async def mock_reasoner() -> DualModelReasoner:
 @pytest.fixture
 def task():
     """Create a test Task for testing."""
-    job = Job(session_id="test_session_id", goal="Test goal")
+    job = SubJob(session_id="test_session_id", goal="Test goal")
     config = OperatorConfig(instruction="Test instruction", actions=[])
     return Task(job=job, operator_config=config)
 

@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
@@ -82,7 +82,7 @@ d) 三年总收益率（用百分比表示）
 
     reasoner = DualModelReasoner()
 
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",

@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 
 import pytest
 
-from app.agent.job import Job
+from app.agent.job import Job, SubJob
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator import Operator
@@ -42,7 +42,7 @@ class TestReasoner(Reasoner):
 @pytest.fixture
 def job():
     """Create a test job."""
-    return Job(
+    return SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",

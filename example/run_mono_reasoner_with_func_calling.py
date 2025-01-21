@@ -2,7 +2,6 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.agent.job import Job
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.task import Task
 from app.toolkit.tool.tool import Tool
@@ -80,7 +79,7 @@ d) 三年总收益率（用百分比表示）
 
     reasoner = MonoModelReasoner()
 
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",

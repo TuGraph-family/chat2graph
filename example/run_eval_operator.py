@@ -2,7 +2,7 @@ import asyncio
 
 import matplotlib.pyplot as plt
 
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.eval_operator import EvalOperator
 from app.agent.workflow.operator.operator_config import OperatorConfig
@@ -41,7 +41,7 @@ async def main():
     operator = EvalOperator(config=operator_config, toolkit_service=ToolkitService(toolkit))
 
     # execute operator (with minimal reasoning rounds for testing)
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Generate some numbers",

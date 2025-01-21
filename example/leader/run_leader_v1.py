@@ -4,7 +4,7 @@ from typing import List, Optional
 import networkx as nx  # type: ignore
 
 from app.agent.agent import AgentConfig, Profile
-from app.agent.job import Job
+from app.agent.job import Job, SubJob
 from app.agent.leader import Leader
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
@@ -141,7 +141,7 @@ async def main():
     #                 ↓
     #              Task4 (Sum)
 
-    job_1 = Job(
+    job_1 = SubJob(
         id="job_1",
         session_id="test_session_id",
         goal="Generate numbers",
@@ -149,7 +149,7 @@ async def main():
         output_schema="string",
     )
 
-    job_2 = Job(
+    job_2 = SubJob(
         id="job_2",
         session_id="test_session_id",
         goal="Multiply numbers by 2",
@@ -157,7 +157,7 @@ async def main():
         output_schema="string",
     )
 
-    job_3 = Job(
+    job_3 = SubJob(
         id="job_3",
         session_id="test_session_id",
         goal="Add 10 to numbers",
@@ -165,7 +165,7 @@ async def main():
         output_schema="string",
     )
 
-    job_4 = Job(
+    job_4 = SubJob(
         id="job_4",
         session_id="test_session_id",
         goal="Sum the numbers",
@@ -173,7 +173,7 @@ async def main():
         output_schema="string",
     )
 
-    job_5 = Job(
+    job_5 = SubJob(
         id="job_5",
         session_id="test_session_id",
         goal="Format final result",
@@ -211,6 +211,7 @@ async def main():
 
     # Create job graph structure
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_1,
         expert_name="Expert 1",
         predecessors=[],
@@ -218,6 +219,7 @@ async def main():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_2,
         expert_name="Expert 2",
         predecessors=[job_1],
@@ -225,6 +227,7 @@ async def main():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_3,
         expert_name="Expert 3",
         predecessors=[job_1],
@@ -232,6 +235,7 @@ async def main():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_4,
         expert_name="Expert 4",
         predecessors=[job_3],
@@ -239,6 +243,7 @@ async def main():
     )
 
     leader._leader_state.add_job(
+        main_job_id="test_main_job_id",
         job=job_5,
         expert_name="Expert 5",
         predecessors=[job_2, job_3],
@@ -249,7 +254,7 @@ async def main():
 
     # get the job graph and expert assignments
     job_graph: nx.DiGraph = await leader.execute_job_graph(
-        job_graph=leader._leader_state.get_job_graph(session_id="test_session_id")
+        job_graph=leader._leader_state.get_job_graph(main_job_id="test_main_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
 

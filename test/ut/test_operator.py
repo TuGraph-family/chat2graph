@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.agent.job import Job
+from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator import Operator
@@ -84,7 +84,7 @@ async def operator(toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]):
 @pytest.mark.asyncio
 async def test_execute_basic_functionality(operator: Operator, mock_reasoner: AsyncMock):
     """Test basic execution functionality."""
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
@@ -143,7 +143,7 @@ async def test_execute_error_handling(operator: Operator, mock_reasoner: AsyncMo
     # make reasoner.infer raise an exception
     mock_reasoner.infer.side_effect = Exception("Test error")
 
-    job = Job(
+    job = SubJob(
         id="test_job_id",
         session_id="test_session_id",
         goal="Test goal",
