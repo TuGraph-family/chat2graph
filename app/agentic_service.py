@@ -38,13 +38,20 @@ class AgenticService:
     async def execute(self, user_message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
         job = Job(goal=user_message.get_payload(), context=user_message.get_context())
-        job_result: JobResult = await JobManager().execute_job(leader=self._leader, job=job)
+        job_result: JobResult = await self.get_job_manager().execute_job(
+            leader=self._leader, job=job
+        )
         return job_result.result
 
     def get_session_manager(self) -> SessionManager:
         """Get the session manager."""
         # get a singleton instance of the session manager
         return SessionManager()
+
+    def get_job_manager(self) -> JobManager:
+        """Get the job manager."""
+        # get a singleton instance of the job manager
+        return JobManager()
 
     def get_leader(self) -> Leader:
         """Get the leader."""
