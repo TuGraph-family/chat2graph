@@ -1,6 +1,7 @@
 import asyncio
 
 from app.agentic_service import AgenticService
+from app.common.type import JobStatus
 from app.manager.job_manager import JobManager
 from app.memory.message import ChatMessage
 
@@ -29,11 +30,19 @@ async def main():
 
     while 1:
         # query the result every n seconds
-        service_message: ChatMessage = await session_manager.query_state(
+        job_status, service_message = await session_manager.query_state(
             job_manager=JobManager(), leader=agentic_service.get_leader(), session_id=session_id
         )
 
-        print(f"Service Result:\n{service_message.get_payload()}\n{service_message.get_context()}")
+        # check if the job is finished
+        if job_status == JobStatus.FINISHED:
+            # print the result
+            print(
+                f"Service Result:\n{service_message.get_payload()}\n{service_message.get_context()}"
+            )
+            break
+
+        # sleep for 5 seconds
         await asyncio.sleep(5)
 
 

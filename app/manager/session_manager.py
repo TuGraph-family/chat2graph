@@ -1,9 +1,10 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from app.agent.core.session import Session
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.agent.leader import Leader
+from app.common.type import JobStatus
 from app.common.util import Singleton
 from app.manager.job_manager import JobManager
 from app.memory.message import ChatMessage
@@ -47,7 +48,7 @@ class SessionManager(metaclass=Singleton):
 
     async def query_state(
         self, job_manager: JobManager, leader: Leader, session_id: str
-    ) -> ChatMessage:
+    ) -> Tuple[JobStatus, ChatMessage]:
         """Query the result"""
         job_result: JobResult = await job_manager.query_job_result(leader=leader, job_id=session_id)
-        return job_result.result
+        return job_result.status, job_result.result

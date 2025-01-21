@@ -15,8 +15,10 @@ async def main():
     )
 
     # submit the job
-    chat_message = await agentic_service.execute(user_message=user_message)
-    print(f"Service Result:\n{chat_message.get_payload()}\n{chat_message.get_context()}")
+    service_message = await agentic_service.execute(user_message=user_message)
+
+    # print the result
+    print(f"Service Result:\n{service_message.get_payload()}\n{service_message.get_context()}")
 
 
 if __name__ == "__main__":
