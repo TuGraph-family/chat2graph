@@ -33,7 +33,7 @@ class Leader(Agent, metaclass=AbcSingleton):
         executed_job_graph = await self.execute_job_graph(job_graph=job_graph)
 
         self._leader_state.replace_subgraph(
-            session_id=job.session_id, new_subgraph=executed_job_graph
+            main_job_id=job.session_id, new_subgraph=executed_job_graph
         )
 
     async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> nx.DiGraph:

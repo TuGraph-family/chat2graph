@@ -43,10 +43,17 @@ class JobManager(metaclass=Singleton):
         for tail_node in tail_nodes:
             workflow_result = job_graph.nodes[tail_node]["workflow_result"]
             if not workflow_result:
-                return ChatMessage(
+                chat_message = ChatMessage(
                     content="The job is not completed yet.",
                     context="",
                     timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                )
+                job_result = JobResult(
+                    job_id=job_id,
+                    status=JobStatus.RUNNING,
+                    duration=0,  # TODO: calculate the duration
+                    tokens=0,  # TODO: calculate the tokens
+                    result=chat_message,
                 )
             mutli_agent_content += job_graph.nodes[tail_node]["workflow_result"].scratchpad + "\n"
         chat_message = ChatMessage(

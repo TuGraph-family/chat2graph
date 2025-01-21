@@ -23,7 +23,9 @@ class SessionManager(metaclass=Singleton):
 
     async def get_session(self, session_id: str) -> Session:
         """Get a session"""
-        return self._sessions.get(session_id)
+        if session_id not in self._sessions:
+            raise ValueError(f"Session with ID {session_id} not found in the session registry.")
+        return self._sessions[session_id]
 
     async def delete_session(self, session_id: str):
         """Delete a session"""
@@ -34,17 +36,18 @@ class SessionManager(metaclass=Singleton):
     ) -> None:
         """Submit the service"""
         if session_id not in self._sessions:
-            self.create_session(session_id=session_id)
+            await self.create_session(session_id=session_id)
 
         job = Job(
             goal=user_message.get_payload(),
             context=user_message.get_context(),
             session_id=session_id,
         )
-        job_manager.submit_job(leader=leader, job=job)
+        await job_manager.submit_job(leader=leader, job=job)
 
     async def query_state(
         self, job_manager: JobManager, leader: Leader, session_id: str
-    ) -> JobResult:
+    ) -> ChatMessage:
         """Query the result"""
-        return await job_manager.query_job_result(leader=leader, job_id=session_id)
+        job_result: JobResult = await job_manager.query_job_result(leader=leader, job_id=session_id)
+        return job_result.result

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from app.agent.agent import AgentConfig, Profile
+from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
@@ -11,6 +12,8 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 def get_leader_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
     """Get the leader configuration."""
     # configure the leader
+    if not reasoner:
+        reasoner = DualModelReasoner()
     decomp_operator_config = OperatorConfig(
         id="job_decomp_operator_id",
         instruction=JOB_DECOMPOSITION_PROMPT,
