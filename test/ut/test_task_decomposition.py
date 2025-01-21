@@ -14,7 +14,7 @@ from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.agent.workflow.workflow import Workflow
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
-from app.common.util import Singleton
+from app.common.util import AbcSingleton
 from app.memory.message import AgentMessage, WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -83,12 +83,12 @@ def mock_reasoner():
 @pytest.fixture
 def leader(mock_reasoner: Reasoner):
     """Create a leader instance with mock reasoner."""
-    # clear the singleton instance
-    if LeaderState in Singleton._instances:
-        del Singleton._instances[LeaderState]
+    # clear the AbcSingleton instance
+    if LeaderState in AbcSingleton._instances:
+        del AbcSingleton._instances[LeaderState]
 
-    if Leader in Singleton._instances:
-        del Singleton._instances[Leader]
+    if Leader in AbcSingleton._instances:
+        del AbcSingleton._instances[Leader]
 
     decomp_operator_config = OperatorConfig(
         id="job_decomp_operator_id",

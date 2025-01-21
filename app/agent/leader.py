@@ -10,11 +10,11 @@ from app.agent.job import Job, SubJob
 from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.type import WorkflowStatus
-from app.common.util import Singleton, parse_json
+from app.common.util import AbcSingleton, parse_json
 from app.memory.message import AgentMessage, WorkflowMessage
 
 
-class Leader(Agent, metaclass=Singleton):
+class Leader(Agent, metaclass=AbcSingleton):
     """Leader is a role that can manage a group of agents and the jobs."""
 
     def __init__(self, agent_config: AgentConfig, id: Optional[str] = None):
