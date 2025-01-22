@@ -9,8 +9,9 @@ from app.agent.expert import Expert
 from app.agent.job import Job, SubJob
 from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
+from app.common.singleton import AbcSingleton
 from app.common.type import WorkflowStatus
-from app.common.util import AbcSingleton, parse_json
+from app.common.util import parse_json
 from app.memory.message import AgentMessage, WorkflowMessage
 
 

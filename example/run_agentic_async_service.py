@@ -20,9 +20,9 @@ async def main():
     )
 
     # submit the job
-    session_manager = agentic_service.get_session_manager()
-    job = await session_manager.submit(session_id=session_id, user_message=user_message)
-    service_message = await session_manager.wait(job.id)
+    session = await agentic_service.get_session(session_id=session_id)
+    job = await session.submit(user_message=user_message)
+    service_message = await session.wait(job.id)
 
     # print the result
     print(f"Service Result:\n{service_message.get_payload()}")

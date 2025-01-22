@@ -6,7 +6,7 @@ import networkx as nx  # type: ignore
 from app.agent.agent import AgentConfig
 from app.agent.expert import Expert
 from app.agent.job import Job
-from app.common.util import Singleton
+from app.common.singleton import Singleton
 
 
 class LeaderState(metaclass=Singleton):

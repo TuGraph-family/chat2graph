@@ -1,3 +1,4 @@
+from app.agent.core.session import Session
 from app.agent.graph_agent.data_importation import get_data_importation_expert_config
 from app.agent.graph_agent.graph_analysis import get_graph_analysis_expert_config
 from app.agent.graph_agent.graph_modeling import get_graph_modeling_expert_config
@@ -41,7 +42,6 @@ class AgenticService:
         job_result: JobResult = await JobManager().execute_job(job=job)
         return job_result.result
 
-    def get_session_manager(self) -> SessionManager:
-        """Get the session manager."""
-        # get a singleton instance of the session manager
-        return SessionManager()
+    async def get_session(self, session_id: str) -> Session:
+        """Get the session."""
+        return await SessionManager().get_session(session_id=session_id)

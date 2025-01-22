@@ -5,8 +5,8 @@ from typing import Dict
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.agent.leader import Leader
+from app.common.singleton import Singleton
 from app.common.type import JobStatus
-from app.common.util import Singleton
 from app.memory.message import ChatMessage
 
 
