@@ -45,5 +45,5 @@ class AgenticService:
         return job_result.result
 
     def session(self, session_id: Optional[str] = None) -> Session:
-        """Get the session."""
+        """Get the session, if not exists or session_id is None, create a new one."""
         return SessionManager().get_session(session_id=session_id)
