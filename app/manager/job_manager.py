@@ -7,7 +7,7 @@ from app.agent.job_result import JobResult
 from app.agent.leader import Leader
 from app.common.singleton import Singleton
 from app.common.type import JobStatus
-from app.memory.message import ChatMessage
+from app.memory.message import TextMessage
 
 
 class JobManager(metaclass=Singleton):
@@ -44,11 +44,11 @@ class JobManager(metaclass=Singleton):
         for tail_node in tail_nodes:
             workflow_result = job_graph.nodes[tail_node]["workflow_result"]
             if not workflow_result:
-                chat_message = ChatMessage(
-                    content="The job is not completed yet.",
+                chat_message = TextMessage(
+                    payload="The job is not completed yet.",
                     timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 )
-                job_result = JobResult(
+                return JobResult(
                     job_id=job_id,
                     status=JobStatus.RUNNING,
                     duration=0,  # TODO: calculate the duration
@@ -56,13 +56,15 @@ class JobManager(metaclass=Singleton):
                     result=chat_message,
                 )
             mutli_agent_content += job_graph.nodes[tail_node]["workflow_result"].scratchpad + "\n"
-        chat_message = ChatMessage(
-            content=mutli_agent_content,
+
+        # parse the multi-agent result
+        chat_message = TextMessage(
+            payload=mutli_agent_content,
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
         job_result = JobResult(
             job_id=job_id,
-            status=JobStatus.FAILED,
+            status=JobStatus.FINISHED,
             duration=0,  # TODO: calculate the duration
             tokens=0,  # TODO: calculate the tokens
             result=chat_message,

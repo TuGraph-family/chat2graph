@@ -167,16 +167,16 @@ class ChatMessage(Message):
 
     def __init__(
         self,
-        content: str,
+        payload: Any,
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
-        self._content: str = content
+        self._payload: str = payload
 
     def get_payload(self) -> str:
         """Get the content of the message."""
-        return self._content
+        return self._payload
 
     def get_timestamp(self) -> str:
         """Get the timestamp of the message."""
@@ -191,10 +191,17 @@ class TextMessage(ChatMessage):
     """Text message"""
 
     # TODO: Add user message attributes
+    def __init__(
+        self,
+        payload: str,
+        timestamp: Optional[str] = None,
+        id: Optional[str] = None,
+    ):
+        super().__init__(payload=payload, timestamp=timestamp, id=id)
 
     def get_payload(self) -> Any:
         """Get the content of the message."""
-        return None
+        return self._payload
 
     def get_timestamp(self) -> str:
         """Get the timestamp of the message."""
@@ -206,8 +213,7 @@ class TextMessage(ChatMessage):
 
     def get_text(self) -> str:
         """Get the string content of the message."""
-        # TODO: Implement get_text
-        return ""
+        return self._payload
 
 
 class ErrorMessage(TextMessage):
