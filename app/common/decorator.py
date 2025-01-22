@@ -10,8 +10,8 @@ from app.memory.message import ChatMessage
 def job_submit(cls):
     """Decorator for the job submit session."""
 
-    class JobSubmitSession(cls):
-        """Job submit session"""
+    class SessionWraper(cls):
+        """Session Wrapper class"""
 
         async def submit(self, message: ChatMessage) -> Job:
             """Submit the job."""
@@ -34,4 +34,4 @@ def job_submit(cls):
                 # sleep for `interval` seconds
                 await asyncio.sleep(interval)
 
-    return JobSubmitSession
+    return SessionWraper
