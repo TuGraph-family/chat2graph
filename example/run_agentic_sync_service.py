@@ -17,7 +17,7 @@ async def main():
     )
 
     # submit the job
-    service_message = await agentic_service.execute(user_message=user_message)
+    service_message = await agentic_service.execute(message=user_message)
 
     # print the result
     print(f"Service Result:\n{service_message.get_payload()}")

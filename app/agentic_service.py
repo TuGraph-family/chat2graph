@@ -36,9 +36,9 @@ class AgenticService:
         self._leader.get_leader_state().add_expert_config(graph_query_expert_config)
         self._leader.get_leader_state().add_expert_config(graph_analysis_expert_config)
 
-    async def execute(self, user_message: ChatMessage) -> ChatMessage:
+    async def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
-        job = Job(goal=user_message.get_payload())
+        job = Job(goal=message.get_payload())
         job_result: JobResult = await JobManager().execute_job(job=job)
         return job_result.result
 

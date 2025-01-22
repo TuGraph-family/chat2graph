@@ -13,13 +13,10 @@ def job_submit(cls):
     class JobSubmitSession(cls):
         """Job submit session"""
 
-        async def submit(self, user_message: ChatMessage) -> Job:
+        async def submit(self, message: ChatMessage) -> Job:
             """Submit the job."""
 
-            job = Job(
-                goal=user_message.get_payload(),
-                session_id=self.id,
-            )
+            job = Job(goal=message.get_payload(), session_id=self.id)
             await JobManager().submit_job(job=job)
             return job
 
