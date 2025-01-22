@@ -7,8 +7,8 @@ from app.manager.job_manager import JobManager
 from app.memory.message import ChatMessage
 
 
-def job_submit(cls):
-    """Decorator for the job submit session."""
+def session_wrapper(cls):
+    """Decorator for the session wrapper."""
 
     class SessionWraper(cls):
         """Session Wrapper class"""
