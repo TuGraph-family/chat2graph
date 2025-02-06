@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
@@ -12,7 +12,6 @@ from app.common.system_env import SystemEnv
 from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
-from app.toolkit.tool.tool import Tool
 
 
 class DualModelReasoner(Reasoner):
@@ -56,7 +55,7 @@ class DualModelReasoner(Reasoner):
         print_messages = SystemEnv.PRINT_REASONER_MESSAGES
 
         # set the system prompt
-        actor_sys_prompt = self._format_actor_sys_prompt(task=task, tools=task.tools)
+        actor_sys_prompt = self._format_actor_sys_prompt(task=task)
         thinker_sys_prompt = self._format_thinker_sys_prompt(task=task)
         if SystemEnv.PRINT_SYSTEM_PROMPT:
             print(f"\033[38;5;245mSystem:\n{actor_sys_prompt}\033[0m\n")
@@ -64,7 +63,7 @@ class DualModelReasoner(Reasoner):
         # trigger the reasoning process
         init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
-            content=(
+            payload=(
                 "<scratchpad>\nEmpty\n</scratchpad>\n"
                 "<action>\nEmpty\n</action>\n"
                 "<feedback>\nNo feadback\n</feedback>\n"
@@ -166,11 +165,7 @@ class DualModelReasoner(Reasoner):
 
         return reasoner_output
 
-    def _format_actor_sys_prompt(
-        self,
-        task: Task,
-        tools: List[Tool] | None = None,
-    ) -> str:
+    def _format_actor_sys_prompt(self, task: Task) -> str:
         """Set the system prompt."""
         # set the task description
         task_description = task.operator_config.instruction if task.operator_config else ""
@@ -202,9 +197,9 @@ class DualModelReasoner(Reasoner):
         reasoning_task = f"=====\nTASK:\n{task_description}\nCONTEXT:\n{task_context}\n====="
 
         # set the function docstrings
-        if tools:
+        if len(task.tools) > 0:
             func_description = "\n".join(
-                [f"Function: {tool.name}()\n{tool.description}\n" for tool in tools]
+                [f"Function {tool.name}():\n\t{tool.description}\n" for tool in task.tools]
             )
         else:
             func_description = "No function calling in this round."

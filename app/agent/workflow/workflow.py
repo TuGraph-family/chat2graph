@@ -101,11 +101,7 @@ class Workflow(ABC):
 
     def get_operators(self) -> List[Operator]:
         """Get all operators from the workflow."""
-        return [
-            data["operator"]
-            for _, data in self._operator_graph.nodes(data=True)
-            if "operator" in data
-        ]
+        return [data["operator"] for _, data in self._operator_graph.nodes() if "operator" in data]
 
     def visualize(self) -> None:
         """Visualize the workflow."""

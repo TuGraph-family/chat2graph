@@ -32,9 +32,11 @@ class WorkflowStatus(Enum):
     JOB_TOO_COMPLICATED_ERROR = "job_too_complicated_error"
     MAX_RETRIES_REACHED = "max_retries_reached"
 
+
 class JobStatus(Enum):
     """Job status type."""
-    CREATED = "success"
+
+    CREATED = "created"
     RUNNING = "running"
     FINISHED = "finished"
     FAILED = "failed"

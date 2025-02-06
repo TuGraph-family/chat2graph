@@ -450,7 +450,7 @@ class CypherExecutor(Tool):
             )
 
             message = ModelMessage(
-                content=cypher_schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
+                payload=cypher_schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
             )
 
             _model = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)

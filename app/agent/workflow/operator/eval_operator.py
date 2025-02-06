@@ -45,7 +45,7 @@ class EvalOperator(Operator):
             result_dict = parse_json(text=result)
 
         return WorkflowMessage(
-            content={
+            payload={
                 "scratchpad": workflow_messages[0].scratchpad,
                 "status": WorkflowStatus[str(result_dict["status"])],
                 "evaluation": result_dict["evaluation"],

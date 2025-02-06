@@ -6,17 +6,22 @@ import networkx as nx  # type: ignore
 
 from app.agent.agent import Agent, AgentConfig
 from app.agent.expert import Expert
+from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
+from app.agent.job_result import JobResult
 from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.singleton import AbcSingleton
-from app.common.type import WorkflowStatus
+from app.common.type import JobStatus, WorkflowStatus
 from app.common.util import parse_json
-from app.memory.message import AgentMessage, WorkflowMessage
+from app.manager.job_manager import JobManager
+from app.memory.message import AgentMessage, TextMessage, WorkflowMessage
 
 
 class Leader(Agent, metaclass=AbcSingleton):
     """Leader is a role that can manage a group of agents and the jobs."""
+
+    _instance_config: Optional[AgentConfig] = None
 
     def __init__(self, agent_config: Optional[AgentConfig] = None, id: Optional[str] = None):
         # self._workflow of the leader is used to decompose the job
@@ -38,11 +43,13 @@ class Leader(Agent, metaclass=AbcSingleton):
 
         executed_job_graph = await self.execute_job_graph(job_graph=job_graph)
 
-        self._leader_state.replace_subgraph(
-            main_job_id=job.session_id, new_subgraph=executed_job_graph
+        JobManager().replace_subgraph(
+            original_job_id=job.id,
+            new_subgraph=executed_job_graph,
+            old_subgraph=JobManager().get_job_graph(job.id),
         )
 
-    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> nx.DiGraph:
+    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
         """Decompose the job and execute the job.
 
         Args:
@@ -50,24 +57,18 @@ class Leader(Agent, metaclass=AbcSingleton):
             retry_count (int): The number of retries.
 
         Returns:
-            nx.DiGraph: The job graph with subjobs and dependencies.
-                {
-                    "job_id": {
-                        "job": Job,
-                        "expert_id": expert_id,
-                    }
-                }
+            JobGraph: The job graph of the subjobs.
         """
         # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
 
         job = agent_message.get_payload()
 
         # get the expert list
-        expert_configs = self._leader_state.get_expert_configs()
+        expert_profiles = LeaderState().get_expert_profiles()
         role_list = "\n".join(
             [
-                f"Expert name: {config.profile.name}\nDescription: {config.profile.description}"
-                for config in expert_configs.values()
+                f"Expert name: {profile.name}\nDescription: {profile.description}"
+                for profile in expert_profiles.values()
             ]
         )
 
@@ -96,7 +97,7 @@ class Leader(Agent, metaclass=AbcSingleton):
                 f"Input content:\n{workflow_message.scratchpad}"
             ) from e
 
-        job_graph = nx.DiGraph()
+        job_graph = JobGraph()
 
         for job_id, subjob_dict in job_dict.items():
             subjob = SubJob(
@@ -113,31 +114,31 @@ class Leader(Agent, metaclass=AbcSingleton):
             job_graph.add_node(
                 job_id,
                 job=subjob,
-                expert_id=self._leader_state.get_or_create_expert_by_name(
-                    subjob_dict.get("assigned_expert", "")
-                ).get_id(),
+                expert_id=LeaderState()
+                .get_expert_by_name(subjob_dict.get("assigned_expert", ""))
+                .get_id(),
             )
 
             # add edges for dependencies
             for dep_id in subjob_dict.get("dependencies", []):
                 job_graph.add_edge(dep_id, job_id)  # dep_id -> job_id shows dependency
 
-        if not nx.is_directed_acyclic_graph(job_graph):
+        if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
             raise ValueError("The job graph is not a directed acyclic graph.")
 
         return job_graph
 
-    async def execute_job_graph(self, job_graph: nx.DiGraph) -> nx.DiGraph:
+    async def execute_job_graph(self, job_graph: JobGraph) -> JobGraph:
         """Asynchronously execute the job graph with dependency-based parallel execution.
 
         Jobs are represented in a directed graph (job_graph) where edges define dependencies.
         Please make sure the job graph is a directed acyclic graph (DAG).
 
         Args:
-            job_graph (nx.DiGraph): The job graph to be executed.
+            job_graph (JobGraph): The job graph to be executed.
 
         Returns:
-            nx.DiGraph: The job graph with the results of the jobs.
+            JobGraph: The job graph with the results of the jobs.
         """
         # TODO: move the router functionality to the experts, and make the experts be able to
         # dispatch the agent messages to the corresponding agents. The objective is to make the
@@ -159,7 +160,7 @@ class Leader(Agent, metaclass=AbcSingleton):
                 )
                 if all_predecessors_completed:
                     # form the agent message to the agent
-                    job: Job = job_graph.nodes[job_id]["job"]
+                    job: Job = job_graph.get_job(job_id)
                     pred_messages: List[WorkflowMessage] = [
                         job_results[pred_id] for pred_id in job_graph.predecessors(job_id)
                     ]
@@ -169,9 +170,7 @@ class Leader(Agent, metaclass=AbcSingleton):
 
             # execute ready jobs
             for job_id in ready_job_ids:
-                expert = self._leader_state.get_or_create_expert_by_id(
-                    job_graph.nodes[job_id]["expert_id"]
-                )
+                expert = LeaderState().get_expert_by_id(job_graph.get_expert_id(job_id))
 
                 running_jobs[job_id] = asyncio.create_task(
                     self._execute_job(expert, job_inputs[job_id])
@@ -220,7 +219,7 @@ class Leader(Agent, metaclass=AbcSingleton):
                             )
                     except Exception as e:
                         job_results[completed_job_id] = WorkflowMessage(
-                            content={
+                            payload={
                                 "status": WorkflowStatus.EXECUTION_ERROR,
                                 "scratchpad": str(e) + "\n" + traceback.format_exc(),
                                 "evaluation": "Some evaluation",
@@ -235,7 +234,14 @@ class Leader(Agent, metaclass=AbcSingleton):
                 await asyncio.sleep(0.5)
 
         for job_id, job_result in job_results.items():
-            job_graph.nodes[job_id]["workflow_result"] = job_result
+            job_graph.set_job_result(
+                job_id,
+                JobResult(
+                    job_id=job_id,
+                    status=JobStatus.FINISHED,
+                    result=TextMessage(payload=job_result.scratchpad),
+                ),
+            )
         return job_graph
 
     async def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
@@ -255,7 +261,3 @@ class Leader(Agent, metaclass=AbcSingleton):
             # )
             raise NotImplementedError("Decompose the job into subjobs is not implemented.")
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
-
-    def get_leader_state(self) -> LeaderState:
-        """Get the leader state."""
-        return self._leader_state

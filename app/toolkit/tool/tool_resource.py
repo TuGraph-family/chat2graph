@@ -36,7 +36,7 @@ class Query(Tool):
         sys_prompt = """Suppose you are the database or the document terminal.
 I will ask you for help. If you don't know the answer, you can make up a reasonable one."""
         message = ModelMessage(
-            content=text,
+            payload=text,
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
         response: ModelMessage = await model_service.generate(

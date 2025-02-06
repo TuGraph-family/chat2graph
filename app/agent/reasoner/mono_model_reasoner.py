@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
@@ -11,7 +11,6 @@ from app.common.system_env import SystemEnv
 from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
-from app.toolkit.tool.tool import Tool
 
 
 class MonoModelReasoner(Reasoner):
@@ -49,7 +48,7 @@ class MonoModelReasoner(Reasoner):
         print_messages = SystemEnv.PRINT_REASONER_MESSAGES
 
         # set the system prompt
-        sys_prompt = self._format_system_prompt(task=task, tools=task.tools)
+        sys_prompt = self._format_system_prompt(task=task)
         # logging
         if SystemEnv.PRINT_SYSTEM_PROMPT:
             print(f"\033[38;5;245mSystem:\n{sys_prompt}\033[0m\n")
@@ -57,7 +56,7 @@ class MonoModelReasoner(Reasoner):
         # trigger the reasoning process
         init_message = ModelMessage(
             source_type=MessageSourceType.MODEL,
-            content=(
+            payload=(
                 "<scratchpad>\nEmpty\n</scratchpad>\n"
                 "<action>\nEmpty\n</action>\n"
                 "<feedback>\nNo feadback\n</feedback>\n"
@@ -110,11 +109,7 @@ class MonoModelReasoner(Reasoner):
         """Conclude the inference results."""
         return ""
 
-    def _format_system_prompt(
-        self,
-        task: Task,
-        tools: Optional[List[Tool]] = None,
-    ) -> str:
+    def _format_system_prompt(self, task: Task) -> str:
         """Set the system prompt."""
         task_description = task.operator_config.instruction if task.operator_config else ""
 
@@ -144,9 +139,9 @@ class MonoModelReasoner(Reasoner):
 
         reasoning_task = f"=====\nTASK:\n{task_description}\nCONTEXT:\n{task_context}\n====="
 
-        if tools:
+        if len(task.tools) > 0:
             func_description = "\n".join(
-                [f"Function: {tool.name}()\n{tool.description}\n" for tool in tools]
+                [f"Function {tool.name}():\n\t{tool.description}\n" for tool in task.tools]
             )
         else:
             func_description = "No function calling in this round."

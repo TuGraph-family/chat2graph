@@ -61,6 +61,10 @@ class Agent(ABC):
         """Get the unique identifier of the agent."""
         return self._id
 
+    def get_profile(self) -> Profile:
+        """Get the profile of the agent."""
+        return self._profile
+
     @abstractmethod
     async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> Any:
         """Execute the agent."""

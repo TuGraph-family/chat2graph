@@ -33,20 +33,20 @@ class ModelMessage(Message):
 
     def __init__(
         self,
-        content: str,
+        payload: str,
         timestamp: str,
         id: Optional[str] = None,
         source_type: MessageSourceType = MessageSourceType.MODEL,
         function_calls: Optional[List[FunctionCallResult]] = None,
     ):
         super().__init__(timestamp=timestamp, id=id)
-        self._content: str = content
+        self._payload: str = payload
         self._source_type: MessageSourceType = source_type
         self._function_calls: Optional[List[FunctionCallResult]] = function_calls
 
     def get_payload(self) -> str:
         """Get the content of the message."""
-        return self._content
+        return self._payload
 
     def get_timestamp(self) -> str:
         """Get the timestamp of the message."""
@@ -74,23 +74,23 @@ class WorkflowMessage(Message):
 
     def __init__(
         self,
-        content: Dict[str, Any],
+        payload: Dict[str, Any],
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
-        self._content: Dict[str, Any] = content
-        for key, value in content.items():
+        self._payload: Dict[str, Any] = payload
+        for key, value in payload.items():
             setattr(self, key, value)
 
     def get_payload(self) -> Dict[str, Any]:
         """Get the content of the message."""
-        return self._content
+        return self._payload
 
     def __getattr__(self, name: str) -> Any:
         """Dynamic field access through attributes."""
-        if name in self._content:
-            return self._content[name]
+        if name in self._payload:
+            return self._payload[name]
         raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{name}'")
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -98,8 +98,8 @@ class WorkflowMessage(Message):
         if name.startswith("_"):
             super().__setattr__(name, value)
         else:
-            if hasattr(self, "_content"):
-                self._content[name] = value
+            if hasattr(self, "_payload"):
+                self._payload[name] = value
             else:
                 super().__setattr__(name, value)
 
@@ -190,7 +190,6 @@ class ChatMessage(Message):
 class TextMessage(ChatMessage):
     """Text message"""
 
-    # TODO: Add user message attributes
     def __init__(
         self,
         payload: str,
@@ -214,7 +213,3 @@ class TextMessage(ChatMessage):
     def get_text(self) -> str:
         """Get the string content of the message."""
         return self._payload
-
-
-class ErrorMessage(TextMessage):
-    """Error message"""

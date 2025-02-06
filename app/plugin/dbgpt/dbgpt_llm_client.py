@@ -139,7 +139,7 @@ class DbgptLlmClient(ModelService):
             source_type = MessageSourceType.ACTOR
 
         response = ModelMessage(
-            content=model_response.text,
+            payload=model_response.text,
             source_type=source_type,
             function_calls=func_call_results,
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
