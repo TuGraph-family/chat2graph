@@ -27,11 +27,11 @@ class AgenticService:
     """Agentic service class"""
 
     def __init__(self):
-        # TODO: to be configured by yaml
+        # TODO: configure the chat2graph service by yaml
 
         # initialize the leader
         reasoner = DualModelReasoner()
-        self._leader: Leader = Leader(agent_config=get_leader_config(reasoner=reasoner))
+        Leader(agent_config=get_leader_config(reasoner=reasoner))
 
         # configure the multi-agent system
         LeaderState().create_expert(graph_modeling_expert_config)
