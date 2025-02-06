@@ -1,10 +1,10 @@
 from typing import Any, List, Optional
 from unittest.mock import AsyncMock
 
-import networkx as nx
 import pytest
 
 from app.agent.agent import AgentConfig, Profile
+from app.agent.graph import JobGraph
 from app.agent.job import Job
 from app.agent.leader import Leader
 from app.agent.leader_state import LeaderState
@@ -15,6 +15,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.agent.workflow.workflow import Workflow
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.common.singleton import AbcSingleton
+from app.manager.job_manager import JobManager
 from app.memory.message import AgentMessage, WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -101,7 +102,9 @@ def leader(mock_reasoner: Reasoner):
     workflow = DbgptWorkflow()
     workflow.add_operator(decomposition_operator)
 
-    config = AgentConfig(profile="test", reasoner=mock_reasoner, workflow=workflow)
+    config = AgentConfig(
+        profile=Profile(name="test_name"), reasoner=mock_reasoner, workflow=workflow
+    )
     return Leader(agent_config=config)
 
 
@@ -173,19 +176,19 @@ Final Delivery:
         reasoner=mock_reasoner,
         workflow=MockWorkflow(),
     )
-    leader._leader_state.add_expert_config(expert_profile_1)
-    leader._leader_state.add_expert_config(expert_profile_2)
-    leader._leader_state.add_expert_config(expert_profile_3)
+    LeaderState().create_expert(expert_profile_1)
+    LeaderState().create_expert(expert_profile_2)
+    LeaderState().create_expert(expert_profile_3)
 
     job_graph = await leader.execute(AgentMessage(job=job))
     print(f"job_graph: {job_graph.nodes}")
-    leader._leader_state.replace_subgraph(main_job_id=job.id, new_subgraph=job_graph)
+    JobManager().replace_subgraph(job.id, new_subgraph=job_graph)
 
-    assert isinstance(job_graph, nx.DiGraph)
-    assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes(data=True))
+    assert isinstance(job_graph, JobGraph)
+    assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes_data())
 
-    assert len(leader._leader_state.get_job_graph(main_job_id=job.id).nodes) == 3
-    assert len(leader._leader_state.get_job_graph(main_job_id=job.id).edges) == 3  # 3 dependencies
+    assert len(JobManager().get_job_graph(job.id).nodes()) == 3
+    assert len(JobManager().get_job_graph(job.id).edges()) == 3  # 3 dependencies
 
 
 @pytest.mark.asyncio
@@ -202,7 +205,7 @@ Analyzing the task...
 
     with pytest.raises(Exception) as exc_info:
         job_graph = await leader.execute(AgentMessage(job=job))
-        leader._leader_state.replace_subgraph(new_subgraph=job_graph)
+        JobManager().replace_subgraph(new_subgraph=job_graph)
 
     assert "Failed to decompose the subtasks by json format" in str(exc_info.value)
     assert mock_response in str(exc_info.value)

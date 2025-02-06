@@ -18,19 +18,19 @@ async def main():
         ModelMessage(
             id="1",
             source_type=MessageSourceType.THINKER,
-            content="Hello, how are you? I am Alice.",
+            payload="Hello, how are you? I am Alice.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         ModelMessage(
             id="2",
             source_type=MessageSourceType.ACTOR,
-            content="I'm fine, thank you.",
+            payload="I'm fine, thank you.",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         ModelMessage(
             id="3",
             source_type=MessageSourceType.THINKER,
-            content="What's my name?",
+            payload="What's my name?",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
     ]

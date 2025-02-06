@@ -26,7 +26,7 @@ async def mock_reasoner() -> MonoModelReasoner:
 
     response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
-        content="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
+        payload="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
 

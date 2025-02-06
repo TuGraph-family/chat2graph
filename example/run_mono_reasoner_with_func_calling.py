@@ -2,6 +2,7 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.agent.job import SubJob
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.task import Task
 from app.toolkit.tool.tool import Tool
@@ -72,28 +73,15 @@ d) 三年总收益率（用百分比表示）
 ===== CONTEXT =====
 用户会提供数学计算问题，系统需要：
 1. 理解问题类型和要求
-2. 选择合适的计算工具
-3. 展示详细的计算步骤
-4. 提供最终答案
+2. 展示调用合适的计算工具的过程
 """
 
     reasoner = MonoModelReasoner()
 
-    job = SubJob(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="Test goal",
-    )
-    task = Task(
-        task_description=calulation_task,
-        task_context=calculation_context,
-        job=job,
-    )
+    job = SubJob(goal="goal", context=calulation_task + calculation_context)
+    task = Task(job=job, tools=[Calculator()])
 
-    await reasoner.infer(
-        task=task,
-        tools=[Calculator()],
-    )
+    await reasoner.infer(task=task)
 
 
 if __name__ == "__main__":

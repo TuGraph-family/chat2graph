@@ -71,7 +71,7 @@ class MockOperator(Operator):
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         self._execution_order.append(self._config.id)
-        return WorkflowMessage(content={"scratchpad": f"Output from {self._config.id}"})
+        return WorkflowMessage(payload={"scratchpad": f"Output from {self._config.id}"})
 
 
 @pytest.mark.asyncio

@@ -48,7 +48,7 @@ async def main():
         context="Generate a list of prime numbers between 1 and 20.",
     )
     workflow_message = WorkflowMessage(
-        content={"scratchpad": "[2, 3, 5, 7, 11, 13, 17, 19]"},
+        payload={"scratchpad": "[2, 3, 5, 7, 11, 13, 17, 19]"},
     )
     result: WorkflowMessage = await operator.execute(
         reasoner=reasoner,

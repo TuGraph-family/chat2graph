@@ -1,11 +1,12 @@
 import asyncio
 
-import networkx as nx
+import networkx as nx  # type: ignore
 
 from app.agent.agent import AgentConfig, Profile
 from app.agent.expert import Expert
 from app.agent.job import SubJob
 from app.agent.leader import Leader
+from app.agent.leader_state import LeaderState
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
@@ -58,28 +59,25 @@ async def main():
         reasoner=reasoner,
         workflow=DbgptWorkflow(),
     )
-    leader._leader_state.add_expert_config(expert_profile_1)
-    leader._leader_state.add_expert_config(expert_profile_2)
-    leader._leader_state.add_expert_config(expert_profile_3)
+    LeaderState().create_expert(expert_profile_1)
+    LeaderState().create_expert(expert_profile_2)
+    LeaderState().create_expert(expert_profile_3)
 
     # decompose the job
-    jobs_graph = await leader.execute(agent_message=AgentMessage(job=job))
+    job_graph = await leader.execute(agent_message=AgentMessage(job=job))
 
     print("=== Decomposed Subtasks ===")
-    for subjob_id in nx.topological_sort(jobs_graph):
-        subjob: Job = jobs_graph.nodes[subjob_id]["job"]
-        expert_id: str = jobs_graph.nodes[subjob_id]["expert_id"]
-        expert: Expert = leader._leader_state.get_or_create_expert_by_id(expert_id)
+    for subjob_id in nx.topological_sort(job_graph.get_graph()):
+        subjob: SubJob = job_graph.get_job(subjob_id)
+        expert_id: str = job_graph.get_expert_id(subjob_id)
+        expert: Expert = LeaderState().get_expert_by_id(expert_id)
         expert_name: str = expert._profile.name
 
         print(f"\nAssigned Expert: {expert_name}")
         print("Goal:", subjob.goal)
         print("Context:", subjob.context)
 
-    # assert len(leader._leader_state.list_expert_assignments().keys()) == 3
-
-    # execute the leader's main workflow
-    # await leader.execute()
+    assert len(LeaderState()._expert_instances.keys()) == 3
 
 
 if __name__ == "__main__":

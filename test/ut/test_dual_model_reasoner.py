@@ -20,12 +20,12 @@ async def mock_reasoner() -> DualModelReasoner:
 
     actor_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
-        content="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
+        payload="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
     thinker_response = ModelMessage(
         source_type=MessageSourceType.THINKER,
-        content="<instruction>\nTest instruction\n</instruction>\n<input>\nTest input\n</input>",
+        payload="<instruction>\nTest instruction\n</instruction>\n<input>\nTest input\n</input>",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
 
@@ -71,7 +71,7 @@ async def test_infer_early_stop(mock_reasoner: DualModelReasoner, task: Task):
     # modify actor response to trigger stop condition
     stop_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
-        content="<scratchpad>\nDone\n</scratchpad>\n<action>\nStop\n</action>\n<feedback>\n<DELIVERABLE></DELIVERABLE>\n</feedback>",
+        payload="<scratchpad>\nDone\n</scratchpad>\n<action>\nStop\n</action>\n<feedback>\n<DELIVERABLE></DELIVERABLE>\n</feedback>",
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
     mock_reasoner._thinker_model.generate = AsyncMock(return_value=stop_response)
@@ -100,7 +100,7 @@ async def test_infer_multiple_rounds(mock_reasoner: DualModelReasoner, task: Tas
             source_type=MessageSourceType.ACTOR
             if round_count % 2 == 0
             else MessageSourceType.THINKER,
-            content=f"Round {round_count} content",
+            payload=f"Round {round_count} content",
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 

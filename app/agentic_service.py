@@ -10,6 +10,7 @@ from app.agent.graph_agent.question_answering import get_graph_question_answeing
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.agent.leader import Leader
+from app.agent.leader_state import LeaderState
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.manager.job_manager import JobManager
 from app.manager.session_manager import SessionManager
@@ -33,15 +34,16 @@ class AgenticService:
         self._leader: Leader = Leader(agent_config=get_leader_config(reasoner=reasoner))
 
         # configure the multi-agent system
-        self._leader.get_leader_state().add_expert_config(graph_modeling_expert_config)
-        self._leader.get_leader_state().add_expert_config(data_importation_expert_config)
-        self._leader.get_leader_state().add_expert_config(graph_query_expert_config)
-        self._leader.get_leader_state().add_expert_config(graph_analysis_expert_config)
+        LeaderState().create_expert(graph_modeling_expert_config)
+        LeaderState().create_expert(data_importation_expert_config)
+        LeaderState().create_expert(graph_query_expert_config)
+        LeaderState().create_expert(graph_analysis_expert_config)
 
     async def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
         job = Job(goal=message.get_payload())
-        job_result: JobResult = await JobManager().execute_job(job=job)
+        await Leader().receive_submission(job=job)
+        job_result: JobResult = await JobManager().query_job_result(job_id=job.id)
         return job_result.result
 
     def session(self, session_id: Optional[str] = None) -> Session:

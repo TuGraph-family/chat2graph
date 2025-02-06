@@ -1,15 +1,16 @@
 import asyncio
 from typing import List, Optional
 
-import networkx as nx  # type: ignore
-
 from app.agent.agent import AgentConfig, Profile
+from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
 from app.agent.leader import Leader
+from app.agent.leader_state import LeaderState
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.manager.job_manager import JobManager
 from app.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -46,7 +47,7 @@ class NumberGeneratorOperator(BaseTestOperator):
         result = "\n" + " ".join(str(x) for x in numbers)
         print(f"NumberGenerator output: {result}")
         print("-" * 50)
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 class MultiplyByTwoOperator(BaseTestOperator):
@@ -59,12 +60,13 @@ class MultiplyByTwoOperator(BaseTestOperator):
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
+        assert workflow_messages is not None, "Workflow messages should not be None"
         last_line = workflow_messages[-1].scratchpad.strip()
         numbers = [int(x) for x in last_line.split()]
         result = " ".join(str(x * 2) for x in numbers)
         print(f"MultiplyByTwo output: {result}")
         print("-" * 50)
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 class AddTenOperator(BaseTestOperator):
@@ -77,12 +79,13 @@ class AddTenOperator(BaseTestOperator):
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
+        assert workflow_messages is not None, "Workflow messages should not be None"
         last_line = workflow_messages[-1].scratchpad.strip()
         numbers = [int(x) for x in last_line.split()]
         result = " ".join(str(x + 10) for x in numbers)
         print(f"AddTen output: {result}")
         print("-" * 50)
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 class SumOperator(BaseTestOperator):
@@ -95,12 +98,13 @@ class SumOperator(BaseTestOperator):
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
+        assert workflow_messages is not None, "Workflow messages should not be None"
         last_line = workflow_messages[-1].scratchpad.strip()
         numbers = [int(x) for x in last_line.split()]
         result = str(sum(numbers))
         print(f"Sum output: {result}")
         print("-" * 50)
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 class FormatResultOperator(BaseTestOperator):
@@ -113,6 +117,7 @@ class FormatResultOperator(BaseTestOperator):
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
+        assert workflow_messages is not None, "Workflow messages should not be None"
         result = (
             f"Final Result\n:{'{}'.join([msg.scratchpad for msg in workflow_messages])}".format(
                 "\n"
@@ -120,7 +125,7 @@ class FormatResultOperator(BaseTestOperator):
         )
         print(f"Format output: {result}")
         print("-" * 50)
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 async def main():
@@ -201,7 +206,7 @@ async def main():
 
     # create expert profiles
     for i, workflow in enumerate(workflows):
-        leader._leader_state.add_expert_config(
+        LeaderState().create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=f"Expert {i + 1}", description=f"Expert {i + 1}"),
                 reasoner=reasoner,
@@ -210,40 +215,40 @@ async def main():
         )
 
     # Create job graph structure
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_1,
         expert_name="Expert 1",
         predecessors=[],
         successors=[job_2, job_3],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_2,
         expert_name="Expert 2",
         predecessors=[job_1],
         successors=[job_5],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_3,
         expert_name="Expert 3",
         predecessors=[job_1],
         successors=[job_4],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_4,
         expert_name="Expert 4",
         predecessors=[job_3],
         successors=[],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_5,
         expert_name="Expert 5",
         predecessors=[job_2, job_3],
@@ -253,18 +258,21 @@ async def main():
     print("\n=== Starting Leader Execute TestTest ===")
 
     # get the job graph and expert assignments
-    job_graph: nx.DiGraph = await leader.execute_job_graph(
-        job_graph=leader._leader_state.get_job_graph(main_job_id="test_main_job_id")
+    job_graph: JobGraph = await leader.execute_job_graph(
+        job_graph=JobManager().get_job_graph("test_original_job_id")
     )
-    tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
+    tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
 
     print("\n=== Execution Results ===")
     for tail_node in tail_nodes:
-        job = job_graph.nodes[tail_node]["job"]
-        workflow_message = job_graph.nodes[tail_node]["workflow_result"]
+        job = job_graph.get_job(tail_node)
+        job_result = job_graph.get_job_result(tail_node)
+        if not job_result:
+            print(f"Job {tail_node} is not completed yet.")
+            continue
         print(f"\nTask {job.id}:")
-        print(f"Status: {workflow_message.status}")
-        print(f"Output: {workflow_message.scratchpad}")
+        print(f"Status: {job_result.status}")
+        print(f"Output: {job_result.result.get_payload()}")
         print("-" * 50)
 
 

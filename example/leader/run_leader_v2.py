@@ -1,10 +1,10 @@
 import asyncio
 
-import networkx as nx  # type: ignore
-
 from app.agent.agent import AgentConfig, Profile
+from app.agent.graph import JobGraph
 from app.agent.job import SubJob
 from app.agent.leader import Leader
+from app.agent.leader_state import LeaderState
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.eval_operator import EvalOperator
 from app.agent.workflow.operator.operator import Operator
@@ -13,6 +13,7 @@ from app.common.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
+from app.manager.job_manager import JobManager
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 
@@ -25,21 +26,46 @@ async def main():
     )
     leader = Leader(agent_config=agent_config)
 
-    # Paper content (simplified for demonstration)
+    # paper content (simplified for demonstration)
     paper_content = """
-    paper content:
-        Title: Impact of Social Media on Mental Health During COVID-19 Pandemic
-        Abstract: This study investigates the relationship between social media usage and mental health during the COVID-19 pandemic, focusing on anxiety levels, depression symptoms, and overall psychological well-being. Our findings indicate that excessive social media exposure is significantly associated with increased mental health challenges, while moderate and purposeful use may provide social support during isolation periods.
-        Methods: We conducted a mixed-methods study involving 1000 participants (ages 18-65) recruited through online platforms. The quantitative component included standardized psychological assessments (GAD-7, PHQ-9) and custom social media usage questionnaires. The qualitative phase comprised semi-structured interviews with 50 selected participants to explore their experiences in depth. Data collection occurred between March 2021 and December 2021, spanning various pandemic phases.
-        Results: Our analysis revealed a significant correlation between increased social media use and anxiety levels (r = 0.68, p < 0.001). Participants spending more than 4 hours daily on social media platforms showed higher depression scores (M = 12.4, SD = 3.2) compared to moderate users (M = 8.2, SD = 2.8). Qualitative findings identified three major themes: information overload, social connection maintenance, and emotional contagion. Notably, 73% of participants reported experiencing heightened anxiety after consuming COVID-19 related content on social media.
-        Discussion: The findings suggest that while social media served as a crucial communication tool during lockdowns, excessive exposure to pandemic-related content contributed to psychological distress. However, moderate usage focusing on maintaining social connections showed protective effects against isolation-induced mental health challenges. These results highlight the need for balanced social media engagement and digital wellness strategies during crisis periods. Future research should explore interventions to promote healthy social media habits and investigate long-term mental health impacts post-pandemic.
+paper content:
+    Mixture-of-Experts (MoE) architectures have emerged as a promising solution for managing computational costs when scaling up parameters in large language models (LLMs). Recent applications
+    of MoE in Transformer-based models (Vaswani et al., 2017) have led to successful attempts at scaling language models to substantial sizes (Shao et al., 2024; DeepSeek-AI et al., 2024; Dai et al.,
+    2024; Fedus et al., 2021; Lepikhin et al., 2020), resulting in remarkable performance improvements.
+    However, training MoE models always face the circumstance of load imbalance, which may result
+    in routing collapse (Shazeer et al., 2017) or increased computational overhead (Fedus et al., 2021;
+    Lepikhin et al., 2020; Shazeer et al., 2017). In order to avoid imbalanced routing, existing methods (Fedus et al., 2021; Lepikhin et al., 2020) commonly use an auxiliary loss to encourage balanced
+    expert load. Although the auxiliary loss can alleviate load imbalance during training, it also introduces undesired gradients that conflict with the language modeling objective. These interference
+    gradients will impair the model performance, so existing MoE methods always need to consider the
+    trade-off between load balance and model performance.
+
+    In this paper, we propose Loss-Free Balancing, an auxiliary-loss-free load balancing strategy,
+    aiming at maintaining control over expert load balance while not introducing interference gradients.
+    Loss-Free Balancing features an iterative process of token routing and bias updating. As illustrated
+    in Figure 1, before the top-K routing decision of MoE, Loss-Free Balancing will first apply expertwise biases to the original routing scores to produce biased gating scores, which determine the actual
+    routing targets of each token during training. These expert-wise biases will keep updating according
+    to the expert load observed on recent training tokens, where the biases of heavy-load experts will be
+    depressed and those of lite-load experts will be elevated. Through this dynamic updating strategy,
+    Loss-Free Balancing ensures that the biased gating scores can consistently lead to balanced routing
+    results. Compared with the auxiliary-loss-controlled load balancing strategies, Loss-Free Balancing
+    does not introduce undesired gradients that disrupt the primary language modeling objective, so its
+    training process is more noise-free and friendly.
+
+    In order to validate the performance of Loss-Free Balancing, we train MoE language models
+    with 1B parameters on 100B tokens and 3B parameters on 200B tokens from scratch. Experimental
+    results demonstrate that Loss-Free Balancing produces MoE models with better validation loss than
+    traditional auxiliary-loss-controlled models. Meanwhile, keeping the performance advantage, LossFree Balancing also achieves a significantly better load balance at the global and batch levels, and
+    is naturally compatible with expert parallelism, which is usually employed for training extremely
+    large MoE models.
+
+    ...
     """  # noqa: E501
 
     # create jobs for paper analysis
     job_1 = SubJob(
         id="extract_key_info",
         session_id="paper_analysis_session",
-        goal="Extract key information from the paper including research goals, methods, and main findings",
+        goal="Identify and extract the core information from the paper, including research problem, proposed solution, and key findings. Ensure to preserve key supporting details and specific examples related to these core elements.",
         context=paper_content,
         output_schema="string",
     )
@@ -47,32 +73,32 @@ async def main():
     job_2 = SubJob(
         id="analyze_methodology",
         session_id="paper_analysis_session",
-        goal="Analyze the research methodology, including study design, data collection, and analytical approaches",
-        context="",
+        goal="Analyze the paper's methodology to understand its research approach, considering aspects like research design, data sources, and analytical techniques.",
+        context=paper_content,
         output_schema="string",
     )
 
     job_3 = SubJob(
         id="analyze_results",
         session_id="paper_analysis_session",
-        goal="Analyze the results and their implications, including statistical significance and practical impact",
-        context="",
+        goal="Analyze the paper's results and discuss their implications, focusing on key findings, statistical evidence, and practical significance.",
+        context=paper_content,
         output_schema="string",
     )
 
     job_4 = SubJob(
         id="technical_review",
         session_id="paper_analysis_session",
-        goal="Review technical soundness of the methodology and statistical analysis",
-        context="",
+        goal="Evaluate the technical soundness of the paper's methodology and analysis, assessing methodological rigor, validity of analysis, and potential limitations.",
+        context=paper_content,
         output_schema="string",
     )
 
     job_5 = SubJob(
         id="generate_summary",
         session_id="paper_analysis_session",
-        goal="Generate a comprehensive summary combining methodology analysis and results analysis",
-        context="",
+        goal="Synthesize a detailed comprehensive summary based on the methodology and results analyses, highlighting the paper's main contributions and significance. Incorporate key supporting details and specific findings from the analyses to provide a rich and informative summary.",
+        context=paper_content,
         output_schema="string",
     )
 
@@ -80,55 +106,54 @@ async def main():
     expert_configs = [
         (
             "Information Extractor",
-            "Extracts and organizes key information from academic papers",
-            "You are a research assistant specializing in extracting key information from academic papers. Focus on:\n"
-            "1. Research objectives and hypotheses\n"
-            "2. Key methodological approaches\n"
-            "3. Main findings and conclusions\n"
-            "Format your response in a structured way with clear sections.",
+            "Extracts and organizes key information from academic papers to create a structured foundation for analysis.",
+            "You are a highly efficient research assistant specializing in extracting and organizing key information from academic papers. Your primary focus is to build a structured foundation for subsequent analysis by other experts. Please focus on:\n"
+            "1. **Clearly identify the core research problem or question** the paper addresses.\n"
+            "2. **Summarize the proposed solution or approach** to address the research problem.\n"
+            "3. **Extract the key findings and main conclusions** presented in the paper.\n"
+            "4. **Organize your response in a structured format using Markdown**, with clear sections for 'Research Problem', 'Proposed Solution', and 'Key Findings'. Use bullet points or numbered lists within each section to enhance readability and organization. This structured output will be used by other experts for in-depth analysis.",
         ),
         (
             "Methodology Expert",
-            "Specializes in research methodology and study design analysis",
-            "You are a methodology expert specializing in research design analysis. Evaluate:\n"
-            "1. Research design appropriateness\n"
-            "2. Sampling methods and sample size adequacy\n"
-            "3. Data collection procedures\n"
-            "4. Potential methodological limitations\n"
-            "Provide a detailed analysis with specific recommendations if applicable.",
+            "Provides in-depth evaluation of research methodology and study design, offering actionable recommendations.",
+            "You are a seasoned methodology expert with a specialization in research design analysis. Your task is to conduct an in-depth evaluation of the paper's methodology and study design, and provide actionable recommendations for improvement or further consideration. Please evaluate:\n"
+            "1. **The appropriateness and rigor of the research design** chosen for the study's objectives.\n"
+            "2. **The adequacy of the sampling methods and sample size** in representing the target population and ensuring generalizability.\n"
+            "3. **The clarity and validity of the data collection procedures**, including instruments and protocols.\n"
+            "4. **Potential methodological limitations and biases** that might affect the study's findings and conclusions.\n"
+            "Provide a detailed analysis for each point, justifying your evaluation with references to established methodological principles where possible. Conclude with a summary of your overall assessment and specific, actionable recommendations for strengthening the methodology in future research or similar studies.",
         ),
         (
             "Results Analyst",
-            "Focuses on analyzing research results and implications",
-            "You are a results analyst specializing in research findings interpretation. Analyze:\n"
-            "1. Statistical significance of findings\n"
-            "2. Effect sizes and practical significance\n"
-            "3. Results interpretation in context\n"
-            "4. Implications for theory and practice\n"
-            "Present your analysis with clear evidence and reasoning.",
+            "Analyzes research results, interprets findings in context, and discusses practical and theoretical implications.",
+            "You are a highly skilled results analyst specializing in the interpretation of research findings and their implications. Your role is to rigorously analyze the research results presented in the paper, interpret them within the broader context of the field, and discuss their practical and theoretical significance. Please analyze:\n"
+            "1. **The strength of evidence supporting the key findings**, moving beyond just statistical significance to consider effect sizes and robustness.\n"
+            "2. **The interpretation of the results in the specific context of the research**, considering alternative explanations and potential confounding factors.\n"
+            "3. **The practical implications of the findings**, including their potential impact on real-world applications or interventions.\n"
+            "4. **The theoretical contributions of the research**, and how the findings contribute to or challenge existing theories and frameworks.\n"
+            "Present your analysis with clear reasoning and evidence from the paper, ensuring that your interpretations are well-supported and insightful.  Conclude with a concise summary of the key implications and contributions of the research results.",
         ),
         (
             "Technical Reviewer",
-            "Reviews technical and statistical aspects of research",
-            "You are a technical reviewer specializing in statistical analysis. Review:\n"
-            "1. Statistical methods appropriateness\n"
-            "2. Data analysis procedures\n"
-            "3. Technical accuracy and rigor\n"
-            "4. Validity and reliability concerns\n"
-            "Provide a technical evaluation with specific points of strength and concern.",
+            "Conducts a thorough technical review of the research, focusing on statistical and analytical soundness and offering constructive feedback.",
+            "You are a meticulous technical reviewer specializing in the statistical and analytical soundness of research. Your responsibility is to conduct a thorough technical review of the paper, focusing on the rigor and validity of the methods and analyses employed. Please review:\n"
+            "1. **The appropriateness of the statistical and analytical methods** used, given the research questions and data types.\n"
+            "2. **The accuracy and correctness of the data analysis procedures** and computations.\n"
+            "3. **The overall technical accuracy and rigor** of the research methodology and analysis.\n"
+            "4. **Potential concerns regarding the validity and reliability** of the findings from a technical perspective.\n"
+            "Provide a technical evaluation that is both critical and constructive. For each point, identify both strengths and areas of concern, offering specific feedback to enhance the technical quality of the research. Your review should be detailed and technically precise, aimed at ensuring the highest standards of research integrity.",
         ),
         (
             "Research Synthesizer",
-            "Synthesizes multiple analyses into coherent summaries",
-            "You are a research synthesizer specializing in integrating diverse analyses. Create a comprehensive summary that:\n"
-            "1. Synthesizes methodology and results analyses\n"
-            "2. Highlights key strengths and limitations\n"
-            "3. Provides overall evaluation\n"
-            "4. Suggests future research directions\n"
-            "Create a coherent narrative that integrates all previous analyses.",
+            "Synthesizes analyses from methodology and results experts into a coherent narrative, providing holistic evaluation and future directions.",
+            "You are an expert research synthesizer with a talent for integrating diverse analyses into a cohesive and insightful summary. Your task is to create a comprehensive and coherent narrative that synthesizes the analyses provided by the Methodology Expert and the Results Analyst. Your summary should:\n"
+            "1. **Synthesize the key evaluations from both the methodology and results analyses**, identifying common themes and points of convergence or divergence.\n"
+            "2. **Highlight the key strengths and limitations of the research** based on the integrated expert evaluations.\n"
+            "3. **Provide a holistic and insightful overall evaluation** of the paper's contribution and quality, considering both methodological rigor and the significance of the findings.\n"
+            "4. **Suggest potential directions for future research** that build upon the current study, addressing its limitations or expanding upon its findings.\n"
+            "Create a coherent and well-structured narrative that seamlessly integrates all previous analyses, offering a comprehensive and balanced perspective on the paper's merits and areas for future development. Your synthesis should be the definitive summary that provides actionable insights and a clear understanding of the paper's overall value and impact.",
         ),
     ]
-
     for name, desc, instruction in expert_configs:
         workflow = DbgptWorkflow()
 
@@ -152,7 +177,7 @@ async def main():
         workflow.add_operator(op)
         workflow.set_evaluator(evaluator)
 
-        leader._leader_state.add_expert_config(
+        LeaderState().create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=name, description=desc),
                 reasoner=reasoner,
@@ -167,40 +192,40 @@ async def main():
     #          ↘                                       ↗
     #            job_3 (Results)
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_1,
         expert_name="Information Extractor",
         predecessors=[],
         successors=[job_2, job_3],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_2,
         expert_name="Methodology Expert",
         predecessors=[job_1],
         successors=[job_4],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_3,
         expert_name="Results Analyst",
         predecessors=[job_1],
         successors=[job_5],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_4,
         expert_name="Technical Reviewer",
         predecessors=[job_2],
         successors=[job_5],
     )
 
-    leader._leader_state.add_job(
-        main_job_id="test_main_job_id",
+    JobManager().add_job(
+        original_job_id="test_original_job_id",
         job=job_5,
         expert_name="Research Synthesizer",
         predecessors=[job_3, job_4],
@@ -209,17 +234,20 @@ async def main():
 
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
-    job_graph: nx.DiGraph = await leader.execute_job_graph(
-        job_graph=leader._leader_state.get_job_graph(main_job_id="test_main_job_id")
+    job_graph: JobGraph = await leader.execute_job_graph(
+        job_graph=JobManager().get_job_graph("test_original_job_id")
     )
-    tail_nodes = [node for node in job_graph.nodes if job_graph.out_degree(node) == 0]
+    tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
 
     for tail_node in tail_nodes:
-        job = job_graph.nodes[tail_node]["job"]
-        workflow_message = job_graph.nodes[tail_node]["workflow_result"]
+        job = job_graph.get_job(tail_node)
+        job_result = job_graph.get_job_result(tail_node)
+        if not job_result:
+            print(f"Job {tail_node} is not completed yet.")
+            continue
         print(f"\nTask {job.id}:")
-        print(f"Status: {workflow_message.status}")
-        print(f"Output: {workflow_message.scratchpad}")
+        print(f"Status: {job_result.status}")
+        print(f"Output: {job_result.result.get_payload()}")
         print("-" * 50)
 
 

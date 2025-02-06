@@ -86,7 +86,7 @@ class UpperOperator(BaseTestOperator):
         result = job.context.upper() + scratchpad_content.upper()
         print(f"UpperOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"UpperOperator output: {result}\n\n")
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 class AddPrefixOperator(BaseTestOperator):
@@ -113,7 +113,7 @@ class AddPrefixOperator(BaseTestOperator):
         result = f"Prefix_{scratchpad_content}{job.context}"
         print(f"AddPrefixOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"AddPrefixOperator output: {result}\n\n")
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 class AddSuffixOperator(BaseTestOperator):
@@ -137,7 +137,7 @@ class AddSuffixOperator(BaseTestOperator):
         result = f"{scratchpad_content}_Suffix"
         print(f"AddSuffixOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"AddSuffixOperator output: {result}\n\n")
-        return WorkflowMessage(content={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result})
 
 
 class EvalOperator(BaseTestOperator):
@@ -165,7 +165,7 @@ class EvalOperator(BaseTestOperator):
         print(f"EvalOperator input - context: {job.context}, scratchpad: {scratchpad_content}")
         print(f"EvalOperator output: {result}\n\n")
         return WorkflowMessage(
-            content={
+            payload={
                 "scratchpad": result,
                 "status": "success",
                 "experience": "The workflow is executed successfully",
