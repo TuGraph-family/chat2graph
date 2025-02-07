@@ -30,7 +30,9 @@ class JobManager(metaclass=Singleton):
         tail_nodes: List[str] = [
             node for node in job_graph.nodes() if job_graph.out_degree(node) == 0
         ]
-        mutli_agent_content = ""
+
+        # combine the content of the job results from the tail nodes
+        mutli_agent_payload = ""
         for tail_node in tail_nodes:
             job_result: Optional[JobResult] = job_graph.get_job_result(tail_node)
             if not job_result:
@@ -45,25 +47,24 @@ class JobManager(metaclass=Singleton):
                     tokens=0,  # TODO: calculate the tokens
                     result=chat_message,
                 )
-            mutli_agent_content += job_result.result.get_payload() + "\n"
+            mutli_agent_payload += job_result.result.get_payload() + "\n"
 
         # parse the multi-agent result
-        chat_message = TextMessage(
-            payload=mutli_agent_content,
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        )
         job_result = JobResult(
             job_id=job_id,
             status=JobStatus.FINISHED,
             duration=0,  # TODO: calculate the duration
             tokens=0,  # TODO: calculate the tokens
-            result=chat_message,
+            result=TextMessage(
+                payload=mutli_agent_payload,
+                timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            ),
         )
 
         return job_result
 
     def get_job_graph(self, job_id: str) -> JobGraph:
-        """Get the job graph."""
+        """Get the job graph by the inital job id."""
         if job_id not in self._job_graphs:
             job_graph = JobGraph()
             self._job_graphs[job_id] = job_graph
@@ -71,7 +72,7 @@ class JobManager(metaclass=Singleton):
         return self._job_graphs[job_id]
 
     def set_job_graph(self, job_id: str, job_graph: JobGraph) -> None:
-        """Set the job graph."""
+        """Set the job graph by the inital job id."""
         self._job_graphs[job_id] = job_graph
 
     def add_job(

@@ -36,7 +36,7 @@ ALGORITHMS_INTENTION_ANALYSIS_OUTPUT_SCHEMA = """
         },
     ]
 }
-"""
+"""  # noqa: E501
 
 # operation 2: Algorithms Execute
 ALGORITHMS_EXECUTE_PROFILE = """
@@ -73,12 +73,15 @@ class AlgorithmsGetter(Tool):
         )
 
     async def get_algorithms(self) -> str:
-        """Retrieve all algorithm plugins of a specified type and version supported by the graph database.
+        """Retrieve all algorithm plugins of a specified type and version supported by the graph
+        database.
 
-        This function queries the database to fetch all algorithm plugins of type 'CPP' and version 'v1' or 'v2', and returns their description information as a JSON formatted string.
+        This function queries the database to fetch all algorithm plugins of type 'CPP' and version
+        'v1' or 'v2', and returns their description information as a JSON formatted string.
 
         Returns:
-            str: A JSON string containing the description information of all matching algorithm plugins.
+            str: A JSON string containing the description information of all matching algorithm
+            plugins.
         """
         plugins: List[Dict[str, str]] = []
         query_v1 = "CALL db.plugin.listPlugin('CPP','v1')"
@@ -122,10 +125,12 @@ class AlgorithmsExecutor(Tool):
     async def execute_algorithms(self, algorithms_name: str) -> str:
         """Execute the specified algorithm on the graph database.
 
-        This function calls the specified algorithm plugin on the graph database and returns the result.
+        This function calls the specified algorithm plugin on the graph database and returns the
+        result.
 
         Args:
-            algorithms_name (str): The name of the algorithm to execute. Pay attention to the format of the algorithm name.
+            algorithms_name (str): The name of the algorithm to execute. Pay attention to the format
+            of the algorithm name.
 
         Returns:
             str: The result of the algorithm execution.
@@ -145,6 +150,7 @@ class AlgorithmsExecutor(Tool):
 
 
 def get_algorithms_intention_analysis_operator():
+    """Get the operator for algorithms intention analysis."""
     analysis_toolkit = Toolkit()
     content_understanding_action = Action(
         id="algorithms_intention_analysis.content_understanding",
@@ -192,6 +198,7 @@ def get_algorithms_intention_analysis_operator():
 
 
 def get_algorithms_execute_operator():
+    """Get the operator for algorithms execution."""
     analysis_toolkit = Toolkit()
     algorithms_validation_action = Action(
         id="algorithms_execute.algorithms_validation_action",

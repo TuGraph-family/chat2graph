@@ -57,7 +57,7 @@ QUERY_INTENTION_ANALYSIS_OUTPUT_SCHEMA = """
 QUERY_DESIGN_PROFILE = """
 你是一位专业的图查询语言设计专家。你的工作是根据查询要求使用对应的图查询语言语法设计出对应的图查询语言，并执行该查询语句。
 如节点查询最常用的语法为 MATCH, WHERE, RETURN 等。你不具备写 Cypher 的能力，你只能调用工具来帮助你达到相关的目的。
-"""
+"""  # noqa: E501
 
 QUERY_DESIGN_INSTRUCTION = """
 基于经验证过的图模型、查询节点和查询条件，按要求完成图查询语言设计的任务：
@@ -150,10 +150,10 @@ class VertexQuerier(Tool):
         if value is None:
             return ""
 
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return str(value)
 
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, list | tuple):
             return str(list(value))
 
         return f"'{value}'"
@@ -161,7 +161,8 @@ class VertexQuerier(Tool):
     async def query_vertex(
         self, vertex_type: str, conditions: List[Dict[str, str]], distinct: bool = False
     ) -> str:
-        """Query vertices with conditions. The input must have been matched with the schema of the graph database.
+        """Query vertices with conditions. The input must have been matched with the schema of the
+        graph database.
 
         Args:
             vertex_type (str): The vertex type to query
@@ -206,7 +207,8 @@ class VertexQuerier(Tool):
                     - + : List concatenation
                     - IN: Check element existence in list
                     - []: List indexing
-                - value (str, optional): Value to compare against. Required for all operators except IS NULL/IS NOT NULL
+                - value (str, optional): Value to compare against. Required for all operators except
+                    IS NULL/IS NOT NULL
             distinct (bool): Whether to return distinct results
 
         Returns:
@@ -333,7 +335,10 @@ def get_query_design_operator():
     query_execution_aciton = Action(
         id="query_design.query_execution_aciton",
         name="执行查询",
-        description="根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，在对应图上执行查询语句得到结果",
+        description=(
+            "根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，"
+            "在对应图上执行查询语句得到结果"
+        ),
     )
     grammer_reader = GrammerReader("grammer_reader_tool")
     schema_getter = SchemaGetter("schema_checker_tool_v2")

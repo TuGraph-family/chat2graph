@@ -209,14 +209,15 @@ class DualModelReasoner(Reasoner):
                 [
                     "\t    " + schema
                     for schema in (
-                        f"[Follow the final delivery example:]\n{task.operator_config.output_schema.strip()}"
+                        "[Follow the final delivery example:]\n"
+                        f"{task.operator_config.output_schema.strip()}"
                     ).split("\n")
                 ]
             )
         else:
             output_schema = ""
 
-        # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
+        # TODO: The prompt template comes from the <system-name>.config.yaml
         return ACTOR_PROMPT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
@@ -261,7 +262,7 @@ class DualModelReasoner(Reasoner):
         # set the reasoning task
         reasoning_task = f"=====\nTASK:\n{task_description}\nCONTEXT:\n{task_context}\n====="
 
-        # TODO: The prompt template comes from the <system-name>.config.yml, eg. chat2graph.config.yml
+        # TODO: The prompt template comes from the <system-name>.config.yaml
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,

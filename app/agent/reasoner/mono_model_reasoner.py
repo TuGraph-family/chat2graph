@@ -151,7 +151,8 @@ class MonoModelReasoner(Reasoner):
                 [
                     "\t    " + schema
                     for schema in (
-                        f"[Follow the final delivery example:]\n{task.operator_config.output_schema.strip()}"
+                        "[Follow the final delivery example:]\n"
+                        f"{task.operator_config.output_schema.strip()}"
                     ).split("\n")
                 ]
             )

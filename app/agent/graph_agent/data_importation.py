@@ -197,7 +197,7 @@ class DataImport(Tool):
                 continue
 
             # checks if source and target exist in the entity data
-            # if not any(entity["label"] == source_type and entity["properties"].get(source_primary_key) == relationship["source"] for entity in cleaned_graph["entities"]):
+            # if not any(entity["label"] == source_type and entity["properties"].get(source_primary_key) == relationship["source"] for entity in cleaned_graph["entities"]):  # noqa: E501
             #     continue
 
             # check if source exists in the entity data
@@ -308,7 +308,7 @@ class DataImport(Tool):
             - It then constructs and executes Cypher statements to create nodes and edges in the database.
             - The `get_tugraph` function is assumed to return a connection to the database.
             - The `db.conn.run` method is used to execute the Cypher statements.
-        """
+        """  # noqa: E501
         graph = self.validate_and_clean_graph(graph)
 
         entities = graph["entities"]
@@ -321,7 +321,7 @@ class DataImport(Tool):
         total_update_entities = 0
 
         def format_property(key, value):
-            if isinstance(value, (int, float)):
+            if isinstance(value, int | float):
                 return f"{key}: {value}"
             else:
                 return f"{key}: '{value}'"
@@ -352,7 +352,8 @@ class DataImport(Tool):
                 elif hasattr(record, "as_dict"):
                     record_dict = record.as_dict()
                 else:
-                    # if there is no as_dict method, use the key values ​​of the Record object directly
+                    # if there is no as_dict method, use the key values ​​of
+                    # the Record object directly
                     record_dict = {key: record[key] for key in record.keys()}
 
                 # update counter
@@ -504,7 +505,7 @@ DATA_GENERATION_INSTRUCTION = f"""
 5. 整合实体和关系数据，并严格按照{DATA_GENERATION_OUTPUT}格式，只保留数据部分，不要输出无关的信息。
 6. 调用相关工具，完成实体和关系数据的导入导入任务。
 7. 输出数据导入结果。
-"""
+"""  # noqa: E501
 
 RESULT_OUTPUT = """
 {
@@ -534,19 +535,19 @@ def get_data_importation_operator():
     edge_data_generation_action = Action(
         id="data_generattion_and_import.edge_data_generation_action",
         name="关系数据抽取",
-        description=f"根据对图模型理解和文本内容理解的理解，进行关系数据的抽取，关系的数量不能少于{COUNT}条，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。关系数据抽取完成后，进行下一步'实体数据抽取'操作。",
+        description=f"根据对图模型理解和文本内容理解的理解，进行关系数据的抽取，关系的数量不能少于{COUNT}条，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。关系数据抽取完成后，进行下一步'实体数据抽取'操作。",  # noqa: E501
     )
 
     node_data_generation_action = Action(
         id="data_generattion_and_import.node_data_generation_action",
         name="实体数据抽取",
-        description="根据关系数据，图模型和文本内容，进行实体数据的抽取，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。实体数据抽取完成后，进行下一步'整合实体和关系数据'操作。",
+        description="根据关系数据，图模型和文本内容，进行实体数据的抽取，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。实体数据抽取完成后，进行下一步'整合实体和关系数据'操作。",  # noqa: E501
     )
 
     graph_data_generation_action = Action(
         id="data_generattion_and_import.graph_data_generation_action",
         name="整合实体和关系数据",
-        description=f"严格按照{DATA_GENERATION_OUTPUT}格式输出数据，并保证整合后的数据符合正确的json格式，不要输出其他无关信息，并且不要在数据中出现 '// '这样的省略字符。数据整合完成后，进行下一步'导入实体和关系数据'操作。",
+        description=f"严格按照{DATA_GENERATION_OUTPUT}格式输出数据，并保证整合后的数据符合正确的json格式，不要输出其他无关信息，并且不要在数据中出现 '// '这样的省略字符。数据整合完成后，进行下一步'导入实体和关系数据'操作。",  # noqa: E501
     )
 
     import_data_action = Action(

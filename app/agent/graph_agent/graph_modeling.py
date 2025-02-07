@@ -100,7 +100,7 @@ DOC_ANALYSIS_PROFILE = """
 你是一位专业的文档分析专家，专注于从文档中提取关键信息，为知识图谱的构建奠定坚实基础。
 你需要理解文档内容。请注意，你分析的文档可能只是全集的一个子集，需要通过局部推断全局。
 请注意，你的任务不是需要操作图数据库。你的任务是分析文档，为后续的 knowledge graph modeling 提供重要信息。
-"""
+"""  # noqa: E501
 
 DOC_ANALYSIS_INSTRUCTION = """
 请仔细阅读给定的文档，并按以下要求完成任务：
@@ -137,7 +137,7 @@ DOC_ANALYSIS_OUTPUT_SCHEMA = """
     "document_insights": "其他重要（多条）信息或（多个）发现，它们独属于本文档的特殊内容，请用分号隔开。",
     "document_snippets": "文档中的关键片段，用于支撑你的分析结论，提供上下文信息。",
 }
-"""
+"""  # noqa: E501
 
 # operation 2: Concept Modeling
 CONCEPT_MODELING_PROFILE = """
@@ -183,7 +183,7 @@ CONCEPT_MODELING_INSTRUCTION = """
 4. 验证图的可达性
 - 可达性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不可达，将无法在构建一个完整的知识图谱。
 - 通过查询图数据库，获取图的结构信息，验证实体和关系的可达性。
-"""
+"""  # noqa: E501
 
 CONCEPT_MODELING_OUTPUT_SCHEMA = """
 {
@@ -271,7 +271,8 @@ class VertexLabelGenerator(Tool):
         primary: str,
         properties: List[Dict[str, Union[str, bool]]],
     ) -> str:
-        """Generate a TuGraph vertex label statement, and then operator the TuGraph database to create the labels in the database.
+        """Generate a TuGraph vertex label statement, and then operator the TuGraph database to
+        create the labels in the database.
         Field names can only contain letters, numbers, and underscores.
 
         Args:
@@ -279,7 +280,8 @@ class VertexLabelGenerator(Tool):
             primary (str): The name of the primary key field
             properties (List[Dict]): List of property definitions, each containing:
                 - name (str): Property name
-                - type (str): Property type (e.g., 'STRING', 'INT32', 'DOUBLE', 'BOOL', 'DATE', 'DATETIME', do not support 'LIST' and 'MAP')
+                - type (str): Property type (e.g., 'STRING', 'INT32', 'DOUBLE', 'BOOL', 'DATE',
+                    'DATETIME', do not support 'LIST' and 'MAP')
                 - optional (bool): Whether the property is optional
                 - index (bool, optional): Whether to create an index
                 And make sure the primary key occurs in the properties list and is not optional.
@@ -348,8 +350,10 @@ class EdgeLabelGenerator(Tool):
         properties: List[Dict[str, Union[str, bool]]],
         constraints: List[List[str]],
     ) -> str:
-        """Generate a TuGraph edge label statement, and then operator the TuGraph database to create the labels in the database.
-        Field names can only contain letters, numbers, and underscores. The value of the parameters should be in English.
+        """Generate a TuGraph edge label statement, and then operator the TuGraph database to create
+        the labels in the database.
+        Field names can only contain letters, numbers, and underscores. The value of the parameters
+        should be in English.
 
         Args:
             label (str): The name of the edge label to create
@@ -358,9 +362,11 @@ class EdgeLabelGenerator(Tool):
                 - name (str): Property name
                 - type (str): Property type (e.g., 'STRING', 'INT32')
                 - optional (bool): Whether the property is optional
-            constraints (List[List[str]]): List of source and target vertex label constraints, which presents the direction of the edge.
+            constraints (List[List[str]]): List of source and target vertex label constraints, which
+            presents the direction of the edge.
                 It can configure multiple source and target vertex label constraints,
-                for example, [["source label", "target label"], ["other source label", "other target label"]]
+                for example, [["source label", "target label"], ["other source label", "other target
+                    label"]]
 
         Returns:
             str: The complete Cypher statement for creating the edge label, and it's result.
@@ -421,7 +427,8 @@ class CypherExecutor(Tool):
 
     async def validate_and_execute_cypher(self, cypher_schema: str) -> str:
         """Validate the TuGraph Cypher and execute it in the TuGraph Database.
-        Make sure the input cypher is only the code without any other information including ```Cypher``` or ```TuGraph Cypher```.
+        Make sure the input cypher is only the code without any other information including
+        ```Cypher``` or ```TuGraph Cypher```.
         This function can only execute one cypher schema at a time.
         If the schema is valid, return the validation results. Otherwise, return the error message.
 
@@ -446,7 +453,7 @@ class CypherExecutor(Tool):
     如果输入包含多条 Cypher，则返回错误信息和修改提示，以反映输入的 Cypher 有误。
 
     经过 TuGraph 内置的验证器，得到了执行错误：{str(e)}
-            """
+            """  # noqa: E501
             )
 
             message = ModelMessage(
@@ -455,7 +462,7 @@ class CypherExecutor(Tool):
 
             _model = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
             response = await _model.generate(sys_prompt=prompt, messages=[message])
-            raise Exception(response.get_payload())
+            raise RuntimeError(response.get_payload()) from e
 
 
 class GraphReachabilityGetter(Tool):
@@ -470,7 +477,8 @@ class GraphReachabilityGetter(Tool):
         )
 
     async def get_graph_reachability(self) -> str:
-        """Get the reachability information of the graph database which can help to understand the graph structure.
+        """Get the reachability information of the graph database which can help to understand the
+        graph structure.
 
         Args:
             None args required
@@ -530,7 +538,8 @@ class GraphReachabilityGetter(Tool):
         if isolated_labels:
             lines.append(
                 "!!! This graph database schema does not have reachability.\n"
-                f"!!! Isolated vertices found: {', '.join(f'({label})' for label in isolated_labels)}"
+                "!!! Isolated vertices found: "
+                f"{', '.join(f'({label})' for label in isolated_labels)}"
             )
         else:
             lines.append("After verified, the graph database schema has reachability.")
