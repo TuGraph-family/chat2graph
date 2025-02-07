@@ -7,7 +7,6 @@ from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
 from app.agent.job_result import JobResult
 from app.agent.leader import Leader
-from app.agent.leader_state import LeaderState
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
@@ -116,7 +115,7 @@ async def test_agent_job_graph():
         workflow = DbgptWorkflow()
         workflow.add_operator(TestAgentOperator(op_id))
 
-        LeaderState().create_expert(
+        leader.get_leader_state().create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=expert_name, description=f"Expert for {op_id}"),
                 reasoner=reasoner,
@@ -128,7 +127,7 @@ async def test_agent_job_graph():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=jobs[0],
-        expert_name="Expert 1",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 1"),
         predecessors=[],
         successors=[jobs[1], jobs[2]],
     )
@@ -136,7 +135,7 @@ async def test_agent_job_graph():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=jobs[1],
-        expert_name="Expert 2",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 2"),
         predecessors=[jobs[0]],
         successors=[jobs[4]],
     )
@@ -144,7 +143,7 @@ async def test_agent_job_graph():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=jobs[2],
-        expert_name="Expert 3",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 3"),
         predecessors=[jobs[0]],
         successors=[jobs[3]],
     )
@@ -152,7 +151,7 @@ async def test_agent_job_graph():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=jobs[3],
-        expert_name="Expert 4",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 4"),
         predecessors=[jobs[2]],
         successors=[],
     )
@@ -160,7 +159,7 @@ async def test_agent_job_graph():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=jobs[4],
-        expert_name="Expert 5",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 5"),
         predecessors=[jobs[1], jobs[2]],
         successors=[],
     )

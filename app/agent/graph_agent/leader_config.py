@@ -12,8 +12,7 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 def get_leader_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
     """Get the leader configuration."""
     # configure the leader
-    if not reasoner:
-        reasoner = DualModelReasoner()
+    reasoner = reasoner or DualModelReasoner()
     decomp_operator_config = OperatorConfig(
         id="job_decomp_operator_id",
         instruction=JOB_DECOMPOSITION_PROMPT,

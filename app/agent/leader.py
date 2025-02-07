@@ -9,7 +9,7 @@ from app.agent.expert import Expert
 from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
 from app.agent.job_result import JobResult
-from app.agent.leader_state import LeaderState
+from app.agent.leader_state import LeaderState, LeaderStateInterface
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.singleton import AbcSingleton
 from app.common.type import JobStatus, WorkflowStatus
@@ -23,7 +23,12 @@ class Leader(Agent, metaclass=AbcSingleton):
 
     _instance_config: Optional[AgentConfig] = None
 
-    def __init__(self, agent_config: Optional[AgentConfig] = None, id: Optional[str] = None):
+    def __init__(
+        self,
+        id: Optional[str] = None,
+        agent_config: Optional[AgentConfig] = None,
+        leader_state: Optional[LeaderStateInterface] = None,
+    ):
         # self._workflow of the leader is used to decompose the job
 
         if agent_config:
@@ -32,7 +37,7 @@ class Leader(Agent, metaclass=AbcSingleton):
             raise ValueError("The Leader instance config is not set.")
 
         super().__init__(agent_config=Leader._instance_config, id=id)
-        self._leader_state: LeaderState = LeaderState()
+        self._leader_state: LeaderStateInterface = leader_state or LeaderState()
 
     async def receive_submission(self, job: Job) -> None:
         """Receive a message from the user."""
@@ -68,7 +73,7 @@ class Leader(Agent, metaclass=AbcSingleton):
         job = agent_message.get_payload()
 
         # get the expert list
-        expert_profiles = LeaderState().get_expert_profiles()
+        expert_profiles = self._leader_state.get_expert_profiles()
         role_list = "\n".join(
             [
                 f"Expert name: {profile.name}\nDescription: {profile.description}"
@@ -118,9 +123,9 @@ class Leader(Agent, metaclass=AbcSingleton):
             job_graph.add_node(
                 job_id,
                 job=subjob,
-                expert_id=LeaderState()
-                .get_expert_by_name(subjob_dict.get("assigned_expert", ""))
-                .get_id(),
+                expert_id=self._leader_state.get_expert_by_name(
+                    subjob_dict.get("assigned_expert", "")
+                ).get_id(),
             )
 
             # add edges for dependencies
@@ -174,7 +179,7 @@ class Leader(Agent, metaclass=AbcSingleton):
 
             # execute ready jobs
             for job_id in ready_job_ids:
-                expert = LeaderState().get_expert_by_id(job_graph.get_expert_id(job_id))
+                expert = self._leader_state.get_expert_by_id(job_graph.get_expert_id(job_id))
 
                 running_jobs[job_id] = asyncio.create_task(
                     self._execute_job(expert, job_inputs[job_id])
@@ -265,3 +270,7 @@ class Leader(Agent, metaclass=AbcSingleton):
             # )
             raise NotImplementedError("Decompose the job into subjobs is not implemented.")
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
+
+    def get_leader_state(self) -> LeaderStateInterface:
+        """Get the leader state."""
+        return self._leader_state

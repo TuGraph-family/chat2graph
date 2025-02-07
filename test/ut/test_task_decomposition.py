@@ -176,9 +176,9 @@ Final Delivery:
         reasoner=mock_reasoner,
         workflow=MockWorkflow(),
     )
-    LeaderState().create_expert(expert_profile_1)
-    LeaderState().create_expert(expert_profile_2)
-    LeaderState().create_expert(expert_profile_3)
+    leader.get_leader_state().create_expert(expert_profile_1)
+    leader.get_leader_state().create_expert(expert_profile_2)
+    leader.get_leader_state().create_expert(expert_profile_3)
 
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()

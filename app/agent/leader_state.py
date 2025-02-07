@@ -1,13 +1,14 @@
+from abc import ABC, abstractmethod
 import threading
 from typing import Dict, List
 
 from app.agent.agent import AgentConfig, Profile
 from app.agent.expert import Expert
-from app.common.singleton import Singleton
+from app.common.singleton import AbcSingleton
 
 
-class LeaderState(metaclass=Singleton):
-    """Leader State is uesd to manage expert agent and jobs.
+class LeaderStateInterface(ABC):
+    """Abstract interface for Leader State.
 
     attributes:
         _expert_instances (Dict[str, Expert]): it stores the expert agent instances.
@@ -17,6 +18,39 @@ class LeaderState(metaclass=Singleton):
     def __init__(self):
         self._expert_instances: Dict[str, Expert] = {}  # expert_id -> instance
         self._expert_creation_lock: threading.Lock = threading.Lock()
+
+    @abstractmethod
+    def get_expert_by_name(self, expert_name: str) -> Expert:
+        """Get existing expert instance or create a new one."""
+
+    @abstractmethod
+    def get_expert_by_id(self, expert_id: str) -> Expert:
+        """Get existing expert instance or create a new one."""
+
+    @abstractmethod
+    def get_expert_profiles(self) -> Dict[str, Profile]:
+        """Return a dictionary of all registered expert profiles."""
+
+    @abstractmethod
+    def list_experts(self) -> List[Expert]:
+        """Return a list of all registered expert information."""
+
+    @abstractmethod
+    def create_expert(self, agent_config: AgentConfig) -> Expert:
+        """Add an expert profile to the registry."""
+
+    @abstractmethod
+    def release_expert(self, expert_id: str) -> None:
+        """Release the expert"""
+
+
+class LeaderState(LeaderStateInterface, metaclass=AbcSingleton):
+    """Leader State is uesd to manage expert agent and jobs.
+
+    attributes:
+        _expert_instances (Dict[str, Expert]): it stores the expert agent instances.
+        _expert_creation_lock (threading.Lock): it is used to lock the expert creation.
+    """
 
     def get_expert_by_name(self, expert_name: str) -> Expert:
         """Get existing expert instance or create a new one."""

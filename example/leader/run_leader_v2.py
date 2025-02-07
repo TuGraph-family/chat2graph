@@ -4,7 +4,6 @@ from app.agent.agent import AgentConfig, Profile
 from app.agent.graph import JobGraph
 from app.agent.job import SubJob
 from app.agent.leader import Leader
-from app.agent.leader_state import LeaderState
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.eval_operator import EvalOperator
 from app.agent.workflow.operator.operator import Operator
@@ -177,7 +176,7 @@ paper content:
         workflow.add_operator(op)
         workflow.set_evaluator(evaluator)
 
-        LeaderState().create_expert(
+        leader.get_leader_state().create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=name, description=desc),
                 reasoner=reasoner,
@@ -195,7 +194,7 @@ paper content:
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert_name="Information Extractor",
+        expert=leader.get_leader_state().get_expert_by_name("Information Extractor"),
         predecessors=[],
         successors=[job_2, job_3],
     )
@@ -203,7 +202,7 @@ paper content:
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert_name="Methodology Expert",
+        expert=leader.get_leader_state().get_expert_by_name("Methodology Expert"),
         predecessors=[job_1],
         successors=[job_4],
     )
@@ -211,7 +210,7 @@ paper content:
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert_name="Results Analyst",
+        expert=leader.get_leader_state().get_expert_by_name("Results Analyst"),
         predecessors=[job_1],
         successors=[job_5],
     )
@@ -219,7 +218,7 @@ paper content:
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert_name="Technical Reviewer",
+        expert=leader.get_leader_state().get_expert_by_name("Technical Reviewer"),
         predecessors=[job_2],
         successors=[job_5],
     )
@@ -227,7 +226,7 @@ paper content:
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert_name="Research Synthesizer",
+        expert=leader.get_leader_state().get_expert_by_name("Research Synthesizer"),
         predecessors=[job_3, job_4],
         successors=[],
     )

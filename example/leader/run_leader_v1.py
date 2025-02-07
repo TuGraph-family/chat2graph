@@ -5,7 +5,6 @@ from app.agent.agent import AgentConfig, Profile
 from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
 from app.agent.leader import Leader
-from app.agent.leader_state import LeaderState
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
@@ -206,7 +205,7 @@ async def main():
 
     # create expert profiles
     for i, workflow in enumerate(workflows):
-        LeaderState().create_expert(
+        leader.get_leader_state().create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=f"Expert {i + 1}", description=f"Expert {i + 1}"),
                 reasoner=reasoner,
@@ -218,7 +217,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert_name="Expert 1",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 1"),
         predecessors=[],
         successors=[job_2, job_3],
     )
@@ -226,7 +225,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert_name="Expert 2",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 2"),
         predecessors=[job_1],
         successors=[job_5],
     )
@@ -234,7 +233,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert_name="Expert 3",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 3"),
         predecessors=[job_1],
         successors=[job_4],
     )
@@ -242,7 +241,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert_name="Expert 4",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 4"),
         predecessors=[job_3],
         successors=[],
     )
@@ -250,7 +249,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert_name="Expert 5",
+        expert=leader.get_leader_state().get_expert_by_name("Expert 5"),
         predecessors=[job_2, job_3],
         successors=[],
     )

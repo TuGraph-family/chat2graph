@@ -167,7 +167,7 @@ class JobGraph(Graph):
                 self._jobs[node_id] = data["job"]
             if "expert_id" in data and isinstance(data["expert_id"], str):
                 self._expert_ids[node_id] = data["expert_id"]
-            if "legacy_job" in data and isinstance(data["legacy_job"], str):
+            if "legacy_job" in data and isinstance(data["legacy_job"], Job):
                 self._legacy_jobs[node_id] = data["legacy_job"]
             if "job_result" in data and isinstance(data["job_result"], JobResult):
                 self._job_results[node_id] = data["job_result"]

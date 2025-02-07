@@ -10,7 +10,6 @@ from app.agent.graph_agent.question_answering import get_graph_question_answeing
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.agent.leader import Leader
-from app.agent.leader_state import LeaderState
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.manager.job_manager import JobManager
 from app.manager.session_manager import SessionManager
@@ -31,13 +30,13 @@ class AgenticService:
 
         # initialize the leader
         reasoner = DualModelReasoner()
-        Leader(agent_config=get_leader_config(reasoner=reasoner))
+        leader = Leader(agent_config=get_leader_config(reasoner=reasoner))
 
         # configure the multi-agent system
-        LeaderState().create_expert(graph_modeling_expert_config)
-        LeaderState().create_expert(data_importation_expert_config)
-        LeaderState().create_expert(graph_query_expert_config)
-        LeaderState().create_expert(graph_analysis_expert_config)
+        leader.get_leader_state().create_expert(graph_modeling_expert_config)
+        leader.get_leader_state().create_expert(data_importation_expert_config)
+        leader.get_leader_state().create_expert(graph_query_expert_config)
+        leader.get_leader_state().create_expert(graph_analysis_expert_config)
 
     async def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""

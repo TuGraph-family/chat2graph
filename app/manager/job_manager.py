@@ -7,7 +7,6 @@ from app.agent.expert import Expert
 from app.agent.graph import JobGraph
 from app.agent.job import Job
 from app.agent.job_result import JobResult
-from app.agent.leader_state import LeaderState
 from app.common.singleton import Singleton
 from app.common.type import JobStatus
 from app.memory.message import TextMessage
@@ -79,12 +78,11 @@ class JobManager(metaclass=Singleton):
         self,
         original_job_id: str,
         job: Job,
-        expert_name: str,
+        expert: Expert,
         predecessors: Optional[List[Job]] = None,
         successors: Optional[List[Job]] = None,
-    ) -> Expert:
+    ) -> None:
         """Assign a job to an expert and return the expert instance."""
-        expert = LeaderState().get_expert_by_name(expert_name)
 
         # add job to the jobs graph
         job_graph = self.get_job_graph(original_job_id)
@@ -101,8 +99,6 @@ class JobManager(metaclass=Singleton):
 
         self._job_graphs[original_job_id] = job_graph
 
-        return expert
-
     def remove_job(self, original_job_id: str, job_id: str) -> None:
         """Remove a Job from the Job registry."""
         job_graph = self.get_job_graph(original_job_id)
@@ -112,12 +108,6 @@ class JobManager(metaclass=Singleton):
     def get_job(self, original_job_id: str, job_id: str) -> Job:
         """Get a Job from the Job registry."""
         return self.get_job_graph(original_job_id).get_job(job_id)
-
-    def get_expert_id_by_job_id(self, original_job_id: str, job_id: str) -> Expert:
-        """Get an expert from the expert registry."""
-        return LeaderState().get_expert_by_id(
-            self.get_job_graph(original_job_id).get_expert_id(job_id)
-        )
 
     def replace_subgraph(
         self,
@@ -191,20 +181,20 @@ class JobManager(metaclass=Singleton):
         # validate the subgraph has exactly one entry and one exit node
         if len(entry_nodes) > 1 or len(exit_nodes) > 1:
             raise ValueError("Subgraph must have no more than one entry and one exit node")
-        entry_node = entry_nodes[0] if entry_nodes else []
-        exit_node = exit_nodes[0] if exit_nodes else []
+        entry_node = entry_nodes[0] if entry_nodes else None
+        exit_node = exit_nodes[0] if exit_nodes else None
 
         # collect all edges pointing to and from the old subgraph
-        predecessors = []
-        if len(entry_node) > 0:
-            for node in job_graph.predecessors(entry_node):
-                if node not in old_subgraph_nodes:
-                    predecessors.append(node)
-        successors = []
-        if len(exit_node) > 0:
-            for node in job_graph.successors(exit_node):
-                if node not in old_subgraph_nodes:
-                    successors.append(node)
+        predecessors = (
+            [node for node in job_graph.predecessors(entry_node) if node not in old_subgraph_nodes]
+            if entry_node
+            else []
+        )
+        successors = (
+            [node for node in job_graph.successors(exit_node) if node not in old_subgraph_nodes]
+            if exit_node
+            else []
+        )
 
         # remove old subgraph
         job_graph.remove_nodes_from(old_subgraph_nodes)
