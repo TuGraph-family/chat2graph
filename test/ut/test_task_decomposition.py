@@ -150,8 +150,8 @@ Final Delivery:
 """
     mock_reasoner.infer.return_value = mock_response
 
-    goal = "从文本中提取出关键实体类型，为后续的图数据库模型构建奠定基础。"
-    job = Job(session_id="test_session_id", goal=goal)
+    job = Job(session_id="test_session_id", goal="extract entities from text")
+
     expert_profile_1 = AgentConfig(
         profile=Profile(
             name="Expert 1",
@@ -180,15 +180,22 @@ Final Delivery:
     LeaderState().create_expert(expert_profile_2)
     LeaderState().create_expert(expert_profile_3)
 
+    # configure the initial job graph
+    initial_job_graph: JobGraph = JobGraph()
+    initial_job_graph.add_node(id=job.id, job=job)
+    JobManager().set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+
     job_graph = await leader.execute(AgentMessage(job=job))
     print(f"job_graph: {job_graph.nodes}")
-    JobManager().replace_subgraph(job.id, new_subgraph=job_graph)
+    JobManager().replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
 
     assert isinstance(job_graph, JobGraph)
     assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes_data())
 
     assert len(JobManager().get_job_graph(job.id).nodes()) == 3
     assert len(JobManager().get_job_graph(job.id).edges()) == 3  # 3 dependencies
+
+    assert len(JobManager().get_job_graph(job.id)._legacy_jobs.keys()) == 1
 
 
 @pytest.mark.asyncio
@@ -207,5 +214,5 @@ Analyzing the task...
         job_graph = await leader.execute(AgentMessage(job=job))
         JobManager().replace_subgraph(new_subgraph=job_graph)
 
-    assert "Failed to decompose the subtasks by json format" in str(exc_info.value)
+    assert "Failed to decompose the subjobs by json format" in str(exc_info.value)
     assert mock_response in str(exc_info.value)

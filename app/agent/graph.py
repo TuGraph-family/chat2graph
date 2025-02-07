@@ -35,11 +35,11 @@ class Graph:
 
     def predecessors(self, id: str) -> List[str]:
         """Get the predecessors of the node."""
-        return self._graph.predecessors(id)
+        return list(self._graph.predecessors(id))
 
     def successors(self, id: str) -> List[str]:
         """Get the successors of the node."""
-        return self._graph.successors(id)
+        return list(self._graph.successors(id))
 
     def out_degree(self, node: str) -> int:
         """Return the number of outgoing edges from the node.
@@ -50,11 +50,11 @@ class Graph:
         Returns:
             int: The number of outgoing edges.
         """
-        return self._graph.out_degree(node)
+        return int(self._graph.out_degree(node))
 
     def number_of_nodes(self) -> int:
         """Get the number of nodes in the graph."""
-        return self._graph.number_of_nodes()
+        return int(self._graph.number_of_nodes())
 
     def get_graph(self) -> nx.DiGraph:
         """Get the graph."""
@@ -105,7 +105,7 @@ class JobGraph(Graph):
         ...
         _jobs (Dict[str, Job]): The job dictionary (job_id -> job).
         _expert_ids (Dict[str, str]): The expert dictionary (job_id -> expert_id).
-        _legacy_ids (Dict[str, str]): The legacy id dictionary (job_id -> legacy_id).
+        _legacy_jobs (Dict[str, Job]): The legacy job dictionary (job_id -> legacy_job).
         _job_results (Dict[str, JobResult]): The job result dictionary (job_id -> job_result).
     """
 
@@ -115,7 +115,7 @@ class JobGraph(Graph):
         # graph node properties
         self._jobs: Dict[str, Job] = {}  # job_id -> job
         self._expert_ids: Dict[str, str] = {}  # job_id -> expert_id
-        self._legacy_ids: Dict[str, str] = {}  # job_id -> legacy_id
+        self._legacy_jobs: Dict[str, Job] = {}  # job_id -> legacy_job
         self._job_results: Dict[str, JobResult] = {}  # job_id -> job_result
 
     def add_node(self, id: str, **properties) -> None:
@@ -126,8 +126,8 @@ class JobGraph(Graph):
             self._jobs[id] = properties["job"]
         if "expert_id" in properties:
             self._expert_ids[id] = properties["expert_id"]
-        if "legacy_id" in properties:
-            self._legacy_ids[id] = properties["legacy_id"]
+        if "legacy_job" in properties:
+            self._legacy_jobs[id] = properties["legacy_job"]
         if "job_result" in properties:
             self._job_results[id] = properties["job_result"]
 
@@ -144,7 +144,7 @@ class JobGraph(Graph):
                 {
                     "job": self.get_job(id),
                     "expert_id": self.get_expert_id(id),
-                    "legacy_id": self.get_legacy_id(id),
+                    "legacy_job": self.get_legacy_job(id),
                     "job_result": self.get_job_result(id),
                 },
             )
@@ -167,8 +167,8 @@ class JobGraph(Graph):
                 self._jobs[node_id] = data["job"]
             if "expert_id" in data and isinstance(data["expert_id"], str):
                 self._expert_ids[node_id] = data["expert_id"]
-            if "legacy_id" in data and isinstance(data["legacy_id"], str):
-                self._legacy_ids[node_id] = data["legacy_id"]
+            if "legacy_job" in data and isinstance(data["legacy_job"], str):
+                self._legacy_jobs[node_id] = data["legacy_job"]
             if "job_result" in data and isinstance(data["job_result"], JobResult):
                 self._job_results[node_id] = data["job_result"]
 
@@ -186,10 +186,12 @@ class JobGraph(Graph):
         """
         self._graph.remove_node(id)
 
+        # please note that, it adds the legacy job back to the graph
+        self.set_legacy_job(id)
+
         # remove node properties
         self._jobs.pop(id, None)
         self._expert_ids.pop(id, None)
-        self._legacy_ids.pop(id, None)
         self._job_results.pop(id, None)
 
     def get_job(self, id: str) -> Job:
@@ -204,17 +206,17 @@ class JobGraph(Graph):
             raise ValueError(f"Expert with id {id} does not exist.")
         return self._expert_ids[id]
 
-    def get_legacy_id(self, id: str) -> Optional[str]:
+    def get_legacy_job(self, id: str) -> Optional[Job]:
         """Return the legacy id by job id."""
-        return self._legacy_ids.get(id, None)
+        return self._legacy_jobs.get(id, None)
 
     def get_job_result(self, id: str) -> Optional[JobResult]:
         """Return the job result by job id."""
         return self._job_results.get(id, None)
 
-    def set_legacy_id(self, id: str, legacy_id: str) -> None:
-        """Set the legacy id by job id."""
-        self._legacy_ids[id] = legacy_id
+    def set_legacy_job(self, id: str) -> None:
+        """Set the legacy job. Please note that, it dosen't remove the legacy job from the graph."""
+        self._legacy_jobs[id] = self._jobs[id]
 
     def set_job_result(self, id: str, job_result: JobResult) -> None:
         """Set the job result by job id."""

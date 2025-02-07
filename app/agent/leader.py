@@ -36,13 +36,17 @@ class Leader(Agent, metaclass=AbcSingleton):
 
     async def receive_submission(self, job: Job) -> None:
         """Receive a message from the user."""
+        # submit the job to the job manager
+        initial_job_graph: JobGraph = JobGraph()
+        initial_job_graph.add_node(id=job.id, job=job)
+        JobManager().set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
+        # execute the job
         agent_message = AgentMessage(job=job)
-
         job_graph = await self.execute(agent_message=agent_message)
-
         executed_job_graph = await self.execute_job_graph(job_graph=job_graph)
 
+        # replace the subgraph in the job manager
         JobManager().replace_subgraph(
             original_job_id=job.id,
             new_subgraph=executed_job_graph,
@@ -87,13 +91,13 @@ class Leader(Agent, metaclass=AbcSingleton):
         # decompose the job by the reasoner in the workflow
         workflow_message = await self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
 
-        # extract the subtasks from the json block
+        # extract the subjobs from the json block
         try:
             job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
             assert job_dict is not None
         except Exception as e:
             raise ValueError(
-                f"Failed to decompose the subtasks by json format: {str(e)}\n"
+                f"Failed to decompose the subjobs by json format: {str(e)}\n"
                 f"Input content:\n{workflow_message.scratchpad}"
             ) from e
 

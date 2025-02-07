@@ -4,6 +4,7 @@ import networkx as nx  # type: ignore
 
 from app.agent.agent import AgentConfig, Profile
 from app.agent.expert import Expert
+from app.agent.graph import JobGraph
 from app.agent.job import SubJob
 from app.agent.leader import Leader
 from app.agent.leader_state import LeaderState
@@ -11,6 +12,7 @@ from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
+from app.manager.job_manager import JobManager
 from app.memory.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -63,8 +65,13 @@ async def main():
     LeaderState().create_expert(expert_profile_2)
     LeaderState().create_expert(expert_profile_3)
 
+    # configure the initial job graph
+    initial_job_graph: JobGraph = JobGraph()
+    initial_job_graph.add_node(id=job.id, job=job)
+    JobManager().set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+
     # decompose the job
-    job_graph = await leader.execute(agent_message=AgentMessage(job=job))
+    job_graph = await leader.execute(AgentMessage(job=job))
 
     print("=== Decomposed Subtasks ===")
     for subjob_id in nx.topological_sort(job_graph.get_graph()):
@@ -76,8 +83,6 @@ async def main():
         print(f"\nAssigned Expert: {expert_name}")
         print("Goal:", subjob.goal)
         print("Context:", subjob.context)
-
-    assert len(LeaderState()._expert_instances.keys()) == 3
 
 
 if __name__ == "__main__":

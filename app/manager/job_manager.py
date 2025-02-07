@@ -18,17 +18,11 @@ class JobManager(metaclass=Singleton):
 
     def __init__(self):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
-        self._legacy_jobs: Dict[str, Job] = {}  # legacy_id -> job
-
-        # TODO: merge the job results to the job graph
-        self._job_results: Dict[str, JobResult] = {}  # job_id -> job_result
 
     async def query_job_result(self, job_id: str) -> JobResult:
         """Query the result of the multi-agent system."""
         if job_id not in self._job_graphs:
             raise ValueError(f"Job with ID {job_id} not found in the job registry.")
-        if job_id in self._job_results:
-            return self._job_results[job_id]
 
         # query the state to get the job execution information
         job_graph = self.get_job_graph(job_id)
@@ -67,9 +61,6 @@ class JobManager(metaclass=Singleton):
             result=chat_message,
         )
 
-        # update the job result in the job results registry
-        self._job_results[job_id] = job_result
-
         return job_result
 
     def get_job_graph(self, job_id: str) -> JobGraph:
@@ -83,10 +74,6 @@ class JobManager(metaclass=Singleton):
     def set_job_graph(self, job_id: str, job_graph: JobGraph) -> None:
         """Set the job graph."""
         self._job_graphs[job_id] = job_graph
-
-    def update_legacy_job(self, legacy_job: Job) -> None:
-        """Update the legacy job."""
-        self._legacy_jobs[legacy_job.id] = legacy_job
 
     def add_job(
         self,
@@ -192,34 +179,32 @@ class JobManager(metaclass=Singleton):
         entry_nodes: List[str] = []
         exit_nodes: List[str] = []
 
-        # find the entry and exit node of the old subgraph
+        # find the entry and exit node of the job_graph
         for node in old_subgraph_nodes:
-            _predecessors = list(job_graph.predecessors(node))
-            for _predecessor in _predecessors:
-                if _predecessor not in old_subgraph_nodes:
-                    entry_nodes.append(node)
+            entry_nodes.extend(
+                node for pred in job_graph.predecessors(node) if pred not in old_subgraph_nodes
+            )
+            exit_nodes.extend(
+                node for succ in job_graph.successors(node) if succ not in old_subgraph_nodes
+            )
 
-            _successors = list(job_graph.successors(node))
-            for _successor in _successors:
-                if _successor not in old_subgraph_nodes:
-                    exit_nodes.append(node)
-
-            JobManager().update_legacy_job(old_subgraph.get_job(node))
-
-        if len(entry_nodes) != 1 or len(exit_nodes) != 1:
-            raise ValueError("Subgraph must have exactly one entry node and one exit node.")
-        entry_node = entry_nodes[0]
-        exit_node = exit_nodes[0]
+        # validate the subgraph has exactly one entry and one exit node
+        if len(entry_nodes) > 1 or len(exit_nodes) > 1:
+            raise ValueError("Subgraph must have no more than one entry and one exit node")
+        entry_node = entry_nodes[0] if entry_nodes else []
+        exit_node = exit_nodes[0] if exit_nodes else []
 
         # collect all edges pointing to and from the old subgraph
         predecessors = []
-        for node in job_graph.predecessors(entry_node):
-            if node not in old_subgraph_nodes:
-                predecessors.append(node)
+        if len(entry_node) > 0:
+            for node in job_graph.predecessors(entry_node):
+                if node not in old_subgraph_nodes:
+                    predecessors.append(node)
         successors = []
-        for node in job_graph.successors(exit_node):
-            if node not in old_subgraph_nodes:
-                successors.append(node)
+        if len(exit_node) > 0:
+            for node in job_graph.successors(exit_node):
+                if node not in old_subgraph_nodes:
+                    successors.append(node)
 
         # remove old subgraph
         job_graph.remove_nodes_from(old_subgraph_nodes)
@@ -228,9 +213,9 @@ class JobManager(metaclass=Singleton):
         job_graph.update(new_subgraph)
 
         # connect the new subgraph with the rest of the graph
-        _topological_sorted_nodes = list(nx.topological_sort(new_subgraph.get_graph()))
-        head_node = _topological_sorted_nodes[0]
-        tail_node = _topological_sorted_nodes[-1]
+        topological_sorted_nodes = list(nx.topological_sort(new_subgraph.get_graph()))
+        head_node = topological_sorted_nodes[0]
+        tail_node = topological_sorted_nodes[-1]
         for predecessor in predecessors:
             job_graph.add_edge(predecessor, head_node)
         for successor in successors:

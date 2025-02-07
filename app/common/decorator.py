@@ -1,6 +1,5 @@
 import asyncio
 
-from app.agent.graph import JobGraph
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.agent.leader import Leader
@@ -19,9 +18,6 @@ def session_wrapper(cls):
             """Submit the job."""
 
             job = Job(goal=message.get_payload(), session_id=self.id)
-            job_graph: JobGraph = JobGraph()
-            job_graph.add_node(id=job.id, job=job)
-            JobManager().set_job_graph(job_id=job.id, job_graph=job_graph)
             asyncio.create_task(Leader().receive_submission(job=job))
 
             return job
