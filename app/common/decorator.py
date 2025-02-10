@@ -18,7 +18,8 @@ def session_wrapper(cls):
             """Submit the job."""
 
             job = Job(goal=message.get_payload(), session_id=self.id)
-            asyncio.create_task(Leader().execute_job(job=job))
+            leader: Leader = Leader.instance
+            asyncio.create_task(leader.execute_job(job=job))
 
             return job
 

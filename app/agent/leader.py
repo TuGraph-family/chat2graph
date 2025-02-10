@@ -22,22 +22,15 @@ from app.memory.message import AgentMessage, TextMessage, WorkflowMessage
 class Leader(Agent, metaclass=AbcSingleton):
     """Leader is a role that can manage a group of agents and the jobs."""
 
-    _instance_config: Optional[AgentConfig] = None
-
     def __init__(
         self,
+        agent_config: AgentConfig,
         id: Optional[str] = None,
-        agent_config: Optional[AgentConfig] = None,
         leader_state: Optional[LeaderState] = None,
     ):
         # self._workflow of the leader is used to decompose the job
 
-        if agent_config:
-            Leader._instance_config = agent_config
-        elif not Leader._instance_config:
-            raise ValueError("The Leader instance config is not set.")
-
-        super().__init__(agent_config=Leader._instance_config, id=id)
+        super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
 
     async def execute_job(self, job: Job) -> None:

@@ -1,5 +1,5 @@
-import threading
 from abc import ABC, abstractmethod
+import threading
 from typing import Dict, List
 
 from app.agent.agent import AgentConfig

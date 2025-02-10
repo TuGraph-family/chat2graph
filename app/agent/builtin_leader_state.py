@@ -3,10 +3,9 @@ from typing import List
 from app.agent.agent import AgentConfig
 from app.agent.expert import Expert
 from app.agent.leader_state import LeaderState
-from app.common.singleton import AbcSingleton
 
 
-class BuiltinLeaderState(LeaderState, metaclass=AbcSingleton):
+class BuiltinLeaderState(LeaderState):
     """Builtin leader state.
 
     attributes:
@@ -20,8 +19,7 @@ class BuiltinLeaderState(LeaderState, metaclass=AbcSingleton):
         for expert in self._expert_instances.values():
             if expert.get_profile().name == expert_name:
                 return expert
-        raise ValueError(
-            f"Expert {expert_name} not exists in the leader state.")
+        raise ValueError(f"Expert {expert_name} not exists in the leader state.")
 
     def get_expert_by_id(self, expert_id: str) -> Expert:
         """Get existing expert instance."""

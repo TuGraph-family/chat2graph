@@ -12,6 +12,11 @@ class AbcSingleton(ABCMeta):
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
+    @property
+    def instance(cls) -> Any:
+        """Returns the singleton instance, or None if not yet created."""
+        return cls._instances.get(cls)
+
 
 class Singleton(type):
     """Singleton metaclass for creating Singleton classes."""
@@ -22,3 +27,8 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
+
+    @property
+    def instance(cls) -> Any:
+        """Returns the singleton instance, or None if not yet created."""
+        return cls._instances.get(cls)
