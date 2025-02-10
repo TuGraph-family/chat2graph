@@ -29,19 +29,19 @@ class AgenticService:
         # TODO: configure the chat2graph service by yaml
 
         # initialize the leader
-        reasoner = DualModelReasoner()
-        leader = Leader(agent_config=get_leader_config(reasoner=reasoner))
+        self._reasoner = DualModelReasoner()
+        self._leader = Leader(agent_config=get_leader_config(reasoner=self._reasoner))
 
         # configure the multi-agent system
-        leader.get_leader_state().create_expert(graph_modeling_expert_config)
-        leader.get_leader_state().create_expert(data_importation_expert_config)
-        leader.get_leader_state().create_expert(graph_query_expert_config)
-        leader.get_leader_state().create_expert(graph_analysis_expert_config)
+        self._leader.state.create_expert(graph_modeling_expert_config)
+        self._leader.state.create_expert(data_importation_expert_config)
+        self._leader.state.create_expert(graph_query_expert_config)
+        self._leader.state.create_expert(graph_analysis_expert_config)
 
     async def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
         job = Job(goal=message.get_payload())
-        await Leader().receive_submission(job=job)
+        await self._leader.execute_job(job=job)
         job_result: JobResult = await JobManager().query_job_result(job_id=job.id)
         return job_result.result
 

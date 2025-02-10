@@ -60,9 +60,9 @@ async def main():
         reasoner=reasoner,
         workflow=DbgptWorkflow(),
     )
-    leader.get_leader_state().create_expert(expert_profile_1)
-    leader.get_leader_state().create_expert(expert_profile_2)
-    leader.get_leader_state().create_expert(expert_profile_3)
+    leader.state.create_expert(expert_profile_1)
+    leader.state.create_expert(expert_profile_2)
+    leader.state.create_expert(expert_profile_3)
 
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()
@@ -76,7 +76,7 @@ async def main():
     for subjob_id in nx.topological_sort(job_graph.get_graph()):
         subjob: SubJob = job_graph.get_job(subjob_id)
         expert_id: str = job_graph.get_expert_id(subjob_id)
-        expert: Expert = leader.get_leader_state().get_expert_by_id(expert_id)
+        expert: Expert = leader.state.get_expert_by_id(expert_id)
         expert_name: str = expert._profile.name
 
         print(f"\nAssigned Expert: {expert_name}")

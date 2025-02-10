@@ -7,7 +7,7 @@ from app.agent.agent import AgentConfig, Profile
 from app.agent.graph import JobGraph
 from app.agent.job import Job
 from app.agent.leader import Leader
-from app.agent.leader_state import LeaderState
+from app.agent.builtin_leader_state import BuiltinLeaderState
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
@@ -85,8 +85,8 @@ def mock_reasoner():
 def leader(mock_reasoner: Reasoner):
     """Create a leader instance with mock reasoner."""
     # clear the AbcSingleton instance
-    if LeaderState in AbcSingleton._instances:
-        del AbcSingleton._instances[LeaderState]
+    if BuiltinLeaderState in AbcSingleton._instances:
+        del AbcSingleton._instances[BuiltinLeaderState]
 
     if Leader in AbcSingleton._instances:
         del AbcSingleton._instances[Leader]
@@ -176,9 +176,9 @@ Final Delivery:
         reasoner=mock_reasoner,
         workflow=MockWorkflow(),
     )
-    leader.get_leader_state().create_expert(expert_profile_1)
-    leader.get_leader_state().create_expert(expert_profile_2)
-    leader.get_leader_state().create_expert(expert_profile_3)
+    leader.state.create_expert(expert_profile_1)
+    leader.state.create_expert(expert_profile_2)
+    leader.state.create_expert(expert_profile_3)
 
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()

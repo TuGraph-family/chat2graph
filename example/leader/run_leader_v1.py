@@ -205,7 +205,7 @@ async def main():
 
     # create expert profiles
     for i, workflow in enumerate(workflows):
-        leader.get_leader_state().create_expert(
+        leader.state.create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=f"Expert {i + 1}", description=f"Expert {i + 1}"),
                 reasoner=reasoner,
@@ -217,7 +217,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 1"),
+        expert=leader.state.get_expert_by_name("Expert 1"),
         predecessors=[],
         successors=[job_2, job_3],
     )
@@ -225,7 +225,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 2"),
+        expert=leader.state.get_expert_by_name("Expert 2"),
         predecessors=[job_1],
         successors=[job_5],
     )
@@ -233,7 +233,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 3"),
+        expert=leader.state.get_expert_by_name("Expert 3"),
         predecessors=[job_1],
         successors=[job_4],
     )
@@ -241,7 +241,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 4"),
+        expert=leader.state.get_expert_by_name("Expert 4"),
         predecessors=[job_3],
         successors=[],
     )
@@ -249,7 +249,7 @@ async def main():
     JobManager().add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 5"),
+        expert=leader.state.get_expert_by_name("Expert 5"),
         predecessors=[job_2, job_3],
         successors=[],
     )

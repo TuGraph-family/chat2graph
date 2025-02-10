@@ -11,14 +11,14 @@ from app.memory.message import ChatMessage
 def session_wrapper(cls):
     """Decorator for the session wrapper."""
 
-    class SessionWraper(cls):
+    class SessionWrapper(cls):
         """Session Wrapper class"""
 
         async def submit(self, message: ChatMessage) -> Job:
             """Submit the job."""
 
             job = Job(goal=message.get_payload(), session_id=self.id)
-            asyncio.create_task(Leader().receive_submission(job=job))
+            asyncio.create_task(Leader().execute_job(job=job))
 
             return job
 
@@ -36,4 +36,4 @@ def session_wrapper(cls):
                 # sleep for `interval` seconds
                 await asyncio.sleep(interval)
 
-    return SessionWraper
+    return SessionWrapper

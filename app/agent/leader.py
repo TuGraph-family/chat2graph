@@ -5,11 +5,12 @@ from typing import Dict, List, Optional, Set
 import networkx as nx  # type: ignore
 
 from app.agent.agent import Agent, AgentConfig
+from app.agent.builtin_leader_state import BuiltinLeaderState
 from app.agent.expert import Expert
 from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
 from app.agent.job_result import JobResult
-from app.agent.leader_state import LeaderState, LeaderStateInterface
+from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.singleton import AbcSingleton
 from app.common.type import JobStatus, WorkflowStatus
@@ -27,7 +28,7 @@ class Leader(Agent, metaclass=AbcSingleton):
         self,
         id: Optional[str] = None,
         agent_config: Optional[AgentConfig] = None,
-        leader_state: Optional[LeaderStateInterface] = None,
+        leader_state: Optional[LeaderState] = None,
     ):
         # self._workflow of the leader is used to decompose the job
 
@@ -37,10 +38,11 @@ class Leader(Agent, metaclass=AbcSingleton):
             raise ValueError("The Leader instance config is not set.")
 
         super().__init__(agent_config=Leader._instance_config, id=id)
-        self._leader_state: LeaderStateInterface = leader_state or LeaderState()
+        self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
 
-    async def receive_submission(self, job: Job) -> None:
-        """Receive a message from the user."""
+    async def execute_job(self, job: Job) -> None:
+        """Execute a job from the user."""
+
         # submit the job to the job manager
         initial_job_graph: JobGraph = JobGraph()
         initial_job_graph.add_node(id=job.id, job=job)
@@ -73,11 +75,11 @@ class Leader(Agent, metaclass=AbcSingleton):
         job = agent_message.get_payload()
 
         # get the expert list
-        expert_profiles = self._leader_state.get_expert_profiles()
+        expert_profiles = [e.get_profile() for e in self._leader_state.list_experts()]
         role_list = "\n".join(
             [
                 f"Expert name: {profile.name}\nDescription: {profile.description}"
-                for profile in expert_profiles.values()
+                for profile in expert_profiles
             ]
         )
 
@@ -271,6 +273,7 @@ class Leader(Agent, metaclass=AbcSingleton):
             raise NotImplementedError("Decompose the job into subjobs is not implemented.")
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 
-    def get_leader_state(self) -> LeaderStateInterface:
+    @property
+    def state(self) -> LeaderState:
         """Get the leader state."""
         return self._leader_state
