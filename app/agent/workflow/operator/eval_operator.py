@@ -6,7 +6,7 @@ from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
 from app.common.type import WorkflowStatus
 from app.common.util import parse_json
-from app.memory.message import WorkflowMessage
+from app.core.memory.message import WorkflowMessage
 
 
 class EvalOperator(Operator):

@@ -3,7 +3,7 @@ from typing import List
 from app.agent.agent import Agent
 from app.common.system_env import SystemEnv
 from app.common.type import WorkflowStatus
-from app.memory.message import AgentMessage, WorkflowMessage
+from app.core.memory.message import AgentMessage, WorkflowMessage
 
 
 class Expert(Agent):

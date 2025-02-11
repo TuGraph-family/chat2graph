@@ -9,7 +9,7 @@ from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.common.system_env import SystemEnv
-from app.memory.message import ModelMessage
+from app.core.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
 from app.core.toolkit.action.action import Action

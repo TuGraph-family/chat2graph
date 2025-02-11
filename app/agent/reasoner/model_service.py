@@ -5,7 +5,7 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from app.memory.message import ModelMessage
+from app.core.memory.message import ModelMessage
 from app.core.toolkit.tool.tool import FunctionCallResult, Tool
 
 

@@ -9,8 +9,8 @@ from app.common.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
 from app.common.prompt.reasoner import MONO_PROMPT_TEMPLATE
 from app.common.system_env import SystemEnv
 from app.common.type import MessageSourceType
-from app.memory.message import ModelMessage
-from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
+from app.core.memory.message import ModelMessage
+from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 
 
 class MonoModelReasoner(Reasoner):

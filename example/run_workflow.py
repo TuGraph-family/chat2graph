@@ -8,8 +8,8 @@ from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.type import WorkflowStatus
-from app.memory.message import WorkflowMessage
-from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
+from app.core.memory.message import WorkflowMessage
+from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.core.toolkit.tool.tool import Tool
 

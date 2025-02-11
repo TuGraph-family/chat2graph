@@ -4,7 +4,7 @@ from app.agent.core.session import Session
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.common.singleton import Singleton
-from app.memory.message import ChatMessage
+from app.core.memory.message import ChatMessage
 from app.service.agent_service import AgentService
 from app.service.job_service import JobService
 from app.service.session_service import SessionService

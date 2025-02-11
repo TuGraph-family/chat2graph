@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from app.agent.reasoner.task import Task
-from app.memory.reasoner_memory import ReasonerMemory
+from app.core.memory.reasoner_memory import ReasonerMemory
 
 
 class Reasoner(ABC):

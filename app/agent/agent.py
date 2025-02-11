@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.workflow import Workflow
-from app.memory.message import AgentMessage
+from app.core.memory.message import AgentMessage
 
 
 @dataclass

@@ -11,7 +11,7 @@ from app.common.prompt.operator import (
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
 from app.common.type import WorkflowStatus
-from app.memory.message import WorkflowMessage
+from app.core.memory.message import WorkflowMessage
 from app.core.toolkit.action.action import Action
 from app.core.toolkit.toolkit import Toolkit, ToolkitService
 

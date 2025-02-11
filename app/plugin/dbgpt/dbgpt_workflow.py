@@ -11,7 +11,7 @@ import networkx as nx  # type: ignore
 from app.agent.job import Job
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.workflow import Workflow
-from app.memory.message import WorkflowMessage
+from app.core.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_map_operator import DbgptMapOperator
 
 

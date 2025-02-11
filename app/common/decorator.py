@@ -3,7 +3,7 @@ import asyncio
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.common.type import JobStatus
-from app.memory.message import ChatMessage
+from app.core.memory.message import ChatMessage
 from app.service.job_service import JobService
 
 

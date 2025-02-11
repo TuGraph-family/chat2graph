@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from app.memory.message import ModelMessage
+from app.core.memory.message import ModelMessage
 
 
 class ReasonerMemory(ABC):

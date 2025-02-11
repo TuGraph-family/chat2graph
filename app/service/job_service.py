@@ -9,7 +9,7 @@ from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.common.singleton import Singleton
 from app.common.type import JobStatus
-from app.memory.message import TextMessage
+from app.core.memory.message import TextMessage
 from app.service.agent_service import AgentService
 
 

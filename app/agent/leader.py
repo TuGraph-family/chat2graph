@@ -14,7 +14,7 @@ from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.type import JobStatus, WorkflowStatus
 from app.common.util import parse_json
-from app.memory.message import AgentMessage, TextMessage, WorkflowMessage
+from app.core.memory.message import AgentMessage, TextMessage, WorkflowMessage
 
 
 class Leader(Agent):

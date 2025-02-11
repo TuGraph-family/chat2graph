@@ -17,7 +17,7 @@ from app.agent.reasoner.model_service import ModelService
 from app.common.prompt.model_service import FUNC_CALLING_PROMPT
 from app.common.system_env import SystemEnv
 from app.common.type import MessageSourceType
-from app.memory.message import ModelMessage
+from app.core.memory.message import ModelMessage
 from app.core.toolkit.tool.tool import FunctionCallResult, Tool
 
 
