@@ -74,8 +74,8 @@ class JobService(metaclass=Singleton):
         self.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
         # submit the job to the leader
-        leader_service: AgentService = AgentService.instance
-        executed_job_graph = await leader_service.leader.execute_job(job=job)
+        agent_service: AgentService = AgentService.instance
+        executed_job_graph = await agent_service.leader.execute_job(job=job)
 
         # replace the subgraph in the job service
         self.replace_subgraph(
