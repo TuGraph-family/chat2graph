@@ -1,6 +1,6 @@
 import asyncio
 
-from app.core.memory.message import TextMessage
+from app.core.model.message import TextMessage
 from app.core.service.agentic_service import AgenticService
 
 

@@ -2,9 +2,9 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.agent.job import SubJob
-from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
-from app.agent.reasoner.task import Task
+from app.core.model.job import SubJob
+from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.model.task import Task
 from app.core.toolkit.tool import Tool
 
 

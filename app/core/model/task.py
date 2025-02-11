@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from app.agent.job import Job
+from app.core.model.job import Job
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.env.insight.insight import Insight
-from app.core.memory.message import WorkflowMessage
+from app.core.model.message import WorkflowMessage
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 

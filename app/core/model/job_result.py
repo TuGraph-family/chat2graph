@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from app.core.common.type import JobStatus
-from app.core.memory.message import ChatMessage
+from app.core.model.message import ChatMessage
 
 
 @dataclass

@@ -2,8 +2,8 @@ import asyncio
 
 import matplotlib.pyplot as plt
 
-from app.agent.job import SubJob
-from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.model.job import SubJob
+from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.prompt.operator import (
@@ -11,7 +11,7 @@ from app.core.prompt.operator import (
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
 from app.core.common.type import WorkflowStatus
-from app.core.memory.message import WorkflowMessage
+from app.core.model.message import WorkflowMessage
 from app.core.toolkit.action import Action
 from app.core.toolkit.toolkit import Toolkit, ToolkitService
 

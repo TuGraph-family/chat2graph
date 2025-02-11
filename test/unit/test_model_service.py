@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.agent.reasoner.model_service_factory import ModelServiceFactory
+from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
-from app.core.memory.message import ModelMessage
+from app.core.model.message import ModelMessage
 
 
 @pytest.fixture

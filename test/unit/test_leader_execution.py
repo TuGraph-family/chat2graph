@@ -3,15 +3,15 @@ from typing import List, Optional
 import pytest
 
 from app.agent.agent import AgentConfig, Profile
-from app.agent.graph import JobGraph
-from app.agent.job import Job, SubJob
-from app.agent.job_result import JobResult
+from app.core.model.job_graph import JobGraph
+from app.core.model.job import Job, SubJob
+from app.core.model.job_result import JobResult
 from app.agent.leader import Leader
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.common.type import JobStatus
-from app.core.memory.message import WorkflowMessage
+from app.core.model.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.core.service.job_service import JobService
 

@@ -8,10 +8,10 @@ from dbgpt.core.awel import (  # type: ignore
 )
 import networkx as nx  # type: ignore
 
-from app.agent.job import Job
-from app.agent.reasoner.reasoner import Reasoner
+from app.core.model.job import Job
+from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.workflow import Workflow
-from app.core.memory.message import WorkflowMessage
+from app.core.model.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_map_operator import DbgptMapOperator
 
 

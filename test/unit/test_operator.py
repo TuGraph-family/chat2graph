@@ -3,12 +3,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.agent.job import SubJob
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.task import Task
+from app.core.model.job import SubJob
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.model.task import Task
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
-from app.core.memory.message import WorkflowMessage
+from app.core.model.message import WorkflowMessage
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 from test.resource.tool_resource import Query

@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import networkx as nx  # type: ignore
 
-from app.agent.job import Job
-from app.agent.job_result import JobResult
+from app.core.model.job import Job
+from app.core.model.job_result import JobResult
 
 
 class Graph:

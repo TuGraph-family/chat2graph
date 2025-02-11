@@ -2,13 +2,13 @@ import asyncio
 import time
 from typing import Any, List, Optional
 
-from app.agent.job import Job, SubJob
-from app.agent.reasoner.reasoner import Reasoner
-from app.agent.reasoner.task import Task
+from app.core.model.job import Job, SubJob
+from app.core.reasoner.reasoner import Reasoner
+from app.core.model.task import Task
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.common.type import WorkflowStatus
-from app.core.memory.message import WorkflowMessage
+from app.core.model.message import WorkflowMessage
 from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.core.toolkit.tool import Tool

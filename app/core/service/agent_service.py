@@ -5,7 +5,7 @@ from app.agent.graph_agent.graph_query import get_graph_query_expert_config
 from app.agent.graph_agent.leader_config import get_leader_config
 from app.agent.graph_agent.question_answering import get_graph_question_answeing_expert_config
 from app.agent.leader import Leader
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.common.singleton import Singleton
 
 graph_modeling_expert_config = get_graph_modeling_expert_config()

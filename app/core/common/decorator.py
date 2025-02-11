@@ -1,9 +1,9 @@
 import asyncio
 
-from app.agent.job import Job
-from app.agent.job_result import JobResult
+from app.core.model.job import Job
+from app.core.model.job_result import JobResult
 from app.core.common.type import JobStatus
-from app.core.memory.message import ChatMessage
+from app.core.model.message import ChatMessage
 from app.core.service.job_service import JobService
 
 

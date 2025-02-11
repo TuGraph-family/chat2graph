@@ -1,10 +1,10 @@
 import asyncio
 
 from app.agent.agent import AgentConfig, Profile
-from app.agent.graph import JobGraph
-from app.agent.job import SubJob
+from app.core.model.job_graph import JobGraph
+from app.core.model.job import SubJob
 from app.agent.leader import Leader
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig

@@ -1,4 +1,4 @@
-from app.agent.reasoner.model_service import ModelService
+from app.core.reasoner.model_service import ModelService
 from app.core.common.type import PlatformType
 from app.plugin.dbgpt.dbgpt_llm_client import DbgptLlmClient
 

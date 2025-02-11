@@ -1,8 +1,8 @@
 from typing import Optional
 
 from app.agent.agent import AgentConfig, Profile
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.reasoner import Reasoner
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT

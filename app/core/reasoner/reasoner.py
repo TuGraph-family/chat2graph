@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from app.agent.reasoner.task import Task
+from app.core.model.task import Task
 from app.core.memory.reasoner_memory import ReasonerMemory
 
 

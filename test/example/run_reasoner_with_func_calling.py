@@ -2,9 +2,9 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.agent.job import SubJob
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.task import Task
+from app.core.model.job import SubJob
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.model.task import Task
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool

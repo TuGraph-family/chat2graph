@@ -4,11 +4,11 @@ from typing import Any, List, Optional
 
 import networkx as nx  # type: ignore
 
-from app.agent.job import Job
-from app.agent.reasoner.reasoner import Reasoner
+from app.core.model.job import Job
+from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.operator import Operator
 from app.core.common.type import WorkflowStatus
-from app.core.memory.message import WorkflowMessage
+from app.core.model.message import WorkflowMessage
 
 
 class Workflow(ABC):

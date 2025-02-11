@@ -2,8 +2,8 @@ import asyncio
 
 import matplotlib.pyplot as plt
 
-from app.agent.job import SubJob
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.model.job import SubJob
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.toolkit.action import Action

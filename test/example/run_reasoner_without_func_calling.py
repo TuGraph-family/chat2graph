@@ -1,8 +1,8 @@
 import asyncio
 
-from app.agent.job import SubJob
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.task import Task
+from app.core.model.job import SubJob
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.model.task import Task
 from app.core.workflow.operator import OperatorConfig
 
 
