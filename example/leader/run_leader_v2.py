@@ -191,7 +191,7 @@ paper content:
     #          ↘                                       ↗
     #            job_3 (Results)
 
-    job_manager: JobManager = JobManager.instance
+    job_manager: JobManager = JobManager()
     job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_1,

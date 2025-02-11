@@ -213,7 +213,7 @@ async def main():
             ),
         )
 
-    job_manager: JobManager = JobManager.instance
+    job_manager: JobManager = JobManager()
     # Create job graph structure
     job_manager.add_job(
         original_job_id="test_original_job_id",
