@@ -31,7 +31,7 @@ class AgentService(metaclass=Singleton):
 
     @property
     def leader(self) -> Leader:
-        """Get the leader. The agentic service now manages only one leader."""
+        """Get the leader. The agent service now manages only one leader."""
         if len(self._leaders) == 0:
             raise ValueError("No leader found.")
         return self._leaders[0]
