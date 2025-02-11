@@ -1,8 +1,8 @@
 from typing import List
 
-from app.agent.agent import AgentConfig
-from app.agent.expert import Expert
-from app.agent.leader_state import LeaderState
+from app.core.agent.agent import AgentConfig
+from app.core.agent.expert import Expert
+from app.core.agent.leader_state import LeaderState
 
 
 class BuiltinLeaderState(LeaderState):

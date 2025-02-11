@@ -1,6 +1,6 @@
 import asyncio
 
-from app.agent.graph_agent.data_importation import get_data_importation_workflow
+from app.core.service.legacy.data_importation import get_data_importation_workflow
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 

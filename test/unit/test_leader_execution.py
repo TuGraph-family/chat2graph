@@ -2,11 +2,11 @@ from typing import List, Optional
 
 import pytest
 
-from app.agent.agent import AgentConfig, Profile
+from app.core.agent.agent import AgentConfig, Profile
 from app.core.model.job_graph import JobGraph
 from app.core.model.job import Job, SubJob
 from app.core.model.job_result import JobResult
-from app.agent.leader import Leader
+from app.core.agent.leader import Leader
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig

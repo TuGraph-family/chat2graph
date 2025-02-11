@@ -4,13 +4,13 @@ from typing import Dict, List, Optional, Set
 
 import networkx as nx  # type: ignore
 
-from app.agent.agent import Agent, AgentConfig
-from app.agent.builtin_leader_state import BuiltinLeaderState
-from app.agent.expert import Expert
+from app.core.agent.agent import Agent, AgentConfig
+from app.core.agent.builtin_leader_state import BuiltinLeaderState
+from app.core.agent.expert import Expert
 from app.core.model.job_graph import JobGraph
 from app.core.model.job import Job, SubJob
 from app.core.model.job_result import JobResult
-from app.agent.leader_state import LeaderState
+from app.core.agent.leader_state import LeaderState
 from app.core.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.core.common.type import JobStatus, WorkflowStatus
 from app.core.common.util import parse_json

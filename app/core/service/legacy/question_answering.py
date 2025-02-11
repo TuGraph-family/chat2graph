@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 from uuid import uuid4
 
-from app.agent.agent import AgentConfig, Profile
+from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.operator import Operator, OperatorConfig

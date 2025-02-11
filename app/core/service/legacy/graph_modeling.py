@@ -3,7 +3,7 @@ import time
 from typing import Dict, List, Optional, Set, Union
 from uuid import uuid4
 
-from app.agent.agent import AgentConfig, Profile
+from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.reasoner.reasoner import Reasoner

@@ -6,7 +6,7 @@ from app.core.service.message_service import (
     get_message,
     handle_user_message,
 )
-from app.server.api.api_tool import BaseException, make_response
+from app.server.common.api_tool import BaseException, make_response
 
 messages_bp = Blueprint("messages", __name__)
 

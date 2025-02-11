@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 import threading
 from typing import Dict, List
 
-from app.agent.agent import AgentConfig
-from app.agent.expert import Expert
+from app.core.agent.agent import AgentConfig
+from app.core.agent.expert import Expert
 
 
 class LeaderState(ABC):
