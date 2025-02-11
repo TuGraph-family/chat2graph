@@ -11,7 +11,7 @@ from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
-from app.manager.job_manager import JobManager
+from app.manager.job_service import JobService
 from app.memory.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -67,8 +67,8 @@ async def main():
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()
     initial_job_graph.add_node(id=job.id, job=job)
-    job_manager: JobManager = JobManager()
-    job_manager.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+    job_service: JobService = JobService()
+    job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
     # decompose the job
     job_graph = await leader.execute(AgentMessage(job=job))

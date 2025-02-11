@@ -15,7 +15,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.agent.workflow.workflow import Workflow
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.common.singleton import AbcSingleton
-from app.manager.job_manager import JobManager
+from app.manager.job_service import JobService
 from app.memory.message import AgentMessage, WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -183,20 +183,20 @@ Final Delivery:
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()
     initial_job_graph.add_node(id=job.id, job=job)
-    job_manager: JobManager = JobManager()
-    job_manager.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+    job_service: JobService = JobService()
+    job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
     job_graph = await leader.execute(AgentMessage(job=job))
     print(f"job_graph: {job_graph.nodes}")
-    job_manager.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
+    job_service.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
 
     assert isinstance(job_graph, JobGraph)
     assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes_data())
 
-    assert len(job_manager.get_job_graph(job.id).nodes()) == 3
-    assert len(job_manager.get_job_graph(job.id).edges()) == 3  # 3 dependencies
+    assert len(job_service.get_job_graph(job.id).nodes()) == 3
+    assert len(job_service.get_job_graph(job.id).edges()) == 3  # 3 dependencies
 
-    assert len(job_manager.get_job_graph(job.id)._legacy_jobs.keys()) == 1
+    assert len(job_service.get_job_graph(job.id)._legacy_jobs.keys()) == 1
 
 
 @pytest.mark.asyncio
@@ -213,8 +213,8 @@ Analyzing the task...
 
     with pytest.raises(Exception) as exc_info:
         job_graph = await leader.execute(AgentMessage(job=job))
-        job_manager: JobManager = JobManager.instance
-        job_manager.replace_subgraph(new_subgraph=job_graph)
+        job_service: JobService = JobService.instance
+        job_service.replace_subgraph(new_subgraph=job_graph)
 
     assert "Failed to decompose the subjobs by json format" in str(exc_info.value)
     assert mock_response in str(exc_info.value)

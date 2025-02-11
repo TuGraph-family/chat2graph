@@ -7,13 +7,14 @@ from app.agent.expert import Expert
 from app.agent.graph import JobGraph
 from app.agent.job import Job
 from app.agent.job_result import JobResult
+from app.agent.leader import Leader
 from app.common.singleton import Singleton
 from app.common.type import JobStatus
 from app.memory.message import TextMessage
 
 
-class JobManager(metaclass=Singleton):
-    """Job manager"""
+class JobService(metaclass=Singleton):
+    """Job service"""
 
     def __init__(self):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
@@ -62,6 +63,22 @@ class JobManager(metaclass=Singleton):
         )
 
         return job_result
+
+    async def execute_job(self, job: Job) -> None:
+        """Execute the job."""
+        # submit the job by self
+        initial_job_graph: JobGraph = JobGraph()
+        initial_job_graph.add_node(id=job.id, job=job)
+        self.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+
+        leader: Leader = Leader.instance
+        executed_job_graph = await leader.execute_job(job=job)
+        # replace the subgraph in the job service
+        self.replace_subgraph(
+            original_job_id=job.id,
+            new_subgraph=executed_job_graph,
+            old_subgraph=self.get_job_graph(job.id),
+        )
 
     def get_job_graph(self, job_id: str) -> JobGraph:
         """Get the job graph by the inital job id."""

@@ -15,7 +15,6 @@ from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.common.singleton import AbcSingleton
 from app.common.type import JobStatus, WorkflowStatus
 from app.common.util import parse_json
-from app.manager.job_manager import JobManager
 from app.memory.message import AgentMessage, TextMessage, WorkflowMessage
 
 
@@ -33,26 +32,15 @@ class Leader(Agent, metaclass=AbcSingleton):
         super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
 
-    async def execute_job(self, job: Job) -> None:
+    async def execute_job(self, job: Job) -> JobGraph:
         """Execute a job from the user."""
-
-        # submit the job to the job manager
-        initial_job_graph: JobGraph = JobGraph()
-        initial_job_graph.add_node(id=job.id, job=job)
-        job_manager: JobManager = JobManager.instance
-        job_manager.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
-
-        # execute the job
+        # decompose the job by the leader
         agent_message = AgentMessage(job=job)
         job_graph = await self.execute(agent_message=agent_message)
-        executed_job_graph = await self.execute_job_graph(job_graph=job_graph)
 
-        # replace the subgraph in the job manager
-        job_manager.replace_subgraph(
-            original_job_id=job.id,
-            new_subgraph=executed_job_graph,
-            old_subgraph=job_manager.get_job_graph(job.id),
-        )
+        # execute the job graph
+        # TODO: make the job graph static, and save the job results by the service
+        return await self.execute_job_graph(job_graph=job_graph)
 
     async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
         """Decompose the job and execute the job.

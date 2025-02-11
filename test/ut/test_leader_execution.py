@@ -11,7 +11,7 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.type import JobStatus
-from app.manager.job_manager import JobManager
+from app.manager.job_service import JobService
 from app.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -124,8 +124,8 @@ async def test_agent_job_graph():
         )
 
     # build job graph
-    job_manager: JobManager = JobManager()
-    job_manager.add_job(
+    job_service: JobService = JobService()
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[0],
         expert=leader.state.get_expert_by_name("Expert 1"),
@@ -133,7 +133,7 @@ async def test_agent_job_graph():
         successors=[jobs[1], jobs[2]],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[1],
         expert=leader.state.get_expert_by_name("Expert 2"),
@@ -141,7 +141,7 @@ async def test_agent_job_graph():
         successors=[jobs[4]],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[2],
         expert=leader.state.get_expert_by_name("Expert 3"),
@@ -149,7 +149,7 @@ async def test_agent_job_graph():
         successors=[jobs[3]],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[3],
         expert=leader.state.get_expert_by_name("Expert 4"),
@@ -157,7 +157,7 @@ async def test_agent_job_graph():
         successors=[],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[4],
         expert=leader.state.get_expert_by_name("Expert 5"),
@@ -167,7 +167,7 @@ async def test_agent_job_graph():
 
     # execute job graph
     job_graph: JobGraph = await leader.execute_job_graph(
-        job_graph=job_manager.get_job_graph(job_id="test_original_job_id")
+        job_graph=job_service.get_job_graph(job_id="test_original_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
     terminal_job_results: List[JobResult] = [job_graph.get_job_result(node) for node in tail_nodes]

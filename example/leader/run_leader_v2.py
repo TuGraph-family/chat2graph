@@ -12,7 +12,7 @@ from app.common.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
-from app.manager.job_manager import JobManager
+from app.manager.job_service import JobService
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 
@@ -191,8 +191,8 @@ paper content:
     #          ↘                                       ↗
     #            job_3 (Results)
 
-    job_manager: JobManager = JobManager()
-    job_manager.add_job(
+    job_service: JobService = JobService()
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
         expert=leader.state.get_expert_by_name("Information Extractor"),
@@ -200,7 +200,7 @@ paper content:
         successors=[job_2, job_3],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
         expert=leader.state.get_expert_by_name("Methodology Expert"),
@@ -208,7 +208,7 @@ paper content:
         successors=[job_4],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
         expert=leader.state.get_expert_by_name("Results Analyst"),
@@ -216,7 +216,7 @@ paper content:
         successors=[job_5],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
         expert=leader.state.get_expert_by_name("Technical Reviewer"),
@@ -224,7 +224,7 @@ paper content:
         successors=[job_5],
     )
 
-    job_manager.add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
         expert=leader.state.get_expert_by_name("Research Synthesizer"),
@@ -235,7 +235,7 @@ paper content:
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
     job_graph: JobGraph = await leader.execute_job_graph(
-        job_graph=job_manager.get_job_graph("test_original_job_id")
+        job_graph=job_service.get_job_graph("test_original_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
 

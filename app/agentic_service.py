@@ -11,8 +11,8 @@ from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.agent.leader import Leader
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.manager.job_manager import JobManager
-from app.manager.session_manager import SessionManager
+from app.manager.job_service import JobService
+from app.manager.session_service import SessionService
 from app.memory.message import ChatMessage
 
 graph_modeling_expert_config = get_graph_modeling_expert_config()
@@ -28,8 +28,8 @@ class AgenticService:
     def __init__(self):
         # TODO: configure the chat2graph service by yaml
 
-        # initialize the job manager
-        self._job_manager = JobManager()
+        # initialize the job service
+        self._job_service = JobService()
 
         # initialize the leader
         self._reasoner = DualModelReasoner()
@@ -45,9 +45,9 @@ class AgenticService:
         """Execute the service synchronously."""
         job = Job(goal=message.get_payload())
         await self._leader.execute_job(job=job)
-        job_result: JobResult = await self._job_manager.query_job_result(job_id=job.id)
+        job_result: JobResult = await self._job_service.query_job_result(job_id=job.id)
         return job_result.result
 
     def session(self, session_id: Optional[str] = None) -> Session:
         """Get the session, if not exists or session_id is None, create a new one."""
-        return SessionManager().get_session(session_id=session_id)
+        return SessionService().get_session(session_id=session_id)

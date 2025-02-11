@@ -4,7 +4,7 @@ from app.agent.core.session import Session
 from app.common.singleton import Singleton
 
 
-class SessionManager(metaclass=Singleton):
+class SessionService(metaclass=Singleton):
     """Session manager"""
 
     def __init__(self):
