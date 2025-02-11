@@ -213,8 +213,9 @@ async def main():
             ),
         )
 
+    job_manager: JobManager = JobManager.instance
     # Create job graph structure
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
         expert=leader.state.get_expert_by_name("Expert 1"),
@@ -222,7 +223,7 @@ async def main():
         successors=[job_2, job_3],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
         expert=leader.state.get_expert_by_name("Expert 2"),
@@ -230,7 +231,7 @@ async def main():
         successors=[job_5],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
         expert=leader.state.get_expert_by_name("Expert 3"),
@@ -238,7 +239,7 @@ async def main():
         successors=[job_4],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
         expert=leader.state.get_expert_by_name("Expert 4"),
@@ -246,7 +247,7 @@ async def main():
         successors=[],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
         expert=leader.state.get_expert_by_name("Expert 5"),
@@ -258,7 +259,7 @@ async def main():
 
     # get the job graph and expert assignments
     job_graph: JobGraph = await leader.execute_job_graph(
-        job_graph=JobManager().get_job_graph("test_original_job_id")
+        job_graph=job_manager.get_job_graph("test_original_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
 

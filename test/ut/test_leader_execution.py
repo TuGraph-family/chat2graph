@@ -124,7 +124,8 @@ async def test_agent_job_graph():
         )
 
     # build job graph
-    JobManager().add_job(
+    job_manager: JobManager = JobManager.instance
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=jobs[0],
         expert=leader.state.get_expert_by_name("Expert 1"),
@@ -132,7 +133,7 @@ async def test_agent_job_graph():
         successors=[jobs[1], jobs[2]],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=jobs[1],
         expert=leader.state.get_expert_by_name("Expert 2"),
@@ -140,7 +141,7 @@ async def test_agent_job_graph():
         successors=[jobs[4]],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=jobs[2],
         expert=leader.state.get_expert_by_name("Expert 3"),
@@ -148,7 +149,7 @@ async def test_agent_job_graph():
         successors=[jobs[3]],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=jobs[3],
         expert=leader.state.get_expert_by_name("Expert 4"),
@@ -156,7 +157,7 @@ async def test_agent_job_graph():
         successors=[],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=jobs[4],
         expert=leader.state.get_expert_by_name("Expert 5"),
@@ -166,7 +167,7 @@ async def test_agent_job_graph():
 
     # execute job graph
     job_graph: JobGraph = await leader.execute_job_graph(
-        job_graph=JobManager().get_job_graph(job_id="test_original_job_id")
+        job_graph=job_manager.get_job_graph(job_id="test_original_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
     terminal_job_results: List[JobResult] = [job_graph.get_job_result(node) for node in tail_nodes]

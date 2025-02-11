@@ -191,7 +191,8 @@ paper content:
     #          ↘                                       ↗
     #            job_3 (Results)
 
-    JobManager().add_job(
+    job_manager: JobManager = JobManager.instance
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
         expert=leader.state.get_expert_by_name("Information Extractor"),
@@ -199,7 +200,7 @@ paper content:
         successors=[job_2, job_3],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
         expert=leader.state.get_expert_by_name("Methodology Expert"),
@@ -207,7 +208,7 @@ paper content:
         successors=[job_4],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
         expert=leader.state.get_expert_by_name("Results Analyst"),
@@ -215,7 +216,7 @@ paper content:
         successors=[job_5],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
         expert=leader.state.get_expert_by_name("Technical Reviewer"),
@@ -223,7 +224,7 @@ paper content:
         successors=[job_5],
     )
 
-    JobManager().add_job(
+    job_manager.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
         expert=leader.state.get_expert_by_name("Research Synthesizer"),
@@ -234,7 +235,7 @@ paper content:
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
     job_graph: JobGraph = await leader.execute_job_graph(
-        job_graph=JobManager().get_job_graph("test_original_job_id")
+        job_graph=job_manager.get_job_graph("test_original_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
 

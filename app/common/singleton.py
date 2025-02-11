@@ -15,7 +15,7 @@ class AbcSingleton(ABCMeta):
     @property
     def instance(cls) -> Any:
         """Returns the singleton instance, or None if not yet created."""
-        return cls._instances.get(cls)
+        return cls._instances.get(cls, None)
 
 
 class Singleton(type):
@@ -31,4 +31,4 @@ class Singleton(type):
     @property
     def instance(cls) -> Any:
         """Returns the singleton instance, or None if not yet created."""
-        return cls._instances.get(cls)
+        return cls._instances.get(cls, None)

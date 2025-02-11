@@ -28,6 +28,9 @@ class AgenticService:
     def __init__(self):
         # TODO: configure the chat2graph service by yaml
 
+        # initialize the job manager
+        self._job_manager = JobManager()
+
         # initialize the leader
         self._reasoner = DualModelReasoner()
         self._leader = Leader(agent_config=get_leader_config(reasoner=self._reasoner))
@@ -42,7 +45,7 @@ class AgenticService:
         """Execute the service synchronously."""
         job = Job(goal=message.get_payload())
         await self._leader.execute_job(job=job)
-        job_result: JobResult = await JobManager().query_job_result(job_id=job.id)
+        job_result: JobResult = await self._job_manager.query_job_result(job_id=job.id)
         return job_result.result
 
     def session(self, session_id: Optional[str] = None) -> Session:

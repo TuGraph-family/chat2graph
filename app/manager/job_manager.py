@@ -160,7 +160,7 @@ class JobManager(metaclass=Singleton):
             if "expert_id" not in data or not isinstance(data["expert_id"], str):
                 raise ValueError(f"Node {node} missing required 'expert_id' attribute")
 
-        job_graph: JobGraph = JobManager().get_job_graph(original_job_id)
+        job_graph: JobGraph = self.get_job_graph(original_job_id)
 
         if not old_subgraph:
             job_graph.update(new_subgraph)

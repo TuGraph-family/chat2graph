@@ -39,7 +39,8 @@ class Leader(Agent, metaclass=AbcSingleton):
         # submit the job to the job manager
         initial_job_graph: JobGraph = JobGraph()
         initial_job_graph.add_node(id=job.id, job=job)
-        JobManager().set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+        job_manager: JobManager = JobManager.instance
+        job_manager.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
         # execute the job
         agent_message = AgentMessage(job=job)
@@ -47,10 +48,10 @@ class Leader(Agent, metaclass=AbcSingleton):
         executed_job_graph = await self.execute_job_graph(job_graph=job_graph)
 
         # replace the subgraph in the job manager
-        JobManager().replace_subgraph(
+        job_manager.replace_subgraph(
             original_job_id=job.id,
             new_subgraph=executed_job_graph,
-            old_subgraph=JobManager().get_job_graph(job.id),
+            old_subgraph=job_manager.get_job_graph(job.id),
         )
 
     async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
