@@ -12,13 +12,12 @@ from app.agent.job import Job, SubJob
 from app.agent.job_result import JobResult
 from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
-from app.common.singleton import AbcSingleton
 from app.common.type import JobStatus, WorkflowStatus
 from app.common.util import parse_json
 from app.memory.message import AgentMessage, TextMessage, WorkflowMessage
 
 
-class Leader(Agent, metaclass=AbcSingleton):
+class Leader(Agent):
     """Leader is a role that can manage a group of agents and the jobs."""
 
     def __init__(
@@ -35,8 +34,7 @@ class Leader(Agent, metaclass=AbcSingleton):
     async def execute_job(self, job: Job) -> JobGraph:
         """Execute a job from the user."""
         # decompose the job by the leader
-        agent_message = AgentMessage(job=job)
-        job_graph = await self.execute(agent_message=agent_message)
+        job_graph = await self.execute(agent_message=AgentMessage(job=job))
 
         # execute the job graph
         # TODO: make the job graph static, and save the job results by the service

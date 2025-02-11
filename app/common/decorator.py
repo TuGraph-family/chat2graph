@@ -25,20 +25,17 @@ def session_wrapper(cls):
         async def wait(self, job_id: str, interval: int = 5) -> ChatMessage:
             """Wait for the result."""
             while 1:
-                # query the result every n seconds
+                # sleep for `interval` seconds
+                await asyncio.sleep(interval)
+
+                # query the result every `interval` seconds.
+                # please note that the job is executed asynchronously,
+                # so the result may not be queryed immediately.
                 job_service: JobService = JobService.instance
                 job_result: JobResult = await job_service.query_job_result(job_id=job_id)
 
                 # check if the job is finished
                 if job_result.status == JobStatus.FINISHED:
                     return job_result.result
-
-                # sleep for `interval` seconds
-                await asyncio.sleep(interval)
-
-        @property
-        def id(self) -> str:
-            """Get the session ID."""
-            return self.id
 
     return SessionWrapper

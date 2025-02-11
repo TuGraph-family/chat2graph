@@ -7,9 +7,9 @@ from app.agent.expert import Expert
 from app.agent.graph import JobGraph
 from app.agent.job import Job
 from app.agent.job_result import JobResult
-from app.agent.leader import Leader
 from app.common.singleton import Singleton
 from app.common.type import JobStatus
+from app.manager.agent_service import AgentService
 from app.memory.message import TextMessage
 
 
@@ -22,7 +22,9 @@ class JobService(metaclass=Singleton):
     async def query_job_result(self, job_id: str) -> JobResult:
         """Query the result of the multi-agent system."""
         if job_id not in self._job_graphs:
-            raise ValueError(f"Job with ID {job_id} not found in the job registry.")
+            raise ValueError(
+                f"Job with ID {job_id} not found in the job registry, or not yet submitted."
+            )
 
         # query the state to get the job execution information
         job_graph = self.get_job_graph(job_id)
@@ -71,8 +73,10 @@ class JobService(metaclass=Singleton):
         initial_job_graph.add_node(id=job.id, job=job)
         self.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
-        leader: Leader = Leader.instance
-        executed_job_graph = await leader.execute_job(job=job)
+        # submit the job to the leader
+        leader_service: AgentService = AgentService.instance
+        executed_job_graph = await leader_service.leader.execute_job(job=job)
+
         # replace the subgraph in the job service
         self.replace_subgraph(
             original_job_id=job.id,
