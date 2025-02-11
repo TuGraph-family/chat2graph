@@ -13,7 +13,7 @@ from app.common.prompt.operator import (
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.service.job_service import JobService
+from app.core.service.job_service import JobService
 
 
 async def main():

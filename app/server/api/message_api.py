@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from app.service.message_service import (
+from app.core.service.message_service import (
     delete_message,
     get_all_messages,
     get_message,

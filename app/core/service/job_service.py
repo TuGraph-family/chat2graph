@@ -10,7 +10,7 @@ from app.agent.job_result import JobResult
 from app.common.singleton import Singleton
 from app.common.type import JobStatus
 from app.core.memory.message import TextMessage
-from app.service.agent_service import AgentService
+from app.core.service.agent_service import AgentService
 
 
 class JobService(metaclass=Singleton):

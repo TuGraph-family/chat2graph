@@ -13,7 +13,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.memory.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.service.job_service import JobService
+from app.core.service.job_service import JobService
 
 
 async def main():

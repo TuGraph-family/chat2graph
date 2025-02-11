@@ -13,7 +13,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.type import JobStatus
 from app.core.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.service.job_service import JobService
+from app.core.service.job_service import JobService
 
 
 class TestAgentOperator(Operator):

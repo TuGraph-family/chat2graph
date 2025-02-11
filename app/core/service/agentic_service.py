@@ -5,9 +5,9 @@ from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.common.singleton import Singleton
 from app.core.memory.message import ChatMessage
-from app.service.agent_service import AgentService
-from app.service.job_service import JobService
-from app.service.session_service import SessionService
+from app.core.service.agent_service import AgentService
+from app.core.service.job_service import JobService
+from app.core.service.session_service import SessionService
 
 
 class AgenticService(metaclass=Singleton):
