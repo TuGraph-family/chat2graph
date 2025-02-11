@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 
-from app.env.insight.insight import Insight, InsightType
+from app.core.env.insight.insight import Insight, InsightType
 
 
 class InsightService(ABC):

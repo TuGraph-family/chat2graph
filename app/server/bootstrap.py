@@ -1,7 +1,7 @@
 from flask import Flask
-from app.config.sqilte_config import SqliteConfig
-from app.model.sqlite_model import db
-from app.api import register_blueprints
+from app.server.config.sqilte_config import SqliteConfig
+from app.server.model.sqlite_model import db
+from app.server.api import register_blueprints
 from flask_cors import CORS
 import os
 from app.toolkit.api_tool import make_error_response, BaseException

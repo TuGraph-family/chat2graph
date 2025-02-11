@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 from app.agent.core.session import Session
 from app.common.singleton import Singleton
-from app.model.sqlite_model import Session as SqlSession, db
+from app.server.model.sqlite_model import Session as SqlSession, db
 from app.toolkit.api_tool import ParameterException, ServiceException
 
 

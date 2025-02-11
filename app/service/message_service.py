@@ -1,4 +1,4 @@
-from app.model.sqlite_model import Message, db
+from app.server.model.sqlite_model import Message, db
 from app.toolkit.api_tool import ParameterException, ServiceException
 from datetime import datetime, timezone
 from openai import OpenAI
