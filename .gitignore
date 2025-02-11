@@ -1,5 +1,6 @@
 .*
 !.gitignore
+!.github
 *.lock
 venv
 __pycache__
