@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "chat2graph"
 version = "0.0.1"
-description = "An Agentic System on Graph Database."
-authors = ["Florian Fan <fanzhidongyzby@163.com>"]
+description = "Chat2Graph: An Agentic System on Graph Database."
+authors = ["Florian Fan <fanzhidongyzby@gmail.com>"]
 packages = [
     { include = "app" }
 ]
