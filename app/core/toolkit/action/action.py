@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from app.toolkit.tool.tool import Tool
+from app.core.toolkit.tool.tool import Tool
 
 
 @dataclass

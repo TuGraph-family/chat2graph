@@ -11,7 +11,7 @@ from app.common.type import WorkflowStatus
 from app.memory.message import WorkflowMessage
 from app.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.toolkit.tool.tool import Tool
+from app.core.toolkit.tool.tool import Tool
 
 
 class TestReasoner(Reasoner):

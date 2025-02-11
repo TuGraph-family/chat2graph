@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List
 from uuid import uuid4
 
-from app.toolkit.action.action import Action
+from app.core.toolkit.action.action import Action
 
 
 @dataclass

@@ -7,7 +7,7 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.core.env.insight.insight import Insight
 from app.core.knowledge.knowlege_service import KnowledgeService
 from app.memory.message import WorkflowMessage
-from app.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 
 class Operator:

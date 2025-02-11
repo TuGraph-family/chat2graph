@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from app.agent.job import Job
 from app.common.type import MessageSourceType
-from app.toolkit.tool.tool import FunctionCallResult
+from app.core.toolkit.tool.tool import FunctionCallResult
 
 
 class Message(ABC):

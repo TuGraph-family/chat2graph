@@ -5,8 +5,8 @@ from app.agent.job import Job
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.core.env.insight.insight import Insight
 from app.memory.message import WorkflowMessage
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
+from app.core.toolkit.action.action import Action
+from app.core.toolkit.tool.tool import Tool
 
 
 @dataclass

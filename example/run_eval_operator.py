@@ -12,8 +12,8 @@ from app.common.prompt.operator import (
 )
 from app.common.type import WorkflowStatus
 from app.memory.message import WorkflowMessage
-from app.toolkit.action.action import Action
-from app.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.action.action import Action
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 
 async def main():

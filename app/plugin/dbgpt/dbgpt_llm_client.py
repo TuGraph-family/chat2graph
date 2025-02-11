@@ -18,7 +18,7 @@ from app.common.prompt.model_service import FUNC_CALLING_PROMPT
 from app.common.system_env import SystemEnv
 from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
-from app.toolkit.tool.tool import FunctionCallResult, Tool
+from app.core.toolkit.tool.tool import FunctionCallResult, Tool
 
 
 class DbgptLlmClient(ModelService):

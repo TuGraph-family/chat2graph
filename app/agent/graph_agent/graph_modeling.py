@@ -12,9 +12,9 @@ from app.common.system_env import SystemEnv
 from app.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.action.action import Action
+from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 CYPHER_GRAMMER = """
 ===== TuGraph Cypher 语法书 =====

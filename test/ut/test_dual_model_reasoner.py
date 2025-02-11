@@ -10,7 +10,7 @@ from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.type import MessageSourceType
 from app.memory.message import ModelMessage
-from app.toolkit.tool.tool import Tool
+from app.core.toolkit.tool.tool import Tool
 
 
 @pytest.fixture

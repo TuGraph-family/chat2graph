@@ -9,10 +9,10 @@ from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.memory.message import WorkflowMessage
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.tool.tool_resource import Query
-from app.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.action.action import Action
+from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.tool.tool_resource import Query
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 
 @pytest.fixture

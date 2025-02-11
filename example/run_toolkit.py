@@ -2,10 +2,10 @@ import asyncio
 
 import matplotlib.pyplot as plt
 
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.tool.tool_resource import Query
-from app.toolkit.toolkit import Toolkit, ToolkitGraphType
+from app.core.toolkit.action.action import Action
+from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.tool.tool_resource import Query
+from app.core.toolkit.toolkit import Toolkit, ToolkitGraphType
 
 
 async def main():

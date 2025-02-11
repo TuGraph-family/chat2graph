@@ -6,8 +6,8 @@ from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
+from app.core.toolkit.action.action import Action
+from app.core.toolkit.tool.tool import Tool
 
 
 # example tool

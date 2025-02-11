@@ -8,9 +8,9 @@ from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.action.action import Action
+from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 QUERY_GRAMMER = """
 ===== 图vertex查询语法书 =====
