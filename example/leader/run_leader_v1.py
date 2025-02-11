@@ -9,9 +9,9 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.manager.job_manager import JobManager
 from app.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.service.job_service import JobService
 
 
 class BaseTestOperator(Operator):
@@ -205,7 +205,7 @@ async def main():
 
     # create expert profiles
     for i, workflow in enumerate(workflows):
-        leader.get_leader_state().create_expert(
+        leader.state.create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=f"Expert {i + 1}", description=f"Expert {i + 1}"),
                 reasoner=reasoner,
@@ -213,43 +213,44 @@ async def main():
             ),
         )
 
+    job_service: JobService = JobService()
     # Create job graph structure
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 1"),
+        expert=leader.state.get_expert_by_name("Expert 1"),
         predecessors=[],
         successors=[job_2, job_3],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 2"),
+        expert=leader.state.get_expert_by_name("Expert 2"),
         predecessors=[job_1],
         successors=[job_5],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 3"),
+        expert=leader.state.get_expert_by_name("Expert 3"),
         predecessors=[job_1],
         successors=[job_4],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 4"),
+        expert=leader.state.get_expert_by_name("Expert 4"),
         predecessors=[job_3],
         successors=[],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert=leader.get_leader_state().get_expert_by_name("Expert 5"),
+        expert=leader.state.get_expert_by_name("Expert 5"),
         predecessors=[job_2, job_3],
         successors=[],
     )
@@ -258,7 +259,7 @@ async def main():
 
     # get the job graph and expert assignments
     job_graph: JobGraph = await leader.execute_job_graph(
-        job_graph=JobManager().get_job_graph("test_original_job_id")
+        job_graph=job_service.get_job_graph("test_original_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
 

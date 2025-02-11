@@ -5,58 +5,40 @@ from typing import Dict, List, Optional, Set
 import networkx as nx  # type: ignore
 
 from app.agent.agent import Agent, AgentConfig
+from app.agent.builtin_leader_state import BuiltinLeaderState
 from app.agent.expert import Expert
 from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
 from app.agent.job_result import JobResult
-from app.agent.leader_state import LeaderState, LeaderStateInterface
+from app.agent.leader_state import LeaderState
 from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
-from app.common.singleton import AbcSingleton
 from app.common.type import JobStatus, WorkflowStatus
 from app.common.util import parse_json
-from app.manager.job_manager import JobManager
 from app.memory.message import AgentMessage, TextMessage, WorkflowMessage
 
 
-class Leader(Agent, metaclass=AbcSingleton):
+class Leader(Agent):
     """Leader is a role that can manage a group of agents and the jobs."""
-
-    _instance_config: Optional[AgentConfig] = None
 
     def __init__(
         self,
+        agent_config: AgentConfig,
         id: Optional[str] = None,
-        agent_config: Optional[AgentConfig] = None,
-        leader_state: Optional[LeaderStateInterface] = None,
+        leader_state: Optional[LeaderState] = None,
     ):
         # self._workflow of the leader is used to decompose the job
 
-        if agent_config:
-            Leader._instance_config = agent_config
-        elif not Leader._instance_config:
-            raise ValueError("The Leader instance config is not set.")
+        super().__init__(agent_config=agent_config, id=id)
+        self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
 
-        super().__init__(agent_config=Leader._instance_config, id=id)
-        self._leader_state: LeaderStateInterface = leader_state or LeaderState()
+    async def execute_job(self, job: Job) -> JobGraph:
+        """Execute a job from the user."""
+        # decompose the job by the leader
+        job_graph = await self.execute(agent_message=AgentMessage(job=job))
 
-    async def receive_submission(self, job: Job) -> None:
-        """Receive a message from the user."""
-        # submit the job to the job manager
-        initial_job_graph: JobGraph = JobGraph()
-        initial_job_graph.add_node(id=job.id, job=job)
-        JobManager().set_job_graph(job_id=job.id, job_graph=initial_job_graph)
-
-        # execute the job
-        agent_message = AgentMessage(job=job)
-        job_graph = await self.execute(agent_message=agent_message)
-        executed_job_graph = await self.execute_job_graph(job_graph=job_graph)
-
-        # replace the subgraph in the job manager
-        JobManager().replace_subgraph(
-            original_job_id=job.id,
-            new_subgraph=executed_job_graph,
-            old_subgraph=JobManager().get_job_graph(job.id),
-        )
+        # execute the job graph
+        # TODO: make the job graph static, and save the job results by the service
+        return await self.execute_job_graph(job_graph=job_graph)
 
     async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
         """Decompose the job and execute the job.
@@ -73,11 +55,11 @@ class Leader(Agent, metaclass=AbcSingleton):
         job = agent_message.get_payload()
 
         # get the expert list
-        expert_profiles = self._leader_state.get_expert_profiles()
+        expert_profiles = [e.get_profile() for e in self._leader_state.list_experts()]
         role_list = "\n".join(
             [
                 f"Expert name: {profile.name}\nDescription: {profile.description}"
-                for profile in expert_profiles.values()
+                for profile in expert_profiles
             ]
         )
 
@@ -271,6 +253,7 @@ class Leader(Agent, metaclass=AbcSingleton):
             raise NotImplementedError("Decompose the job into subjobs is not implemented.")
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 
-    def get_leader_state(self) -> LeaderStateInterface:
+    @property
+    def state(self) -> LeaderState:
         """Get the leader state."""
         return self._leader_state

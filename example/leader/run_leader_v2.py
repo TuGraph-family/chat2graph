@@ -12,8 +12,8 @@ from app.common.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
-from app.manager.job_manager import JobManager
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.service.job_service import JobService
 
 
 async def main():
@@ -176,7 +176,7 @@ paper content:
         workflow.add_operator(op)
         workflow.set_evaluator(evaluator)
 
-        leader.get_leader_state().create_expert(
+        leader.state.create_expert(
             agent_config=AgentConfig(
                 profile=Profile(name=name, description=desc),
                 reasoner=reasoner,
@@ -191,42 +191,43 @@ paper content:
     #          ↘                                       ↗
     #            job_3 (Results)
 
-    JobManager().add_job(
+    job_service: JobService = JobService()
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert=leader.get_leader_state().get_expert_by_name("Information Extractor"),
+        expert=leader.state.get_expert_by_name("Information Extractor"),
         predecessors=[],
         successors=[job_2, job_3],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert=leader.get_leader_state().get_expert_by_name("Methodology Expert"),
+        expert=leader.state.get_expert_by_name("Methodology Expert"),
         predecessors=[job_1],
         successors=[job_4],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert=leader.get_leader_state().get_expert_by_name("Results Analyst"),
+        expert=leader.state.get_expert_by_name("Results Analyst"),
         predecessors=[job_1],
         successors=[job_5],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert=leader.get_leader_state().get_expert_by_name("Technical Reviewer"),
+        expert=leader.state.get_expert_by_name("Technical Reviewer"),
         predecessors=[job_2],
         successors=[job_5],
     )
 
-    JobManager().add_job(
+    job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert=leader.get_leader_state().get_expert_by_name("Research Synthesizer"),
+        expert=leader.state.get_expert_by_name("Research Synthesizer"),
         predecessors=[job_3, job_4],
         successors=[],
     )
@@ -234,7 +235,7 @@ paper content:
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
     job_graph: JobGraph = await leader.execute_job_graph(
-        job_graph=JobManager().get_job_graph("test_original_job_id")
+        job_graph=job_service.get_job_graph("test_original_job_id")
     )
     tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
 

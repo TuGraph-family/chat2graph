@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.agent.agent import AgentConfig, Profile
+from app.agent.builtin_leader_state import BuiltinLeaderState
 from app.agent.graph import JobGraph
 from app.agent.job import Job
 from app.agent.leader import Leader
-from app.agent.leader_state import LeaderState
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator
@@ -15,9 +15,9 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.agent.workflow.workflow import Workflow
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.common.singleton import AbcSingleton
-from app.manager.job_manager import JobManager
 from app.memory.message import AgentMessage, WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.service.job_service import JobService
 
 
 class MockWorkflow(Workflow):
@@ -85,8 +85,8 @@ def mock_reasoner():
 def leader(mock_reasoner: Reasoner):
     """Create a leader instance with mock reasoner."""
     # clear the AbcSingleton instance
-    if LeaderState in AbcSingleton._instances:
-        del AbcSingleton._instances[LeaderState]
+    if BuiltinLeaderState in AbcSingleton._instances:
+        del AbcSingleton._instances[BuiltinLeaderState]
 
     if Leader in AbcSingleton._instances:
         del AbcSingleton._instances[Leader]
@@ -176,26 +176,27 @@ Final Delivery:
         reasoner=mock_reasoner,
         workflow=MockWorkflow(),
     )
-    leader.get_leader_state().create_expert(expert_profile_1)
-    leader.get_leader_state().create_expert(expert_profile_2)
-    leader.get_leader_state().create_expert(expert_profile_3)
+    leader.state.create_expert(expert_profile_1)
+    leader.state.create_expert(expert_profile_2)
+    leader.state.create_expert(expert_profile_3)
 
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()
     initial_job_graph.add_node(id=job.id, job=job)
-    JobManager().set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+    job_service: JobService = JobService()
+    job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
     job_graph = await leader.execute(AgentMessage(job=job))
     print(f"job_graph: {job_graph.nodes}")
-    JobManager().replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
+    job_service.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
 
     assert isinstance(job_graph, JobGraph)
     assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes_data())
 
-    assert len(JobManager().get_job_graph(job.id).nodes()) == 3
-    assert len(JobManager().get_job_graph(job.id).edges()) == 3  # 3 dependencies
+    assert len(job_service.get_job_graph(job.id).nodes()) == 3
+    assert len(job_service.get_job_graph(job.id).edges()) == 3  # 3 dependencies
 
-    assert len(JobManager().get_job_graph(job.id)._legacy_jobs.keys()) == 1
+    assert len(job_service.get_job_graph(job.id)._legacy_jobs.keys()) == 1
 
 
 @pytest.mark.asyncio
@@ -212,7 +213,8 @@ Analyzing the task...
 
     with pytest.raises(Exception) as exc_info:
         job_graph = await leader.execute(AgentMessage(job=job))
-        JobManager().replace_subgraph(new_subgraph=job_graph)
+        job_service: JobService = JobService.instance
+        job_service.replace_subgraph(new_subgraph=job_graph)
 
     assert "Failed to decompose the subjobs by json format" in str(exc_info.value)
     assert mock_response in str(exc_info.value)
