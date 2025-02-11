@@ -6,10 +6,7 @@ from app.memory.message import TextMessage
 
 async def main():
     """Main function."""
-    agentic_service = AgenticService()
-
-    # set the session ID
-    session_id = "test_session_id"
+    agentic_service = AgenticService("Chat2Graph").load()
 
     # set the user message
     user_message = TextMessage(
@@ -20,8 +17,8 @@ async def main():
     )
 
     # submit the job
-    session = agentic_service.session(session_id=session_id)
-    job = await session.submit(message=user_message)
+    session = agentic_service.session()
+    job = await session.submit(user_message)
     service_message = await session.wait(job.id)
 
     # print the result

@@ -1,6 +1,8 @@
 from typing import Optional
 
+from app.agent.agent import AgentConfig
 from app.agent.core.session import Session
+from app.agent.expert import Expert
 from app.agent.graph_agent.data_importation import get_data_importation_expert_config
 from app.agent.graph_agent.graph_analysis import get_graph_analysis_expert_config
 from app.agent.graph_agent.graph_modeling import get_graph_modeling_expert_config
@@ -25,8 +27,19 @@ graph_question_answering_expert_config = get_graph_question_answeing_expert_conf
 class AgenticService:
     """Agentic service class"""
 
-    def __init__(self):
+    def __init__(self, service_name: Optional[str] = None):
+        self._service_name = service_name or "Chat2Graph"
+
+    def load(self, config_file_path: Optional[str] = None) -> "AgenticService":
+        """Load the configuration of the agentic service."""
+        if not config_file_path:
+            self.load_default()
+            return self
+
         # TODO: configure the chat2graph service by yaml
+
+    def load_default(self) -> None:
+        """Load the default configuration of the agentic service."""
 
         # initialize the leader
         reasoner = DualModelReasoner()
@@ -48,3 +61,7 @@ class AgenticService:
     def session(self, session_id: Optional[str] = None) -> Session:
         """Get the session, if not exists or session_id is None, create a new one."""
         return SessionManager().get_session(session_id=session_id)
+
+    def expert(self, agent_config: AgentConfig) -> Expert:
+        """Get the expert for the agentic service."""
+        return Leader().get_leader_state().create_expert(agent_config)

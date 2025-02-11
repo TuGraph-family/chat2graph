@@ -1,4 +1,4 @@
-from typing import List, Optional, Set, Tuple
+from typing import Any, List, Optional, Set, Tuple
 
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
@@ -97,7 +97,7 @@ class Toolkit:
         action: Action,
         next_actions: List[tuple[Action, float]],
         prev_actions: List[tuple[Action, float]],
-    ):
+    ) -> None:
         """Add action to the toolkit graph. Action --Next--> Action.
 
         Args:
@@ -222,9 +222,8 @@ class Toolkit:
                 break
 
         # for all found actions, add their connected tools to the found actions
-        action_node_ids = {
-            n for n in node_ids_to_keep
-        }  # copy to avoid modification during iteration
+        action_node_ids = set(node_ids_to_keep)
+
         for action_node_id in action_node_ids:
             for tool_id in self._toolkit_graph.successors(action_node_id):
                 edge_data = self._toolkit_graph.get_edge_data(action_node_id, tool_id)
@@ -369,7 +368,7 @@ class Toolkit:
             edge_labels,
             font_size=8,
             label_pos=0.5,
-            bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.7},
         )
 
         # add node labels - handle both Action and Tool nodes
@@ -433,3 +432,7 @@ class ToolkitService:
     def get_toolkit(self) -> Toolkit:
         """Get the current toolkit."""
         return self._toolkit
+
+    def with_store(self, store_type: Any) -> "ToolkitService":
+        """Use the store for the toolkit."""
+        # TODO: implement the persistent storage for the toolkit

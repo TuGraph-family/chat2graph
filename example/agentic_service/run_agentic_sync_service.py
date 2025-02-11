@@ -6,7 +6,7 @@ from app.memory.message import TextMessage
 
 async def main():
     """Main function."""
-    agentic_service = AgenticService()
+    agentic_service = AgenticService("Chat2Graph").load()
 
     # set the user message
     user_message = TextMessage(

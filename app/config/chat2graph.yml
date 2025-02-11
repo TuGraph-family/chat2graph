@@ -1,0 +1,91 @@
+app:
+  name: "Chat2Graph"
+  desc: "An Agentic System on Graph Database."
+  version: "0.0.1"
+
+reasoner:
+  mode: "DUAL"
+
+memory:
+
+env:
+
+leader:
+  profile:
+    name: "Leader"
+    desc: "The Leader Agent."
+  workflow:
+    operators:
+      - name: "default_operator"
+        instruction: := *leader_instr
+        output_schema:
+          - sub_job_id:
+              goal: "subtask_description"
+              context: "Input data, resources, etc."
+              completion_criteria: "Acceptance Criteria, etc."
+              dependencies:
+                - "specific_task_id_1"
+                - "specific_task_id_2"
+                - "..."
+              assigned_expert: "Name of an expert (in English.)"
+
+experts:
+  - profile:
+      name: "Graph Modeling Expert"
+      desc: "The Graph Modeling Expert."
+    workflow:
+      operators:
+        - name: "analysis_operator"
+          instruction: "仔细阅读给定的文档，完成文档理解。"
+          actions:
+            - "doc_analysis.content_understanding"
+            - "doc_analysis.concept_identification"
+            - "doc_analysis.relation_pattern"
+            - "doc_analysis.consistency_check"
+          output_schema:
+            - domain: "文档所属领域的详细描述，解释该领域的主要业务和数据特点"
+              data_full_view: "对文档数据全貌的详细推测，包括数据结构、规模、实体关系等，并提供思考链路和理由"
+              concepts:
+                - concept: "概念名称"
+                  description: "概念的详细描述"
+                  importance: "概念在文档中的重要性"
+              properties:
+                - concept: "所属概念"
+                  property: "属性名称"
+                  description: "属性的详细描述"
+                  data_type: "属性的数据类型"
+              potential_relations:
+                - relation: "关系类型"
+                  entities_involved:
+                    - "实体1"
+                    - "实体2"
+                    - "..."
+                  description: "关系的详细描述"
+                  strength: "关系的强度或重要性"
+              document_insights: "其他重要（多条）信息或（多个）发现，它们独属于本文档的特殊内容，请用分号隔开。"
+              document_snippets: "文档中的关键片段，用于支撑你的分析结论，提供上下文信息。"
+
+        - name: "concept_modeling_operator"
+          instruction: "基于文档分析的结果，完成图建模的任务，确保图模型的正确性和连通性。"
+          actions:
+            - "concept_modeling.entity_type"
+            - "concept_modeling.relation_type"
+            - "concept_modeling.reflection_schema"
+            - "concept_modeling.schema_design"
+            - "concept_modeling.graph_validation"
+          output_schema:
+            - reachability: "说明实体和关系之间的可达性，是否存在有效的连接路径"
+            - status: "模型状态，是否通过验证等"
+            - entity_label: "成功创建的实体标签"
+            - relation_label: "成功创建的关系标签"
+      chain:
+        - from: "analysis_operator"
+          to: "concept_modeling_operator"
+
+knowledgebase:
+
+toolkit:
+
+
+vars:
+  leader_instr: &leader_instr "asdsaqwasdasdasda"

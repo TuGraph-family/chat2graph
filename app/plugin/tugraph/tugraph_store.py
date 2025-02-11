@@ -13,14 +13,13 @@ def get_tugraph(config: Optional[TuGraphStoreConfig] = None) -> TuGraphStore:
         initialized tugraph store instance
     """
     try:
-        if not config:
-            config = TuGraphStoreConfig(
-                name="default_graph",
-                host="127.0.0.1",
-                port=7687,
-                username="admin",
-                password="73@TuGraph",
-            )
+        config = config or TuGraphStoreConfig(
+            name="default_graph",
+            host="127.0.0.1",
+            port=7687,
+            username="admin",
+            password="73@TuGraph",
+        )
 
         # initialize store
         store = TuGraphStore(config)

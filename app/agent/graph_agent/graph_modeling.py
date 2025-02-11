@@ -547,31 +547,33 @@ class GraphReachabilityGetter(Tool):
         return "\n".join(lines)
 
 
+read_document = DocumentReader(id="read_document_tool")
+content_understanding_action = Action(
+    id="doc_analysis.content_understanding",
+    name="内容理解",
+    description="通过阅读和批注理解文档的主要内容和结构",
+    tools=[read_document],
+)
+concept_identification_action = Action(
+    id="doc_analysis.concept_identification",
+    name="核心概念识别",
+    description="识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系。",
+)
+relation_pattern_recognition_action = Action(
+    id="doc_analysis.relation_pattern",
+    name="关系模式识别",
+    description="发现概念间的关系模式和交互方式（结构模式、语义模式、演化模式）、提取概念网络特征（局部、全局、动态）。",
+)
+consistency_check_action = Action(
+    id="doc_analysis.consistency_check",
+    name="一致性检查",
+    description="检查文档中的概念和关系是否一致，确保概念和关系已经对齐。并且没有孤立的概念（即，没有相邻的概念）",
+)
+
+
 def get_analysis_operator():
     """Get the operator for document analysis."""
     analysis_toolkit = Toolkit()
-
-    content_understanding_action = Action(
-        id="doc_analysis.content_understanding",
-        name="内容理解",
-        description="通过阅读和批注理解文档的主要内容和结构",
-    )
-    concept_identification_action = Action(
-        id="doc_analysis.concept_identification",
-        name="核心概念识别",
-        description="识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系。",
-    )
-    relation_pattern_recognition_action = Action(
-        id="doc_analysis.relation_pattern",
-        name="关系模式识别",
-        description="发现概念间的关系模式和交互方式（结构模式、语义模式、演化模式）、提取概念网络特征（局部、全局、动态）。",
-    )
-    consistency_check_action = Action(
-        id="doc_analysis.consistency_check",
-        name="一致性检查",
-        description="检查文档中的概念和关系是否一致，确保概念和关系已经对齐。并且没有孤立的概念（即，没有相邻的概念）",
-    )
-    read_document = DocumentReader(id="read_document_tool")
 
     analysis_toolkit.add_action(
         action=content_understanding_action,
@@ -616,37 +618,41 @@ def get_analysis_operator():
     return operator
 
 
+vertex_label_generator = VertexLabelGenerator(id="vertex_label_generator_tool")
+edge_label_generator = EdgeLabelGenerator(id="edge_label_generator_tool")
+graph_reachability_getter = GraphReachabilityGetter(id="graph_reachability_getter_tool")
+
+entity_type_definition_action = Action(
+    id="concept_modeling.entity_type",
+    name="实体类型定义",
+    description="定义和分类文档中识别出的核心实体类型，只需要分析即可",
+)
+relation_type_definition_action = Action(
+    id="concept_modeling.relation_type",
+    name="关系类型定义",
+    description="设计实体间的关系类型和属性，只需要分析即可",
+)
+self_reflection_schema_action = Action(
+    id="concept_modeling.reflection_schema",
+    name="自我反思目前阶段的概念建模",
+    description="不断检查和反思当前概念模型的设计，确保模型的完整性和准确性，并发现潜在概念和关系。最后确保实体关系之间是存在联系的，禁止出现孤立的实体概念（这很重要）。",
+)
+schema_design_action = Action(
+    id="concept_modeling.schema_design",
+    name="Schema设计创建 TuGraph labels",
+    description="将概念模型转化为图数据库 label，并在 TuGraph 中创建 labels",
+    tools=[vertex_label_generator, edge_label_generator],
+)
+graph_validation_action = Action(
+    id="concept_modeling.graph_validation",
+    name="反思和检查图的可达性(Reachability)",
+    description="需要调用相关的工具来检查。可达性指的是每个节点标签和关系标签都有至少一个节点或关系与之关联。如果不连通，则需要在目前的基础上调用工具来解决。",
+    tools=[graph_reachability_getter],
+)
+
+
 def get_concept_modeling_operator():
     """Get the operator for concept modeling."""
-    entity_type_definition_action = Action(
-        id="concept_modeling.entity_type",
-        name="实体类型定义",
-        description="定义和分类文档中识别出的核心实体类型，只需要分析即可",
-    )
-    relation_type_definition_action = Action(
-        id="concept_modeling.relation_type",
-        name="关系类型定义",
-        description="设计实体间的关系类型和属性，只需要分析即可",
-    )
-    self_reflection_schema_action = Action(
-        id="concept_modeling.reflection_schema",
-        name="自我反思目前阶段的概念建模",
-        description="不断检查和反思当前概念模型的设计，确保模型的完整性和准确性，并发现潜在概念和关系。最后确保实体关系之间是存在联系的，禁止出现孤立的实体概念（这很重要）。",
-    )
-    schema_design_action = Action(
-        id="concept_modeling.schema_design",
-        name="Schema设计创建 TuGraph labels",
-        description="将概念模型转化为图数据库 label，并在 TuGraph 中创建 labels",
-    )
-    graph_validation_action = Action(
-        id="concept_modeling.graph_validation",
-        name="反思和检查图的可达性(Reachability)",
-        description="需要调用相关的工具来检查。可达性指的是每个节点标签和关系标签都有至少一个节点或关系与之关联。如果不连通，则需要在目前的基础上调用工具来解决。",
-    )
-    vertex_label_generator = VertexLabelGenerator(id="vertex_label_generator_tool")
-    edge_label_generator = EdgeLabelGenerator(id="edge_label_generator_tool")
-    graph_reachability_getter = GraphReachabilityGetter(id="graph_reachability_getter_tool")
-
     concept_modeling_toolkit = Toolkit()
 
     concept_modeling_toolkit.add_action(
@@ -719,7 +725,7 @@ def get_graph_modeling_workflow():
     workflow.add_operator(
         operator=concept_modeling_operator,
         previous_ops=[analysis_operator],
-        next_ops=None,
+        next_ops=[],
     )
 
     return workflow
