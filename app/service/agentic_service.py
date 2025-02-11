@@ -4,10 +4,10 @@ from app.agent.core.session import Session
 from app.agent.job import Job
 from app.agent.job_result import JobResult
 from app.common.singleton import Singleton
-from app.manager.agent_service import AgentService
-from app.manager.job_service import JobService
-from app.manager.session_service import SessionService
 from app.memory.message import ChatMessage
+from app.service.agent_service import AgentService
+from app.service.job_service import JobService
+from app.service.session_service import SessionService
 
 
 class AgenticService(metaclass=Singleton):

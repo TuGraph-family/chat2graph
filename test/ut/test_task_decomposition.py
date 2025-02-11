@@ -15,9 +15,9 @@ from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.agent.workflow.workflow import Workflow
 from app.common.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.common.singleton import AbcSingleton
-from app.manager.job_service import JobService
 from app.memory.message import AgentMessage, WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.service.job_service import JobService
 
 
 class MockWorkflow(Workflow):

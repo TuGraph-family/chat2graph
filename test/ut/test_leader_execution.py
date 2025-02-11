@@ -11,9 +11,9 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.common.type import JobStatus
-from app.manager.job_service import JobService
 from app.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.service.job_service import JobService
 
 
 class TestAgentOperator(Operator):

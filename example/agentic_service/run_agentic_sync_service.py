@@ -1,7 +1,7 @@
 import asyncio
 
-from app.manager.agentic_service import AgenticService
 from app.memory.message import TextMessage
+from app.service.agentic_service import AgenticService
 
 
 async def main():
