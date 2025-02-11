@@ -1,6 +1,6 @@
 import asyncio
 
-from app.core.service.legacy.graph_modeling import get_graph_modeling_workflow
+from app.core.sdk.legacy.graph_modeling import get_graph_modeling_workflow
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 

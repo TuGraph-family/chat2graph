@@ -1,6 +1,6 @@
 import asyncio
 
-from app.core.service.legacy.question_answering import get_question_answering_workflow
+from app.core.sdk.legacy.question_answering import get_question_answering_workflow
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 
