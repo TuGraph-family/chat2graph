@@ -3,8 +3,8 @@ from typing import List
 import networkx as nx
 import pytest
 
-from app.core.toolkit.action.action import Action
-from app.core.toolkit.tool.tool_resource import Query
+from app.core.toolkit.action import Action
+from test.resource.tool_resource import Query
 from app.core.toolkit.toolkit import Toolkit, ToolkitGraphType
 
 

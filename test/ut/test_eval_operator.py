@@ -9,9 +9,9 @@ from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.eval_operator import EvalOperator
 from app.agent.workflow.operator.operator_config import OperatorConfig
 from app.core.memory.message import WorkflowMessage
-from app.core.toolkit.action.action import Action
-from app.core.toolkit.tool.tool import Tool
-from app.core.toolkit.tool.tool_resource import Query
+from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
+from test.resource.tool_resource import Query
 from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 

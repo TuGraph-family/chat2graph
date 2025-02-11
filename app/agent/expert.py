@@ -1,8 +1,8 @@
 from typing import List
 
 from app.agent.agent import Agent
-from app.common.system_env import SystemEnv
-from app.common.type import WorkflowStatus
+from app.core.common.system_env import SystemEnv
+from app.core.common.type import WorkflowStatus
 from app.core.memory.message import AgentMessage, WorkflowMessage
 
 

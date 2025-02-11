@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from uuid import uuid4
 
-from app.common.system_env import SystemEnv
+from app.core.common.system_env import SystemEnv
 
 
 @dataclass

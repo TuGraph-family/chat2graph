@@ -8,7 +8,7 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.eval_operator import EvalOperator
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.common.prompt.operator import (
+from app.core.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )

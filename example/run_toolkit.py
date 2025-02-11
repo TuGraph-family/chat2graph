@@ -2,9 +2,9 @@ import asyncio
 
 import matplotlib.pyplot as plt
 
-from app.core.toolkit.action.action import Action
-from app.core.toolkit.tool.tool import Tool
-from app.core.toolkit.tool.tool_resource import Query
+from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
+from test.resource.tool_resource import Query
 from app.core.toolkit.toolkit import Toolkit, ToolkitGraphType
 
 

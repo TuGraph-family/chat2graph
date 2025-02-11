@@ -3,7 +3,7 @@ from typing import Optional
 from app.agent.core.session import Session
 from app.agent.job import Job
 from app.agent.job_result import JobResult
-from app.common.singleton import Singleton
+from app.core.common.singleton import Singleton
 from app.core.memory.message import ChatMessage
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService

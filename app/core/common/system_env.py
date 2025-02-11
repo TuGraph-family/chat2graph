@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple, Type
 
 from dotenv import load_dotenv
 
-from app.common.type import PlatformType
+from app.core.common.type import PlatformType
 
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {

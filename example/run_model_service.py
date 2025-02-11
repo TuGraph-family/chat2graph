@@ -3,8 +3,8 @@ import time
 from typing import List
 
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
-from app.common.system_env import SystemEnv
-from app.common.type import MessageSourceType
+from app.core.common.system_env import SystemEnv
+from app.core.common.type import MessageSourceType
 from app.core.memory.message import ModelMessage
 
 

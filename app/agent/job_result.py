@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.common.type import JobStatus
+from app.core.common.type import JobStatus
 from app.core.memory.message import ChatMessage
 
 

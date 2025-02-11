@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.agent.job import SubJob
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.task import Task
-from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.tool import Tool
 
 
 # example tool

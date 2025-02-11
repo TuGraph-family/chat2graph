@@ -6,10 +6,10 @@ from app.agent.reasoner.model_service import ModelService
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
-from app.common.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
-from app.common.prompt.reasoner import ACTOR_PROMPT_TEMPLATE, QUANTUM_THINKER_PROPMT_TEMPLATE
-from app.common.system_env import SystemEnv
-from app.common.type import MessageSourceType
+from app.core.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
+from app.core.prompt.reasoner import ACTOR_PROMPT_TEMPLATE, QUANTUM_THINKER_PROPMT_TEMPLATE
+from app.core.common.system_env import SystemEnv
+from app.core.common.type import MessageSourceType
 from app.core.memory.message import ModelMessage
 from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 

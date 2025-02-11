@@ -2,7 +2,7 @@ from dataclasses import asdict, dataclass, field
 from typing import List
 from uuid import uuid4
 
-from app.common.type import InsightType
+from app.core.common.type import InsightType
 
 
 @dataclass

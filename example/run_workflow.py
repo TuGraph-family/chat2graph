@@ -7,11 +7,11 @@ from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.common.type import WorkflowStatus
+from app.core.common.type import WorkflowStatus
 from app.core.memory.message import WorkflowMessage
 from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.tool import Tool
 
 
 class TestReasoner(Reasoner):

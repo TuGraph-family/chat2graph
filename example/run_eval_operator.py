@@ -6,13 +6,13 @@ from app.agent.job import SubJob
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.workflow.operator.eval_operator import EvalOperator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.common.prompt.operator import (
+from app.core.prompt.operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
-from app.common.type import WorkflowStatus
+from app.core.common.type import WorkflowStatus
 from app.core.memory.message import WorkflowMessage
-from app.core.toolkit.action.action import Action
+from app.core.toolkit.action import Action
 from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 

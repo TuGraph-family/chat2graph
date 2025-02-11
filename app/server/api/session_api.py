@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from app.core.service.session_service import get_all_sessions, create_session as service_create_session, get_session, delete_session
-from app.core.toolkit.api_tool import make_response, BaseException
+from app.server.api.api_tool import make_response, BaseException
 
 sessions_bp = Blueprint('sessions', __name__)
 

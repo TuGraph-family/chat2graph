@@ -7,7 +7,7 @@ from app.agent.job import SubJob
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.task import Task
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.common.type import MessageSourceType
+from app.core.common.type import MessageSourceType
 from app.core.memory.message import ModelMessage
 
 

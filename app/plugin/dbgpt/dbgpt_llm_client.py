@@ -14,11 +14,11 @@ from dbgpt.model.proxy.base import LLMClient  # type: ignore
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 
 from app.agent.reasoner.model_service import ModelService
-from app.common.prompt.model_service import FUNC_CALLING_PROMPT
-from app.common.system_env import SystemEnv
-from app.common.type import MessageSourceType
+from app.core.prompt.model_service import FUNC_CALLING_PROMPT
+from app.core.common.system_env import SystemEnv
+from app.core.common.type import MessageSourceType
 from app.core.memory.message import ModelMessage
-from app.core.toolkit.tool.tool import FunctionCallResult, Tool
+from app.core.toolkit.tool import FunctionCallResult, Tool
 
 
 class DbgptLlmClient(ModelService):

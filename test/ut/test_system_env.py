@@ -1,5 +1,5 @@
-from app.common.system_env import SystemEnv
-from app.common.type import PlatformType
+from app.core.common.system_env import SystemEnv
+from app.core.common.type import PlatformType
 
 
 def test_system_env():

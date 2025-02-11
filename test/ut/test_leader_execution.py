@@ -10,7 +10,7 @@ from app.agent.leader import Leader
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.workflow.operator.operator import Operator
 from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.common.type import JobStatus
+from app.core.common.type import JobStatus
 from app.core.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.core.service.job_service import JobService

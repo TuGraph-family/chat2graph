@@ -11,9 +11,9 @@ from app.agent.graph import JobGraph
 from app.agent.job import Job, SubJob
 from app.agent.job_result import JobResult
 from app.agent.leader_state import LeaderState
-from app.common.prompt.agent import JOB_DECOMPOSITION_PROMPT
-from app.common.type import JobStatus, WorkflowStatus
-from app.common.util import parse_json
+from app.core.prompt.agent import JOB_DECOMPOSITION_PROMPT
+from app.core.common.type import JobStatus, WorkflowStatus
+from app.core.common.util import parse_json
 from app.core.memory.message import AgentMessage, TextMessage, WorkflowMessage
 
 

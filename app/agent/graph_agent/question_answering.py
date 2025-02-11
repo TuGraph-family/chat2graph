@@ -6,8 +6,8 @@ from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.workflow.operator.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.core.toolkit.action.action import Action
-from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
 from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 # operation 1: Document Retrieving

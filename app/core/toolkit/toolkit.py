@@ -4,8 +4,8 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import networkx as nx  # type: ignore
 
-from app.core.toolkit.action.action import Action
-from app.core.toolkit.tool.tool import Tool
+from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
 
 
 class ToolkitGraphType:
