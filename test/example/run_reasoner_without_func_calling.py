@@ -3,7 +3,7 @@ import asyncio
 from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
-from app.agent.workflow.operator.operator import OperatorConfig
+from app.core.workflow.operator import OperatorConfig
 
 
 async def main():

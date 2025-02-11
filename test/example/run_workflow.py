@@ -5,8 +5,8 @@ from typing import Any, List, Optional
 from app.agent.job import Job, SubJob
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
-from app.agent.workflow.operator.operator import Operator
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator import Operator
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.common.type import WorkflowStatus
 from app.core.memory.message import WorkflowMessage
 from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory

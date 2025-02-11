@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 

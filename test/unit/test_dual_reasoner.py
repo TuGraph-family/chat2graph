@@ -7,7 +7,7 @@ import pytest
 from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.task import Task
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.common.type import MessageSourceType
 from app.core.memory.message import ModelMessage
 from app.core.toolkit.tool import Tool

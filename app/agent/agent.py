@@ -4,7 +4,7 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.workflow import Workflow
+from app.core.workflow.workflow import Workflow
 from app.core.memory.message import AgentMessage
 
 

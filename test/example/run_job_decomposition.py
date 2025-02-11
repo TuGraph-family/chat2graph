@@ -8,8 +8,8 @@ from app.agent.graph import JobGraph
 from app.agent.job import SubJob
 from app.agent.leader import Leader
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
-from app.agent.workflow.operator.operator import Operator
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator import Operator
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.memory.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow

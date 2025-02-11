@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from app.agent.job import Job
 from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator
+from app.core.workflow.operator import Operator
 from app.core.common.type import WorkflowStatus
 from app.core.common.util import parse_json
 from app.core.memory.message import WorkflowMessage

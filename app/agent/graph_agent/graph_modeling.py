@@ -7,7 +7,7 @@ from app.agent.agent import AgentConfig, Profile
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.model_service_factory import ModelServiceFactory
 from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator, OperatorConfig
+from app.core.workflow.operator import Operator, OperatorConfig
 from app.core.common.system_env import SystemEnv
 from app.core.memory.message import ModelMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow

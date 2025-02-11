@@ -10,9 +10,9 @@ from app.agent.job import Job
 from app.agent.leader import Leader
 from app.agent.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator
-from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.agent.workflow.workflow import Workflow
+from app.core.workflow.operator import Operator
+from app.core.workflow.operator_config import OperatorConfig
+from app.core.workflow.workflow import Workflow
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.common.singleton import AbcSingleton
 from app.core.memory.message import AgentMessage, WorkflowMessage

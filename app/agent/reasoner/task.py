@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from app.agent.job import Job
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.env.insight.insight import Insight
 from app.core.memory.message import WorkflowMessage
 from app.core.toolkit.action import Action

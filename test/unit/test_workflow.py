@@ -5,8 +5,8 @@ import pytest
 from app.agent.job import Job, SubJob
 from app.agent.reasoner.reasoner import Reasoner
 from app.agent.reasoner.task import Task
-from app.agent.workflow.operator.operator import Operator
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator import Operator
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.memory.message import WorkflowMessage
 from app.core.memory.reasoner_memory import ReasonerMemory
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow

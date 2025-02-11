@@ -7,8 +7,8 @@ from app.agent.job import Job, SubJob
 from app.agent.leader import Leader
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
 from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator import Operator
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.memory.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.core.service.job_service import JobService

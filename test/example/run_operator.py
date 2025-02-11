@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from app.agent.job import SubJob
 from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.workflow.operator.operator import Operator
-from app.agent.workflow.operator.operator_config import OperatorConfig
+from app.core.workflow.operator import Operator
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.toolkit.action import Action
 from test.resource.tool_resource import Query
 from app.core.toolkit.toolkit import Toolkit, ToolkitService
