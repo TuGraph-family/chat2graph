@@ -29,6 +29,7 @@ And make sure that the title of your pull request follows the following format:
 
 - [ ] `web`: (web front-end module)
 - [ ] `server`: (web server module)
+- [ ] `dal`: (data access layer)
 - [ ] `sdk`: (sdk module)
 - [ ] `planner`: (planner/leader module)
 - [ ] `workflow`: (workflow module)
@@ -36,11 +37,11 @@ And make sure that the title of your pull request follows the following format:
 - [ ] `toolkit`: (toolkit module)
 - [ ] `reasoner`: (reasoner module)
 - [ ] `memory`: (memory module)
-- [ ] `dal`: (data access layer)
 - [ ] `model`: (model/LLM module)
 - [ ] `env`: (env module)
 - [ ] `resource`: (resource module)
 - [ ] `tracer`: (tracer module)
+- [ ] `plugin`: (plugin module)
 - [ ] `none`: (no module)
 
 ### Description
