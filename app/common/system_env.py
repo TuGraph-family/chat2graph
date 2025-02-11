@@ -57,7 +57,7 @@ class SystemEnvMeta(type):
 
         # cast value by type
         if key_type is bool:
-            val = str(val).lower() in ("true", "TRUE", "True", "1", "yes") if val else None
+            val = str(val).lower() in ("true", "1", "yes") if val else None
         else:
             val = key_type(val) if val else None
         _env_values[key] = val
