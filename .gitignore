@@ -1,6 +1,8 @@
 .*
 !.gitignore
+!.github
 *.lock
+dist
 venv
 __pycache__
 **/*.db
