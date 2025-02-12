@@ -4,11 +4,11 @@ from typing import Dict, List, Optional, Set
 import networkx as nx  # type: ignore
 
 from app.core.agent.expert import Expert
-from app.core.model.job_graph import JobGraph
-from app.core.model.job import Job
-from app.core.model.job_result import JobResult
 from app.core.common.singleton import Singleton
 from app.core.common.type import JobStatus
+from app.core.model.job import Job
+from app.core.model.job_graph import JobGraph
+from app.core.model.job_result import JobResult
 from app.core.model.message import TextMessage
 from app.core.service.agent_service import AgentService
 

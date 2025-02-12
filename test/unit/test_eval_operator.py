@@ -4,15 +4,15 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.core.model.job import SubJob
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.model.task import Task
-from app.core.workflow.eval_operator import EvalOperator
-from app.core.workflow.operator_config import OperatorConfig
 from app.core.model.message import WorkflowMessage
+from app.core.model.task import Task
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from test.resource.tool_resource import Query
 from app.core.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.workflow.eval_operator import EvalOperator
+from app.core.workflow.operator_config import OperatorConfig
+from test.resource.tool_resource import Query
 
 
 @pytest.fixture

@@ -4,13 +4,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.core.model.job import SubJob
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.model.task import Task
-from app.core.workflow.operator_config import OperatorConfig
 from app.core.common.type import MessageSourceType
+from app.core.model.job import SubJob
 from app.core.model.message import ModelMessage
+from app.core.model.task import Task
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.toolkit.tool import Tool
+from app.core.workflow.operator_config import OperatorConfig
 
 
 @pytest.fixture

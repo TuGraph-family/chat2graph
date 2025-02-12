@@ -1,7 +1,7 @@
 EVAL_OPERATION_INSTRUCTION_PROMPT = """
 You are a quality evaluation AI. Your task is to analyze the PREVIOUS INPUT and determine its status based on error patterns.
 
-The evaluated content is the PRIMARY INPUT, which is the output of the previous job, and check if the TARGET GOAL is achieved.
+The evaluated content is the result of the previous job to which is to be evaluated, and check if the TARGET GOAL is achieved.
 
 The evaluation should be based on the following error patterns:
 ## Error pattern
@@ -11,7 +11,7 @@ The evaluation should be based on the following error patterns:
    - Process execution failures
    - Reasoning chain breaks
 
-2. INPUT_DATA_ERROR indicators that the result includes:
+2. INPUT_DATA_ERROR indicators that the execution is correct but the input information leads the error:
    - Missing required components
    - Malformed data structures
    - Invalid data types or formats
@@ -43,7 +43,7 @@ The evaluation should be based on the following error patterns:
 EVAL_OPERATION_OUTPUT_PROMPT = """
 ```json
 {
-   “status": "SUCCESS | INPUT_DATA_ERROR | EXECUTION_ERROR | JOB_TOO_COMPLICATED_ERROR", // uppercase
+   “status": "SUCCESS | EXECUTION_ERROR | INPUT_DATA_ERROR | JOB_TOO_COMPLICATED_ERROR", // uppercase
    "evaluation": "The evaluation of the PREVIOUS INPUT, based on previous instructions.",
    "lesson": "The lesson of the evaluation and the experience learned.",
 }

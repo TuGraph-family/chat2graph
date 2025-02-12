@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from test.resource.tool_resource import Query
 from app.core.toolkit.toolkit import Toolkit, ToolkitGraphType
+from test.resource.tool_resource import Query
 
 
 async def main():

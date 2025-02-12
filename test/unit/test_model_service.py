@@ -4,16 +4,16 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
+from app.core.reasoner.model_service_factory import ModelServiceFactory
 
 
 @pytest.fixture
 def mock_model_service():
     """Fixture to create a mock model service."""
-    with patch("app.agent.reasoner.model_service_factory.ModelServiceFactory") as mock_factory:
+    with patch("app.core.reasoner.model_service_factory.ModelServiceFactory") as mock_factory:
         # create a mock model service instance
         mock_service = AsyncMock()
 
@@ -81,9 +81,7 @@ async def test_model_service_generate(
 @pytest.mark.asyncio
 async def test_model_service_factory():
     """Test the model service factory creation."""
-    with patch(
-        "app.agent.reasoner.model_service_factory.ModelServiceFactory.create"
-    ) as mock_create:
+    with patch("app.core.reasoner.model_service_factory.ModelServiceFactory.create") as mock_create:
         # configure mock
         mock_service = AsyncMock()
         mock_create.return_value = mock_service

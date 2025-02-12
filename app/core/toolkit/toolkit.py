@@ -222,9 +222,7 @@ class Toolkit:
                 break
 
         # for all found actions, add their connected tools to the found actions
-        action_node_ids = {
-            n for n in node_ids_to_keep
-        }  # copy to avoid modification during iteration
+        action_node_ids: Set[str] = set(node_ids_to_keep)
         for action_node_id in action_node_ids:
             for tool_id in self._toolkit_graph.successors(action_node_id):
                 edge_data = self._toolkit_graph.get_edge_data(action_node_id, tool_id)
@@ -369,7 +367,7 @@ class Toolkit:
             edge_labels,
             font_size=8,
             label_pos=0.5,
-            bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.7},
         )
 
         # add node labels - handle both Action and Tool nodes

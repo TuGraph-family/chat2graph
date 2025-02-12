@@ -4,16 +4,16 @@ import networkx as nx  # type: ignore
 
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.expert import Expert
-from app.core.model.job_graph import JobGraph
-from app.core.model.job import SubJob
 from app.core.agent.leader import Leader
+from app.core.model.job import SubJob
+from app.core.model.job_graph import JobGraph
+from app.core.model.message import AgentMessage
+from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.service.job_service import JobService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
-from app.core.model.message import AgentMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.core.service.job_service import JobService
 
 
 async def main():

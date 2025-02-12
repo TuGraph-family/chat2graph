@@ -9,14 +9,18 @@ from dbgpt.core.awel import (  # type: ignore
 import networkx as nx  # type: ignore
 
 from app.core.model.job import Job
+from app.core.model.message import WorkflowMessage
 from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.workflow import Workflow
-from app.core.model.message import WorkflowMessage
 from app.plugin.dbgpt.dbgpt_map_operator import DbgptMapOperator
 
 
 class DbgptWorkflow(Workflow):
     """DB-GPT workflow"""
+
+    def __init__(self):
+        self._tail_map_op: Optional[DbgptMapOperator] = None
+        super().__init__()
 
     def _build_workflow(self, reasoner: Reasoner) -> DbgptMapOperator:
         """Build the DB-GPT workflow."""

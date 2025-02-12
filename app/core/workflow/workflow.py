@@ -4,11 +4,12 @@ from typing import Any, List, Optional
 
 import networkx as nx  # type: ignore
 
-from app.core.model.job import Job
-from app.core.reasoner.reasoner import Reasoner
-from app.core.workflow.operator import Operator
 from app.core.common.type import WorkflowStatus
+from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
+from app.core.reasoner.reasoner import Reasoner
+from app.core.workflow.eval_operator import EvalOperator
+from app.core.workflow.operator import Operator
 
 
 class Workflow(ABC):
@@ -24,7 +25,7 @@ class Workflow(ABC):
         self.__workflow = None
 
         self._operator_graph: nx.DiGraph = nx.DiGraph()
-        self._evaluator: Optional[Operator] = None
+        self._evaluator: Optional[EvalOperator] = None
 
     async def execute(
         self,
@@ -88,7 +89,7 @@ class Workflow(ABC):
             self._operator_graph.remove_node(operator.get_id())
             self.__workflow = None
 
-    def set_evaluator(self, evaluator: Operator):
+    def set_evaluator(self, evaluator: EvalOperator):
         """Add an evaluator operator to the workflow."""
         self._evaluator = evaluator
 

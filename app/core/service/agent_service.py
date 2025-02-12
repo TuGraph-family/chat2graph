@@ -1,12 +1,12 @@
+from app.core.agent.leader import Leader
+from app.core.common.singleton import Singleton
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.legacy.data_importation import get_data_importation_expert_config
 from app.core.sdk.legacy.graph_analysis import get_graph_analysis_expert_config
 from app.core.sdk.legacy.graph_modeling import get_graph_modeling_expert_config
 from app.core.sdk.legacy.graph_query import get_graph_query_expert_config
 from app.core.sdk.legacy.leader_config import get_leader_config
 from app.core.sdk.legacy.question_answering import get_graph_question_answeing_expert_config
-from app.core.agent.leader import Leader
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.common.singleton import Singleton
 
 graph_modeling_expert_config = get_graph_modeling_expert_config()
 data_importation_expert_config = get_data_importation_expert_config()

@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
-from app.core.model.session import Session
 from app.core.common.singleton import Singleton
+from app.core.model.session import Session
 from app.plugin.sqlite.sqlite_model import Session as SqlSession, db
 from app.server.common.api_tool import ParameterException, ServiceException
 

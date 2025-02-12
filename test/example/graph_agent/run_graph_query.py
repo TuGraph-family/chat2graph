@@ -1,8 +1,8 @@
 import asyncio
 
-from app.core.sdk.legacy.graph_query import get_graph_query_workflow
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.sdk.legacy.graph_query import get_graph_query_workflow
 
 
 async def main():

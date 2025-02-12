@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from app.core.model.task import Task
 from app.core.memory.reasoner_memory import ReasonerMemory
+from app.core.model.task import Task
 
 
 class Reasoner(ABC):

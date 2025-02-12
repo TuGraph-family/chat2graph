@@ -1,12 +1,12 @@
 import json
 from typing import List, Optional
 
-from app.core.model.job import Job
-from app.core.reasoner.reasoner import Reasoner
-from app.core.workflow.operator import Operator
 from app.core.common.type import WorkflowStatus
 from app.core.common.util import parse_json
+from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
+from app.core.reasoner.reasoner import Reasoner
+from app.core.workflow.operator import Operator
 
 
 class EvalOperator(Operator):
@@ -23,6 +23,21 @@ class EvalOperator(Operator):
         assert workflow_messages is not None and len(workflow_messages) > 0, (
             "There is no workflow message(s) to be evaluated."
         )
+        # refine the workflow messages to help the LLM to evaluate the performance and the process
+        if len(workflow_messages) > 1:
+            workflow_messages[0].scratchpad = (
+                "[Job Execution Result]:\n" + workflow_messages[0].scratchpad
+            )
+            for msg in workflow_messages[1:]:
+                msg.scratchpad = (
+                    "\n[Input information] (data/conditions/limitations):\n" + msg.scratchpad
+                )
+        elif len(workflow_messages) == 1:
+            workflow_messages[0].scratchpad = (
+                "[Job execution result] (and the job do not have the input information, "
+                f"so that the evaluation status can not be {WorkflowStatus.INPUT_DATA_ERROR}):\n"
+                + workflow_messages[0].scratchpad
+            )
 
         job.context = "TARGET GOAL:\n" + job.goal + "\n" + job.context
         task = await self._build_task(job, workflow_messages, lesson)

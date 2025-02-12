@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.toolkit.action import Action
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
-from app.core.toolkit.action import Action
 from test.resource.tool_resource import Query
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
 
 
 async def main():

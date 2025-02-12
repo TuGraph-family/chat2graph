@@ -1,10 +1,10 @@
 from typing import Optional
 
-from app.core.model.session import Session
+from app.core.common.singleton import Singleton
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
-from app.core.common.singleton import Singleton
 from app.core.model.message import ChatMessage
+from app.core.model.session import Session
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.session_service import SessionService

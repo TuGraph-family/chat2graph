@@ -5,19 +5,19 @@ import pytest
 
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.builtin_leader_state import BuiltinLeaderState
-from app.core.model.job_graph import JobGraph
-from app.core.model.job import Job
 from app.core.agent.leader import Leader
+from app.core.common.singleton import AbcSingleton
+from app.core.model.job import Job
+from app.core.model.job_graph import JobGraph
+from app.core.model.message import AgentMessage, WorkflowMessage
+from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.job_service import JobService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.workflow.workflow import Workflow
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
-from app.core.common.singleton import AbcSingleton
-from app.core.model.message import AgentMessage, WorkflowMessage
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.core.service.job_service import JobService
 
 
 class MockWorkflow(Workflow):

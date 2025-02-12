@@ -1,8 +1,8 @@
 import asyncio
 
-from app.core.sdk.legacy.graph_analysis import get_graph_analysis_workflow
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.sdk.legacy.graph_analysis import get_graph_analysis_workflow
 
 
 async def main():

@@ -1,8 +1,8 @@
 import asyncio
 
-from app.core.sdk.legacy.question_answering import get_question_answering_workflow
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.sdk.legacy.question_answering import get_question_answering_workflow
 
 QUESTION = """
 我在执行Cypher语句

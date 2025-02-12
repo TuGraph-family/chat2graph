@@ -1,10 +1,12 @@
+import os
+
 from flask import Flask
-from app.server.config.sqilte_config import SqliteConfig
+from flask_cors import CORS
+
 from app.plugin.sqlite.sqlite_model import db
 from app.server.api import register_blueprints
-from flask_cors import CORS
-import os
-from app.server.common.api_tool import make_error_response, BaseException
+from app.server.common.api_tool import BaseException, make_error_response
+from app.server.config.sqilte_config import SqliteConfig
 
 
 def create_app():

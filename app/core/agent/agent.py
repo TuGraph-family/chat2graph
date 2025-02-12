@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from typing import Any, Optional
 from uuid import uuid4
 
+from app.core.model.message import AgentMessage
 from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.workflow import Workflow
-from app.core.model.message import AgentMessage
 
 
 @dataclass

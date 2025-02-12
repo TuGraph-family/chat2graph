@@ -3,8 +3,8 @@ import time
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.core.model.job import Job
 from app.core.common.type import MessageSourceType
+from app.core.model.job import Job
 from app.core.toolkit.tool import FunctionCallResult
 
 

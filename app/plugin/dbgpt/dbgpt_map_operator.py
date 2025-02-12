@@ -3,9 +3,9 @@ from typing import List, Optional, Tuple
 from dbgpt.core.awel import MapOperator  # type: ignore
 
 from app.core.model.job import Job
+from app.core.model.message import WorkflowMessage
 from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.operator import Operator
-from app.core.model.message import WorkflowMessage
 
 
 class DbgptMapOperator(MapOperator[Tuple[Job, Optional[List[WorkflowMessage]]], WorkflowMessage]):
