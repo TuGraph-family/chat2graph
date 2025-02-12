@@ -27,6 +27,10 @@ class Message(ABC):
     def get_id(self) -> str:
         """Get the message id."""
 
+    @abstractmethod
+    def copy(self) -> "Message":
+        """Copy the message."""
+
 
 class ModelMessage(Message):
     """Agent message"""
@@ -67,6 +71,16 @@ class ModelMessage(Message):
     def set_source_type(self, source_type: MessageSourceType):
         """Set the source type of the message."""
         self._source_type = source_type
+
+    def copy(self) -> Any:
+        """Copy the message."""
+        return ModelMessage(
+            payload=self._payload,
+            timestamp=self._timestamp,
+            id=self._id,
+            source_type=self._source_type,
+            function_calls=self._function_calls,
+        )
 
 
 class WorkflowMessage(Message):
@@ -110,6 +124,10 @@ class WorkflowMessage(Message):
     def get_id(self) -> str:
         """Get the message id."""
         return self._id
+
+    def copy(self) -> "WorkflowMessage":
+        """Copy the message."""
+        return WorkflowMessage(payload=self._payload.copy(), timestamp=self._timestamp, id=self._id)
 
 
 class AgentMessage(Message):
@@ -161,6 +179,16 @@ class AgentMessage(Message):
         """Set the lesson of the execution of the job."""
         self._lesson = lesson
 
+    def copy(self) -> "AgentMessage":
+        """Copy the message."""
+        return AgentMessage(
+            job=self._job,
+            workflow_messages=self._workflow_messages.copy(),
+            lesson=self._lesson,
+            timestamp=self._timestamp,
+            id=self._id,
+        )
+
 
 class ChatMessage(Message):
     """Chat message"""
@@ -185,6 +213,10 @@ class ChatMessage(Message):
     def get_id(self) -> str:
         """Get the message id."""
         return self._id
+
+    def copy(self) -> "ChatMessage":
+        """Copy the message."""
+        return ChatMessage(payload=self._payload, timestamp=self._timestamp, id=self._id)
 
 
 class TextMessage(ChatMessage):
@@ -213,3 +245,7 @@ class TextMessage(ChatMessage):
     def get_text(self) -> str:
         """Get the string content of the message."""
         return self._payload
+
+    def copy(self) -> "TextMessage":
+        """Copy the message."""
+        return TextMessage(payload=self._payload, timestamp=self._timestamp, id=self._id)

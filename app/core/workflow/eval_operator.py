@@ -5,6 +5,7 @@ from app.core.common.type import WorkflowStatus
 from app.core.common.util import parse_json
 from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
+from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.operator import Operator
 
@@ -23,23 +24,8 @@ class EvalOperator(Operator):
         assert workflow_messages is not None and len(workflow_messages) > 0, (
             "There is no workflow message(s) to be evaluated."
         )
-        # refine the workflow messages to help the LLM to evaluate the performance and the process
-        if len(workflow_messages) > 1:
-            workflow_messages[0].scratchpad = (
-                "[Job Execution Result]:\n" + workflow_messages[0].scratchpad
-            )
-            for msg in workflow_messages[1:]:
-                msg.scratchpad = (
-                    "\n[Input information] (data/conditions/limitations):\n" + msg.scratchpad
-                )
-        elif len(workflow_messages) == 1:
-            workflow_messages[0].scratchpad = (
-                "[Job execution result] (and the job do not have the input information, "
-                f"so that the evaluation status can not be {WorkflowStatus.INPUT_DATA_ERROR}):\n"
-                + workflow_messages[0].scratchpad
-            )
+        previous_op_message = workflow_messages[0].scratchpad
 
-        job.context = "TARGET GOAL:\n" + job.goal + "\n" + job.context
         task = await self._build_task(job, workflow_messages, lesson)
 
         result = await reasoner.infer(task=task)
@@ -61,9 +47,50 @@ class EvalOperator(Operator):
 
         return WorkflowMessage(
             payload={
-                "scratchpad": workflow_messages[0].scratchpad,
+                "scratchpad": previous_op_message,
                 "status": WorkflowStatus[str(result_dict["status"])],
                 "evaluation": result_dict["evaluation"],
                 "lesson": result_dict["lesson"],
             }
         )
+
+    async def _build_task(
+        self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]
+    ) -> Task:
+        rec_tools, rec_actions = await self._toolkit_service.get_toolkit().recommend_tools(
+            actions=self._config.actions,
+            threshold=self._config.threshold,
+            hops=self._config.hops,
+        )
+
+        # refine the workflow messages to help the LLM to evaluate the performance and the process
+        workflow_messages_copy: List[WorkflowMessage] = []
+        if workflow_messages:
+            workflow_messages_copy = [msg.copy() for msg in workflow_messages if msg.scratchpad]
+        if len(workflow_messages_copy) == 1:
+            workflow_messages_copy[0].scratchpad = (
+                "[Job execution result] (and the job does not have the [INPUT INFORMATION], so "
+                f"that the evaluation status can not be {WorkflowStatus.INPUT_DATA_ERROR.value}):\n"
+                + workflow_messages_copy[0].scratchpad
+            )
+        elif len(workflow_messages_copy) > 1:
+            workflow_messages_copy[0].scratchpad = (
+                "[JOB EXECUTION RESULT]:\n" + workflow_messages_copy[0].scratchpad
+            )
+            for msg in workflow_messages_copy[1:]:
+                msg.scratchpad = (
+                    "\n[INPUT INFORMATION] (data/conditions/limitations):\n" + msg.scratchpad
+                )
+        job.context = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
+
+        task = Task(
+            job=job,
+            operator_config=self._config,
+            workflow_messages=workflow_messages_copy,
+            tools=rec_tools,
+            actions=rec_actions,
+            knowledge=await self.get_knowledge(),
+            insights=await self.get_env_insights(),
+            lesson=lesson,
+        )
+        return task

@@ -1,17 +1,23 @@
 EVAL_OPERATION_INSTRUCTION_PROMPT = """
-You are a quality evaluation AI. Your task is to analyze the PREVIOUS INPUT and determine its status based on error patterns.
+You are a quality evaluation AI. Your task is to analyze the JOB TARGET GOAL & PREVIOUS INPUT and determine its status based on error patterns.
 
-The evaluated content is the result of the previous job to which is to be evaluated, and check if the TARGET GOAL is achieved.
+The evaluated content is the result of the current job to which is to be evaluated, and check if the JOB TARGET GOAL is achieved.
+Please remember that you are to evaluate the job execution result, not execute or complete the job target goal itself.
 
-The evaluation should be based on the following error patterns:
+Here's a breakdown of the context for your evaluation:
+- JOB TARGET GOAL: is the goal and context of the job to be evaluated.
+- JOB EXECUTION RESULT: is the result of the job to be evaluated.
+- INPUT INFORMATION: is the input information (data/conditions/limitations) of the job to be evaluated.
+
+Your evaluation should be based on the following error patterns. Please categorize the result into one of these status types, prioritizing them as listed:
 ## Error pattern
-1. EXECUTION_ERROR indicators:
+1. EXECUTION_ERROR (Indicates problems during job execution, generally reflected in the JOB EXECUTION RESULT):
    - Logical inconsistencies
    - Function calling errors
    - Process execution failures
-   - Reasoning chain breaks
+   - Reasoning chain breaks or mistakes
 
-2. INPUT_DATA_ERROR indicators that the execution is correct but the input information leads the error:
+2. INPUT_DATA_ERROR (Indicates the execution itself might be correct, but the provided INPUT INFORMATION caused the error, generally due to issues with INPUT INFORMATION):
    - Missing required components
    - Malformed data structures
    - Invalid data types or formats
@@ -19,13 +25,13 @@ The evaluation should be based on the following error patterns:
    - No failed code execution information
    - If the input data is not valid, it means the output of the previous job is not correct.
 
-3. JOB_TOO_COMPLICATED_ERROR indicators:
+3. JOB_TOO_COMPLICATED_ERROR (Indicates the job was inherently too complex for the current capabilities):
    - Partial or incomplete solutions
    - Significant deviations from requirements
    - Multiple cascading errors
    - Core capability of LLM gaps
 
-4. SUCCESS indicators:
+4. SUCCESS:
    - Complete execution
    - Valid output format
    - Logical consistency
