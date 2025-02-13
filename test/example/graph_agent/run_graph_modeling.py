@@ -1,14 +1,8 @@
 import asyncio
 
-<<<<<<< HEAD:example/graph_agent/run_graph_modeling.py
-from app.agent.graph_agent.graph_modeling import get_graph_modeling_workflow
-from app.agent.job import SubJob
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-=======
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.legacy.graph_modeling import get_graph_modeling_workflow
->>>>>>> reformat:test/example/graph_agent/run_graph_modeling.py
 
 
 async def main():

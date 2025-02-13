@@ -219,7 +219,7 @@ class JobService(metaclass=Singleton):
         )
 
         # remove old subgraph
-        job_graph.remove_nodes_from(old_subgraph_nodes)
+        job_graph.remove_nodes(old_subgraph_nodes)
 
         # add the new subgraph without connecting it to the rest of the graph
         job_graph.update(new_subgraph)

@@ -2,27 +2,15 @@ import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-<<<<<<<< HEAD:app/core/graph_agent/graph_query.py
-from app.agent.agent import AgentConfig, Profile
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator, OperatorConfig
-from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.plugin.tugraph.tugraph_store import get_tugraph
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit import Toolkit, ToolkitService
-========
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
->>>>>>>> reformat:app/core/sdk/legacy/graph_query.py
 
 QUERY_GRAMMER = """
 ===== 图vertex查询语法书 =====
@@ -285,29 +273,29 @@ def get_query_intention_analysis_operator():
     )
     schema_getter = SchemaGetter("schema_getter_tool")
 
-    query_intention_query_design_toolkit = Toolkit()
+    query_intention_query_design_toolkit_service = ToolkitService()
 
-    query_intention_query_design_toolkit.add_action(
+    query_intention_query_design_toolkit_service.add_action(
         action=query_intention_identification_action,
         next_actions=[(node_type_validation_action, 1)],
         prev_actions=[],
     )
-    query_intention_query_design_toolkit.add_action(
+    query_intention_query_design_toolkit_service.add_action(
         action=node_type_validation_action,
         next_actions=[(condition_validation_action, 1)],
         prev_actions=[(query_intention_identification_action, 1)],
     )
-    query_intention_query_design_toolkit.add_action(
+    query_intention_query_design_toolkit_service.add_action(
         action=condition_validation_action,
         next_actions=[(supplement_aciton, 1)],
         prev_actions=[(node_type_validation_action, 1)],
     )
-    query_intention_query_design_toolkit.add_action(
+    query_intention_query_design_toolkit_service.add_action(
         action=supplement_aciton,
         next_actions=[],
         prev_actions=[(condition_validation_action, 1)],
     )
-    query_intention_query_design_toolkit.add_tool(
+    query_intention_query_design_toolkit_service.add_tool(
         tool=schema_getter,
         connected_actions=[
             (node_type_validation_action, 1),
@@ -328,8 +316,7 @@ def get_query_intention_analysis_operator():
     )
 
     operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=query_intention_query_design_toolkit),
+        config=operator_config, toolkit_service=query_intention_query_design_toolkit_service
     )
 
     return operator
@@ -337,7 +324,7 @@ def get_query_intention_analysis_operator():
 
 def get_query_design_operator():
     """Get the operator for query design."""
-    query_design_toolkit = Toolkit()
+    query_design_toolkit_service = ToolkitService()
 
     grammar_study_action = Action(
         id="query_design.grammar_study_action",
@@ -356,25 +343,25 @@ def get_query_design_operator():
     schema_getter = SchemaGetter("schema_checker_tool_v2")
     vertex_querier = VertexQuerier("vertex_querier_tool")
 
-    query_design_toolkit.add_action(
+    query_design_toolkit_service.add_action(
         action=grammar_study_action,
         next_actions=[(query_execution_aciton, 1)],
         prev_actions=[],
     )
-    query_design_toolkit.add_action(
+    query_design_toolkit_service.add_action(
         action=query_execution_aciton,
         next_actions=[],
         prev_actions=[(grammar_study_action, 1)],
     )
-    query_design_toolkit.add_tool(
+    query_design_toolkit_service.add_tool(
         tool=grammer_reader,
         connected_actions=[(grammar_study_action, 1)],
     )
-    query_design_toolkit.add_tool(
+    query_design_toolkit_service.add_tool(
         tool=schema_getter,
         connected_actions=[(query_execution_aciton, 1)],
     )
-    query_design_toolkit.add_tool(
+    query_design_toolkit_service.add_tool(
         tool=vertex_querier,
         connected_actions=[(query_execution_aciton, 1)],
     )
@@ -385,10 +372,7 @@ def get_query_design_operator():
         output_schema=QUERY_DESIGN_OUTPUT_SCHEMA,
         actions=[grammar_study_action, query_execution_aciton],
     )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=query_design_toolkit),
-    )
+    operator = Operator(config=operator_config, toolkit_service=query_design_toolkit_service)
 
     return operator
 

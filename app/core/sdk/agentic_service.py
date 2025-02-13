@@ -1,5 +1,6 @@
 from typing import Optional
 
+from app.core.agent.expert import Expert
 from app.core.common.singleton import Singleton
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
@@ -13,8 +14,8 @@ from app.core.service.session_service import SessionService
 class AgenticService(metaclass=Singleton):
     """Agentic service class"""
 
-    def __init__(self):
-        # TODO: configure the chat2graph service by yaml
+    def __init__(self, service_name: Optional[str] = None):
+        self._service_name = service_name or "Chat2Graph"
 
         # initialize the leader service
         self._agent_service = AgentService()
@@ -36,3 +37,20 @@ class AgenticService(metaclass=Singleton):
 
         job_result: JobResult = await self._job_service.query_job_result(job_id=job.id)
         return job_result.result
+
+    def expert(self, expert: Expert) -> None:
+        """Get the expert for the agentic service."""
+        self._agent_service.leader.state.add_expert(expert)
+
+    def load(self, config_file_path: Optional[str] = None) -> "AgenticService":
+        """Load the configuration of the agentic service."""
+        if not config_file_path:
+            self.load_default()
+            return self
+
+        # TODO: configure the chat2graph service by yaml
+
+        return self
+
+    def load_default(self) -> None:
+        """Load the default configuration of the agentic service."""

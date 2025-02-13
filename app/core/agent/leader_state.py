@@ -35,5 +35,9 @@ class LeaderState(ABC):
         """Add an expert profile to the registry."""
 
     @abstractmethod
+    def add_expert(self, expert: Expert) -> None:
+        """Add the expert"""
+
+    @abstractmethod
     def remove_expert(self, expert_id: str) -> None:
         """Remove the expert"""

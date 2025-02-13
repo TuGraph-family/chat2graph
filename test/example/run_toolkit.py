@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import Toolkit, ToolkitGraphType
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 from test.resource.tool_resource import Query
 
 
 async def main():
     """Main function."""
     # initialize toolkit
-    toolkit = Toolkit()
+    toolkit_service = ToolkitService()
 
     # create some sample actions
     action1 = Action(id="action1", name="Search Web", description="Search information from web")
@@ -34,65 +34,55 @@ async def main():
     tool4: Tool = Query(id="tool4")
 
     # add actions with connections
-    toolkit.add_action(
+    toolkit_service.add_action(
         action=action1, next_actions=[(action2, 0.8), (action3, 0.6)], prev_actions=[]
     )
 
-    toolkit.add_action(
+    toolkit_service.add_action(
         action=action2,
         next_actions=[(action3, 0.7), (action4, 0.9)],
         prev_actions=[(action1, 0.8)],
     )
 
-    toolkit.add_action(
+    toolkit_service.add_action(
         action=action3,
         next_actions=[(action4, 0.7)],
         prev_actions=[(action1, 0.6), (action2, 0.7)],
     )
 
-    toolkit.add_action(
+    toolkit_service.add_action(
         action=action4, next_actions=[], prev_actions=[(action2, 0.9), (action3, 0.7)]
     )
 
     # add tools with connections to actions
-    toolkit.add_tool(tool=tool1, connected_actions=[(action1, 0.9)])
-    toolkit.add_tool(tool=tool2, connected_actions=[(action2, 0.8)])
-    toolkit.add_tool(tool=tool3, connected_actions=[(action3, 0.9)])
-    toolkit.add_tool(tool=tool4, connected_actions=[(action4, 0.8)])
+    toolkit_service.add_tool(tool=tool1, connected_actions=[(action1, 0.9)])
+    toolkit_service.add_tool(tool=tool2, connected_actions=[(action2, 0.8)])
+    toolkit_service.add_tool(tool=tool3, connected_actions=[(action3, 0.9)])
+    toolkit_service.add_tool(tool=tool4, connected_actions=[(action4, 0.8)])
+
+    toolkit: Toolkit = toolkit_service.get_toolkit()
 
     # verify initial graph structure
-    assert len(toolkit._toolkit_graph.nodes()) == 8, "Graph should have 4 actions and 4 tools"
-    assert (
-        len([n for n, d in toolkit._toolkit_graph.nodes() if d["type"] == ToolkitGraphType.ACTION])
-        == 4
-    ), "Should have 4 action nodes"
-    assert (
-        len([n for n, d in toolkit._toolkit_graph.nodes() if d["type"] == ToolkitGraphType.TOOL])
-        == 4
-    ), "Should have 4 tool nodes"
+    assert len(toolkit.nodes()) == 8, "Graph should have 4 actions and 4 tools"
+    assert len([n for n in toolkit.nodes() if toolkit.get_action(n)]) == 4, (
+        "Should have 4 action nodes"
+    )
+    assert len([n for n in toolkit.nodes() if toolkit.get_tool(n)]) == 4, "Should have 4 tool nodes"
 
     # verify edge types and weights
-    action_next_edges = [
-        (u, v, d)
-        for u, v, d in toolkit._toolkit_graph.edges()
-        if d["type"] == ToolkitGraphType.ACTION_NEXT_ACTION
-    ]
-    tool_call_edges = [
-        (u, v, d)
-        for u, v, d in toolkit._toolkit_graph.edges()
-        if d["type"] == ToolkitGraphType.ACTION_CALL_TOOL
-    ]
+    action_next_edges = [(u, v) for u, v in toolkit.edges() if toolkit.get_action(v)]
+    tool_call_edges = [(u, v) for u, v in toolkit.edges() if toolkit.get_tool(v)]
 
     assert len(action_next_edges) == 5, "Should have 5 action-to-action edges"
     assert len(tool_call_edges) == 4, "Should have 4 action-to-tool edges"
 
     # verify all edge scores are within valid range
-    assert all(0 <= d["score"] <= 1 for _, _, d in toolkit._toolkit_graph.edges()), (
+    assert all(0 <= toolkit.get_score(u, v) <= 1 for (u, v) in toolkit.edges()), (
         "All edge scores should be between 0 and 1"
     )
 
     # visualize the full graph
-    toolkit.visualize(toolkit._toolkit_graph, "Full Toolkit Graph")
+    toolkit_service.visualize(toolkit, "Full Toolkit Graph")
     plt.show(block=False)
 
     print("\nTesting recommendation with different parameters:")
@@ -159,7 +149,7 @@ async def main():
     ]
 
     for i, case in enumerate(test_cases):
-        subgraph = await toolkit.recommend_tools(
+        subgraph = await toolkit_service.recommend_subgraph(
             actions=case["actions"], threshold=case["threshold"], hops=case["hops"]
         )
 
@@ -179,12 +169,12 @@ async def main():
         )
 
         # verify edge properties in subgraph
-        assert all(d["score"] >= case["threshold"] for _, _, d in subgraph.edges()), (
+        assert all(subgraph.get_score(u, v) >= case["threshold"] for u, v in subgraph.edges()), (
             f"Test case {i + 1}: All edges should have score >= {case['threshold']}"
         )
 
         plt.figure(i + 2)
-        toolkit.visualize(subgraph, case["title"])
+        toolkit_service.visualize(subgraph, case["title"])
         # plt.show(block=False)
 
     print("\nAll assertions passed! (press ctrl+c to exit)")

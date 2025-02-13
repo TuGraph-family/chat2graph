@@ -51,7 +51,7 @@ class Operator:
     async def _build_task(
         self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]
     ) -> Task:
-        rec_tools, rec_actions = await self._toolkit_service.get_toolkit().recommend_tools(
+        rec_tools, rec_actions = await self._toolkit_service.recommend_tools(
             actions=self._config.actions,
             threshold=self._config.threshold,
             hops=self._config.hops,

@@ -18,7 +18,7 @@ from test.resource.tool_resource import Query
 @pytest.fixture
 def toolkit_setup():
     """Setup a toolkit with actions and tools."""
-    toolkit = Toolkit()
+    toolkit_service = ToolkitService()
 
     # create actions
     actions = [
@@ -38,14 +38,14 @@ def toolkit_setup():
     tools = [Query(id=f"{action.id}_tool") for action in actions]
 
     # add actions to toolkit
-    toolkit.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
-    toolkit.add_action(action=actions[1], next_actions=[], prev_actions=[(actions[0], 0.9)])
+    toolkit_service.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
+    toolkit_service.add_action(action=actions[1], next_actions=[], prev_actions=[(actions[0], 0.9)])
 
     # add tools to toolkit
     for tool, action in zip(tools, actions, strict=False):
-        toolkit.add_tool(tool=tool, connected_actions=[(action, 0.9)])
+        toolkit_service.add_tool(tool=tool, connected_actions=[(action, 0.9)])
 
-    return toolkit, actions, tools
+    return toolkit_service.get_toolkit(), actions, tools
 
 
 @pytest.fixture

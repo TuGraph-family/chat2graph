@@ -37,6 +37,10 @@ class BuiltinLeaderState(LeaderState):
             self._expert_instances[expert_id] = expert
             return expert
 
+    def add_expert(self, expert: Expert) -> None:
+        """Add the expert"""
+        self._expert_instances[expert.get_id()] = expert
+
     def remove_expert(self, expert_id: str) -> None:
         """Remove the expert"""
         self._expert_instances.pop(expert_id, None)

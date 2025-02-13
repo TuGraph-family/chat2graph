@@ -1,12 +1,12 @@
 from typing import List, Optional, Union
 
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit import Toolkit
+from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
+from app.core.toolkit.toolkit import Toolkit
 
 
 class ToolkitWrapper:
-    """Wrapper for interacting with the toolkit."""
+    """Facade of the toolkit."""
 
     def __init__(self):
         self._toolkit: Toolkit = Toolkit()
@@ -16,7 +16,7 @@ class ToolkitWrapper:
         action.tools = tools or []
         self._toolkit.add_action(action, [], [])
 
-    def chain(self, *action_chain: Union[Action, tuple[Action, Action]]) -> None:
+    def chain(self, *action_chain: Union[Action, tuple[Action, Action]]) -> Toolkit:
         """Chain actions together in the toolkit graph."""
         for item in action_chain:
             if isinstance(item, Action):
@@ -57,3 +57,5 @@ class ToolkitWrapper:
                 to_action.tools = []
             else:
                 raise ValueError(f"Invalid chain item: {item}.")
+
+        return self._toolkit

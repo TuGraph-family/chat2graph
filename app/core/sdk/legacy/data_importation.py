@@ -2,27 +2,15 @@ import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-<<<<<<<< HEAD:app/core/graph_agent/data_importation.py
-from app.agent.agent import AgentConfig, Profile
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator, OperatorConfig
-from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.plugin.tugraph.tugraph_store import get_tugraph
-from app.toolkit.action.action import Action
-from app.toolkit.tool.tool import Tool
-from app.toolkit.toolkit import Toolkit, ToolkitService
-========
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
->>>>>>>> reformat:app/core/sdk/legacy/data_importation.py
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回
@@ -530,7 +518,7 @@ COUNT = 20
 
 def get_data_importation_operator():
     """Get the data importation operator."""
-    analysis_toolkit = Toolkit()
+    analysis_toolkit_service = ToolkitService()
 
     schema_understanding_action = Action(
         id="data_generattion_and_import.schema_understanding_action",
@@ -574,56 +562,58 @@ def get_data_importation_operator():
         description="输出数据导入的结果",
     )
 
-    analysis_toolkit.add_action(
+    analysis_toolkit_service.add_action(
         action=schema_understanding_action,
         next_actions=[(content_understanding_action, 1)],
         prev_actions=[],
     )
-    analysis_toolkit.add_action(
+    analysis_toolkit_service.add_action(
         action=content_understanding_action,
         next_actions=[(edge_data_generation_action, 1)],
         prev_actions=[(schema_understanding_action, 1)],
     )
-    analysis_toolkit.add_action(
+    analysis_toolkit_service.add_action(
         action=edge_data_generation_action,
         next_actions=[(node_data_generation_action, 1)],
         prev_actions=[(content_understanding_action, 1)],
     )
 
-    analysis_toolkit.add_action(
+    analysis_toolkit_service.add_action(
         action=node_data_generation_action,
         next_actions=[(graph_data_generation_action, 1)],
         prev_actions=[(edge_data_generation_action, 1)],
     )
 
-    analysis_toolkit.add_action(
+    analysis_toolkit_service.add_action(
         action=graph_data_generation_action,
         next_actions=[(import_data_action, 1)],
         prev_actions=[(node_data_generation_action, 1)],
     )
 
-    analysis_toolkit.add_action(
+    analysis_toolkit_service.add_action(
         action=import_data_action,
         next_actions=[(output_result_action, 1)],
         prev_actions=[(graph_data_generation_action, 1)],
     )
 
-    analysis_toolkit.add_action(
+    analysis_toolkit_service.add_action(
         action=output_result_action,
         next_actions=[],
         prev_actions=[(import_data_action, 1)],
     )
 
     get_schema = SchemaGetter(id="get_schema_tool")
-    analysis_toolkit.add_tool(tool=get_schema, connected_actions=[(schema_understanding_action, 1)])
+    analysis_toolkit_service.add_tool(
+        tool=get_schema, connected_actions=[(schema_understanding_action, 1)]
+    )
 
     get_document = DocumentReader(id="get_document_tool")
-    analysis_toolkit.add_tool(
+    analysis_toolkit_service.add_tool(
         tool=get_document, connected_actions=[(content_understanding_action, 1)]
     )
 
     import_data = DataImport(id="import_data_tool")
-    analysis_toolkit.add_tool(tool=import_data, connected_actions=[(import_data_action, 1)])
+    analysis_toolkit_service.add_tool(tool=import_data, connected_actions=[(import_data_action, 1)])
 
     operator_config = OperatorConfig(
         id="data_generation_operator",
@@ -641,7 +631,7 @@ def get_data_importation_operator():
     )
     operator = Operator(
         config=operator_config,
-        toolkit_service=ToolkitService(toolkit=analysis_toolkit),
+        toolkit_service=analysis_toolkit_service,
     )
 
     return operator

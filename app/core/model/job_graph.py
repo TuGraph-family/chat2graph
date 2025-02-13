@@ -1,101 +1,8 @@
-from abc import abstractmethod
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
-import networkx as nx  # type: ignore
-
+from app.core.model.grpah import Graph
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
-
-
-class Graph:
-    """Graph is the dataclass to represent the graph.
-
-    Attributes:
-        _graph (nx.DiGraph): The oriented graph to present the dependencies.
-    """
-
-    def __init__(self):
-        self._graph: nx.DiGraph = nx.DiGraph()  # only node ids
-
-    def add_edge(self, u_of_edge: str, v_of_edge: str) -> None:
-        """Add an edge to the graph."""
-        self._graph.add_edge(u_of_edge, v_of_edge)
-
-    def has_node(self, id: str) -> bool:
-        """Check if the node exists in the graph."""
-        return self._graph.has_node(id)
-
-    def nodes(self) -> List[str]:
-        """Get the nodes of the graph."""
-        return list(self._graph.nodes())
-
-    def edges(self) -> List[Tuple[str, str]]:
-        """Get the edges of the graph."""
-        return list(self._graph.edges())
-
-    def predecessors(self, id: str) -> List[str]:
-        """Get the predecessors of the node."""
-        return list(self._graph.predecessors(id))
-
-    def successors(self, id: str) -> List[str]:
-        """Get the successors of the node."""
-        return list(self._graph.successors(id))
-
-    def out_degree(self, node: str) -> int:
-        """Return the number of outgoing edges from the node.
-
-        Args:
-            node: The node ID to get the out degree for.
-
-        Returns:
-            int: The number of outgoing edges.
-        """
-        return int(self._graph.out_degree(node))
-
-    def number_of_nodes(self) -> int:
-        """Get the number of nodes in the graph."""
-        return int(self._graph.number_of_nodes())
-
-    def get_graph(self) -> nx.DiGraph:
-        """Get the graph."""
-        return self._graph
-
-    def remove_nodes_from(self, ids: Set[str]) -> None:
-        """Remove multiple nodes from the graph.
-
-        Args:
-            nodes: List of node IDs to remove.
-        """
-        for id in ids:
-            self.remove_node(id)
-
-    @abstractmethod
-    def add_node(self, id: str, **properties) -> None:
-        """Add a node to the job graph."""
-
-    @abstractmethod
-    def nodes_data(self) -> List[Tuple[str, Dict[str, Union[Any]]]]:
-        """Get the nodes of the job graph with data.
-
-        Returns:
-            List[Tuple[str, Dict[str, Union[Any]]]]: The nodes with data in tuple.
-        """
-
-    @abstractmethod
-    def update(self, other: "Graph") -> None:
-        """Update current graph with nodes and edges from other graph.
-
-        Args:
-            other: Another JobGraph instance whose nodes and edges will be added to this graph.
-        """
-
-    @abstractmethod
-    def remove_node(self, id: str) -> None:
-        """Remove a node from the graph.
-
-        Args:
-            node: The node ID to remove.
-        """
 
 
 class JobGraph(Graph):
@@ -155,7 +62,8 @@ class JobGraph(Graph):
         """Update current graph with nodes and edges from other graph.
 
         Args:
-            other: Another JobGraph instance whose nodes and edges will be added to this graph.
+            other (Graph): Another JobGraph instance whose nodes and edges will be added to
+                this graph.
         """
         # update nodes
         for node_id, data in other.nodes_data():
@@ -179,11 +87,7 @@ class JobGraph(Graph):
                 self._graph.add_edge(u, v)
 
     def remove_node(self, id: str) -> None:
-        """Remove a node from the job graph.
-
-        Args:
-            node: The node ID to remove.
-        """
+        """Remove a node from the job graph."""
         self._graph.remove_node(id)
 
         # please note that, it adds the legacy job back to the graph

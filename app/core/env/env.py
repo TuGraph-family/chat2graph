@@ -1,6 +1,8 @@
 from dataclasses import asdict, dataclass
 from typing import List
 
+from app.core.knowledge.knowlege_service import KnowledgeService
+
 
 @dataclass
 class Insight:
@@ -50,3 +52,7 @@ class Env:
 
     async def insights_to_json(self):
         """Convert insights to json."""
+
+
+class EnvService(KnowledgeService):
+    """Environment Service provides the environment information to the agent."""

@@ -1,20 +1,13 @@
 from typing import List, Optional, Tuple
 from uuid import uuid4
 
-<<<<<<<< HEAD:app/core/graph_agent/question_answering.py
-from app.agent.agent import AgentConfig, Profile
-from app.agent.reasoner.dual_model_reasoner import DualModelReasoner
-from app.agent.reasoner.reasoner import Reasoner
-from app.agent.workflow.operator.operator import Operator, OperatorConfig
-========
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
->>>>>>>> reformat:app/core/sdk/legacy/question_answering.py
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 # operation 1: Document Retrieving
@@ -291,7 +284,7 @@ class ReferenceGenerator(Tool):
 
 def get_retrieving_operator():
     """Get the operator for document retrieving."""
-    retrieving_toolkit = Toolkit()
+    retrieving_toolkit_service = ToolkitService()
 
     knowledge_base_retrieving = Action(
         id="doc_retrieving.vector_retrieving",
@@ -306,20 +299,22 @@ def get_retrieving_operator():
     knowledge_base_search = KnowledgeBaseRetriever(id="knowledge_base_search_tool")
     internet_search = InternetRetriever(id="internet_search_tool")
 
-    retrieving_toolkit.add_action(
+    retrieving_toolkit_service.add_action(
         action=knowledge_base_retrieving,
         next_actions=[(internet_retrieving, 1)],
         prev_actions=[],
     )
-    retrieving_toolkit.add_action(
+    retrieving_toolkit_service.add_action(
         action=internet_retrieving,
         next_actions=[],
         prev_actions=[(knowledge_base_retrieving, 1)],
     )
-    retrieving_toolkit.add_tool(
+    retrieving_toolkit_service.add_tool(
         tool=knowledge_base_search, connected_actions=[(knowledge_base_retrieving, 1)]
     )
-    retrieving_toolkit.add_tool(tool=internet_search, connected_actions=[(internet_retrieving, 1)])
+    retrieving_toolkit_service.add_tool(
+        tool=internet_search, connected_actions=[(internet_retrieving, 1)]
+    )
 
     operator_config = OperatorConfig(
         id="retrieving_operator",
@@ -330,17 +325,14 @@ def get_retrieving_operator():
             internet_retrieving,
         ],
     )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=retrieving_toolkit),
-    )
+    operator = Operator(config=operator_config, toolkit_service=retrieving_toolkit_service)
 
     return operator
 
 
 def get_summarizing_operator():
     """Get the operator for document summarizing."""
-    summarizing_toolkit = Toolkit()
+    summarizing_toolkit_service = ToolkitService()
 
     reference_listing = Action(
         id="doc_summarizing.reference_listing",
@@ -349,12 +341,14 @@ def get_summarizing_operator():
     )
     reference_list = ReferenceGenerator(id="reference_list_tool")
 
-    summarizing_toolkit.add_action(
+    summarizing_toolkit_service.add_action(
         action=reference_listing,
         next_actions=[],
         prev_actions=[],
     )
-    summarizing_toolkit.add_tool(tool=reference_list, connected_actions=[(reference_listing, 1)])
+    summarizing_toolkit_service.add_tool(
+        tool=reference_list, connected_actions=[(reference_listing, 1)]
+    )
 
     operator_config = OperatorConfig(
         id="summarizing_operator",
@@ -362,10 +356,7 @@ def get_summarizing_operator():
         output_schema=DOC_SUMMARIZING_OUTPUT_SCHEMA,
         actions=[reference_listing],
     )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=ToolkitService(toolkit=summarizing_toolkit),
-    )
+    operator = Operator(config=operator_config, toolkit_service=summarizing_toolkit_service)
 
     return operator
 

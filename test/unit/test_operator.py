@@ -18,7 +18,7 @@ from test.resource.tool_resource import Query
 @pytest.fixture
 def toolkit_setup():
     """Setup a toolkit with actions and tools."""
-    toolkit = Toolkit()
+    toolkit_service = ToolkitService()
 
     # create actions
     actions = [
@@ -43,19 +43,19 @@ def toolkit_setup():
     tools = [Query(id=f"{action.id}_tool") for action in actions]
 
     # add actions to toolkit
-    toolkit.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
-    toolkit.add_action(
+    toolkit_service.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
+    toolkit_service.add_action(
         action=actions[1],
         next_actions=[(actions[2], 0.8)],
         prev_actions=[(actions[0], 0.9)],
     )
-    toolkit.add_action(action=actions[2], next_actions=[], prev_actions=[(actions[1], 0.8)])
+    toolkit_service.add_action(action=actions[2], next_actions=[], prev_actions=[(actions[1], 0.8)])
 
     # add tools to toolkit
     for tool, action in zip(tools, actions, strict=False):
-        toolkit.add_tool(tool=tool, connected_actions=[(action, 0.9)])
+        toolkit_service.add_tool(tool=tool, connected_actions=[(action, 0.9)])
 
-    return toolkit, actions, tools
+    return toolkit_service.get_toolkit(), actions, tools
 
 
 @pytest.fixture
@@ -121,7 +121,7 @@ async def test_get_tools_from_actions(
     operator: Operator, toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]
 ):
     """Test tool retrieval from actions."""
-    tools, _ = await operator._toolkit_service.get_toolkit().recommend_tools(
+    tools, _ = await operator._toolkit_service.recommend_tools(
         actions=operator._config.actions,
         threshold=operator._config.threshold,
         hops=operator._config.hops,
@@ -172,7 +172,7 @@ async def test_get_tools_from_actions_duplicates(
 
     operator._config.threshold = 0.7
     operator._config.hops = 1
-    tools, _ = await operator._toolkit_service.get_toolkit().recommend_tools(
+    tools, _ = await operator._toolkit_service.recommend_tools(
         actions=operator._config.actions,
         threshold=operator._config.threshold,
         hops=operator._config.hops,
