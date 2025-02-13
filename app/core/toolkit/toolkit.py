@@ -274,7 +274,6 @@ class ToolkitService:
 
         # for all found actions, add their connected tools to the found actions
         action_node_ids: Set[str] = set(node_ids_to_keep)
-
         for action_node_id in action_node_ids:
             for tool_id in self._toolkit.successors(action_node_id):
                 if (
