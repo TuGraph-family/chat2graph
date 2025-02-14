@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 from app.core.env.env import EnvService
 from app.core.knowledge.knowlege_service import KnowledgeService
 from app.core.toolkit.action import Action
-from app.core.toolkit.toolkit import ToolkitService
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 
@@ -51,6 +51,18 @@ class OperatorWrapper:
             raise ValueError(f"Invalid service: {service}.")
 
         return self
+
+    def toolkit_service(self, toolkit: Toolkit) -> "OperatorWrapper":
+        """Set the toolkit service of the operator."""
+        return self.service(ToolkitService(toolkit))
+
+    def env_service(self, env: EnvService) -> "OperatorWrapper":
+        """Set the environment service of the operator."""
+        return self.service(env)
+
+    def knowledge_service(self, knowledge: KnowledgeService) -> "OperatorWrapper":
+        """Set the knowledge service of the operator."""
+        return self.service(knowledge)
 
     def build(self) -> Operator:
         """Build the operator."""

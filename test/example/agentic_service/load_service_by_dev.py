@@ -25,7 +25,6 @@ from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.reasoner_wrapper import ReasonerWrapper
 from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
-from app.core.toolkit.toolkit import ToolkitService
 
 
 async def main():
@@ -44,7 +43,6 @@ async def main():
             consistency_check_action,
         ),
     )
-    analysis_toolkit_service = ToolkitService(toolkit=analysis_toolkit)
     concept_modeling_toolkit = ToolkitWrapper().chain(
         (
             entity_type_definition_action,
@@ -54,7 +52,6 @@ async def main():
             graph_validation_action,
         ),
     )
-    concept_modeling_toolkit_service = ToolkitService(toolkit=concept_modeling_toolkit)
 
     # reasoner
     reasoner = ReasonerWrapper().reasoner(
@@ -73,7 +70,7 @@ async def main():
                 consistency_check_action,
             ]
         )
-        .service(analysis_toolkit_service)
+        .toolkit_service(analysis_toolkit)
         .build()
     )
     concept_modeling_operator = (
@@ -89,7 +86,7 @@ async def main():
                 graph_validation_action,
             ]
         )
-        .service(concept_modeling_toolkit_service)
+        .toolkit_service(concept_modeling_toolkit)
         .build()
     )
 
