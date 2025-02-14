@@ -6,7 +6,7 @@ from app.core.env.env import EnvService
 from app.core.knowledge.knowlege_service import KnowledgeService
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.toolkit.action import Action
-from app.core.toolkit.toolkit import ToolkitService
+from app.core.toolkit.toolkit import Toolkit, ToolkitService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 
@@ -34,6 +34,13 @@ def mock_env_service(mocker):
     """Fixture to mock EnvService class."""
     mocked_env_service_class = mocker.patch("app.core.env.env.EnvService", autospec=True)
     return mocked_env_service_class.return_value
+
+
+@pytest.fixture()
+def mock_toolkit(mocker):
+    """Fixture to mock Toolkit class."""
+    mocked_toolkit_class = mocker.patch("app.core.toolkit.toolkit.Toolkit", autospec=True)
+    return mocked_toolkit_class.return_value
 
 
 def test_operator_wrapper_configuration_methods():
@@ -102,6 +109,22 @@ def test_operator_wrapper_build_valid_config(
     assert operator._toolkit_service == mock_toolkit_service
     assert operator._knowledge_service == mock_knowledge_service
     assert operator._environment_service == mock_env_service
+
+
+def test_operator_wrapper_syntactic_sugar_configuration_methods(mock_toolkit: Toolkit):
+    """test the syntactic sugar configuration methods of OperatorWrapper."""
+    wrapper = OperatorWrapper()
+
+    # test toolkit_service()
+    assert wrapper.toolkit_service(mock_toolkit) is wrapper
+    assert isinstance(wrapper._toolkit_service, ToolkitService)
+    assert wrapper._toolkit_service._toolkit == mock_toolkit
+
+    # test env_service()
+    # TODO: test the env_service method
+
+    # test knowledge_service()
+    # TODO: test the knowledge_service method
 
 
 def test_operator_wrapper_build_missing_instruction(mock_toolkit_service: ToolkitService):

@@ -60,10 +60,10 @@ class ToolkitWrapper:
 
     def update_action(self, action: Action, arg: Any) -> None:
         """Update the action in the toolkit graph."""
-        # TODO: Implement the add_operator method
+        # TODO: implement the add_operator method
         raise NotImplementedError("This method is not implemented")
 
     def train(self, *args: Any, **kwargs: Any) -> Any:
         """Train the toolkit by RL."""
-        # TODO: Implement the train method
+        # TODO: implement the train method
         raise NotImplementedError("This method is not implemented")

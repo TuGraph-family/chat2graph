@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from app.core.agent.expert import Expert
 from app.core.common.singleton import Singleton
@@ -23,7 +23,7 @@ class AgenticService(metaclass=Singleton):
         self._agent_wrapper = AgentWrapper()
         self._job_wrapper = JobWrapper()
 
-    def session(self, session_id: Optional[str] = None) -> SessionWrapper:
+    def session(self, session_id: Optional[str] = None) -> Tuple[SessionWrapper, str]:
         """Get the session, if not exists or session_id is None, create a new one."""
         return self._session_wrapper.session(session_id=session_id)
 

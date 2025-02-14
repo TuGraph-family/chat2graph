@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from app.core.env.env import EnvService
 from app.core.knowledge.knowlege_service import KnowledgeService
@@ -56,13 +56,15 @@ class OperatorWrapper:
         """Set the toolkit service of the operator."""
         return self.service(ToolkitService(toolkit))
 
-    def env_service(self, env: EnvService) -> "OperatorWrapper":
+    def env_service(self, env: Any) -> "OperatorWrapper":
         """Set the environment service of the operator."""
-        return self.service(env)
+        # TODO: implement the environment service
+        raise NotImplementedError("Environment service is not implemented yet.")
 
-    def knowledge_service(self, knowledge: KnowledgeService) -> "OperatorWrapper":
+    def knowledge_service(self, knowledge: Any) -> "OperatorWrapper":
         """Set the knowledge service of the operator."""
-        return self.service(knowledge)
+        # TODO: implement the knowledge service
+        raise NotImplementedError("Knowledge service is not implemented yet.")
 
     def build(self) -> Operator:
         """Build the operator."""

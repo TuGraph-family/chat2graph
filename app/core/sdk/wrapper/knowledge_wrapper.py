@@ -1,4 +1,4 @@
 class KnowledgeWrapper:
     """Facade of the knowledge base."""
 
-    # TODO: Implement the KnowledgeWrapper class.
+    # TODO: implement the KnowledgeWrapper class.

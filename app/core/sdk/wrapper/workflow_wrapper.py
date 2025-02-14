@@ -42,7 +42,7 @@ class WorkflowWrapper:
         After adding:
             previous operator -> Operator -> Next operator
         """
-        # TODO: Implement the add_operator method
+        # TODO: implement the add_operator method
         raise NotImplementedError("This method is not implemented")
 
     def update_operator(self, operator: Operator) -> Workflow:
@@ -62,10 +62,10 @@ class WorkflowWrapper:
             previous operator 2 -> Next operator 1
             previous operator 2 -> Next operator 2
         """
-        # TODO: Implement the remove_operator method
+        # TODO: implement the remove_operator method
         raise NotImplementedError("This method is not implemented.")
 
     def train(self, *args: Any, **kwargs: Any) -> Any:
         """Train and auto-generate the workflow."""
-        # TODO: Implement the train method
+        # TODO: implement the train method
         raise NotImplementedError("This method is not implemented")

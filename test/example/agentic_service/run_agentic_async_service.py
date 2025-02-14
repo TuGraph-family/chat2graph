@@ -17,8 +17,8 @@ async def main():
     )
 
     # submit the job
-    session = agentic_service.session()
-    job = await session.submit(user_message)
+    session, session_id = agentic_service.session()
+    job = await session.submit(session_id, user_message)
     service_message = await session.wait(job.id)
 
     # print the result
