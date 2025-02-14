@@ -2,23 +2,13 @@ import pytest
 
 from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.toolkit.action import Action
-from app.core.toolkit.toolkit import ToolkitService
 from test.resource.tool_resource import Query
 
 
-@pytest.fixture()
-def mock_toolkit_service(mocker):
-    """Fixture to mock ToolkitService class."""
-    mocked_toolkit_service_class = mocker.patch(
-        "app.core.toolkit.toolkit.ToolkitService", autospec=True
-    )
-    return mocked_toolkit_service_class.return_value
-
-
-def test_action(mock_toolkit_service: ToolkitService):
+def test_action(mocker):
     """Test the action method."""
     wrapper = ToolkitWrapper()
-    wrapper._toolkit_service = mock_toolkit_service
+    mock_toolkit_service = mocker.patch.object(wrapper, "_toolkit_service", autospec=True)
 
     action = Action(id="test_action_id", name="test_action", description="test_description")
     tools = [Query(id="test_query_id")]
@@ -37,10 +27,10 @@ def test_action(mock_toolkit_service: ToolkitService):
     assert call_args[0][2] == []
 
 
-def test_chain_single_action(mock_toolkit_service: ToolkitService):
+def test_chain_single_action(mocker):
     """Test the chain method with a single action."""
     wrapper = ToolkitWrapper()
-    wrapper._toolkit_service = mock_toolkit_service
+    mock_toolkit_service = mocker.patch.object(wrapper, "_toolkit_service", autospec=True)
 
     action_instance = Action(
         id="test_action_id",
@@ -69,10 +59,10 @@ def test_chain_single_action(mock_toolkit_service: ToolkitService):
     assert score == 1.0
 
 
-def test_chain_multiple_actions(mock_toolkit_service: ToolkitService):
+def test_chain_multiple_actions(mocker):
     """Test the chain method with multiple actions in a tuple."""
     wrapper = ToolkitWrapper()
-    wrapper._toolkit_service = mock_toolkit_service
+    mock_toolkit_service = mocker.patch.object(wrapper, "_toolkit_service", autospec=True)
 
     action1 = Action(
         id="action_1",
@@ -143,10 +133,10 @@ def test_chain_multiple_actions(mock_toolkit_service: ToolkitService):
     assert score == 1.0
 
 
-def test_update_action_not_implemented():
+def test_update_action_not_implemented(mocker):
     """Test that update_action method raises NotImplementedError."""
     wrapper = ToolkitWrapper()
-    wrapper._toolkit_service = ToolkitService()
+    _ = mocker.patch.object(wrapper, "_toolkit_service", autospec=True)
 
     action_instance = Action(
         id="test_action_id", name="test_action", description="test_description"
