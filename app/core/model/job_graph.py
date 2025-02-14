@@ -8,7 +8,7 @@ from app.core.model.job_result import JobResult
 
 
 class JobGraph(Graph):
-    """JobGraph is the dataclass to represent the job graph.
+    """JobGraph is the class to represent the job graph.
 
     Attributes:
         ...

@@ -5,7 +5,7 @@ import networkx as nx  # type: ignore
 
 
 class Graph:
-    """Graph is the dataclass to represent the graph.
+    """Graph class represent a graph structure.
 
     Attributes:
         _graph (nx.DiGraph): The oriented graph to present the dependencies.
