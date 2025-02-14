@@ -13,12 +13,12 @@ class SessionWrapper:
     """Facade for managing sessions."""
 
     def __init__(self):
+        self._session_service: SessionService = SessionService.instance or SessionService()
         self._session_id: Optional[str] = None
 
     def session(self, session_id: Optional[str] = None) -> "SessionWrapper":
         """Set the session ID."""
-        session_service: SessionService = SessionService.instance
-        self._session_id = session_service.get_session(session_id=session_id).id
+        self._session_id = self._session_service.get_session(session_id=session_id).id
         return self
 
     async def submit(self, message: ChatMessage) -> Job:

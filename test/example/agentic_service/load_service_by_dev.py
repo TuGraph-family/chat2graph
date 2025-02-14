@@ -2,7 +2,6 @@ import asyncio
 
 from app.core.agent.expert import Expert
 from app.core.model.message import TextMessage
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.legacy.graph_modeling import (
     CONCEPT_MODELING_INSTRUCTION,
@@ -23,6 +22,7 @@ from app.core.sdk.legacy.graph_modeling import (
 )
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
+from app.core.sdk.wrapper.reasoner_wrapper import ReasonerWrapper
 from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.toolkit.toolkit import ToolkitService
@@ -56,6 +56,10 @@ async def main():
     )
     concept_modeling_toolkit_service = ToolkitService(toolkit=concept_modeling_toolkit)
 
+    # reasoner
+    reasoner = ReasonerWrapper().reasoner(
+        thinker_name="Graph Modeling Expert", actor_name="Graph Modeling Expert"
+    )
     # operator
     analysis_operator = (
         OperatorWrapper()
@@ -98,7 +102,7 @@ async def main():
         .type(Expert)
         .name("Graph Modeling Expert")
         .description(CONCEPT_MODELING_PROFILE + CONCEPT_MODELING_INSTRUCTION)
-        .reasoner(DualModelReasoner())
+        .reasoner(reasoner)
         .workflow(workflow)
         .build()
     )

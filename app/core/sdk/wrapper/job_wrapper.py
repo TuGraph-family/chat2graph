@@ -13,7 +13,7 @@ class JobWrapper:
     """
 
     def __init__(self):
-        self._job_service: JobService = JobService()
+        self._job_service: JobService = JobService.instance or JobService()
 
     def get_job_graph(self, id: str) -> JobGraph:
         """Get the job graph by id."""
@@ -22,6 +22,10 @@ class JobWrapper:
     def get_job(self, original_job_id: str, job_id: str) -> Job:
         """Get the job by original job id."""
         return self._job_service.get_job(original_job_id=original_job_id, job_id=job_id)
+
+    async def execute_job(self, job: Job) -> None:
+        """Execute the job."""
+        await self._job_service.execute_job(job=job)
 
     async def query_job_result(self, id: str) -> JobResult:
         """Query the result of the multi-agent system by original job id."""

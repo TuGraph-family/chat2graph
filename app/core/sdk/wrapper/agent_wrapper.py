@@ -5,6 +5,7 @@ from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.agent_service import AgentService
 from app.core.workflow.workflow import Workflow
 
 
@@ -17,6 +18,8 @@ class AgentWrapper:
         self._description: str = ""
         self._reasoner: Optional[Reasoner] = None
         self._workflow: Optional[Workflow] = None
+
+        self._agent_service: AgentService = AgentService()
 
     def type(self, agent_type: Union[type[Leader], type[Expert]]) -> "AgentWrapper":
         """Set the type of the agent (Leader or Expert)."""
@@ -45,6 +48,15 @@ class AgentWrapper:
         self._workflow = workflow
         return self
 
+    def clear(self) -> "AgentWrapper":
+        """Clear the agent wrapper."""
+        self._type = None
+        self._name = None
+        self._description = ""
+        self._reasoner = None
+        self._workflow = None
+        return self
+
     def build(self) -> Agent:
         """Build the agent."""
         if not self._name:
@@ -61,7 +73,13 @@ class AgentWrapper:
         )
 
         if self._type is Leader:
+            self.clear()
             return Leader(agent_config=agent_config)
-        elif self._type is Expert:
+        if self._type is Expert:
+            self.clear()
             return Expert(agent_config=agent_config)
         raise ValueError("Invalid agent type.")
+
+    def expert(self, expert: Expert) -> None:
+        """Add the expert to the agentic service."""
+        self._agent_service.leader.state.add_expert(expert)
