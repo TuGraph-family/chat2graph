@@ -12,7 +12,7 @@ from test.resource.tool_resource import Query
 def sample_actions():
     """Create sample actions for testing."""
     return [
-        Action(id=f"action{i}", name=f"Action {i}", description=f"Description {i}")
+        Action(id=f"action {i}", name=f"Action {i}", description=f"Description {i}")
         for i in range(1, 5)
     ]
 
@@ -20,7 +20,7 @@ def sample_actions():
 @pytest.fixture
 def sample_tools():
     """Create sample tools for testing."""
-    return [Query(id=f"tool{i}") for i in range(1, 5)]
+    return [Query(id=f"tool {i}") for i in range(1, 5)]
 
 
 @pytest.fixture
@@ -130,7 +130,7 @@ async def test_recommend_subgraph_no_hops(
         actions=[action1], threshold=0.5, hops=0
     )
 
-    expected_nodes = {action1.id, "tool1"}
+    expected_nodes = {action1.id, "tool 1"}
     assert set(subgraph.nodes()) == expected_nodes
     assert len(subgraph.edges()) == 1
 
@@ -145,7 +145,7 @@ async def test_recommend_subgraph_one_hop(
         actions=[action1], threshold=0.5, hops=1
     )
 
-    expected_nodes = {"action1", "action2", "action3", "tool1", "tool2", "tool3"}
+    expected_nodes = {"action 1", "action 2", "action 3", "tool 1", "tool 2", "tool 3"}
     assert set(subgraph.nodes()) == expected_nodes
     assert len(subgraph.edges()) == 6
 

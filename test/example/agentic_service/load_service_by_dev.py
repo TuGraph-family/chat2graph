@@ -37,16 +37,22 @@ async def main():
 
     # toolkit service
     analysis_toolkit = ToolkitWrapper().chain(
-        (content_understanding_action, concept_identification_action),
-        (concept_identification_action, relation_pattern_recognition_action),
-        (relation_pattern_recognition_action, consistency_check_action),
+        (
+            content_understanding_action,
+            concept_identification_action,
+            relation_pattern_recognition_action,
+            consistency_check_action,
+        ),
     )
     analysis_toolkit_service = ToolkitService(toolkit=analysis_toolkit)
     concept_modeling_toolkit = ToolkitWrapper().chain(
-        (entity_type_definition_action, relation_type_definition_action),
-        (relation_type_definition_action, self_reflection_schema_action),
-        (self_reflection_schema_action, schema_design_action),
-        (schema_design_action, graph_validation_action),
+        (
+            entity_type_definition_action,
+            relation_type_definition_action,
+            self_reflection_schema_action,
+            schema_design_action,
+            graph_validation_action,
+        ),
     )
     concept_modeling_toolkit_service = ToolkitService(toolkit=concept_modeling_toolkit)
 
