@@ -1,11 +1,11 @@
 from typing import List, Optional, Union
 
-from app.agent.workflow.operator.operator import Operator
-from app.agent.workflow.operator.operator_config import OperatorConfig
-from app.env.env import EnvService
-from app.knowledge.knowlege_service import KnowledgeService
-from app.toolkit.action.action import Action
-from app.toolkit.toolkit import ToolkitService
+from app.core.env.env import EnvService
+from app.core.knowledge.knowlege_service import KnowledgeService
+from app.core.toolkit.action import Action
+from app.core.toolkit.toolkit import ToolkitService
+from app.core.workflow.operator import Operator
+from app.core.workflow.operator_config import OperatorConfig
 
 
 class OperatorWrapper:
@@ -17,7 +17,7 @@ class OperatorWrapper:
         self._actions: List[Action] = []
         self._toolkit_service: Optional[ToolkitService] = None
         self._knowledge_service: Optional[KnowledgeService] = None
-        self._environment_service: Optional[KnowledgeService] = None
+        self._environment_service: Optional[EnvService] = None
 
     def instruction(self, instruction: str) -> "OperatorWrapper":
         """Set the instruction of the operator."""
@@ -35,8 +35,7 @@ class OperatorWrapper:
         return self
 
     def service(
-        self,
-        service: Union[ToolkitService, KnowledgeService, EnvService],
+        self, service: Union[ToolkitService, KnowledgeService, EnvService]
     ) -> "OperatorWrapper":
         """Set the service of the operator."""
         if isinstance(service, ToolkitService):

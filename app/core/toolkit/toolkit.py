@@ -46,13 +46,9 @@ class Toolkit(Graph):
             in tuple.
         """
         return [
-            (
-                id,
-                {
-                    "data": self._actions.get(id, None) or self._tools.get(id, None),
-                },
-            )
+            (id, {"data": data})
             for id in self._graph.nodes()
+            if (data := self.get_action(id) or self.get_tool(id)) is not None
         ]
 
     def update(self, other: Graph) -> None:
@@ -82,14 +78,14 @@ class Toolkit(Graph):
                 self._graph.add_edge(u, v)
                 self._scores[(u, v)] = other.get_score(u, v)
 
-    def subgraph(self, ids: List[str]) -> Graph:
+    def subgraph(self, ids: List[str]) -> "Toolkit":
         """Get the subgraph of the graph.
 
         Args:
             ids (List[str]): The node ids to include in the subgraph.
 
         Returns:
-            Graph: The subgraph.
+            Toolkit: The subgraph.
         """
         toolkit_graoh = Toolkit()
 
@@ -152,6 +148,7 @@ class ToolkitService:
     def with_store(self, store_type: Any) -> "ToolkitService":
         """Use the store for the toolkit."""
         # TODO: implement the persistent storage for the toolkit
+        raise NotImplementedError("This method is not implemented")
 
     def add_tool(self, tool: Tool, connected_actions: List[tuple[Action, float]]):
         """Add tool to toolkit graph. Action --Call--> Tool.
@@ -212,7 +209,7 @@ class ToolkitService:
 
     def get_action(self, action_id: str) -> Action:
         """Get action from the toolkit graph."""
-        action: Optional[None] = self._toolkit.get_action(action_id)
+        action: Optional[Action] = self._toolkit.get_action(action_id)
         if not action:
             raise ValueError(f"Action {action_id} not found in the toolkit graph")
         return action
@@ -307,17 +304,17 @@ class ToolkitService:
             nx.DiGraph: The toolkit subgraph with recommended tools
         """
         subgraph = await self.recommend_subgraph(actions, threshold, hops)
-        actions: List[Action] = []
-        tools: List[Tool] = []
+        rec_actions: List[Action] = []
+        rec_tools: List[Tool] = []
         for n in subgraph.nodes():
             item: Optional[Union[Action, Tool]] = subgraph.get_action(n) or subgraph.get_tool(n)
             assert item is not None
             if isinstance(item, Action):
-                actions.append(item)
+                rec_actions.append(item)
             elif isinstance(item, Tool):
-                tools.append(item)
+                rec_tools.append(item)
 
-        return tools, actions
+        return rec_tools, rec_actions
 
     async def update_action(self, text: str, called_tools: List[Tool]):
         """Update the toolkit graph by reinforcement learning.

@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict
+from typing import Any
 
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
@@ -28,12 +28,12 @@ class MonoModelReasoner(Reasoner):
         self,
         model_name: str = MessageSourceType.MODEL.value,
     ):
+        super().__init__()
+
         self._model_name = model_name
         self._model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.PLATFORM_TYPE
         )
-
-        self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
 
     async def infer(self, task: Task) -> str:
         """Infer by the reasoner.

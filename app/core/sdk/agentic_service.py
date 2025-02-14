@@ -1,11 +1,13 @@
-from typing import Optional
+from typing import Any, Optional
 
 from app.core.agent.expert import Expert
 from app.core.common.singleton import Singleton
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
-from app.core.model.session import Session
+from app.core.sdk.wrapper.session_wrapper import SessionWrapper
+from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
+from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.session_service import SessionService
@@ -26,9 +28,9 @@ class AgenticService(metaclass=Singleton):
         # initialize the session service
         self._session_service = SessionService()
 
-    def session(self, session_id: Optional[str] = None) -> Session:
+    def session(self, session_id: Optional[str] = None) -> SessionWrapper:
         """Get the session, if not exists or session_id is None, create a new one."""
-        return SessionService().get_session(session_id=session_id)
+        return SessionWrapper().session(session_id=session_id)
 
     async def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
@@ -54,3 +56,11 @@ class AgenticService(metaclass=Singleton):
 
     def load_default(self) -> None:
         """Load the default configuration of the agentic service."""
+
+    def train_toolkit(self, toolkit_wrapper: ToolkitWrapper, *args, **kwargs) -> Any:
+        """Train the toolkit."""
+        toolkit_wrapper.train(*args, **kwargs)
+
+    def train_workflow(self, workflow_wrapper: WorkflowWrapper, *args, **kwargs) -> Any:
+        """Train the workflow."""
+        workflow_wrapper.train(*args, **kwargs)

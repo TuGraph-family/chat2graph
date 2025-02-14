@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Any, Dict
+from typing import Any
 
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
@@ -30,6 +30,8 @@ class DualModelReasoner(Reasoner):
         actor_name: str = MessageSourceType.ACTOR.value,
         thinker_name: str = MessageSourceType.THINKER.value,
     ):
+        super().__init__()
+
         self._actor_name = actor_name
         self._thinker_name = thinker_name
         self._actor_model: ModelService = ModelServiceFactory.create(
@@ -38,8 +40,6 @@ class DualModelReasoner(Reasoner):
         self._thinker_model: ModelService = ModelServiceFactory.create(
             platform_type=SystemEnv.PLATFORM_TYPE
         )
-
-        self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
 
     async def infer(self, task: Task) -> str:
         """Infer by the reasoner.

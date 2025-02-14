@@ -20,7 +20,7 @@ class JobService(metaclass=Singleton):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
 
     async def query_job_result(self, job_id: str) -> JobResult:
-        """Query the result of the multi-agent system."""
+        """Query the result of the multi-agent system by original job id."""
         if job_id not in self._job_graphs:
             raise ValueError(
                 f"Job with ID {job_id} not found in the job registry, or not yet submitted."

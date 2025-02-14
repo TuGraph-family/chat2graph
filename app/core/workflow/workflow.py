@@ -91,7 +91,9 @@ class Workflow(ABC):
 
     def set_evaluator(self, evaluator: EvalOperator):
         """Add an evaluator operator to the workflow."""
-        self._evaluator = evaluator
+        with self.__lock:
+            self._evaluator = evaluator
+            self.__workflow = None
 
     def get_operator(self, operator_id: str) -> Optional[Operator]:
         """Get an operator from the workflow."""
@@ -103,6 +105,15 @@ class Workflow(ABC):
     def get_operators(self) -> List[Operator]:
         """Get all operators from the workflow."""
         return [data["operator"] for _, data in self._operator_graph.nodes() if "operator" in data]
+
+    def update_operator(self, operator: Operator) -> None:
+        """Update an operator in the workflow."""
+        with self.__lock:
+            id = operator.get_id()
+            if not self._operator_graph.has_node(id):
+                raise ValueError(f"Operator {id} does not exist in the workflow.")
+            self._operator_graph.nodes[id]["operator"] = operator
+            self.__workflow = None
 
     def visualize(self) -> None:
         """Visualize the workflow."""

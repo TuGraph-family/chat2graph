@@ -87,9 +87,20 @@ class Graph:
         """Update current graph with nodes and edges from other graph.
 
         Args:
-            other: Another JobGraph instance whose nodes and edges will be added to this graph.
+            other (Graph): Another JobGraph instance whose nodes and edges will be added to this graph.
         """
 
     @abstractmethod
     def remove_node(self, id: str) -> None:
         """Remove a node from the graph."""
+
+    @abstractmethod
+    def subgraph(self, ids: List[str]) -> Any:
+        """Get the subgraph of the graph.
+
+        Args:
+            ids (List[str]): The node ids to include in the subgraph.
+
+        Returns:
+            Graph: The subgraph.
+        """

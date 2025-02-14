@@ -1,5 +1,7 @@
 from typing import Dict, List, Optional, Tuple, Union
 
+import networkx as nx  # type: ignore
+
 from app.core.model.grpah import Graph
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
@@ -97,6 +99,30 @@ class JobGraph(Graph):
         self._jobs.pop(id, None)
         self._expert_ids.pop(id, None)
         self._job_results.pop(id, None)
+
+    def subgraph(self, ids: List[str]) -> "JobGraph":
+        """Get the subgraph of the graph.
+
+        Args:
+            ids (List[str]): The node ids to include in the subgraph.
+
+        Returns:
+            JobGraph: The subgraph.
+        """
+        job_graph = JobGraph()
+
+        subgraph_view: nx.DiGraph = self._graph.subgraph(ids)
+        job_graph._graph = subgraph_view.copy()  # noqa: W0212
+        job_graph._jobs = {id: self._jobs[id] for id in ids if id in self._jobs}  # noqa: W0212
+        job_graph._expert_ids = {id: self._expert_ids[id] for id in ids if id in self._expert_ids}  # noqa: W0212
+        job_graph._legacy_jobs = {
+            id: self._legacy_jobs[id] for id in ids if id in self._legacy_jobs
+        }  # noqa: W0212
+        job_graph._job_results = {
+            id: self._job_results[id] for id in ids if id in self._job_results
+        }  # noqa: W0212
+
+        return job_graph
 
     def get_job(self, id: str) -> Job:
         """Return the job by id."""
