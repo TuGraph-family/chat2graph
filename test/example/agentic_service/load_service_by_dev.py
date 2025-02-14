@@ -1,6 +1,7 @@
 import asyncio
 
 from app.core.agent.expert import Expert
+from app.core.common.type import PlatformType
 from app.core.model.message import TextMessage
 from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.legacy.graph_modeling import (
@@ -91,7 +92,9 @@ async def main():
     )
 
     # workflow
-    workflow = WorkflowWrapper().chain((analysis_operator, concept_modeling_operator))
+    workflow = WorkflowWrapper(PlatformType.DBGPT).chain(
+        (analysis_operator, concept_modeling_operator)
+    )
 
     # expert
     expert = (

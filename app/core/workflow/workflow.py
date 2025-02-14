@@ -132,3 +132,26 @@ class Workflow(ABC):
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         """Execute the workflow."""
+
+
+class BuiltinWorkflow(Workflow):
+    """BuiltinWorkflow is a sequence of operators that need to be executed.
+
+    Attributes:
+        _operator_graph (nx.DiGraph): The operator graph of the workflow.
+        _evaluator (Optional[Operator]): The operator to evaluate the progress of the workflow.
+    """
+
+    def _build_workflow(self, reasoner: Reasoner) -> Any:
+        """Build the workflow."""
+        raise NotImplementedError("This method is not implemented.")
+
+    async def _execute_workflow(
+        self,
+        workflow: Any,
+        job: Job,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
+    ) -> WorkflowMessage:
+        """Execute the workflow."""
+        raise NotImplementedError("This method is not implemented.")

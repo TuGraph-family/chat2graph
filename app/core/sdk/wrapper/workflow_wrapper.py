@@ -1,15 +1,21 @@
 from typing import Any, Optional, Tuple, Union
 
+from app.core.common.type import PlatformType
 from app.core.workflow.operator import Operator
-from app.core.workflow.workflow import Workflow
-from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.core.workflow.workflow import BuiltinWorkflow, Workflow
 
 
 class WorkflowWrapper:
     """Facade of the workflow."""
 
-    def __init__(self, workflow: Optional[Workflow] = None):
-        self._workflow: Workflow = workflow or DbgptWorkflow()
+    def __init__(self, platform: Optional[PlatformType] = None):
+        if platform is None:
+            self._workflow: Workflow = BuiltinWorkflow()
+        elif platform == PlatformType.DBGPT:
+            # pylint: disable=import-outside-toplevel
+            from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+
+            self._workflow = DbgptWorkflow()
 
     def chain(self, *operator_chain: Union[Operator, Tuple[Operator, ...]]) -> Workflow:
         """Chain the operators in the workflow.

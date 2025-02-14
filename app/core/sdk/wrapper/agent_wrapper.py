@@ -19,7 +19,7 @@ class AgentWrapper:
         self._reasoner: Optional[Reasoner] = None
         self._workflow: Optional[Workflow] = None
 
-        self._agent_service: AgentService = AgentService()
+        self._agent_service: AgentService = AgentService.instance or AgentService()
 
     def type(self, agent_type: Union[type[Leader], type[Expert]]) -> "AgentWrapper":
         """Set the type of the agent (Leader or Expert)."""
