@@ -38,6 +38,8 @@ flask-cors = "5.0.0"
 [tool.poetry.group.test.dependencies]
 pytest = "*"
 pytest-cov = "*"
+pytest-mock = "^3.14.0"
+
 
 [tool.poetry.group.db-gpt.dependencies]
 dbgpt = { version = "0.6.3", extras = ["framework", "rag"] }
