@@ -10,8 +10,8 @@ from app.core.prompt.operator import (
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 
@@ -19,16 +19,11 @@ from app.core.workflow.operator_config import OperatorConfig
 async def main():
     """Main function to demonstrate Operator usage for the evaluation."""
     # initialize
-    toolkit = Toolkit()
-
     action1 = Action(
         id="action_id_1",
         name="Evaluate",
         description="Evaluate the given result",
     )
-
-    # add actions to toolkit
-    toolkit.add_action(action=action1, next_actions=[], prev_actions=[])
 
     # set operator properties
     reasoner = MonoModelReasoner()
@@ -38,7 +33,13 @@ async def main():
         output_schema=EVAL_OPERATION_OUTPUT_PROMPT,
     )
 
-    operator = EvalOperator(config=operator_config, toolkit_service=ToolkitService(toolkit))
+    operator = EvalOperator(config=operator_config)
+
+    # add actions to toolkit
+    toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
+    toolkit_service.add_action(
+        id=operator.get_id(), action=action1, next_actions=[], prev_actions=[]
+    )
 
     # execute operator (with minimal reasoning rounds for testing)
     job = SubJob(

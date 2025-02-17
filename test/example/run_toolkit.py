@@ -2,9 +2,10 @@ import asyncio
 
 import matplotlib.pyplot as plt
 
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.toolkit import Toolkit
 from test.resource.tool_resource import Query
 
 
@@ -12,6 +13,7 @@ async def main():
     """Main function."""
     # initialize toolkit
     toolkit_service = ToolkitService()
+    operator_id = "test_operator_id"
 
     # create some sample actions
     action1 = Action(id="action1", name="Search Web", description="Search information from web")
@@ -35,32 +37,40 @@ async def main():
 
     # add actions with connections
     toolkit_service.add_action(
-        action=action1, next_actions=[(action2, 0.8), (action3, 0.6)], prev_actions=[]
+        id=operator_id,
+        action=action1,
+        next_actions=[(action2, 0.8), (action3, 0.6)],
+        prev_actions=[],
     )
 
     toolkit_service.add_action(
+        id=operator_id,
         action=action2,
         next_actions=[(action3, 0.7), (action4, 0.9)],
         prev_actions=[(action1, 0.8)],
     )
 
     toolkit_service.add_action(
+        id=operator_id,
         action=action3,
         next_actions=[(action4, 0.7)],
         prev_actions=[(action1, 0.6), (action2, 0.7)],
     )
 
     toolkit_service.add_action(
-        action=action4, next_actions=[], prev_actions=[(action2, 0.9), (action3, 0.7)]
+        id=operator_id,
+        action=action4,
+        next_actions=[],
+        prev_actions=[(action2, 0.9), (action3, 0.7)],
     )
 
     # add tools with connections to actions
-    toolkit_service.add_tool(tool=tool1, connected_actions=[(action1, 0.9)])
-    toolkit_service.add_tool(tool=tool2, connected_actions=[(action2, 0.8)])
-    toolkit_service.add_tool(tool=tool3, connected_actions=[(action3, 0.9)])
-    toolkit_service.add_tool(tool=tool4, connected_actions=[(action4, 0.8)])
+    toolkit_service.add_tool(id=operator_id, tool=tool1, connected_actions=[(action1, 0.9)])
+    toolkit_service.add_tool(id=operator_id, tool=tool2, connected_actions=[(action2, 0.8)])
+    toolkit_service.add_tool(id=operator_id, tool=tool3, connected_actions=[(action3, 0.9)])
+    toolkit_service.add_tool(id=operator_id, tool=tool4, connected_actions=[(action4, 0.8)])
 
-    toolkit: Toolkit = toolkit_service.get_toolkit()
+    toolkit: Toolkit = toolkit_service.get_toolkit(id=operator_id)
 
     # verify initial graph structure
     assert len(toolkit.vertices()) == 8, "Graph should have 4 actions and 4 tools"

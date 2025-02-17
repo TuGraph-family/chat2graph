@@ -1,8 +1,10 @@
 import asyncio
 
 from app.core.agent.expert import Expert
+from app.core.agent.leader import Leader
 from app.core.common.type import PlatformType
 from app.core.model.message import TextMessage
+from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.legacy.graph_modeling import (
     CONCEPT_MODELING_INSTRUCTION,
@@ -30,34 +32,16 @@ from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 
 async def main():
     """Main function."""
-    agentic_service = AgenticService("Chat2Graph").load()
+    mas = AgenticService("Chat2Graph")
 
     # set the user message
     user_message = TextMessage(payload="通过工具来阅读原文，我需要对《三国演义》中的关系进行建模。")
 
-    # toolkit service
-    analysis_toolkit = ToolkitWrapper().chain(
-        (
-            content_understanding_action,
-            concept_identification_action,
-            relation_pattern_recognition_action,
-            consistency_check_action,
-        ),
-    )
-    concept_modeling_toolkit = ToolkitWrapper().chain(
-        (
-            entity_type_definition_action,
-            relation_type_definition_action,
-            self_reflection_schema_action,
-            schema_design_action,
-            graph_validation_action,
-        ),
-    )
-
     # reasoner
-    reasoner = ReasonerWrapper().reasoner(
+    reasoner = ReasonerWrapper().build(
         thinker_name="Graph Modeling Expert", actor_name="Graph Modeling Expert"
     )
+
     # operator
     analysis_operator = (
         OperatorWrapper()
@@ -71,7 +55,6 @@ async def main():
                 consistency_check_action,
             ]
         )
-        .toolkit_service(analysis_toolkit)
         .build()
     )
     concept_modeling_operator = (
@@ -87,8 +70,26 @@ async def main():
                 graph_validation_action,
             ]
         )
-        .toolkit_service(concept_modeling_toolkit)
         .build()
+    )
+
+    # toolkit service
+    ToolkitWrapper(analysis_operator.get_id()).chain(
+        (
+            content_understanding_action,
+            concept_identification_action,
+            relation_pattern_recognition_action,
+            consistency_check_action,
+        ),
+    )
+    ToolkitWrapper(concept_modeling_operator.get_id()).chain(
+        (
+            entity_type_definition_action,
+            relation_type_definition_action,
+            self_reflection_schema_action,
+            schema_design_action,
+            graph_validation_action,
+        ),
     )
 
     # workflow
@@ -96,7 +97,23 @@ async def main():
         (analysis_operator, concept_modeling_operator)
     )
 
-    # expert
+    # leader & expert
+    leader = (
+        AgentWrapper()
+        .type(Leader)
+        .name("Leader")
+        .description("The leader of the multi-agnet system.")
+        .reasoner(reasoner)
+        .workflow(
+            WorkflowWrapper(PlatformType.DBGPT).chain(
+                OperatorWrapper()
+                .instruction(JOB_DECOMPOSITION_PROMPT)
+                .output_schema(JOB_DECOMPOSITION_OUTPUT_SCHEMA)
+                .build()
+            )
+        )
+        .build()
+    )
     expert = (
         AgentWrapper()
         .type(Expert)
@@ -106,11 +123,11 @@ async def main():
         .workflow(workflow)
         .build()
     )
-    agentic_service.expert(expert)
+    mas.agent(leader).agent(expert)
 
     # submit the job
-    session, session_id = agentic_service.session()
-    job = await session.submit(session_id, user_message)
+    session = mas.session()
+    job = await session.submit(user_message)
     service_message = await session.wait(job.id)
 
     # print the result

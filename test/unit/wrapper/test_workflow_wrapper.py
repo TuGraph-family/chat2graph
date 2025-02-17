@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 
 from app.core.common.type import PlatformType
+from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.workflow.operator import Operator
 from app.core.workflow.workflow import BuiltinWorkflow
@@ -14,6 +15,13 @@ class TestOperator(Operator):
 
     def __init__(self, id: str):
         self.id = id
+
+
+class TestOperatorWrapper(OperatorWrapper):
+    """Test operator wrapper class."""
+
+    def __init__(self, operator: Operator):
+        self._operator = operator
 
 
 @pytest.fixture()
@@ -51,13 +59,13 @@ def test_workflow_wrapper_chain_single_operator(mock_dbgpt_workflow: DbgptWorkfl
     wrapper = WorkflowWrapper(PlatformType.DBGPT)
     wrapper._workflow = mock_dbgpt_workflow
 
-    operator = TestOperator(id="test_operator_id")
+    operator_wrapper = TestOperatorWrapper(TestOperator(id="test_operator_id"))
 
     # call the chain method with a single operator
-    workflow = wrapper.chain(operator)
+    wrapper_returned = wrapper.chain(operator_wrapper)
 
-    assert workflow == mock_dbgpt_workflow
-    mock_dbgpt_workflow.add_operator.assert_called_once_with(operator)
+    assert wrapper_returned.workflow == mock_dbgpt_workflow
+    mock_dbgpt_workflow.add_operator.assert_called_once_with(operator_wrapper.operator)
 
 
 def test_workflow_wrapper_chain_two_operators(mock_dbgpt_workflow: DbgptWorkflow):
@@ -68,10 +76,10 @@ def test_workflow_wrapper_chain_two_operators(mock_dbgpt_workflow: DbgptWorkflow
     operator_1 = TestOperator(id="test_operator_id_1")
     operator_2 = TestOperator(id="test_operator_id_2")
 
-    operators_tuple = (operator_1, operator_2)
-    workflow = wrapper.chain(operators_tuple)
+    operator_wrappers_tuple = (TestOperatorWrapper(operator_1), TestOperatorWrapper(operator_2))
+    wrapper_returned = wrapper.chain(operator_wrappers_tuple)
 
-    assert workflow == mock_dbgpt_workflow
+    assert wrapper_returned.workflow == mock_dbgpt_workflow
     assert mock_dbgpt_workflow.add_operator.call_count == 2
     mock_dbgpt_workflow.add_operator.assert_has_calls(
         [
@@ -91,10 +99,14 @@ def test_workflow_wrapper_chain_multiple_operators(mock_builtin_workflow: DbgptW
     operator_3 = TestOperator(id="test_operator_id_3")
 
     # call the chain method with multiple operators
-    operators_tuple = (operator_1, operator_2, operator_3)
-    workflow = wrapper.chain(operators_tuple)
+    operator_wrappers_tuple = (
+        TestOperatorWrapper(operator_1),
+        TestOperatorWrapper(operator_2),
+        TestOperatorWrapper(operator_3),
+    )
+    wrapper_returned = wrapper.chain(operator_wrappers_tuple)
 
-    assert workflow == mock_builtin_workflow
+    assert wrapper_returned.workflow == mock_builtin_workflow
     assert mock_builtin_workflow.add_operator.call_count == 4
     mock_builtin_workflow.add_operator.assert_has_calls(
         [

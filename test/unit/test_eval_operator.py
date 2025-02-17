@@ -1,4 +1,3 @@
-from typing import List, Tuple
 from unittest.mock import AsyncMock
 
 import pytest
@@ -7,45 +6,11 @@ from app.core.model.job import SubJob
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
-
-
-@pytest.fixture
-def toolkit_setup():
-    """Setup a toolkit with actions and tools."""
-    toolkit_service = ToolkitService()
-
-    # create actions
-    actions = [
-        Action(
-            id="evaluate_content",
-            name="Content Evaluation",
-            description="Evaluate and analyze input content and extracting insights",
-        ),
-        Action(
-            id="evaluate_response",
-            name="Response Evaluation",
-            description="Generate and evaluate response quality based on content analysis",
-        ),
-    ]
-
-    # create tools
-    tools = [Query(id=f"{action.id}_tool") for action in actions]
-
-    # add actions to toolkit
-    toolkit_service.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
-    toolkit_service.add_action(action=actions[1], next_actions=[], prev_actions=[(actions[0], 0.9)])
-
-    # add tools to toolkit
-    for tool, action in zip(tools, actions, strict=False):
-        toolkit_service.add_tool(tool=tool, connected_actions=[(action, 0.9)])
-
-    return toolkit_service.get_toolkit(), actions, tools
 
 
 @pytest.fixture
@@ -66,16 +31,54 @@ def mock_reasoner():
 
 
 @pytest.fixture
-async def operator(toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]):
+async def operator():
     """Create an operator instance with mock reasoner."""
-    toolkit, actions, _ = toolkit_setup
+    toolkit_service = ToolkitService()
+
+    # create actions
+    actions = [
+        Action(
+            id="evaluate_content",
+            name="Content Evaluation",
+            description="Evaluate and analyze input content and extracting insights",
+        ),
+        Action(
+            id="evaluate_response",
+            name="Response Evaluation",
+            description="Generate and evaluate response quality based on content analysis",
+        ),
+    ]
+
+    # create tools
+    tools = [Query(id=f"{action.id}_tool") for action in actions]
+
     config = OperatorConfig(
         instruction="Test instruction",
         actions=[actions[0]],  # start with first action
         threshold=0.7,
         hops=2,
     )
-    return EvalOperator(config=config, toolkit_service=ToolkitService(toolkit=toolkit))
+    eval_operator = EvalOperator(config=config)
+
+    # add actions to toolkit
+    toolkit_service.add_action(
+        id=eval_operator.get_id(),
+        action=actions[0],
+        next_actions=[(actions[1], 0.9)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=eval_operator.get_id(),
+        action=actions[1],
+        next_actions=[],
+        prev_actions=[(actions[0], 0.9)],
+    )
+    # add tools to toolkit
+    for tool, action in zip(tools, actions, strict=False):
+        toolkit_service.add_tool(
+            id=eval_operator.get_id(), tool=tool, connected_actions=[(action, 0.9)]
+        )
+    return eval_operator
 
 
 @pytest.mark.asyncio

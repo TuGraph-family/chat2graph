@@ -6,6 +6,7 @@ from app.core.common.type import JobStatus
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
+from app.core.model.session import Session
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
 from app.core.service.job_service import JobService
 from app.core.service.session_service import SessionService
@@ -14,41 +15,51 @@ from app.core.service.session_service import SessionService
 def test_session_wrapper_init():
     """Test session wrapper init method."""
     wrapper = SessionWrapper()
-    assert isinstance(wrapper._session_service, SessionService)
-    assert wrapper._session_service is SessionService.instance
+    assert wrapper._session is None
 
 
-def test_session_wrapper_session():
+def test_session_wrapper_session(mocker):
     """Test session method."""
+    SessionService()
     wrapper = SessionWrapper()
-    # mock _session_service
-    mock_session_service = mock.patch.object(wrapper, "_session_service", autospec=True).start()
-    mock_session_instance = mock_session_service.get_session.return_value
-    mock_session_instance.id = "test_session_id"
 
-    wrapper_returned, session_id_returned = wrapper.session("test_session_id")
+    # mock get_session method
+    mock_get_session_method = mocker.patch(
+        "app.core.sdk.wrapper.session_wrapper.SessionService.get_session",
+        new_callable=mock.Mock,
+    )
+    mock_session = mock.create_autospec(Session)
+    mock_session.id = "test_session_id"
+    mock_get_session_method.return_value = mock_session
+
+    # test session method with session_id
+    wrapper_returned = wrapper.session("test_session_id")
 
     assert wrapper_returned is wrapper
-    assert session_id_returned == "test_session_id"
-    mock_session_service.get_session.assert_called_once_with(session_id="test_session_id")
+    assert wrapper._session == mock_session
+    assert wrapper._session.id == "test_session_id"
+    mock_get_session_method.assert_called_once_with(session_id="test_session_id")
 
-    # Test session method without session_id (None)
-    wrapper_returned_none, session_id_returned_none = wrapper.session()
+    # test session method without session_id (None)
+    wrapper_returned_none = wrapper.session()
 
     assert wrapper_returned_none is wrapper
-    assert session_id_returned_none == "test_session_id"
-    mock_session_service.get_session.assert_called_with(session_id=None)
+    assert wrapper._session == mock_session
+    mock_get_session_method.assert_called_with(session_id=None)
 
 
 @pytest.mark.asyncio
 async def test_session_wrapper_submit(mocker):
     """Test submit method."""
     JobService()
+    SessionService()
     wrapper = SessionWrapper()
+
+    wrapper.session("test_session_id")
 
     # mock JobService.execute_job method
     mock_execute_job_method = mocker.patch(
-        "app.core.sdk.wrapper.session_wrapper.JobService.instance.execute_job",
+        "app.core.sdk.wrapper.session_wrapper.JobService.execute_job",
         new_callable=mock.AsyncMock,
     )
     # mock asyncio.create_task
@@ -61,7 +72,7 @@ async def test_session_wrapper_submit(mocker):
     mock_chat_message: ChatMessage = mock.create_autospec(ChatMessage)
     mock_chat_message.get_payload.return_value = test_message_payload
 
-    job = await wrapper.submit(test_session_id, mock_chat_message)
+    job = await wrapper.submit(mock_chat_message)
 
     assert isinstance(job, Job)
     assert job.session_id == test_session_id

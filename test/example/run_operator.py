@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
+from app.core.toolkit.toolkit import Toolkit
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
@@ -34,15 +35,6 @@ async def main():
 
     search_tool = Query(id="search_tool")
     analyze_tool = Query(id="analyze_tool")
-
-    # add actions to toolkit
-    toolkit.add_action(action=action1, next_actions=[(action2, 0.9)], prev_actions=[])
-    toolkit.add_action(action=action2, next_actions=[(action3, 0.8)], prev_actions=[(action1, 0.9)])
-    toolkit.add_action(action=action3, next_actions=[], prev_actions=[(action2, 0.8)])
-
-    # add tools to toolkit
-    toolkit.add_tool(tool=search_tool, connected_actions=[(action1, 0.9)])
-    toolkit.add_tool(tool=analyze_tool, connected_actions=[(action2, 0.9)])
 
     # set operator properties
     instruction = """
@@ -98,7 +90,36 @@ Answer in Chinese.
         threshold=0.7,
         hops=2,
     )
-    operator = Operator(config=operator_config, toolkit_service=ToolkitService(toolkit))
+    operator = Operator(config=operator_config)
+
+    # add actions to toolkit
+    toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=action1,
+        next_actions=[(action2, 0.9)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=action2,
+        next_actions=[(action3, 0.8)],
+        prev_actions=[(action1, 0.9)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=action3,
+        next_actions=[],
+        prev_actions=[(action2, 0.8)],
+    )
+
+    # add tools to toolkit
+    toolkit_service.add_tool(
+        id=operator.get_id(), tool=search_tool, connected_actions=[(action1, 0.9)]
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(), tool=analyze_tool, connected_actions=[(action2, 0.9)]
+    )
 
     # execute operator (with minimal reasoning rounds for testing)
     job = SubJob(

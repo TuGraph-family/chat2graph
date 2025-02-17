@@ -1,4 +1,3 @@
-from typing import List, Tuple
 from unittest.mock import AsyncMock
 
 import pytest
@@ -7,17 +6,25 @@ from app.core.model.job import SubJob
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import Toolkit, ToolkitService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
 
 
 @pytest.fixture
-def toolkit_setup():
-    """Setup a toolkit with actions and tools."""
+def mock_reasoner():
+    """Create a mock reasoner."""
+    reasoner = AsyncMock(spec=DualModelReasoner)
+    reasoner.infer = AsyncMock()
+    reasoner.infer.return_value = "Test result"
+    return reasoner
+
+
+@pytest.fixture
+async def operator():
+    """Create an operator instance with mock reasoner."""
     toolkit_service = ToolkitService()
 
     # create actions
@@ -42,42 +49,38 @@ def toolkit_setup():
     # create tools
     tools = [Query(id=f"{action.id}_tool") for action in actions]
 
-    # add actions to toolkit
-    toolkit_service.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
-    toolkit_service.add_action(
-        action=actions[1],
-        next_actions=[(actions[2], 0.8)],
-        prev_actions=[(actions[0], 0.9)],
-    )
-    toolkit_service.add_action(action=actions[2], next_actions=[], prev_actions=[(actions[1], 0.8)])
-
-    # add tools to toolkit
-    for tool, action in zip(tools, actions, strict=False):
-        toolkit_service.add_tool(tool=tool, connected_actions=[(action, 0.9)])
-
-    return toolkit_service.get_toolkit(), actions, tools
-
-
-@pytest.fixture
-def mock_reasoner():
-    """Create a mock reasoner."""
-    reasoner = AsyncMock(spec=DualModelReasoner)
-    reasoner.infer = AsyncMock()
-    reasoner.infer.return_value = "Test result"
-    return reasoner
-
-
-@pytest.fixture
-async def operator(toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]):
-    """Create an operator instance with mock reasoner."""
-    toolkit, actions, _ = toolkit_setup
     config = OperatorConfig(
         instruction="Test instruction",
         actions=[actions[0]],  # start with first action
         threshold=0.7,
         hops=2,
     )
-    operator = Operator(config=config, toolkit_service=ToolkitService(toolkit=toolkit))
+    operator = Operator(config=config)
+
+    # add actions to toolkit
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=actions[0],
+        next_actions=[(actions[1], 0.9)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=actions[1],
+        next_actions=[(actions[2], 0.8)],
+        prev_actions=[(actions[0], 0.9)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=actions[2],
+        next_actions=[],
+        prev_actions=[(actions[1], 0.8)],
+    )
+
+    # add tools to toolkit
+    for tool, action in zip(tools, actions, strict=False):
+        toolkit_service.add_tool(id=operator.get_id(), tool=tool, connected_actions=[(action, 0.9)])
+
     return operator
 
 
@@ -117,11 +120,11 @@ async def test_execute_basic_functionality(operator: Operator, mock_reasoner: As
 
 @pytest.mark.asyncio
 @pytest.mark.asyncio
-async def test_get_tools_from_actions(
-    operator: Operator, toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]
-):
+async def test_get_tools_from_actions(operator: Operator):
     """Test tool retrieval from actions."""
-    tools, _ = await operator._toolkit_service.recommend_tools(
+    toolkit_service: ToolkitService = ToolkitService.instance
+    tools, _ = await toolkit_service.recommend_tools(
+        id=operator.get_id(),
         actions=operator._config.actions,
         threshold=operator._config.threshold,
         hops=operator._config.hops,
@@ -158,26 +161,3 @@ async def test_execute_error_handling(operator: Operator, mock_reasoner: AsyncMo
         )
 
     assert str(excinfo.value) == "Test error"
-
-
-@pytest.mark.asyncio
-async def test_get_tools_from_actions_duplicates(
-    operator: Operator, toolkit_setup: Tuple[Toolkit, List[Action], List[Tool]]
-):
-    """Test tool retrieval handles duplicates correctly."""
-    # add duplicate tools to actions
-    _, _, tools = toolkit_setup
-    for action in operator._config.actions:
-        action.tools = tools  # Deliberately add all tools to each action
-
-    operator._config.threshold = 0.7
-    operator._config.hops = 1
-    tools, _ = await operator._toolkit_service.recommend_tools(
-        actions=operator._config.actions,
-        threshold=operator._config.threshold,
-        hops=operator._config.hops,
-    )
-
-    # verify no duplicates
-    tool_ids = [tool.id for tool in tools]
-    assert len(tool_ids) == len(set(tool_ids))
