@@ -5,7 +5,8 @@ from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
-from app.core.service.agent_service import AgentService
+from app.core.sdk.wrapper.reasoner_wrapper import ReasonerWrapper
+from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.workflow.workflow import Workflow
 
 
@@ -13,13 +14,20 @@ class AgentWrapper:
     """Facade of the agent."""
 
     def __init__(self):
+        self._agent: Optional[Agent] = None
+
         self._type: Optional[Union[type[Leader], type[Expert]]] = None
         self._name: Optional[str] = None
         self._description: str = ""
         self._reasoner: Optional[Reasoner] = None
         self._workflow: Optional[Workflow] = None
 
-        self._agent_service: AgentService = AgentService.instance or AgentService()
+    @property
+    def agent(self) -> Agent:
+        """Get the agent."""
+        if not self._agent:
+            raise ValueError("Agent is not set.")
+        return self._agent
 
     def type(self, agent_type: Union[type[Leader], type[Expert]]) -> "AgentWrapper":
         """Set the type of the agent (Leader or Expert)."""
@@ -38,14 +46,14 @@ class AgentWrapper:
         self._description = description
         return self
 
-    def reasoner(self, reasoner: Reasoner) -> "AgentWrapper":
+    def reasoner(self, reasoner_wrapper: ReasonerWrapper) -> "AgentWrapper":
         """Set the reasoner of the agent."""
-        self._reasoner = reasoner
+        self._reasoner = reasoner_wrapper.reasoner
         return self
 
-    def workflow(self, workflow: Workflow) -> "AgentWrapper":
+    def workflow(self, workflow_wrapper: WorkflowWrapper) -> "AgentWrapper":
         """Set the workflow of the agent."""
-        self._workflow = workflow
+        self._workflow = workflow_wrapper.workflow
         return self
 
     def clear(self) -> "AgentWrapper":
@@ -57,7 +65,7 @@ class AgentWrapper:
         self._workflow = None
         return self
 
-    def build(self) -> Agent:
+    def build(self) -> "AgentWrapper":
         """Build the agent."""
         if not self._name:
             raise ValueError("Name is required.")
@@ -74,12 +82,9 @@ class AgentWrapper:
 
         if self._type is Leader:
             self.clear()
-            return Leader(agent_config=agent_config)
+            self._agent = Leader(agent_config=agent_config)
         if self._type is Expert:
             self.clear()
-            return Expert(agent_config=agent_config)
-        raise ValueError("Invalid agent type.")
+            self._agent = Expert(agent_config=agent_config)
 
-    def expert(self, expert: Expert) -> None:
-        """Add the expert to the agentic service."""
-        self._agent_service.leader.state.add_expert(expert)
+        return self

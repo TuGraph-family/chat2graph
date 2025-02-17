@@ -4,9 +4,9 @@ from uuid import uuid4
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
@@ -198,6 +198,9 @@ INTERNET_REF = [
 ]
 
 
+toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
+
+
 class KnowledgeBaseRetriever(Tool):
     """Tool for retrieving document content from knowledge base."""
 
@@ -284,8 +287,6 @@ class ReferenceGenerator(Tool):
 
 def get_retrieving_operator():
     """Get the operator for document retrieving."""
-    retrieving_toolkit_service = ToolkitService()
-
     knowledge_base_retrieving = Action(
         id="doc_retrieving.vector_retrieving",
         name="知识库检索",
@@ -299,23 +300,6 @@ def get_retrieving_operator():
     knowledge_base_search = KnowledgeBaseRetriever(id="knowledge_base_search_tool")
     internet_search = InternetRetriever(id="internet_search_tool")
 
-    retrieving_toolkit_service.add_action(
-        action=knowledge_base_retrieving,
-        next_actions=[(internet_retrieving, 1)],
-        prev_actions=[],
-    )
-    retrieving_toolkit_service.add_action(
-        action=internet_retrieving,
-        next_actions=[],
-        prev_actions=[(knowledge_base_retrieving, 1)],
-    )
-    retrieving_toolkit_service.add_tool(
-        tool=knowledge_base_search, connected_actions=[(knowledge_base_retrieving, 1)]
-    )
-    retrieving_toolkit_service.add_tool(
-        tool=internet_search, connected_actions=[(internet_retrieving, 1)]
-    )
-
     operator_config = OperatorConfig(
         id="retrieving_operator",
         instruction=DOC_RETRIEVING_PROFILE + DOC_RETRIEVING_INSTRUCTION,
@@ -325,15 +309,34 @@ def get_retrieving_operator():
             internet_retrieving,
         ],
     )
-    operator = Operator(config=operator_config, toolkit_service=retrieving_toolkit_service)
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=knowledge_base_retrieving,
+        next_actions=[(internet_retrieving, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=internet_retrieving,
+        next_actions=[],
+        prev_actions=[(knowledge_base_retrieving, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=knowledge_base_search,
+        connected_actions=[(knowledge_base_retrieving, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(), tool=internet_search, connected_actions=[(internet_retrieving, 1)]
+    )
 
     return operator
 
 
 def get_summarizing_operator():
     """Get the operator for document summarizing."""
-    summarizing_toolkit_service = ToolkitService()
-
     reference_listing = Action(
         id="doc_summarizing.reference_listing",
         name="原文出处列举",
@@ -341,22 +344,23 @@ def get_summarizing_operator():
     )
     reference_list = ReferenceGenerator(id="reference_list_tool")
 
-    summarizing_toolkit_service.add_action(
-        action=reference_listing,
-        next_actions=[],
-        prev_actions=[],
-    )
-    summarizing_toolkit_service.add_tool(
-        tool=reference_list, connected_actions=[(reference_listing, 1)]
-    )
-
     operator_config = OperatorConfig(
         id="summarizing_operator",
         instruction=DOC_SUMMARIZING_PROFILE + DOC_SUMMARIZING_INSTRUCTION,
         output_schema=DOC_SUMMARIZING_OUTPUT_SCHEMA,
         actions=[reference_listing],
     )
-    operator = Operator(config=operator_config, toolkit_service=summarizing_toolkit_service)
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=reference_listing,
+        next_actions=[],
+        prev_actions=[],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(), tool=reference_list, connected_actions=[(reference_listing, 1)]
+    )
 
     return operator
 

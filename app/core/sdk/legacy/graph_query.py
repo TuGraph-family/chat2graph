@@ -5,9 +5,9 @@ from uuid import uuid4
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
@@ -76,6 +76,8 @@ QUERY_DESIGN_OUTPUT_SCHEMA = """
     "query_result": "查询语言在对应图上的查询结果"
 }
 """
+
+toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
 
 
 class SchemaGetter(Tool):
@@ -273,36 +275,6 @@ def get_query_intention_analysis_operator():
     )
     schema_getter = SchemaGetter("schema_getter_tool")
 
-    query_intention_query_design_toolkit_service = ToolkitService()
-
-    query_intention_query_design_toolkit_service.add_action(
-        action=query_intention_identification_action,
-        next_actions=[(vertex_type_validation_action, 1)],
-        prev_actions=[],
-    )
-    query_intention_query_design_toolkit_service.add_action(
-        action=vertex_type_validation_action,
-        next_actions=[(condition_validation_action, 1)],
-        prev_actions=[(query_intention_identification_action, 1)],
-    )
-    query_intention_query_design_toolkit_service.add_action(
-        action=condition_validation_action,
-        next_actions=[(supplement_aciton, 1)],
-        prev_actions=[(vertex_type_validation_action, 1)],
-    )
-    query_intention_query_design_toolkit_service.add_action(
-        action=supplement_aciton,
-        next_actions=[],
-        prev_actions=[(condition_validation_action, 1)],
-    )
-    query_intention_query_design_toolkit_service.add_tool(
-        tool=schema_getter,
-        connected_actions=[
-            (vertex_type_validation_action, 1),
-            (condition_validation_action, 1),
-        ],
-    )
-
     operator_config = OperatorConfig(
         id="query_intention_analysis_operator",
         instruction=QUERY_INSTRUCTION_AYNALYSIS_PROFILE + QUERY_INTENTION_ANALYSIS_INSTRUCTION,
@@ -315,8 +287,39 @@ def get_query_intention_analysis_operator():
         ],
     )
 
-    operator = Operator(
-        config=operator_config, toolkit_service=query_intention_query_design_toolkit_service
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=query_intention_identification_action,
+        next_actions=[(vertex_type_validation_action, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=vertex_type_validation_action,
+        next_actions=[(condition_validation_action, 1)],
+        prev_actions=[(query_intention_identification_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=condition_validation_action,
+        next_actions=[(supplement_aciton, 1)],
+        prev_actions=[(vertex_type_validation_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=supplement_aciton,
+        next_actions=[],
+        prev_actions=[(condition_validation_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=schema_getter,
+        connected_actions=[
+            (vertex_type_validation_action, 1),
+            (condition_validation_action, 1),
+        ],
     )
 
     return operator
@@ -324,8 +327,6 @@ def get_query_intention_analysis_operator():
 
 def get_query_design_operator():
     """Get the operator for query design."""
-    query_design_toolkit_service = ToolkitService()
-
     grammar_study_action = Action(
         id="query_design.grammar_study_action",
         name="语法学习",
@@ -343,36 +344,41 @@ def get_query_design_operator():
     schema_getter = SchemaGetter("schema_checker_tool_v2")
     vertex_querier = VertexQuerier("vertex_querier_tool")
 
-    query_design_toolkit_service.add_action(
-        action=grammar_study_action,
-        next_actions=[(query_execution_aciton, 1)],
-        prev_actions=[],
-    )
-    query_design_toolkit_service.add_action(
-        action=query_execution_aciton,
-        next_actions=[],
-        prev_actions=[(grammar_study_action, 1)],
-    )
-    query_design_toolkit_service.add_tool(
-        tool=grammer_reader,
-        connected_actions=[(grammar_study_action, 1)],
-    )
-    query_design_toolkit_service.add_tool(
-        tool=schema_getter,
-        connected_actions=[(query_execution_aciton, 1)],
-    )
-    query_design_toolkit_service.add_tool(
-        tool=vertex_querier,
-        connected_actions=[(query_execution_aciton, 1)],
-    )
-
     operator_config = OperatorConfig(
         id="analysis_operator",
         instruction=QUERY_DESIGN_PROFILE + QUERY_DESIGN_INSTRUCTION,
         output_schema=QUERY_DESIGN_OUTPUT_SCHEMA,
         actions=[grammar_study_action, query_execution_aciton],
     )
-    operator = Operator(config=operator_config, toolkit_service=query_design_toolkit_service)
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=grammar_study_action,
+        next_actions=[(query_execution_aciton, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=query_execution_aciton,
+        next_actions=[],
+        prev_actions=[(grammar_study_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=grammer_reader,
+        connected_actions=[(grammar_study_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=schema_getter,
+        connected_actions=[(query_execution_aciton, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=vertex_querier,
+        connected_actions=[(query_execution_aciton, 1)],
+    )
 
     return operator
 

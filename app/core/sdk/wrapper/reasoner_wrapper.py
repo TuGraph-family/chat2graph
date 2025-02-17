@@ -16,9 +16,16 @@ class ReasonerWrapper:
     def __init__(self):
         self._reasoner: Optional[Reasoner] = None
 
-    def reasoner(
+    @property
+    def reasoner(self) -> Reasoner:
+        """Get the reasoner."""
+        if not self._reasoner:
+            raise ValueError("Reasoner is not set.")
+        return self._reasoner
+
+    def build(
         self, actor_name: str = MessageSourceType.MODEL.value, thinker_name: Optional[str] = None
-    ) -> Reasoner:
+    ) -> "ReasonerWrapper":
         """Set the reasoner of the agent.
 
         If thinker_name is provided, use DualModelReasoner, otherwise use MonoModelReasoner.
@@ -28,7 +35,7 @@ class ReasonerWrapper:
         else:
             self._reasoner = MonoModelReasoner(model_name=actor_name)
 
-        return self._reasoner
+        return self
 
     def get_memory(self, job: Job) -> ReasonerMemory:
         """Get the memory of the reasoner."""

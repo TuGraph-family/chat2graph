@@ -1,10 +1,11 @@
 import asyncio
-from typing import Optional, Tuple
+from typing import Optional
 
 from app.core.common.type import JobStatus
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
+from app.core.model.session import Session
 from app.core.service.job_service import JobService
 from app.core.service.session_service import SessionService
 
@@ -13,15 +14,18 @@ class SessionWrapper:
     """Facade for managing sessions."""
 
     def __init__(self):
-        self._session_service: SessionService = SessionService.instance or SessionService()
+        self._session: Optional[Session] = None
 
-    def session(self, session_id: Optional[str] = None) -> Tuple["SessionWrapper", str]:
+    def session(self, session_id: Optional[str] = None) -> "SessionWrapper":
         """Set the session ID."""
-        return self, self._session_service.get_session(session_id=session_id).id
+        session_service: SessionService = SessionService.instance
+        self._session = session_service.get_session(session_id=session_id)
+        return self
 
-    async def submit(self, session_id: str, message: ChatMessage) -> Job:
+    async def submit(self, message: ChatMessage) -> Job:
         """Submit the job."""
-        job = Job(goal=message.get_payload(), session_id=session_id)
+        assert self._session, "Session is not set. Please call session() first."
+        job = Job(goal=message.get_payload(), session_id=self._session.id)
         job_service: JobService = JobService.instance
         asyncio.create_task(job_service.execute_job(job=job))
 

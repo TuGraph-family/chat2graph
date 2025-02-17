@@ -5,9 +5,9 @@ from uuid import uuid4
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
@@ -59,6 +59,7 @@ ALGORITHMS_EXECUTE_OUTPUT_SCHEMA = """
     "algorithms_result": "算法执行的结果。如果失败，返回失败原因"
 }
 """
+toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
 
 
 class AlgorithmsGetter(Tool):
@@ -151,7 +152,6 @@ class AlgorithmsExecutor(Tool):
 
 def get_algorithms_intention_analysis_operator():
     """Get the operator for algorithms intention analysis."""
-    analysis_toolkit_service = ToolkitService()
     content_understanding_action = Action(
         id="algorithms_intention_analysis.content_understanding",
         name="内容理解",
@@ -164,21 +164,6 @@ def get_algorithms_intention_analysis_operator():
     )
     algorithms_getter = AlgorithmsGetter(id="algorithms_getter_tool")
 
-    analysis_toolkit_service.add_action(
-        action=content_understanding_action,
-        next_actions=[(algorithms_intention_identification_action, 1)],
-        prev_actions=[],
-    )
-    analysis_toolkit_service.add_action(
-        action=algorithms_intention_identification_action,
-        next_actions=[],
-        prev_actions=[(content_understanding_action, 1)],
-    )
-    analysis_toolkit_service.add_tool(
-        tool=algorithms_getter,
-        connected_actions=[(algorithms_intention_identification_action, 1)],
-    )
-
     operator_config = OperatorConfig(
         id="algorithms_intention_analysis_operator",
         instruction=ALGORITHMS_INTENTION_ANALYSIS_PROFILE
@@ -189,14 +174,32 @@ def get_algorithms_intention_analysis_operator():
             algorithms_intention_identification_action,
         ],
     )
-    operator = Operator(config=operator_config, toolkit_service=analysis_toolkit_service)
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=content_understanding_action,
+        next_actions=[(algorithms_intention_identification_action, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=algorithms_intention_identification_action,
+        next_actions=[],
+        prev_actions=[(content_understanding_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=algorithms_getter,
+        connected_actions=[(algorithms_intention_identification_action, 1)],
+    )
 
     return operator
 
 
 def get_algorithms_execute_operator():
     """Get the operator for algorithms execution."""
-    analysis_toolkit_service = ToolkitService()
+    toolkit_service = ToolkitService()
     algorithms_validation_action = Action(
         id="algorithms_execute.algorithms_validation_action",
         name="算法执行验证",
@@ -210,30 +213,36 @@ def get_algorithms_execute_operator():
     algorithms_getter = AlgorithmsGetter(id="algorithms_getter_tool")
     algorithms_excute = AlgorithmsExecutor(id="algorithms_excute_tool")
 
-    analysis_toolkit_service.add_action(
-        action=algorithms_validation_action,
-        next_actions=[(algorithms_execution_aciton, 1)],
-        prev_actions=[],
-    )
-    analysis_toolkit_service.add_action(
-        action=algorithms_execution_aciton,
-        next_actions=[],
-        prev_actions=[(algorithms_validation_action, 1)],
-    )
-    analysis_toolkit_service.add_tool(
-        tool=algorithms_getter, connected_actions=[(algorithms_validation_action, 1)]
-    )
-    analysis_toolkit_service.add_tool(
-        tool=algorithms_excute, connected_actions=[(algorithms_execution_aciton, 1)]
-    )
-
     operator_config = OperatorConfig(
         id="algorithms_execute_operator",
         instruction=ALGORITHMS_EXECUTE_PROFILE + ALGORITHMS_EXECUTE_INSTRUCTION,
         output_schema=ALGORITHMS_EXECUTE_OUTPUT_SCHEMA,
         actions=[algorithms_validation_action, algorithms_execution_aciton],
     )
-    operator = Operator(config=operator_config, toolkit_service=analysis_toolkit_service)
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=algorithms_validation_action,
+        next_actions=[(algorithms_execution_aciton, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=algorithms_execution_aciton,
+        next_actions=[],
+        prev_actions=[(algorithms_validation_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=algorithms_getter,
+        connected_actions=[(algorithms_validation_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=algorithms_excute,
+        connected_actions=[(algorithms_execution_aciton, 1)],
+    )
     return operator
 
 

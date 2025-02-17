@@ -5,9 +5,9 @@ from uuid import uuid4
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
@@ -515,11 +515,11 @@ RESULT_OUTPUT = """
 """
 
 COUNT = 20
+toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
 
 
 def get_data_importation_operator():
     """Get the data importation operator."""
-    analysis_toolkit_service = ToolkitService()
 
     schema_understanding_action = Action(
         id="data_generattion_and_import.schema_understanding_action",
@@ -563,59 +563,6 @@ def get_data_importation_operator():
         description="输出数据导入的结果",
     )
 
-    analysis_toolkit_service.add_action(
-        action=schema_understanding_action,
-        next_actions=[(content_understanding_action, 1)],
-        prev_actions=[],
-    )
-    analysis_toolkit_service.add_action(
-        action=content_understanding_action,
-        next_actions=[(edge_data_generation_action, 1)],
-        prev_actions=[(schema_understanding_action, 1)],
-    )
-    analysis_toolkit_service.add_action(
-        action=edge_data_generation_action,
-        next_actions=[(vertex_data_generation_action, 1)],
-        prev_actions=[(content_understanding_action, 1)],
-    )
-
-    analysis_toolkit_service.add_action(
-        action=vertex_data_generation_action,
-        next_actions=[(graph_data_generation_action, 1)],
-        prev_actions=[(edge_data_generation_action, 1)],
-    )
-
-    analysis_toolkit_service.add_action(
-        action=graph_data_generation_action,
-        next_actions=[(import_data_action, 1)],
-        prev_actions=[(vertex_data_generation_action, 1)],
-    )
-
-    analysis_toolkit_service.add_action(
-        action=import_data_action,
-        next_actions=[(output_result_action, 1)],
-        prev_actions=[(graph_data_generation_action, 1)],
-    )
-
-    analysis_toolkit_service.add_action(
-        action=output_result_action,
-        next_actions=[],
-        prev_actions=[(import_data_action, 1)],
-    )
-
-    get_schema = SchemaGetter(id="get_schema_tool")
-    analysis_toolkit_service.add_tool(
-        tool=get_schema, connected_actions=[(schema_understanding_action, 1)]
-    )
-
-    get_document = DocumentReader(id="get_document_tool")
-    analysis_toolkit_service.add_tool(
-        tool=get_document, connected_actions=[(content_understanding_action, 1)]
-    )
-
-    import_data = DataImport(id="import_data_tool")
-    analysis_toolkit_service.add_tool(tool=import_data, connected_actions=[(import_data_action, 1)])
-
     operator_config = OperatorConfig(
         id="data_generation_operator",
         instruction=DATA_GENERATION_PROFILE + DATA_GENERATION_INSTRUCTION,
@@ -630,9 +577,72 @@ def get_data_importation_operator():
             output_result_action,
         ],
     )
-    operator = Operator(
-        config=operator_config,
-        toolkit_service=analysis_toolkit_service,
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=schema_understanding_action,
+        next_actions=[(content_understanding_action, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=content_understanding_action,
+        next_actions=[(edge_data_generation_action, 1)],
+        prev_actions=[(schema_understanding_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=edge_data_generation_action,
+        next_actions=[(vertex_data_generation_action, 1)],
+        prev_actions=[(content_understanding_action, 1)],
+    )
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=vertex_data_generation_action,
+        next_actions=[(graph_data_generation_action, 1)],
+        prev_actions=[(edge_data_generation_action, 1)],
+    )
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=graph_data_generation_action,
+        next_actions=[(import_data_action, 1)],
+        prev_actions=[(vertex_data_generation_action, 1)],
+    )
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=import_data_action,
+        next_actions=[(output_result_action, 1)],
+        prev_actions=[(graph_data_generation_action, 1)],
+    )
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=output_result_action,
+        next_actions=[],
+        prev_actions=[(import_data_action, 1)],
+    )
+
+    get_schema = SchemaGetter(id="get_schema_tool")
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=get_schema,
+        connected_actions=[(schema_understanding_action, 1)],
+    )
+
+    get_document = DocumentReader(id="get_document_tool")
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=get_document,
+        connected_actions=[(content_understanding_action, 1)],
+    )
+
+    import_data = DataImport(id="import_data_tool")
+    toolkit_service.add_tool(
+        id=operator.get_id(), tool=import_data, connected_actions=[(import_data_action, 1)]
     )
 
     return operator

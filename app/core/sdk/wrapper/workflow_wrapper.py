@@ -1,6 +1,7 @@
 from typing import Any, Optional, Tuple, Union
 
 from app.core.common.type import PlatformType
+from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.workflow.operator import Operator
 from app.core.workflow.workflow import BuiltinWorkflow, Workflow
 
@@ -17,23 +18,32 @@ class WorkflowWrapper:
 
             self._workflow = DbgptWorkflow()
 
-    def chain(self, *operator_chain: Union[Operator, Tuple[Operator, ...]]) -> Workflow:
+    @property
+    def workflow(self) -> "Workflow":
+        """Get the workflow."""
+        return self._workflow
+
+    def chain(
+        self, *operator_chain: Union[OperatorWrapper, Tuple[OperatorWrapper, ...]]
+    ) -> "WorkflowWrapper":
         """Chain the operators in the workflow.
 
         If a tuple of operators is provided, they will be chained sequentially.
         """
         for item in operator_chain:
-            if isinstance(item, Operator):
-                self._workflow.add_operator(item)
-            elif isinstance(item, tuple) and all(isinstance(op, Operator) for op in item):
+            if isinstance(item, OperatorWrapper):
+                self._workflow.add_operator(item.operator)
+            elif isinstance(item, tuple) and all(isinstance(op, OperatorWrapper) for op in item):
                 # chain all operators in the tuple sequentially
                 for i in range(len(item) - 1):
-                    self._workflow.add_operator(item[i], next_ops=[item[i + 1]])
-                    self._workflow.add_operator(item[i + 1], previous_ops=[item[i]])
+                    self._workflow.add_operator(item[i].operator, next_ops=[item[i + 1].operator])
+                    self._workflow.add_operator(
+                        item[i + 1].operator, previous_ops=[item[i].operator]
+                    )
             else:
                 raise ValueError(f"Invalid chain item: {item}.")
 
-        return self._workflow
+        return self
 
     def add_operator(
         self,

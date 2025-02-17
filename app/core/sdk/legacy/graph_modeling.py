@@ -9,9 +9,9 @@ from app.core.model.message import ModelMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-from app.core.toolkit.toolkit import ToolkitService
 from app.core.workflow.operator import Operator, OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from app.plugin.tugraph.tugraph_store import get_tugraph
@@ -227,6 +227,8 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
  
 拚将一死酬知己，致令千秋仰义名。
 """
+
+toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
 
 
 class DocumentReader(Tool):
@@ -573,31 +575,6 @@ consistency_check_action = Action(
 
 def get_analysis_operator():
     """Get the operator for document analysis."""
-    analysis_toolkit_service = ToolkitService()
-
-    analysis_toolkit_service.add_action(
-        action=content_understanding_action,
-        next_actions=[(concept_identification_action, 1)],
-        prev_actions=[],
-    )
-    analysis_toolkit_service.add_action(
-        action=concept_identification_action,
-        next_actions=[(relation_pattern_recognition_action, 1)],
-        prev_actions=[(content_understanding_action, 1)],
-    )
-    analysis_toolkit_service.add_action(
-        action=relation_pattern_recognition_action,
-        next_actions=[(consistency_check_action, 1)],
-        prev_actions=[(concept_identification_action, 1)],
-    )
-    analysis_toolkit_service.add_action(
-        action=consistency_check_action,
-        next_actions=[],
-        prev_actions=[(relation_pattern_recognition_action, 1)],
-    )
-    analysis_toolkit_service.add_tool(
-        tool=read_document, connected_actions=[(content_understanding_action, 1)]
-    )
 
     operator_config = OperatorConfig(
         id="analysis_operator",
@@ -610,7 +587,37 @@ def get_analysis_operator():
             consistency_check_action,
         ],
     )
-    operator = Operator(config=operator_config, toolkit_service=analysis_toolkit_service)
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=content_understanding_action,
+        next_actions=[(concept_identification_action, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=concept_identification_action,
+        next_actions=[(relation_pattern_recognition_action, 1)],
+        prev_actions=[(content_understanding_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=relation_pattern_recognition_action,
+        next_actions=[(consistency_check_action, 1)],
+        prev_actions=[(concept_identification_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=consistency_check_action,
+        next_actions=[],
+        prev_actions=[(relation_pattern_recognition_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=read_document,
+        connected_actions=[(content_understanding_action, 1)],
+    )
 
     return operator
 
@@ -650,43 +657,6 @@ graph_validation_action = Action(
 
 def get_concept_modeling_operator():
     """Get the operator for concept modeling."""
-    concept_modeling_toolkit_service = ToolkitService()
-
-    concept_modeling_toolkit_service.add_action(
-        action=entity_type_definition_action,
-        next_actions=[(relation_type_definition_action, 1)],
-        prev_actions=[],
-    )
-    concept_modeling_toolkit_service.add_action(
-        action=relation_type_definition_action,
-        next_actions=[(self_reflection_schema_action, 1)],
-        prev_actions=[(entity_type_definition_action, 1)],
-    )
-    concept_modeling_toolkit_service.add_action(
-        action=self_reflection_schema_action,
-        next_actions=[(schema_design_action, 1)],
-        prev_actions=[(relation_type_definition_action, 1)],
-    )
-    concept_modeling_toolkit_service.add_action(
-        action=schema_design_action,
-        next_actions=[(graph_validation_action, 1)],
-        prev_actions=[(self_reflection_schema_action, 1)],
-    )
-    concept_modeling_toolkit_service.add_action(
-        action=graph_validation_action,
-        next_actions=[],
-        prev_actions=[(schema_design_action, 1)],
-    )
-    concept_modeling_toolkit_service.add_tool(
-        tool=vertex_label_generator, connected_actions=[(schema_design_action, 1)]
-    )
-    concept_modeling_toolkit_service.add_tool(
-        tool=edge_label_generator, connected_actions=[(schema_design_action, 1)]
-    )
-    concept_modeling_toolkit_service.add_tool(
-        tool=graph_reachability_getter, connected_actions=[(graph_validation_action, 1)]
-    )
-
     operator_config = OperatorConfig(
         id="concept_modeling_operator",
         instruction=CONCEPT_MODELING_PROFILE + CONCEPT_MODELING_INSTRUCTION,
@@ -700,7 +670,53 @@ def get_concept_modeling_operator():
         ],
     )
 
-    operator = Operator(config=operator_config, toolkit_service=concept_modeling_toolkit_service)
+    operator = Operator(config=operator_config)
+
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=entity_type_definition_action,
+        next_actions=[(relation_type_definition_action, 1)],
+        prev_actions=[],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=relation_type_definition_action,
+        next_actions=[(self_reflection_schema_action, 1)],
+        prev_actions=[(entity_type_definition_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=self_reflection_schema_action,
+        next_actions=[(schema_design_action, 1)],
+        prev_actions=[(relation_type_definition_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=schema_design_action,
+        next_actions=[(graph_validation_action, 1)],
+        prev_actions=[(self_reflection_schema_action, 1)],
+    )
+    toolkit_service.add_action(
+        id=operator.get_id(),
+        action=graph_validation_action,
+        next_actions=[],
+        prev_actions=[(schema_design_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=vertex_label_generator,
+        connected_actions=[(schema_design_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=edge_label_generator,
+        connected_actions=[(schema_design_action, 1)],
+    )
+    toolkit_service.add_tool(
+        id=operator.get_id(),
+        tool=graph_reachability_getter,
+        connected_actions=[(graph_validation_action, 1)],
+    )
 
     return operator
 
