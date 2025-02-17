@@ -63,11 +63,13 @@ async def main():
     toolkit: Toolkit = toolkit_service.get_toolkit()
 
     # verify initial graph structure
-    assert len(toolkit.nodes()) == 8, "Graph should have 4 actions and 4 tools"
-    assert len([n for n in toolkit.nodes() if toolkit.get_action(n)]) == 4, (
-        "Should have 4 action nodes"
+    assert len(toolkit.vertices()) == 8, "Graph should have 4 actions and 4 tools"
+    assert len([n for n in toolkit.vertices() if toolkit.get_action(n)]) == 4, (
+        "Should have 4 action vertices"
     )
-    assert len([n for n in toolkit.nodes() if toolkit.get_tool(n)]) == 4, "Should have 4 tool nodes"
+    assert len([n for n in toolkit.vertices() if toolkit.get_tool(n)]) == 4, (
+        "Should have 4 tool vertices"
+    )
 
     # verify edge types and weights
     action_next_edges = [(u, v) for u, v in toolkit.edges() if toolkit.get_action(v)]
@@ -94,7 +96,7 @@ async def main():
             "threshold": 0.5,
             "hops": 0,
             "title": "Subgraph: Start from Action1, No hops, Threshold 0.5",
-            "expected_nodes": {action1.id, tool1.id},  # action1 and its tool
+            "expected_vertices": {action1.id, tool1.id},  # action1 and its tool
             "expected_edges": 1,  # just the tool call edge
         },
         {
@@ -102,7 +104,7 @@ async def main():
             "threshold": 0.5,
             "hops": 1,
             "title": "Subgraph: Start from Action1, 1 hop, Threshold 0.5",
-            "expected_nodes": {
+            "expected_vertices": {
                 action1.id,
                 action2.id,
                 action3.id,
@@ -117,7 +119,7 @@ async def main():
             "threshold": 0.7,
             "hops": 2,
             "title": "Subgraph: Start from Action1, 2 hops, Threshold 0.7",
-            "expected_nodes": {
+            "expected_vertices": {
                 action1.id,
                 action2.id,
                 action3.id,
@@ -134,7 +136,7 @@ async def main():
             "threshold": 0.6,
             "hops": 1,
             "title": "Subgraph: Start from Action1 & Action3, 1 hop, Threshold 0.6",
-            "expected_nodes": {
+            "expected_vertices": {
                 action1.id,
                 action2.id,
                 action3.id,
@@ -154,13 +156,13 @@ async def main():
         )
 
         print(f"\nTest case {i + 1}:")
-        print(f"Nodes: {subgraph.nodes()}")
+        print(f"Vertices: {subgraph.vertices()}")
         print(f"Edges: {subgraph.edges()}")
 
         # verify subgraph properties
-        actual_nodes = set(subgraph.nodes())
-        assert actual_nodes == case["expected_nodes"], (
-            f"Test case {i + 1}: Expected nodes {case['expected_nodes']}, got {actual_nodes}"
+        actual_vertices = set(subgraph.vertices())
+        assert actual_vertices == case["expected_vertices"], (
+            f"Test case {i + 1}: Expected vertices {case['expected_vertices']}, got {actual_vertices}"
         )
 
         assert len(subgraph.edges()) == case["expected_edges"], (

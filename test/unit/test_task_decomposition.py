@@ -182,18 +182,18 @@ Final Delivery:
 
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()
-    initial_job_graph.add_node(id=job.id, job=job)
+    initial_job_graph.add_vertex(id=job.id, job=job)
     job_service: JobService = JobService()
     job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
     job_graph = await leader.execute(AgentMessage(job=job))
-    print(f"job_graph: {job_graph.nodes}")
+    print(f"job_graph: {job_graph.vertices}")
     job_service.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
 
     assert isinstance(job_graph, JobGraph)
-    assert all(isinstance(node_data["job"], Job) for _, node_data in job_graph.nodes_data())
+    assert all(isinstance(vertex_data["job"], Job) for _, vertex_data in job_graph.vertices_data())
 
-    assert len(job_service.get_job_graph(job.id).nodes()) == 3
+    assert len(job_service.get_job_graph(job.id).vertices()) == 3
     assert len(job_service.get_job_graph(job.id).edges()) == 3  # 3 dependencies
 
     assert len(job_service.get_job_graph(job.id)._legacy_jobs.keys()) == 1

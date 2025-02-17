@@ -68,7 +68,7 @@ async def test_toolkit_initialization(toolkit_service: ToolkitService):
     """Test toolkit initialization."""
     toolkit: Toolkit = toolkit_service.get_toolkit()
     assert isinstance(toolkit.get_graph(), nx.DiGraph)
-    assert len(toolkit.nodes()) == 0
+    assert len(toolkit.vertices()) == 0
     assert len(toolkit.edges()) == 0
 
 
@@ -78,7 +78,7 @@ def test_add_single_action(toolkit_service: ToolkitService, sample_actions: List
     action = sample_actions[0]
     toolkit_service.add_action(action=action, next_actions=[], prev_actions=[])
 
-    assert len(toolkit.nodes()) == 1
+    assert len(toolkit.vertices()) == 1
     assert isinstance(toolkit.get_action(action.id), Action)
     assert toolkit.get_action(action.id) == action
 
@@ -93,7 +93,7 @@ def test_add_single_tool(
     toolkit_service.add_tool(tool=tool, connected_actions=[(action, 0.9)])
     toolkit: Toolkit = toolkit_service.get_toolkit()
 
-    assert len(toolkit.nodes()) == 2
+    assert len(toolkit.vertices()) == 2
     assert isinstance(toolkit.get_tool(tool.id), Query)
     assert toolkit.get_tool(tool.id) == tool
 
@@ -102,12 +102,12 @@ def test_graph_structure(populated_toolkit_service: ToolkitService):
     """Test the overall graph structure."""
     graph = populated_toolkit_service.get_toolkit()
 
-    # verify node counts
-    action_nodes = [n for n in graph.nodes() if graph.get_action(n)]
-    tool_nodes = [n for n in graph.nodes() if graph.get_tool(n)]
+    # verify vertex counts
+    action_vertices = [n for n in graph.vertices() if graph.get_action(n)]
+    tool_vertices = [n for n in graph.vertices() if graph.get_tool(n)]
 
-    assert len(action_nodes) == 4
-    assert len(tool_nodes) == 4
+    assert len(action_vertices) == 4
+    assert len(tool_vertices) == 4
 
     # verify edge types and counts
     action_next_edges = [(u, v) for u, v in graph.edges() if graph.get_action(v)]
@@ -130,8 +130,8 @@ async def test_recommend_subgraph_no_hops(
         actions=[action1], threshold=0.5, hops=0
     )
 
-    expected_nodes = {action1.id, "tool 1"}
-    assert set(subgraph.nodes()) == expected_nodes
+    expected_vertices = {action1.id, "tool 1"}
+    assert set(subgraph.vertices()) == expected_vertices
     assert len(subgraph.edges()) == 1
 
 
@@ -145,8 +145,8 @@ async def test_recommend_subgraph_one_hop(
         actions=[action1], threshold=0.5, hops=1
     )
 
-    expected_nodes = {"action 1", "action 2", "action 3", "tool 1", "tool 2", "tool 3"}
-    assert set(subgraph.nodes()) == expected_nodes
+    expected_vertices = {"action 1", "action 2", "action 3", "tool 1", "tool 2", "tool 3"}
+    assert set(subgraph.vertices()) == expected_vertices
     assert len(subgraph.edges()) == 6
 
 
@@ -174,5 +174,5 @@ async def test_recommend_subgraph_multiple_start_points(
         actions=[action1, action3], threshold=0.6, hops=1
     )
 
-    assert len(subgraph.nodes()) == 8  # all nodes should be included
+    assert len(subgraph.vertices()) == 8  # all vertices should be included
     assert len(subgraph.edges()) == 9  # all edges above threshold

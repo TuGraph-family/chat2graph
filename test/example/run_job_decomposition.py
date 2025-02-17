@@ -66,7 +66,7 @@ async def main():
 
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()
-    initial_job_graph.add_node(id=job.id, job=job)
+    initial_job_graph.add_vertex(id=job.id, job=job)
     job_service: JobService = JobService()
     job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 

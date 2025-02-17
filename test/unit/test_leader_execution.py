@@ -169,11 +169,13 @@ async def test_agent_job_graph():
     job_graph: JobGraph = await leader.execute_job_graph(
         job_graph=job_service.get_job_graph(job_id="test_original_job_id")
     )
-    tail_nodes = [node for node in job_graph.nodes() if job_graph.out_degree(node) == 0]
-    terminal_job_results: List[JobResult] = [job_graph.get_job_result(node) for node in tail_nodes]
+    tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
+    terminal_job_results: List[JobResult] = [
+        job_graph.get_job_result(vertex) for vertex in tail_vertices
+    ]
 
-    # verify we only get messages from terminal nodes (job4 and job5)
-    assert len(tail_nodes) == 2, "Should receive 2 messages from terminal nodes"
+    # verify we only get messages from terminal vertices (job4 and job5)
+    assert len(tail_vertices) == 2, "Should receive 2 messages from terminal vertices"
 
     # extract job4 (sum) and job5 (format) results
     job4_result = next(result for result in terminal_job_results if result.job_id == "job_4")
