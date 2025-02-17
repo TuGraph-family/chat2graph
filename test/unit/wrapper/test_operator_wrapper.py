@@ -1,12 +1,9 @@
-from unittest import mock
-
 import pytest
 
 from app.core.env.env import EnvService
 from app.core.knowledge.knowlege_service import KnowledgeService
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.toolkit.action import Action
-from app.core.toolkit.toolkit import Toolkit
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 
@@ -63,21 +60,6 @@ def test_operator_wrapper_configuration_methods():
     assert wrapper.actions(actions) is wrapper
     assert wrapper._actions == actions
 
-    # test service() with KnowledgeService
-    mock_knowledge_service_instance = mock.create_autospec(KnowledgeService)
-    assert wrapper.service(mock_knowledge_service_instance) is wrapper
-    assert wrapper._knowledge_service == mock_knowledge_service_instance
-
-    # test service() with EnvService
-    mock_env_service_instance = mock.create_autospec(EnvService)
-    assert wrapper.service(mock_env_service_instance) is wrapper
-    assert wrapper._environment_service == mock_env_service_instance
-
-    # test service() with invalid service
-    with pytest.raises(ValueError) as excinfo:
-        wrapper.service("invalid service")
-    assert "Invalid service" in str(excinfo.value)
-
 
 def test_operator_wrapper_build_valid_config(
     mock_knowledge_service: KnowledgeService,
@@ -89,8 +71,6 @@ def test_operator_wrapper_build_valid_config(
     wrapper.output_schema("test schema")
     actions = [Action(id="action_1", name="action_1", description="test action 1")]
     wrapper.actions(actions)
-    wrapper.service(mock_knowledge_service)
-    wrapper.service(mock_env_service)
 
     operator = wrapper.build().operator
 
@@ -99,17 +79,6 @@ def test_operator_wrapper_build_valid_config(
     assert operator._config.instruction == "test instruction"
     assert operator._config.output_schema == "test schema"
     assert operator._config.actions == actions
-    assert operator._knowledge_service == mock_knowledge_service
-    assert operator._environment_service == mock_env_service
-
-
-def test_operator_wrapper_syntactic_sugar_configuration_methods(mock_toolkit: Toolkit):
-    """test the syntactic sugar configuration methods of OperatorWrapper."""
-    # test env_service()
-    # TODO: test the env_service method
-
-    # test knowledge_service()
-    # TODO: test the knowledge_service method
 
 
 def test_operator_wrapper_build_missing_instruction():

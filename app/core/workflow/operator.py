@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 from app.core.env.insight.insight import Insight
-from app.core.knowledge.knowlege_service import KnowledgeService
 from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
@@ -16,21 +15,12 @@ class Operator:
     Attributes:
         _id (str): The unique identifier of the operator.
         _config (OperatorConfig): The configuration of the operator.
-        _knowledge_service (Optional[KnowledgeService]): The knowledge service.
-        _environment_service (Optional[KnowledgeService]): The environment service.
     """
 
-    def __init__(
-        self,
-        config: OperatorConfig,
-        knowledge_service: Optional[KnowledgeService] = None,
-        environment_service: Optional[KnowledgeService] = None,
-    ):
+    def __init__(self, config: OperatorConfig):
         self._config: OperatorConfig = config
         # TODO: need to start the service firstly
         self._toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
-        self._knowledge_service: Optional[KnowledgeService] = knowledge_service
-        self._environment_service: Optional[KnowledgeService] = environment_service
 
     async def execute(
         self,
