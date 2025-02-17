@@ -47,7 +47,7 @@ QUERY_INTENTION_ANALYSIS_INSTRUCTION = """
 QUERY_INTENTION_ANALYSIS_OUTPUT_SCHEMA = """
 {
     "analysis": "内容中查询要求",
-    "object_node_type": "单点查询点的种类",
+    "object_vertex_type": "单点查询点的种类",
     "query_condition":"查询的条件"
     "supplement": "需要补充的缺少的或无法匹配的信息"
 }
@@ -256,8 +256,8 @@ def get_query_intention_analysis_operator():
         name="核心查询意图识别",
         description="识别并理解提供的查询要求，提取出查询针对的图模型名称、查询点的种类和查询条件",
     )
-    node_type_validation_action = Action(
-        id="schema_check.node_type_validation_action",
+    vertex_type_validation_action = Action(
+        id="schema_check.vertex_type_validation_action",
         name="节点种类验证",
         description="读取图数据现有的 schema，以帮助检查节点类型是否和对应的模型匹配",
     )
@@ -277,18 +277,18 @@ def get_query_intention_analysis_operator():
 
     query_intention_query_design_toolkit_service.add_action(
         action=query_intention_identification_action,
-        next_actions=[(node_type_validation_action, 1)],
+        next_actions=[(vertex_type_validation_action, 1)],
         prev_actions=[],
     )
     query_intention_query_design_toolkit_service.add_action(
-        action=node_type_validation_action,
+        action=vertex_type_validation_action,
         next_actions=[(condition_validation_action, 1)],
         prev_actions=[(query_intention_identification_action, 1)],
     )
     query_intention_query_design_toolkit_service.add_action(
         action=condition_validation_action,
         next_actions=[(supplement_aciton, 1)],
-        prev_actions=[(node_type_validation_action, 1)],
+        prev_actions=[(vertex_type_validation_action, 1)],
     )
     query_intention_query_design_toolkit_service.add_action(
         action=supplement_aciton,
@@ -298,7 +298,7 @@ def get_query_intention_analysis_operator():
     query_intention_query_design_toolkit_service.add_tool(
         tool=schema_getter,
         connected_actions=[
-            (node_type_validation_action, 1),
+            (vertex_type_validation_action, 1),
             (condition_validation_action, 1),
         ],
     )
@@ -309,7 +309,7 @@ def get_query_intention_analysis_operator():
         output_schema=QUERY_INTENTION_ANALYSIS_OUTPUT_SCHEMA,
         actions=[
             query_intention_identification_action,
-            node_type_validation_action,
+            vertex_type_validation_action,
             condition_validation_action,
             supplement_aciton,
         ],

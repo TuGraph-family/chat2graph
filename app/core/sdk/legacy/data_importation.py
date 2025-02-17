@@ -251,9 +251,8 @@ class DataImport(Tool):
         return cleaned_graph
 
     async def import_data(self, graph: Dict[str, Any]) -> str:
-        """
-        Import the graph data into the database. This function validates and cleans the input graph data,
-        then creates nodes (entities) and edges (relationships) in the database.
+        """Import the graph data into the database. This function validates and cleans the input graph data,
+        then creates vertices (entities) and edges (relationships) in the database.
         then return the result
 
         Args:
@@ -305,7 +304,7 @@ class DataImport(Tool):
 
         Note:
             - The function first validates and cleans the input graph data.
-            - It then constructs and executes Cypher statements to create nodes and edges in the database.
+            - It then constructs and executes Cypher statements to create vertices and edges in the database.
             - The `get_tugraph` function is assumed to return a connection to the database.
             - The `db.conn.run` method is used to execute the Cypher statements.
         """  # noqa: E501
@@ -315,7 +314,7 @@ class DataImport(Tool):
         relationships = graph["relationships"]
         db = get_tugraph()
 
-        node_types: Dict = {}
+        vertex_types: Dict = {}
         total_entities = 0
         total_inserted_entities = 0
         total_update_entities = 0
@@ -327,19 +326,21 @@ class DataImport(Tool):
                 return f"{key}: '{value}'"
 
         for entity in entities:
-            node_type = entity["label"]
-            if node_type not in node_types:
-                node_types[node_type] = []
-            node_types[node_type].append(entity["properties"])
+            vertex_type = entity["label"]
+            if vertex_type not in vertex_types:
+                vertex_types[vertex_type] = []
+            vertex_types[vertex_type].append(entity["properties"])
 
-        for node_type, nodes_list in node_types.items():
+        for vertex_type, vertices_list in vertex_types.items():
             properties_str_list = []
-            for node in nodes_list:
+            for vertex in vertices_list:
                 # for each key-value pair, format the output according to the value type
-                property_str = ", ".join(format_property(key, value) for key, value in node.items())
+                property_str = ", ".join(
+                    format_property(key, value) for key, value in vertex.items()
+                )
                 properties_str_list.append(f"{{ {property_str} }}")
             properties_str = ",".join(properties_str_list)
-            cypher_statement = f"CALL db.upsertVertex('{node_type}', [{properties_str}])"
+            cypher_statement = f"CALL db.upsertVertex('{vertex_type}', [{properties_str}])"
             print(cypher_statement)
             res = db.conn.run(cypher_statement)
             if res:
@@ -538,8 +539,8 @@ def get_data_importation_operator():
         description=f"根据对图模型理解和文本内容理解的理解，进行关系数据的抽取，关系的数量不能少于{COUNT}条，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。关系数据抽取完成后，进行下一步'实体数据抽取'操作。",  # noqa: E501
     )
 
-    node_data_generation_action = Action(
-        id="data_generattion_and_import.node_data_generation_action",
+    vertex_data_generation_action = Action(
+        id="data_generattion_and_import.vertex_data_generation_action",
         name="实体数据抽取",
         description="根据关系数据，图模型和文本内容，进行实体数据的抽取，遇到‘optional: false’的属性必须进行数据补全，输出的格式要严格符合输出模板，不要输出其他无关信息。实体数据抽取完成后，进行下一步'整合实体和关系数据'操作。",  # noqa: E501
     )
@@ -574,12 +575,12 @@ def get_data_importation_operator():
     )
     analysis_toolkit_service.add_action(
         action=edge_data_generation_action,
-        next_actions=[(node_data_generation_action, 1)],
+        next_actions=[(vertex_data_generation_action, 1)],
         prev_actions=[(content_understanding_action, 1)],
     )
 
     analysis_toolkit_service.add_action(
-        action=node_data_generation_action,
+        action=vertex_data_generation_action,
         next_actions=[(graph_data_generation_action, 1)],
         prev_actions=[(edge_data_generation_action, 1)],
     )
@@ -587,7 +588,7 @@ def get_data_importation_operator():
     analysis_toolkit_service.add_action(
         action=graph_data_generation_action,
         next_actions=[(import_data_action, 1)],
-        prev_actions=[(node_data_generation_action, 1)],
+        prev_actions=[(vertex_data_generation_action, 1)],
     )
 
     analysis_toolkit_service.add_action(
@@ -623,7 +624,7 @@ def get_data_importation_operator():
             schema_understanding_action,
             content_understanding_action,
             edge_data_generation_action,
-            node_data_generation_action,
+            vertex_data_generation_action,
             graph_data_generation_action,
             import_data_action,
             output_result_action,

@@ -25,12 +25,12 @@ class Toolkit(Graph):
 
     def __init__(self):
         super().__init__()
-        self._actions: Dict[str, Action] = {}  # node_id -> Action
-        self._tools: Dict[str, Tool] = {}  # node_id -> Tool
+        self._actions: Dict[str, Action] = {}  # vertex_id -> Action
+        self._tools: Dict[str, Tool] = {}  # vertex_id -> Tool
         self._scores: Dict[Tuple[str, str], float] = {}  # (u, v) -> score
 
-    def add_node(self, id, **properties) -> None:
-        """Add a node to the graph."""
+    def add_vertex(self, id, **properties) -> None:
+        """Add a vertex to the graph."""
         self._graph.add_node(id)
 
         if isinstance(properties["data"], Action):
@@ -38,11 +38,11 @@ class Toolkit(Graph):
         if isinstance(properties["data"], Tool):
             self._tools[id] = properties["data"]
 
-    def nodes_data(self) -> List[Tuple[str, Dict[str, Union[Action, Tool]]]]:
-        """Get the nodes of the toolkit graph with data.
+    def vertices_data(self) -> List[Tuple[str, Dict[str, Union[Action, Tool]]]]:
+        """Get the vertices of the toolkit graph with data.
 
         Returns:
-            List[Tuple[str, Dict[str, Union[Action, Tool]]]: List of nodes with data
+            List[Tuple[str, Dict[str, Union[Action, Tool]]]: List of vertices with data
             in tuple.
         """
         return [
@@ -52,24 +52,24 @@ class Toolkit(Graph):
         ]
 
     def update(self, other: Graph) -> None:
-        """Update current graph with nodes and edges from other graph.
+        """Update current graph with vertices and edges from other graph.
 
         Args:
-            other (Graph): Another Toolkit instance whose nodes and edges will be added to this
+            other (Graph): Another Toolkit instance whose vertices and edges will be added to this
                 graph.
         """
         assert isinstance(other, Toolkit)
 
-        # update nodes
-        for node_id, data in other.nodes_data():
-            if node_id not in self._graph:
-                self._graph.add_node(node_id)
+        # update vertices
+        for vertex_id, data in other.vertices_data():
+            if vertex_id not in self._graph:
+                self._graph.add_node(vertex_id)
 
-            # update node properties
+            # update vertex properties
             if "data" in data and isinstance(data["data"], Action):
-                self._actions[node_id] = data["data"]
+                self._actions[vertex_id] = data["data"]
             if "data" in data and isinstance(data["data"], Tool):
-                self._tools[node_id] = data["data"]
+                self._tools[vertex_id] = data["data"]
 
         # update edges
         other_graph = other.get_graph()
@@ -82,7 +82,7 @@ class Toolkit(Graph):
         """Get the subgraph of the graph.
 
         Args:
-            ids (List[str]): The node ids to include in the subgraph.
+            ids (List[str]): The vertex ids to include in the subgraph.
 
         Returns:
             Toolkit: The subgraph.
@@ -101,8 +101,8 @@ class Toolkit(Graph):
 
         return toolkit_graoh
 
-    def remove_node(self, id: str) -> None:
-        """Remove a node from the job graph."""
+    def remove_vertex(self, id: str) -> None:
+        """Remove a vertex from the job graph."""
         # if the id is action's, remove all its tool successors which are only called by this action
         # if the id is tool's which has no successors, just remove it self
         successors = self.successors(id)
@@ -110,19 +110,19 @@ class Toolkit(Graph):
         for successor in successors:
             tool: Optional[Tool] = self.get_tool(successor)
             if tool and len(self.predecessors(successor)) == 1:
-                self.remove_node(successor)
+                self.remove_vertex(successor)
 
-        # remove node properties
+        # remove vertex properties
         self._actions.pop(id, None)
         self._tools.pop(id, None)
-        self.remove_node(id)
+        self.remove_vertex(id)
 
     def get_action(self, id: str) -> Optional[Action]:
-        """Get action by node id."""
+        """Get action by vertex id."""
         return self._actions.get(id, None)
 
     def get_tool(self, id: str) -> Optional[Tool]:
-        """Get tool by node id."""
+        """Get tool by vertex id."""
         return self._tools.get(id, None)
 
     def get_score(self, u: str, v: str) -> float:
@@ -159,13 +159,13 @@ class ToolkitService:
                 call this tool
         """
         has_connected_actions = False
-        # add tool node if not exists
-        if tool.id not in self._toolkit.nodes():
-            self._toolkit.add_node(tool.id, data=tool)
+        # add tool vertex if not exists
+        if tool.id not in self._toolkit.vertices():
+            self._toolkit.add_vertex(tool.id, data=tool)
 
         # add edges from actions to tool
         for action, score in connected_actions:
-            if action.id in self._toolkit.nodes():
+            if action.id in self._toolkit.vertices():
                 self._toolkit.add_edge(action.id, tool.id)
                 self._toolkit.set_score(action.id, tool.id, score)
                 has_connected_actions = True
@@ -174,7 +174,7 @@ class ToolkitService:
 
         if not has_connected_actions:
             print(f"warning: Tool {tool.id} has no connected actions")
-            self._toolkit.remove_node(tool.id)
+            self._toolkit.remove_vertex(tool.id)
 
     def add_action(
         self,
@@ -191,19 +191,19 @@ class ToolkitService:
             prev_actions (List[tuple[Action, float]]): List of tuples (action, score) that precede
                 this action
         """
-        # add action node if not exists
-        if action.id not in self._toolkit.nodes():
-            self._toolkit.add_node(action.id, data=action)
+        # add action vertex if not exists
+        if action.id not in self._toolkit.vertices():
+            self._toolkit.add_vertex(action.id, data=action)
 
         # add edges to next actions
         for next_action, score in next_actions:
-            if next_action.id in self._toolkit.nodes():
+            if next_action.id in self._toolkit.vertices():
                 self._toolkit.add_edge(action.id, next_action.id)
                 self._toolkit.set_score(action.id, next_action.id, score)
 
         # add edges from previous actions
         for prev_action, score in prev_actions:
-            if prev_action.id in self._toolkit.nodes():
+            if prev_action.id in self._toolkit.vertices():
                 self._toolkit.add_edge(prev_action.id, action.id)
                 self._toolkit.set_score(prev_action.id, action.id, score)
 
@@ -216,11 +216,11 @@ class ToolkitService:
 
     def remove_tool(self, tool_id: str):
         """Remove tool from the toolkit graph."""
-        self._toolkit.remove_node(tool_id)
+        self._toolkit.remove_vertex(tool_id)
 
     def remove_action(self, action_id: str):
         """Remove action from the toolkit graph."""
-        self._toolkit.remove_node(action_id)
+        self._toolkit.remove_vertex(action_id)
 
     async def recommend_subgraph(
         self, actions: List[Action], threshold: float = 0.5, hops: int = 0
@@ -245,42 +245,42 @@ class ToolkitService:
         Returns:
             nx.DiGraph: Subgraph containing relevant actions and tools
         """
-        # get initial action node ids
-        node_ids_to_keep: Set[str] = {
-            action.id for action in actions if action.id in self._toolkit.nodes()
+        # get initial action vertex ids
+        vertex_ids_to_keep: Set[str] = {
+            action.id for action in actions if action.id in self._toolkit.vertices()
         }
 
-        # do BFS to get all action node ids within hops
-        current_node_ids = node_ids_to_keep.copy()
+        # do BFS to get all action vertex ids within hops
+        current_vertex_ids = vertex_ids_to_keep.copy()
         for _ in range(hops):
-            next_node_ids: Set[str] = set()
-            for node_id in current_node_ids:
+            next_vertex_ids: Set[str] = set()
+            for vertex_id in current_vertex_ids:
                 # find next actions connected with score >= threshold
-                for neighbor_id in self._toolkit.successors(node_id):
+                for neighbor_id in self._toolkit.successors(vertex_id):
                     if (
-                        self._toolkit.get_action(node_id)
+                        self._toolkit.get_action(vertex_id)
                         and self._toolkit.get_action(neighbor_id)
-                        and self._toolkit.get_score(node_id, neighbor_id) >= threshold
+                        and self._toolkit.get_score(vertex_id, neighbor_id) >= threshold
                     ):
-                        next_node_ids.add(neighbor_id)
-                        node_ids_to_keep.add(neighbor_id)
+                        next_vertex_ids.add(neighbor_id)
+                        vertex_ids_to_keep.add(neighbor_id)
 
-            current_node_ids = next_node_ids
-            if not current_node_ids:
+            current_vertex_ids = next_vertex_ids
+            if not current_vertex_ids:
                 break
 
         # for all found actions, add their connected tools to the found actions
-        action_node_ids: Set[str] = set(node_ids_to_keep)
-        for action_node_id in action_node_ids:
-            for tool_id in self._toolkit.successors(action_node_id):
+        action_vertex_ids: Set[str] = set(vertex_ids_to_keep)
+        for action_vertex_id in action_vertex_ids:
+            for tool_id in self._toolkit.successors(action_vertex_id):
                 if (
-                    self._toolkit.get_action(action_node_id)
+                    self._toolkit.get_action(action_vertex_id)
                     and self._toolkit.get_tool(tool_id)
-                    and self._toolkit.get_score(action_node_id, tool_id) >= threshold
+                    and self._toolkit.get_score(action_vertex_id, tool_id) >= threshold
                 ):
-                    node_ids_to_keep.add(tool_id)
+                    vertex_ids_to_keep.add(tool_id)
 
-        toolkit_subgraph: Toolkit = self._toolkit.subgraph(list(node_ids_to_keep))
+        toolkit_subgraph: Toolkit = self._toolkit.subgraph(list(vertex_ids_to_keep))
 
         # remove edges that don't meet the threshold
         for u, v in toolkit_subgraph.edges():
@@ -306,7 +306,7 @@ class ToolkitService:
         subgraph = await self.recommend_subgraph(actions, threshold, hops)
         rec_actions: List[Action] = []
         rec_tools: List[Tool] = []
-        for n in subgraph.nodes():
+        for n in subgraph.vertices():
             item: Optional[Union[Action, Tool]] = subgraph.get_action(n) or subgraph.get_tool(n)
             assert item is not None
             if isinstance(item, Action):
@@ -339,30 +339,30 @@ class ToolkitService:
         """
         plt.figure(figsize=(12, 8))
 
-        # get node positions using spring layout with larger distance and more iterations
+        # get vertex positions using spring layout with larger distance and more iterations
         pos = nx.spring_layout(
             graph.get_graph(), k=2, iterations=200
         )  # increase k and iterations for better layout
 
-        # draw nodes
-        action_nodes = [n for n in graph.nodes() if graph.get_action(n)]
-        tool_nodes = [n for n in graph.nodes() if graph.get_tool(n)]
+        # draw vertices
+        action_vertices = [n for n in graph.vertices() if graph.get_action(n)]
+        tool_vertices = [n for n in graph.vertices() if graph.get_tool(n)]
 
-        # draw action nodes in blue
+        # draw action vertices in blue
         nx.draw_networkx_nodes(
             graph.get_graph(),
             pos,
-            nodelist=action_nodes,
+            nodelist=action_vertices,
             node_color="lightblue",
             node_size=2000,
             node_shape="o",
         )
 
-        # draw tool nodes in green
+        # draw tool vertices in green
         nx.draw_networkx_nodes(
             graph.get_graph(),
             pos,
-            nodelist=tool_nodes,
+            nodelist=tool_vertices,
             node_color="lightgreen",
             node_size=1500,
             node_shape="s",
@@ -406,18 +406,18 @@ class ToolkitService:
             bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.7},
         )
 
-        # add node labels - handle both Action and Tool nodes
-        node_labels: Dict[str, str] = {}  # node id -> action id or tool id
-        for n in graph.nodes():
+        # add vertex labels - handle both Action and Tool vertices
+        vertex_labels: Dict[str, str] = {}  # vertex id -> action id or tool id
+        for n in graph.vertices():
             item: Optional[Union[Action, Tool]] = graph.get_action(n) or graph.get_tool(n)
             assert item is not None
-            node_labels[n] = item.id
+            vertex_labels[n] = item.id
 
         # draw labels with white background for better visibility
         nx.draw_networkx_labels(
             graph.get_graph(),
             pos,
-            node_labels,
+            vertex_labels,
             font_size=8,
             # bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
         )

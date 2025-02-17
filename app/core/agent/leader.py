@@ -102,7 +102,7 @@ class Leader(Agent):
                 ),
             )
             # add the subjob to the job graph
-            job_graph.add_node(
+            job_graph.add_vertex(
                 job_id,
                 job=subjob,
                 expert_id=self._leader_state.get_expert_by_name(
@@ -135,7 +135,7 @@ class Leader(Agent):
         # dispatch the agent messages to the corresponding agents. The objective is to make the
         # multi-agent system more flexible, scalable, and distributed.
 
-        pending_job_ids: Set[str] = set(job_graph.nodes())
+        pending_job_ids: Set[str] = set(job_graph.vertices())
         running_jobs: Dict[str, asyncio.Task] = {}  # job_id -> asyncio.Task
         job_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (result)
         job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)

@@ -21,14 +21,14 @@ class JobGraph(Graph):
     def __init__(self):
         super().__init__()
 
-        # graph node properties
+        # graph vertex properties
         self._jobs: Dict[str, Job] = {}  # job_id -> job
         self._expert_ids: Dict[str, str] = {}  # job_id -> expert_id
         self._legacy_jobs: Dict[str, Job] = {}  # job_id -> legacy_job
         self._job_results: Dict[str, JobResult] = {}  # job_id -> job_result
 
-    def add_node(self, id: str, **properties) -> None:
-        """Add a node to the job graph."""
+    def add_vertex(self, id: str, **properties) -> None:
+        """Add a vertex to the job graph."""
         self._graph.add_node(id)
 
         if "job" in properties:
@@ -40,11 +40,11 @@ class JobGraph(Graph):
         if "job_result" in properties:
             self._job_results[id] = properties["job_result"]
 
-    def nodes_data(self) -> List[Tuple[str, Dict[str, Union[Job, str, JobResult, None]]]]:
-        """Get the nodes of the job graph with data.
+    def vertices_data(self) -> List[Tuple[str, Dict[str, Union[Job, str, JobResult, None]]]]:
+        """Get the vertices of the job graph with data.
 
         Returns:
-            List[Tuple[str, Dict[str, Union[Job, str, JobResult, None]]]: The nodes with data
+            List[Tuple[str, Dict[str, Union[Job, str, JobResult, None]]]: The vertices with data
             in tuple.
         """
         return [
@@ -61,26 +61,26 @@ class JobGraph(Graph):
         ]
 
     def update(self, other: Graph) -> None:
-        """Update current graph with nodes and edges from other graph.
+        """Update current graph with vertices and edges from other graph.
 
         Args:
-            other (Graph): Another JobGraph instance whose nodes and edges will be added to
+            other (Graph): Another JobGraph instance whose vertices and edges will be added to
                 this graph.
         """
-        # update nodes
-        for node_id, data in other.nodes_data():
-            if node_id not in self._graph:
-                self._graph.add_node(node_id)
+        # update vertices
+        for vertex_id, data in other.vertices_data():
+            if vertex_id not in self._graph:
+                self._graph.add_node(vertex_id)
 
-            # update node properties
+            # update vertex properties
             if "job" in data and isinstance(data["job"], Job):
-                self._jobs[node_id] = data["job"]
+                self._jobs[vertex_id] = data["job"]
             if "expert_id" in data and isinstance(data["expert_id"], str):
-                self._expert_ids[node_id] = data["expert_id"]
+                self._expert_ids[vertex_id] = data["expert_id"]
             if "legacy_job" in data and isinstance(data["legacy_job"], Job):
-                self._legacy_jobs[node_id] = data["legacy_job"]
+                self._legacy_jobs[vertex_id] = data["legacy_job"]
             if "job_result" in data and isinstance(data["job_result"], JobResult):
-                self._job_results[node_id] = data["job_result"]
+                self._job_results[vertex_id] = data["job_result"]
 
         # update edges
         other_graph = other.get_graph()
@@ -88,14 +88,14 @@ class JobGraph(Graph):
             if not self._graph.has_edge(u, v):
                 self._graph.add_edge(u, v)
 
-    def remove_node(self, id: str) -> None:
-        """Remove a node from the job graph."""
+    def remove_vertex(self, id: str) -> None:
+        """Remove a vertex from the job graph."""
         self._graph.remove_node(id)
 
         # please note that, it adds the legacy job back to the graph
         self.set_legacy_job(id)
 
-        # remove node properties
+        # remove vertex properties
         self._jobs.pop(id, None)
         self._expert_ids.pop(id, None)
         self._job_results.pop(id, None)
@@ -104,7 +104,7 @@ class JobGraph(Graph):
         """Get the subgraph of the graph.
 
         Args:
-            ids (List[str]): The node ids to include in the subgraph.
+            ids (List[str]): The vertex ids to include in the subgraph.
 
         Returns:
             JobGraph: The subgraph.
