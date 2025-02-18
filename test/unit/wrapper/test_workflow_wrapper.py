@@ -142,9 +142,9 @@ def test_workflow_wrapper_update_operator(mock_dbgpt_workflow: DbgptWorkflow):
 
     operator = TestOperator(id="test_operator_id")
 
-    workflow = wrapper.update_operator(operator)
+    wrapper_returned = wrapper.update_operator(operator)
 
-    assert workflow == wrapper._workflow
+    assert wrapper_returned.workflow == wrapper._workflow
     mock_dbgpt_workflow.update_operator.assert_called_once_with(operator)
 
 
@@ -154,12 +154,4 @@ def test_workflow_wrapper_remove_operator_not_implemented():
     operator_instance = mock.create_autospec(Operator)  # 创建 Mock Operator 实例
     with pytest.raises(NotImplementedError) as excinfo:
         wrapper.remove_operator(operator_instance)
-    assert "This method is not implemented" in str(excinfo.value)
-
-
-def test_workflow_wrapper_train_not_implemented():
-    """Test train method raises NotImplementedError."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
-    with pytest.raises(NotImplementedError) as excinfo:
-        wrapper.train()
     assert "This method is not implemented" in str(excinfo.value)
