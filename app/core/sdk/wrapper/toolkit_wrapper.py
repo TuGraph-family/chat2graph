@@ -22,7 +22,7 @@ class ToolkitWrapper:
     def action(self, action: Action, tools: Optional[List[Tool]] = None) -> "ToolkitWrapper":
         """Syntactic Sugar of add_action."""
         action.tools = tools or []
-        toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
+        toolkit_service: ToolkitService = ToolkitService.instance
         toolkit_service.add_action(self._toolkit_id, action, [], [])
         action.tools = []  # clear tools from the action
         return self
@@ -33,7 +33,7 @@ class ToolkitWrapper:
         If a tuple of actions is provided, they will be chained sequentially.
         """
         for item in action_chain:
-            toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
+            toolkit_service: ToolkitService = ToolkitService.instance
 
             if isinstance(item, Action):
                 # add action to the graph

@@ -19,8 +19,7 @@ class Operator:
 
     def __init__(self, config: OperatorConfig):
         self._config: OperatorConfig = config
-        # TODO: need to start the service firstly
-        self._toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
+        self._toolkit_service: ToolkitService = ToolkitService.instance
 
     async def execute(
         self,

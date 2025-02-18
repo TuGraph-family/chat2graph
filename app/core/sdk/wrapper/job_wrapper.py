@@ -13,7 +13,7 @@ class JobWrapper:
     """
 
     def __init__(self):
-        self._job_service: JobService = JobService.instance or JobService()
+        self._job_service: JobService = JobService.instance
 
     def get_job_graph(self, id: str) -> JobGraph:
         """Get the job graph by id."""

@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 from app.core.common.type import PlatformType
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
@@ -19,7 +19,7 @@ class WorkflowWrapper:
             self._workflow = DbgptWorkflow()
 
     @property
-    def workflow(self) -> "Workflow":
+    def workflow(self) -> Workflow:
         """Get the workflow."""
         return self._workflow
 
@@ -50,7 +50,7 @@ class WorkflowWrapper:
         operator: Operator,
         previous_op: Optional[Operator] = None,
         next_op: Optional[Operator] = None,
-    ) -> Workflow:
+    ) -> "WorkflowWrapper":
         """Add an operator to the workflow.
 
         Orignal structure:
@@ -61,12 +61,12 @@ class WorkflowWrapper:
         # TODO: implement the add_operator method
         raise NotImplementedError("This method is not implemented")
 
-    def update_operator(self, operator: Operator) -> Workflow:
+    def update_operator(self, operator: Operator) -> "WorkflowWrapper":
         """Update the operator in the workflow."""
         self._workflow.update_operator(operator)
-        return self._workflow
+        return self
 
-    def remove_operator(self, operator: Operator) -> Workflow:
+    def remove_operator(self, operator: Operator) -> "WorkflowWrapper":
         """Remove the operator from the workflow.
 
         Orignal structure:
@@ -80,8 +80,3 @@ class WorkflowWrapper:
         """
         # TODO: implement the remove_operator method
         raise NotImplementedError("This method is not implemented.")
-
-    def train(self, *args: Any, **kwargs: Any) -> Any:
-        """Train and auto-generate the workflow."""
-        # TODO: implement the train method
-        raise NotImplementedError("This method is not implemented")

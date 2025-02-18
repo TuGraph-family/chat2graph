@@ -93,4 +93,5 @@ class AgenticService(metaclass=Singleton):
 
     def train_workflow(self, workflow_wrapper: WorkflowWrapper, *args, **kwargs) -> Any:
         """Train the workflow."""
-        workflow_wrapper.train(*args, **kwargs)
+        # TODO: implement the train workflow
+        raise NotImplementedError("Train workflow is not implemented yet.")
