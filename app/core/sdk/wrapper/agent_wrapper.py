@@ -1,12 +1,16 @@
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 from app.core.agent.agent import Agent, AgentConfig, Profile
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
+from app.core.common.type import PlatformType
+from app.core.model.message import MessageSourceType
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.reasoner_wrapper import ReasonerWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
+from app.core.service.agent_service import AgentService
 from app.core.workflow.workflow import Workflow
 
 
@@ -41,19 +45,33 @@ class AgentWrapper:
         self._name = name
         return self
 
-    def description(self, description: str) -> "AgentWrapper":
+    def description(self, description: Optional[str]) -> "AgentWrapper":
         """Set the description of the agent."""
-        self._description = description
+        self._description = description or self._description
         return self
 
-    def reasoner(self, reasoner_wrapper: ReasonerWrapper) -> "AgentWrapper":
-        """Set the reasoner of the agent."""
-        self._reasoner = reasoner_wrapper.reasoner
+    def reasoner(
+        self, actor_name: str = MessageSourceType.MODEL.value, thinker_name: Optional[str] = None
+    ) -> "AgentWrapper":
+        """Set the reasoner of the expert."""
+        self._reasoner = (
+            ReasonerWrapper().build(actor_name=actor_name, thinker_name=thinker_name).reasoner
+        )
+
         return self
 
-    def workflow(self, workflow_wrapper: WorkflowWrapper) -> "AgentWrapper":
-        """Set the workflow of the agent."""
-        self._workflow = workflow_wrapper.workflow
+    def workflow(
+        self,
+        *operator_chain: Union[OperatorWrapper, Tuple[OperatorWrapper, ...]],
+        platfor_type: Optional[PlatformType] = None,
+    ) -> "AgentWrapper":
+        """Set the workflow of the expert."""
+
+        if self._workflow:
+            workflow_wrapper = WorkflowWrapper(workflow=self._workflow)
+            self._workflow = workflow_wrapper.chain(*operator_chain).workflow
+        else:
+            self._workflow = WorkflowWrapper(platform=platfor_type).chain(*operator_chain).workflow
         return self
 
     def clear(self) -> "AgentWrapper":
@@ -80,11 +98,15 @@ class AgentWrapper:
             workflow=self._workflow,
         )
 
+        agent_service: AgentService = AgentService.instance
+
         if self._type is Leader:
             self.clear()
             self._agent = Leader(agent_config=agent_config)
+            agent_service.set_leadder(self._agent)
         if self._type is Expert:
             self.clear()
             self._agent = Expert(agent_config=agent_config)
+            agent_service.add_expert(self._agent)
 
         return self

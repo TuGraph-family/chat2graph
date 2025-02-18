@@ -52,16 +52,6 @@ class AgenticService(metaclass=Singleton):
         job_result: JobResult = await self._job_service.query_job_result(job_id=job.id)
         return job_result.result
 
-    def agent(self, agent_wrapper: AgentWrapper) -> "AgenticService":
-        """Add the expert to the agentic service."""
-        if isinstance(agent_wrapper.agent, Leader):
-            self._agent_service.set_leadder(agent_wrapper.agent)
-        elif isinstance(agent_wrapper.agent, Expert):
-            self._agent_service.leader.state.add_expert(agent_wrapper.agent)
-        else:
-            raise ValueError("Agent must be a Leader or Expert.")
-        return self
-
     def load(self, config_file_path: Optional[str] = None) -> "AgenticService":
         """Load the configuration of the agentic service."""
         if not config_file_path:
@@ -95,3 +85,17 @@ class AgenticService(metaclass=Singleton):
         """Train the workflow."""
         # TODO: implement the train workflow
         raise NotImplementedError("Train workflow is not implemented yet.")
+
+    def leader(self, name: str, description: Optional[str] = None) -> AgentWrapper:
+        """Set the name of the leader."""
+        agent_wrapper = AgentWrapper()
+        agent_wrapper.name(name).description(description).type(Leader)
+
+        return agent_wrapper
+
+    def expert(self, name: str, description: Optional[str] = None) -> AgentWrapper:
+        """Set the name of the expert."""
+        agent_wrapper = AgentWrapper()
+        agent_wrapper.name(name).description(description).type(Expert)
+
+        return agent_wrapper

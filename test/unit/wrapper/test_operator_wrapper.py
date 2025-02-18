@@ -1,7 +1,5 @@
 import pytest
 
-from app.core.env.env import EnvService
-from app.core.knowledge.knowlege_service import KnowledgeService
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.toolkit.action import Action
 from app.core.workflow.operator import Operator
@@ -61,10 +59,7 @@ def test_operator_wrapper_configuration_methods():
     assert wrapper._actions == actions
 
 
-def test_operator_wrapper_build_valid_config(
-    mock_knowledge_service: KnowledgeService,
-    mock_env_service: EnvService,
-):
+def test_operator_wrapper_build_valid_config():
     """test the build method with valid configurations."""
     wrapper = OperatorWrapper()
     wrapper.instruction("test instruction")

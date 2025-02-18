@@ -1,7 +1,5 @@
 import asyncio
 
-from app.core.agent.expert import Expert
-from app.core.agent.leader import Leader
 from app.core.common.type import PlatformType
 from app.core.model.message import TextMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
@@ -23,11 +21,7 @@ from app.core.sdk.legacy.graph_modeling import (
     schema_design_action,
     self_reflection_schema_action,
 )
-from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
-from app.core.sdk.wrapper.reasoner_wrapper import ReasonerWrapper
-from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
-from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 
 
 async def main():
@@ -36,11 +30,6 @@ async def main():
 
     # set the user message
     user_message = TextMessage(payload="通过工具来阅读原文，我需要对《三国演义》中的关系进行建模。")
-
-    # reasoner
-    reasoner = ReasonerWrapper().build(
-        thinker_name="Graph Modeling Expert", actor_name="Graph Modeling Expert"
-    )
 
     # operator
     analysis_operator = (
@@ -56,6 +45,14 @@ async def main():
             ]
         )
         .build()
+        .toolkit_chain(
+            (
+                content_understanding_action,
+                concept_identification_action,
+                relation_pattern_recognition_action,
+                consistency_check_action,
+            ),
+        )
     )
     concept_modeling_operator = (
         OperatorWrapper()
@@ -71,59 +68,33 @@ async def main():
             ]
         )
         .build()
+        .toolkit_chain(
+            (
+                entity_type_definition_action,
+                relation_type_definition_action,
+                self_reflection_schema_action,
+                schema_design_action,
+                graph_validation_action,
+            ),
+        )
     )
-
-    # toolkit service
-    ToolkitWrapper(analysis_operator.get_id()).chain(
-        (
-            content_understanding_action,
-            concept_identification_action,
-            relation_pattern_recognition_action,
-            consistency_check_action,
-        ),
-    )
-    ToolkitWrapper(concept_modeling_operator.get_id()).chain(
-        (
-            entity_type_definition_action,
-            relation_type_definition_action,
-            self_reflection_schema_action,
-            schema_design_action,
-            graph_validation_action,
-        ),
-    )
-
-    # workflow
-    workflow = WorkflowWrapper(PlatformType.DBGPT).chain(
-        (analysis_operator, concept_modeling_operator)
+    job_decomposition_operator = (
+        OperatorWrapper()
+        .instruction(JOB_DECOMPOSITION_PROMPT)
+        .output_schema(JOB_DECOMPOSITION_OUTPUT_SCHEMA)
+        .build()
     )
 
     # leader & expert
-    leader = (
-        AgentWrapper()
-        .type(Leader)
-        .name("Leader")
-        .description("The leader of the multi-agnet system.")
-        .reasoner(reasoner)
-        .workflow(
-            WorkflowWrapper(PlatformType.DBGPT).chain(
-                OperatorWrapper()
-                .instruction(JOB_DECOMPOSITION_PROMPT)
-                .output_schema(JOB_DECOMPOSITION_OUTPUT_SCHEMA)
-                .build()
-            )
-        )
-        .build()
-    )
-    expert = (
-        AgentWrapper()
-        .type(Expert)
-        .name("Graph Modeling Expert")
-        .description(CONCEPT_MODELING_PROFILE + CONCEPT_MODELING_INSTRUCTION)
-        .reasoner(reasoner)
-        .workflow(workflow)
-        .build()
-    )
-    mas.agent(leader).agent(expert)
+    mas.leader(name="Leader").reasoner(thinker_name="Leader", actor_name="Leader").workflow(
+        job_decomposition_operator, platfor_type=PlatformType.DBGPT
+    ).build()
+
+    mas.expert(name="Graph Modeling Expert").reasoner(
+        thinker_name="Graph Modeling Expert", actor_name="Graph Modeling Expert"
+    ).workflow(
+        (analysis_operator, concept_modeling_operator), platfor_type=PlatformType.DBGPT
+    ).build()
 
     # submit the job
     session = mas.session()

@@ -9,9 +9,11 @@ from app.core.workflow.workflow import BuiltinWorkflow, Workflow
 class WorkflowWrapper:
     """Facade of the workflow."""
 
-    def __init__(self, platform: Optional[PlatformType] = None):
+    def __init__(
+        self, platform: Optional[PlatformType] = None, workflow: Optional[Workflow] = None
+    ):
         if platform is None:
-            self._workflow: Workflow = BuiltinWorkflow()
+            self._workflow: Workflow = workflow or BuiltinWorkflow()
         elif platform == PlatformType.DBGPT:
             # pylint: disable=import-outside-toplevel
             from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow

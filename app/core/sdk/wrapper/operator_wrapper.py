@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 
+from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.toolkit.action import Action
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
@@ -51,6 +52,16 @@ class OperatorWrapper:
         )
 
         self._operator = Operator(config=config)
+
+        return self
+
+    def toolkit_chain(self, *action_chain: Union[Action, Tuple[Action, ...]]) -> "OperatorWrapper":
+        """Chain the toolkit actions in the operator."""
+        if not self._operator:
+            raise ValueError("Operator is not built yet.")
+
+        toolkit_wrapper = ToolkitWrapper(id=self.get_id())
+        toolkit_wrapper.chain(*action_chain)
 
         return self
 

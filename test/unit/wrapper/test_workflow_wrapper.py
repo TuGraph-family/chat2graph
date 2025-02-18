@@ -45,13 +45,15 @@ def mock_dbgpt_workflow(mocker):
 def test_workflow_wrapper_init_default(mock_builtin_workflow: BuiltinWorkflow):
     """Test WorkflowWrapper init with default platform (BuiltinWorkflow)."""
     wrapper = WorkflowWrapper()
-    assert isinstance(wrapper._workflow, BuiltinWorkflow)
+    assert isinstance(wrapper.workflow, BuiltinWorkflow)
+    wrapper = WorkflowWrapper(workflow=mock_builtin_workflow)
+    assert wrapper.workflow == mock_builtin_workflow
 
 
-def test_workflow_wrapper_init_dbgpt(mock_dbgpt_workflow: DbgptWorkflow):
+def test_workflow_wrapper_init_dbgpt():
     """Test WorkflowWrapper init with DBGPT platform (DbgptWorkflow)."""
     wrapper = WorkflowWrapper(PlatformType.DBGPT)
-    assert isinstance(wrapper._workflow, DbgptWorkflow)
+    assert isinstance(wrapper.workflow, DbgptWorkflow)
 
 
 def test_workflow_wrapper_chain_single_operator(mock_dbgpt_workflow: DbgptWorkflow):
@@ -129,7 +131,7 @@ def test_workflow_wrapper_chain_invalid_item():
 def test_workflow_wrapper_add_operator_not_implemented():
     """Test add_operator method raises NotImplementedError."""
     wrapper = WorkflowWrapper(PlatformType.DBGPT)
-    operator_instance = mock.create_autospec(Operator)  # 创建 Mock Operator 实例
+    operator_instance = mock.create_autospec(Operator)
     with pytest.raises(NotImplementedError) as excinfo:
         wrapper.add_operator(operator_instance)
     assert "This method is not implemented" in str(excinfo.value)
@@ -144,14 +146,14 @@ def test_workflow_wrapper_update_operator(mock_dbgpt_workflow: DbgptWorkflow):
 
     wrapper_returned = wrapper.update_operator(operator)
 
-    assert wrapper_returned.workflow == wrapper._workflow
+    assert wrapper_returned.workflow == wrapper.workflow
     mock_dbgpt_workflow.update_operator.assert_called_once_with(operator)
 
 
 def test_workflow_wrapper_remove_operator_not_implemented():
     """Test remove_operator method raises NotImplementedError."""
     wrapper = WorkflowWrapper(PlatformType.DBGPT)
-    operator_instance = mock.create_autospec(Operator)  # 创建 Mock Operator 实例
+    operator_instance = mock.create_autospec(Operator)
     with pytest.raises(NotImplementedError) as excinfo:
         wrapper.remove_operator(operator_instance)
     assert "This method is not implemented" in str(excinfo.value)
