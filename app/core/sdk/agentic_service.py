@@ -93,13 +93,13 @@ class AgenticService(metaclass=Singleton):
     def leader(self, name: str, description: Optional[str] = None) -> AgentWrapper:
         """Set the name of the leader."""
         agent_wrapper = AgentWrapper()
-        agent_wrapper.name(name).description(description).type(Leader)
+        agent_wrapper.profile(name=name, description=description).type(Leader)
 
         return agent_wrapper
 
     def expert(self, name: str, description: Optional[str] = None) -> AgentWrapper:
         """Set the name of the expert."""
         agent_wrapper = AgentWrapper()
-        agent_wrapper.name(name).description(description).type(Expert)
+        agent_wrapper.profile(name=name, description=description).type(Expert)
 
         return agent_wrapper

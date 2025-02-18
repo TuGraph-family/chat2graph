@@ -13,7 +13,7 @@ class OperatorWrapper:
         self._operator: Optional[Operator] = None
 
         self._instruction: Optional[str] = None
-        self._output_schema: Optional[str] = None
+        self._output_schema: str = ""
         self._actions: List[Action] = []
 
     @property

@@ -21,8 +21,7 @@ class AgentWrapper:
         self._agent: Optional[Agent] = None
 
         self._type: Optional[Union[type[Leader], type[Expert]]] = None
-        self._name: Optional[str] = None
-        self._description: str = ""
+        self._profile: Optional[Profile] = None
         self._reasoner: Optional[Reasoner] = None
         self._workflow: Optional[Workflow] = None
 
@@ -40,14 +39,9 @@ class AgentWrapper:
         self._type = agent_type
         return self
 
-    def name(self, name: str) -> "AgentWrapper":
-        """Set the name of the agent."""
-        self._name = name
-        return self
-
-    def description(self, description: Optional[str]) -> "AgentWrapper":
-        """Set the description of the agent."""
-        self._description = description or self._description
+    def profile(self, name: str, description: Optional[str] = None) -> "AgentWrapper":
+        """Set the profile of the agent."""
+        self._profile = Profile(name=name, description=description or self._description)
         return self
 
     def reasoner(
@@ -85,15 +79,15 @@ class AgentWrapper:
 
     def build(self) -> "AgentWrapper":
         """Build the agent."""
-        if not self._name:
-            raise ValueError("Name is required.")
+        if not self._profile:
+            raise ValueError("Profile is required.")
         if not self._workflow:
             raise ValueError("Workflow is required.")
         if not self._type:
             raise ValueError("Agent type is required. Please use .type(Leader) or .type(Expert).")
 
         agent_config = AgentConfig(
-            profile=Profile(name=self._name, description=self._description),
+            profile=self._profile,
             reasoner=self._reasoner or DualModelReasoner(),
             workflow=self._workflow,
         )

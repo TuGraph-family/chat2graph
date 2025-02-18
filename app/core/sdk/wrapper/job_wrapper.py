@@ -4,7 +4,7 @@ from app.core.service.job_service import JobService
 
 
 class JobWrapper:
-    """Facade for executing jobs in a separate thread."""
+    """Facade of the job."""
 
     def __init__(self, job: Job):
         self._job: Job = job
