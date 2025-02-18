@@ -6,7 +6,7 @@ from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
 from app.core.model.session import Session
-from app.core.service.job_service import JobService
+from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.service.session_service import SessionService
 
 
@@ -22,16 +22,17 @@ class SessionWrapper:
         self._session = session_service.get_session(session_id=session_id)
         return self
 
-    async def submit(self, message: ChatMessage) -> Job:
+    async def submit(self, message: ChatMessage) -> JobWrapper:
         """Submit the job."""
         assert self._session, "Session is not set. Please call session() first."
         job = Job(goal=message.get_payload(), session_id=self._session.id)
-        job_service: JobService = JobService.instance
-        asyncio.create_task(job_service.execute_job(job=job))
+        job_wrapper = JobWrapper(job)
 
-        return job
+        asyncio.create_task(job_wrapper.execute())
 
-    async def wait(self, job_id: str, interval: int = 5) -> ChatMessage:
+        return job_wrapper
+
+    async def wait(self, job_wrapper: JobWrapper, interval: int = 5) -> ChatMessage:
         """Wait for the result."""
         while 1:
             # sleep for `interval` seconds
@@ -40,8 +41,7 @@ class SessionWrapper:
             # query the result every `interval` seconds.
             # please note that the job is executed asynchronously,
             # so the result may not be queryed immediately.
-            job_service: JobService = JobService.instance
-            job_result: JobResult = await job_service.query_job_result(job_id=job_id)
+            job_result: JobResult = await job_wrapper.result()
 
             # check if the job is finished
             if job_result.status == JobStatus.FINISHED:

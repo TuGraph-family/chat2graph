@@ -7,6 +7,7 @@ from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
 from app.core.model.session import Session
+from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
 from app.core.service.job_service import JobService
 from app.core.service.session_service import SessionService
@@ -59,7 +60,7 @@ async def test_session_wrapper_submit(mocker):
 
     # mock JobService.execute_job method
     mock_execute_job_method = mocker.patch(
-        "app.core.sdk.wrapper.session_wrapper.JobService.execute_job",
+        "app.core.sdk.wrapper.session_wrapper.JobWrapper.execute",
         new_callable=mock.AsyncMock,
     )
     # mock asyncio.create_task
@@ -72,17 +73,12 @@ async def test_session_wrapper_submit(mocker):
     mock_chat_message: ChatMessage = mock.create_autospec(ChatMessage)
     mock_chat_message.get_payload.return_value = test_message_payload
 
-    job = await wrapper.submit(mock_chat_message)
+    job_wrapper = await wrapper.submit(mock_chat_message)
 
-    assert isinstance(job, Job)
-    assert job.session_id == test_session_id
-    assert job.goal == test_message_payload
-    mock_execute_job_method.assert_called_once()
-    call_args = mock_execute_job_method.call_args
-    job_arg = call_args[1]["job"]
-    assert isinstance(job_arg, Job)
-    assert job_arg.session_id == test_session_id
-    assert job_arg.goal == test_message_payload
+    assert isinstance(job_wrapper, JobWrapper)
+    assert job_wrapper.job.session_id == test_session_id
+    assert job_wrapper.job.goal == test_message_payload
+    mock_execute_job_method.assert_called_once_with()
     mock_asyncio_create_task.assert_called_once()
 
 
@@ -95,7 +91,7 @@ async def test_session_wrapper_wait(mocker):
     # mock JobService.query_job_result method with side_effect
     call_count = 0
 
-    async def mock_query_job_result_side_effect(job_id: str):
+    async def mock_result_side_effect():
         nonlocal call_count
         call_count += 1
         mock_job_result: JobResult = mock.create_autospec(JobResult)
@@ -109,10 +105,10 @@ async def test_session_wrapper_wait(mocker):
             mock_job_result.result = None
         return mock_job_result
 
-    mock_query_job_result_method = mocker.patch(
-        "app.core.sdk.wrapper.session_wrapper.JobService.query_job_result",
+    mock_result_method = mocker.patch(
+        "app.core.sdk.wrapper.session_wrapper.JobWrapper.result",
         new_callable=mock.AsyncMock,
-        side_effect=mock_query_job_result_side_effect,
+        side_effect=mock_result_side_effect,
     )
 
     # mock asyncio.sleep
@@ -121,13 +117,12 @@ async def test_session_wrapper_wait(mocker):
         new_callable=mock.AsyncMock,
     )
 
-    test_job_id = "test_job_id"
+    test_job_wrapper = JobWrapper(job=Job(goal="test goal"))
     test_interval = 10
 
-    result_message = await wrapper.wait(test_job_id, interval=test_interval)
+    result_message = await wrapper.wait(test_job_wrapper, interval=test_interval)
 
     assert isinstance(result_message, ChatMessage)
-    assert result_message.get_payload() == "test result after wait"  # ✅ 验证模拟的 result payload
+    assert result_message.get_payload() == "test result after wait"
     mock_asyncio_sleep.assert_called()
-    mock_query_job_result_method.assert_called()
-    mock_query_job_result_method.assert_called_with(job_id=test_job_id)
+    mock_result_method.assert_called()

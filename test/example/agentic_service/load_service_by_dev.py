@@ -28,9 +28,6 @@ async def main():
     """Main function."""
     mas = AgenticService("Chat2Graph")
 
-    # set the user message
-    user_message = TextMessage(payload="通过工具来阅读原文，我需要对《三国演义》中的关系进行建模。")
-
     # operator
     analysis_operator = (
         OperatorWrapper()
@@ -96,10 +93,13 @@ async def main():
         (analysis_operator, concept_modeling_operator), platfor_type=PlatformType.DBGPT
     ).build()
 
+    # set the user message
+    user_message = TextMessage(payload="通过工具来阅读原文，我需要对《三国演义》中的关系进行建模。")
+
     # submit the job
     session = mas.session()
-    job = await session.submit(user_message)
-    service_message = await session.wait(job.id)
+    job_wrapper = await session.submit(user_message)
+    service_message = await session.wait(job_wrapper)
 
     # print the result
     print(f"Service Result:\n{service_message.get_payload()}")

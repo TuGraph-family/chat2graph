@@ -14,6 +14,7 @@ from app.core.sdk.legacy.graph_query import get_graph_query_expert_config
 from app.core.sdk.legacy.leader_config import get_leader_config
 from app.core.sdk.legacy.question_answering import get_graph_question_answeing_expert_config
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
+from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.service.agent_service import AgentService
@@ -46,10 +47,13 @@ class AgenticService(metaclass=Singleton):
 
     async def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
-        job = Job(goal=message.get_payload())
-        await self._job_service.execute_job(job=job)
+        job_wrapper = JobWrapper(Job(goal=message.get_payload()))
 
-        job_result: JobResult = await self._job_service.query_job_result(job_id=job.id)
+        # execute the job
+        await job_wrapper.execute()
+
+        # get the result of the job
+        job_result: JobResult = await job_wrapper.result()
         return job_result.result
 
     def load(self, config_file_path: Optional[str] = None) -> "AgenticService":
