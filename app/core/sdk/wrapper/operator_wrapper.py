@@ -42,8 +42,6 @@ class OperatorWrapper:
         """Build the operator."""
         if not self._instruction:
             raise ValueError("Instruction is required.")
-        if not self._output_schema:
-            raise ValueError("Output schema is required.")
 
         config = OperatorConfig(
             instruction=self._instruction,
