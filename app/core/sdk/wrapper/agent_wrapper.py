@@ -41,7 +41,7 @@ class AgentWrapper:
 
     def profile(self, name: str, description: Optional[str] = None) -> "AgentWrapper":
         """Set the profile of the agent."""
-        self._profile = Profile(name=name, description=description or self._description)
+        self._profile = Profile(name=name, description=description or "")
         return self
 
     def reasoner(
@@ -71,8 +71,7 @@ class AgentWrapper:
     def clear(self) -> "AgentWrapper":
         """Clear the agent wrapper."""
         self._type = None
-        self._name = None
-        self._description = ""
+        self._profile = None
         self._reasoner = None
         self._workflow = None
         return self

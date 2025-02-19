@@ -1,11 +1,18 @@
-from typing import Any, Optional
+import importlib
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+from uuid import uuid4
+
+import yaml  # type: ignore
 
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
+from app.core.common.type import PlatformType
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
+from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.legacy.data_importation import get_data_importation_expert_config
 from app.core.sdk.legacy.graph_analysis import get_graph_analysis_expert_config
@@ -15,12 +22,15 @@ from app.core.sdk.legacy.leader_config import get_leader_config
 from app.core.sdk.legacy.question_answering import get_graph_question_answeing_expert_config
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
+from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.session_service import SessionService
 from app.core.service.toolkit_service import ToolkitService
+from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
 
 graph_modeling_expert_config = get_graph_modeling_expert_config()
 data_importation_expert_config = get_data_importation_expert_config()
@@ -56,17 +66,107 @@ class AgenticService(metaclass=Singleton):
         job_result: JobResult = await job_wrapper.result()
         return job_result.result
 
-    def load(self, config_file_path: Optional[str] = None) -> "AgenticService":
+    def load(
+        self, yaml_path: Optional[Union[str, Path]] = None, encoding: str = "utf-8"
+    ) -> "AgenticService":
         """Load the configuration of the agentic service."""
-        if not config_file_path:
-            self.load_default()
-            return self
+        if not yaml_path:
+            return self.load_default()
 
-        # TODO: configure the chat2graph service by yaml
+        def _load_action(action_config: Dict[str, Any]) -> Action:
+            """Load a single action."""
+            tools: List[Tool] = []
+
+            # configure the tools
+            for tool_config in action_config.get("tools", []):
+                module = importlib.import_module(tool_config["module_path"])
+                tool_class = getattr(module, tool_config["tool"])
+                tools.append(tool_class(id=tool_config.get("id", str(uuid4()))))
+
+            # configure the action
+            return Action(
+                id=action_config.get("id", str(uuid4())),
+                name=action_config["name"],
+                description=action_config["desc"],
+                tools=tools,
+            )
+
+        def _load_operator(operator_config: Dict[str, Any]) -> OperatorWrapper:
+            """Load a single operator."""
+            operator: OperatorWrapper = (
+                OperatorWrapper()
+                .instruction(operator_config["instruction"])
+                .output_schema(operator_config.get("output_schema", ""))
+                .actions(
+                    [_load_action(act_config) for act_config in operator_config.get("actions", [])]
+                )
+                .build()
+            )
+
+            if toolkit := operator_config.get("toolkit", None):
+                # handle with all tuple types of actions
+                for chain in toolkit.get("chain", None):
+                    operator = operator.toolkit_chain(
+                        tuple(_load_action(act_config) for act_config in chain)
+                    )
+
+                # handle all single actions
+                for act_config in toolkit.get("single", []):
+                    operator = operator.toolkit_chain(_load_action(act_config))
+
+            return operator
+
+        with open(yaml_path, encoding=encoding) as f:
+            config = yaml.safe_load(f)
+        app_config = config.get("app", {})
+        plugin = config.get("plugin", {})
+        platform = plugin.get("platform", None)
+        platform_type = PlatformType(platform) if platform else None
+
+        # start the agentic service
+        mas = AgenticService(app_config.get("name", "Chat2Graph"))
+
+        # configure the leader
+        job_decomposition_operator = (
+            OperatorWrapper()
+            .instruction("Please decompose the task.")
+            .output_schema(JOB_DECOMPOSITION_OUTPUT_SCHEMA)
+            .build()
+        )
+        mas.leader(name="Leader Test").reasoner(
+            thinker_name="Leader", actor_name="Leader"
+        ).workflow(job_decomposition_operator, platfor_type=platform_type).build()
+
+        # configure the experts
+        for expert in config.get("experts", []):
+            # configure the profile and the reasoner of the expert
+            expert_wrapper = mas.expert(
+                name=expert["profile"]["name"], description=expert["profile"].get("desc", "")
+            ).reasoner(
+                actor_name=expert["reasoner"]["actor_name"],
+                thinker_name=expert["reasoner"].get("thinker_name", None),
+            )
+
+            # configure the workflow
+            if workflow := expert["workflow"]:
+                # handle with all tuple types of operators
+                for chain in workflow.get("chain", []):
+                    expert_wrapper = expert_wrapper.workflow(
+                        tuple(_load_operator(operator_config) for operator_config in chain),
+                        platfor_type=platform_type,
+                    )
+
+                # handle all single operators
+                for operator_config in workflow.get("single", []):
+                    expert_wrapper = expert_wrapper.workflow(
+                        _load_operator(operator_config), platfor_type=platform_type
+                    )
+
+            expert_wrapper.build()
 
         return self
 
-    def load_default(self) -> None:
+    def load_default(self) -> "AgenticService":
         """Load the default configuration of the agentic service."""
         # TODO: load the default yaml configuration
 
@@ -80,6 +180,8 @@ class AgenticService(metaclass=Singleton):
         self._agent_service.create_expert(data_importation_expert_config)
         self._agent_service.create_expert(graph_query_expert_config)
         self._agent_service.create_expert(graph_analysis_expert_config)
+
+        return self
 
     def train_toolkit(self, id: str, *args, **kwargs) -> Any:
         """Train the toolkit."""
