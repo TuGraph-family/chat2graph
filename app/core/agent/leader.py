@@ -63,12 +63,7 @@ class Leader(Agent):
             ]
         )
 
-        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(
-            num_subtasks="N (not determined)",
-            num_roles="M (not determined)",
-            task=job.goal,
-            role_list=role_list,
-        )
+        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(task=job.goal, role_list=role_list)
         decompsed_job = SubJob(
             session_id=job.session_id,
             goal=job.goal,

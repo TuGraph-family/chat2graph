@@ -1,10 +1,14 @@
+import json
 import re
-from typing import Any, Dict, Optional
+import time
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.core.resource.read_doc import SchemaManager
+from app.core.common.system_env import SystemEnv
+from app.core.model.message import ModelMessage
+from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.neo4j_store import get_neo4j
+from app.plugin.tugraph.tugraph_store import get_tugraph
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回
@@ -78,40 +82,85 @@ class SchemaGetter(Tool):
         )
 
     async def get_schema(self) -> str:
-        """获取图数据库的 schema 信息"""
-        schema = await SchemaManager.read_schema()
+        """Get the schema of a graph database.
 
-        result = "# Neo4j Graph Schema\n\n"
+        Args:
+            None args required
 
-        # 节点信息
-        result += "## Node Labels\n\n"
-        for label, info in schema["nodes"].items():
-            result += f"### {label}\n"
-            result += f"- Primary Key: `{info['primary_key']}`\n"
-            result += "- Properties:\n"
-            for prop in info["properties"]:
-                index_info = ""
-                if prop["has_index"]:
-                    index_info = f" (Indexed: {prop['index_name']})"
-                else:
-                    index_info = " (Indexed: not indexed)"
-                result += f"  - `{prop['name']}` ({prop['type']}){index_info}\n"
-            result += "\n"
+        Returns:
+            str: The schema of the graph database in string format
 
-        # 关系信息
-        result += "## Relationship Types\n\n"
-        for label, info in schema["relationships"].items():
-            result += f"### {label}\n"
-            result += f"- Primary Key: `{info['primary_key']}`\n"
-            result += "- Properties:\n"
-            for prop in info["properties"]:
-                index_info = ""
-                if prop["has_index"]:
-                    index_info = f" (Indexed: {prop['index_name']})"
-                result += f"  - `{prop['name']}` ({prop['type']}){index_info}\n"
-            result += "\n"
+        Example:
+            schema_str = get_schema()
+        """
+        query = "CALL dbms.graph.getGraphSchema()"
+        sstore = get_tugraph()
+        schema = sstore.conn.run(query=query)
+
+        result = f"{SCHEMA_BOOK}\n\n查询成功，得到当下的图 schema：\n" + json.dumps(
+            json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False
+        )
 
         return result
+
+
+class CypherExecutor(Tool):
+    """Tool for validating and executing TuGraph Cypher schema definitions."""
+
+    def __init__(self, id: Optional[str] = None):
+        super().__init__(
+            id=id or str(uuid4()),
+            name=self.validate_and_execute_cypher.__name__,
+            description=self.validate_and_execute_cypher.__doc__ or "",
+            function=self.validate_and_execute_cypher,
+        )
+
+    async def validate_and_execute_cypher(self, cyphers: List[str], **kargs) -> str:
+        """Validate the TuGraph Cypher and execute it in the TuGraph Database.
+        Make sure the input cypher is only the code without any other information including ```Cypher``` or ```TuGraph Cypher```.
+        This function can only execute one cypher schema at a time.
+        If the schema is valid, return the validation results. Otherwise, return the error message.
+
+        Args:
+            cypher (str): TuGraph Cypher including only the code.
+
+        Returns:
+            Validation and execution results.
+        """
+
+        print("\n".join(cyphers))
+        try:
+            store = get_tugraph()
+            for cypher in cyphers:
+                print(f"result: {(store.conn.run(cypher)[0])}")
+            return f"TuGraph 导入数据成功，成功运行如下指令：\n{'  '.join(cyphers)}"
+        except Exception as e:
+            prompt = (
+                SCHEMA_BOOK
+                + f"""假设你是 TuGraph DB 的管理员，经过数据库执行，得到的语句出现了报错，你需要给我信息反馈。
+
+标准不要太严格，只要不和 TuGraph Cypher 语法冲突就行。最好是具体的修改提示，而不是泛泛而谈，只谈数据导入的问题。schema 是无法修改的。
+我只能修改调用函数的参数，不能修改和查看调用函数的内部逻辑、graph schema 和数据库已有的数据。
+信息反馈的部分中，需要返回错误信息，针对调用函数的参数的修改提示。
+
+经过 TuGraph 内置的验证器，得到了执行错误：
+{str(e)}
+
+原始的执行语句（这些语句是由调用函数的参数转化而来的）：
+{cyphers}
+
+调用函数的参数：
+{kargs}
+
+你的最终回答是：由函数拼接出的 Cypher 语法不合规，然后给出错误信息和针对调用函数的参数的修改提示，而不仅仅是只传递错误信息。
+"""  # noqa: E501
+            )
+
+            message = ModelMessage(payload=cypher, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+            _model = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
+            response = await _model.generate(sys_prompt=prompt, messages=[message])
+            raise Exception(response.get_payload())
 
 
 class DataImport(Tool):
@@ -151,25 +200,40 @@ class DataImport(Tool):
             - Invalid entities or relationships will be silently skipped
             - Date values must be in YYYY-MM-DD format, for example, "2022-01-01" or
                 "2022-01-01T00:00:00Z", but "208-01-01" (without a 0 in 208) is invalid
-            - Use the English letters (by snake_case naming) for the field if it is related to the identity
-                instead of the number (e.g., "LiuBei" for person_id, instead of "123")
+            - Use the pingyin (by CamelCase naming) for the field if it is related to the identity
+                instead of the number (e.g., "LiuBei" for person_id, instead of "1")
+
+        Processing Mechanism:
+            - Data is processed one triple at a time (source node, target node, and their relationship)
+            - For each relationship, the function will:
+                1. Find matching source and target entities
+                2. Create/update the source node
+                3. Create/update the target node
+                4. Create/update the relationship
 
         Args:
             source_label (str): Label of the source node (e.g., "Person"), defined in the graph schema
             source_primary_key (str): Primary key of the source node (e.g., "id")
-            source_properties (Dict[str, Any]): Properties of the source node. If it is related to the identity of
-                    the entity, it should be in English letters (by snake_case naming)
+            source_properties (Dict[str, Any]): Properties of the source node, including:
+                - some_primary_key_field (str): Required field. If it is related to the identity of
+                    the entity, it should be in pingyin (by CamelCase naming)
                 - some_not_optional_field (str): Required field. If it is related to the identity of
-                    the entity, it should be in English letters (by snake_case naming)
+                    the entity, it should be in pingyin (by CamelCase naming)
                 - Other related fields as defined in schema
             target_label (str): Label of the target node, defined in the graph schema
             target_primary_key (str): Primary key of the target node
-            target_properties (Dict[str, Any]): Properties of the target node. If it is related to the identity of
-                    the entity, it should be in English letters (by snake_case naming)
+            target_properties (Dict[str, Any]): Properties of the target node, including:
+                - some_primary_key_field (str): Required field. If it is related to the identity of
+                    the entity, it should be in pingyin (by CamelCase naming)
+                - some_not_optional_field (str): Required field. If it is related to the identity of
+                    the entity, it should be in pingyin (by CamelCase naming)
                 - Other related fields as defined in schema
             relationship_label (str): Label of the relationship, defined in the graph schema
-            relationship_properties (Dict[str, Any]): Properties of the relationship. If it is related to the identity of
-                    the entity, it should be in English letters (by snake_case naming)
+            relationship_properties (Dict[str, Any]): Properties of the relationship, including:
+                - some_primary_key_field (str): Required field. If it is related to the identity of
+                    the entity, it should be in pingyin (by CamelCase naming)
+                - some_not_optional_field (str): Required field. If it is related to the identity of
+                    the entity, it should be in pingyin (by CamelCase naming)
                 - Other related fields as defined in schema
 
         Returns:
@@ -179,178 +243,143 @@ class DataImport(Tool):
 
         def format_date(value: str) -> str:
             """Format date value to ensure it has a leading zero in the year."""
+            # match date format like "XXX-XX-XX" or "XXX-XX-XXTxx:xx:xxZ"
             date_pattern = r"^(\d{3})-(\d{2})-(\d{2})(T[\d:]+Z)?$"
             match = re.match(date_pattern, value)
             if match:
                 year = match.group(1)
                 if len(year) == 3:
+                    # add leading zero to three-digit year
                     time_part = match.group(4) or ""
                     return f"0{year}-{match.group(2)}-{match.group(3)}{time_part}"
             return value
 
-        def format_property_value(value: Any) -> str:
-            """Format property value for Cypher query."""
+        def format_property(key: str, value: Any) -> str:
+            """Format property key-value pair for Cypher query."""
             if value is None:
-                return "null"
+                return f"{key}: null"
             elif isinstance(value, int | float):
-                return str(value)
+                return f"{key}: {value}"
             else:
                 str_value = str(value)
-                str_value = str_value.replace("'", "\\'")
-                return f"'{str_value}'"
-
-        def format_properties(properties: Dict[str, Any]) -> str:
-            """Format properties dictionary to Cypher property string."""
-            props = []
-            for key, value in properties.items():
-                if key in ["date", "start_date", "end_date", "start_time"] and isinstance(
-                    value, str
+                if (
+                    isinstance(str_value, str)
+                    and str_value
+                    and (key in ["date", "start_date", "end_date", "start_time"])
                 ):
-                    value = format_date(value)
-                props.append(f"{key}: {format_property_value(value)}")
-            return "{" + ", ".join(props) + "}"
+                    str_value = format_date(str_value)
+                str_value = str_value.replace("'", "\\'")
+                return f"{key}: '{str_value}'"
 
-        try:
-            # 格式化属性
-            source_props = format_properties(source_properties)
-            target_props = format_properties(target_properties)
-            rel_props = format_properties(relationship_properties)
+        def generate_property_string(properties: Dict[str, Any]) -> str:
+            """Generate formatted property string for Cypher query."""
+            return ", ".join(format_property(k, v) for k, v in properties.items())
 
-            # 构建Cypher语句
-            cypher = f"""
-            MERGE (source:{source_label} {{{source_primary_key}: {format_property_value(source_properties[source_primary_key])}}})
-            ON CREATE SET source = {source_props}
-            ON MATCH SET source = {source_props}
-            WITH source
-            MERGE (target:{target_label} {{{target_primary_key}: {format_property_value(target_properties[target_primary_key])}}})
-            ON CREATE SET target = {target_props}
-            ON MATCH SET target = {target_props}
-            WITH source, target
-            MERGE (source)-[r:{relationship_label}]->(target)
-            ON CREATE SET r = {rel_props}
-            ON MATCH SET r = {rel_props}
-            RETURN source, target, r
-            """
+        # process source node
+        # source_properties["id"] = str(uuid4())
+        source_props_str = generate_property_string(source_properties)
+        source_statement = f"CALL db.upsertVertex('{source_label}', [{{{source_props_str}}}])"
 
-            store = get_neo4j()
-            with store.conn.session() as session:
-                # 执行导入操作
-                print(f"Executing statement: {cypher}")
-                result = session.run(cypher)
-                summary = result.consume()
-                nodes_created = summary.counters.nodes_created
-                nodes_updated = summary.counters.properties_set
-                rels_created = summary.counters.relationships_created
+        # process target node
+        # target_properties["id"] = str(uuid4())
+        target_props_str = generate_property_string(target_properties)
+        target_statement = f"CALL db.upsertVertex('{target_label}', [{{{target_props_str}}}])"
 
-                # 获取本次操作的详细信息
-                details = {
-                    "source": f"{source_label}(id: {source_properties[source_primary_key]})",
-                    "target": f"{target_label}(id: {target_properties[target_primary_key]})",
-                    "relationship": f"{relationship_label}",
-                }
+        # process relationship
+        rel_props = {
+            **relationship_properties,
+            "source_node": source_properties[source_primary_key],
+            "target_node": target_properties[target_primary_key],
+        }
+        rel_props_str = generate_property_string(rel_props)
 
-                # 获取数据库当前状态
-                # 1. 节点统计
-                node_counts = {}
-                for label in [source_label, target_label]:
-                    result = session.run(f"MATCH (n:{label}) RETURN count(n) as count")
-                    node_counts[label] = result.single()["count"]
+        rel_statement = (
+            f"CALL db.upsertEdge('{relationship_label}', "
+            f"{{type: '{source_label}', key: 'source_node'}}, "
+            f"{{type: '{target_label}', key: 'target_node'}}, "
+            f"[{{{rel_props_str}}}])"
+        )
 
-                # 2. 关系统计
-                rel_count = session.run(
-                    f"MATCH ()-[r:{relationship_label}]->() RETURN count(r) as count"
-                ).single()["count"]
-
-                # 3. 总体统计
-                total_stats = session.run("""
-                    MATCH (n) 
-                    OPTIONAL MATCH (n)-[r]->() 
-                    RETURN 
-                        count(DISTINCT n) as total_nodes,
-                        count(DISTINCT r) as total_relationships
-                """).single()
-
-                return f"""数据导入成功！
-本次操作详情：
-- 创建/更新的节点：
-- 源节点: {details["source"]}
-- 目标节点: {details["target"]}
-- 创建的关系: {details["relationship"]}
-- 操作统计：
-- 新建节点数: {nodes_created}
-- 更新属性数: {nodes_updated}
-- 新建关系数: {rels_created}
-
-当前数据库状态：
-- 节点统计：
-- {source_label}: {node_counts[source_label]} 个
-- {target_label}: {node_counts[target_label]} 个
-- 关系统计：
-- {relationship_label}: {rel_count} 个
-- 总体统计：
-- 总节点数: {total_stats["total_nodes"]}
-- 总关系数: {total_stats["total_relationships"]}
-"""
-
-        except Exception as e:
-            raise Exception(f"Failed to import data: {str(e)}")
+        cypher_executor = CypherExecutor()
+        return await cypher_executor.validate_and_execute_cypher(
+            [source_statement, target_statement, rel_statement],
+            source_label=source_label,
+            source_primary_key=source_primary_key,
+            source_properties=source_properties,
+            target_label=target_label,
+            target_primary_key=target_primary_key,
+            target_properties=target_properties,
+            relationship_label=relationship_label,
+            relationship_properties=relationship_properties,
+        )
 
 
 SCHEMA_BOOK = """
-# Neo4j Schema 指南 (LLM 友好版)
+# 图数据库 Schema 指南 (LLM 友好版)
 
-本指南帮助理解Neo4j的数据模型和Schema设计。
+本指南旨在帮助你理解和设计图数据库的 Schema，以便 LLM (语言模型) 更好地理解图数据的结构。
 
-## 1. 节点 (Node) 定义
+## 1. 顶点 (Vertex) 定义 (实体定义)
 
-Neo4j中的节点代表实体，具有以下特征：
+在图数据库中，**顶点 (Vertex)** 代表 **实体 (Entity)**，是图结构中的基本单元。 每个 **顶点类型** 的定义描述了具有相同特征的实体的结构。
 
-### 1.1 标签 (Labels)
-- 节点可以有一个或多个标签
-- 标签用于分类和区分不同类型的节点
-- 示例：`:Person`、`:Location`
+### 1.1. 顶点类型要素
 
-### 1.2 属性 (Properties)
-- 属性是键值对
-- 支持的数据类型：
-  - String：字符串
-  - Integer：整数
-  - Float：浮点数
-  - Boolean：布尔值
-  - Point：空间点
-  - Date/DateTime：日期时间
-  - Duration：时间段
-- 属性可以建立索引提高查询性能
+每个 **顶点类型** 定义包含以下关键要素：
 
-### 1.3 约束 (Constraints)
-- 唯一性约束：确保属性值唯一性
-- 示例：`CREATE CONSTRAINT person_id_unique IF NOT EXISTS FOR (n:Person) REQUIRE n.id IS UNIQUE`
+- **标签 (Label):**
+    - **定义:**  **标签 (Label)** 是 **顶点类型** 的名称或标识符。它用于区分不同类型的实体。
+    - **示例:** 例如，`"Person"` (人), `"Event"` (事件), `"Location"` (地点), `"Organization"` (组织) 等都是常见的 **顶点标签 (Vertex Label)**。
+    - **JSON Schema 示例:** 在提供的 JSON Schema 中，`"label": "Person"`  定义了一个 **顶点类型** 的标签为 `"Person"`。
 
-## 2. 关系 (Relationship) 定义
+- **主键 (Primary Key):**
+    - **定义:**  **主键 (Primary Key)** 是 **顶点类型** 的唯一标识属性。它用于在图中唯一地识别每个顶点实例。
+    - **重要性:**  **主键** 必须是唯一的，并且通常选择一个核心属性作为 **主键**。
+    - **示例:**  例如，`"person_id"` 可以作为 `"Person"` **顶点类型** 的 **主键**， `"event_id"` 可以作为 `"Event"` **顶点类型** 的 **主键**。
+    - **JSON Schema 示例:**  在 JSON Schema 中，`"primary": "person_id"`  指定 `"person_id"` 属性为 `"Person"` **顶点类型** 的 **主键**。
 
-关系连接节点，具有以下特征：
+- **属性 (Properties):**
+    - **定义:**  **属性 (Properties)** 描述了 **顶点** 的特征或信息。每个 **顶点类型** 可以包含多个 **属性**。
+    - **属性要素:**  每个 **属性** 定义包含以下子要素：
+        - **名称 (name):**  **属性** 的标识符，例如 `"name"`, `"description"`, `"occurrence_time"` 等。
+        - **数据类型 (type):**  **属性** 存储的数据类型，例如 `"STRING"` (字符串), `"INTEGER"` (整数), `"DATE"` (日期) 等。
+        - **可选性 (optional):**  标记 **属性** 是否可以为空。`true` 表示可选，`false` 表示必填。
+        - **索引 (index):**  标记 **属性** 是否创建索引以优化查询性能。`true` 表示创建索引。
+        - **唯一性 (unique):**  标记 **属性** 值在同类型顶点中是否唯一。`true` 表示唯一。
+    - **JSON Schema 示例:**  在 JSON Schema 中，`"properties": [...]`  数组定义了 **顶点类型** 的所有 **属性**，例如 `"name": {"name": "name", "type": "STRING", "optional": false}` 定义了一个名为 `"name"`，类型为 `"STRING"`，非可选的属性。
 
-### 2.1 类型 (Types)
-- 关系必须有一个类型
-- 关系类型通常使用大写字母
-- 示例：`:KNOWS`、`:WORKS_FOR`
+## 2. 边 (Edge) 定义 (关系定义)
 
-### 2.2 属性
-- 关系也可以有属性
-- 属性数据类型与节点相同
-- 可以为关系属性创建索引
+在图数据库中，**边 (Edge)** 代表 **关系 (Relationship)**，用于连接不同的 **顶点 (Vertex)**，表达实体之间的联系。 每个 **边类型** 的定义描述了具有相同联系类型的关系结构。
 
-### 2.3 方向性
-- 关系有方向，但可以双向查询
-- 格式：`(source)-[relationship]->(target)`
+### 2.1. 边类型要素
 
-## 3. 索引 (Indexes)
-- 支持节点和关系的属性索引
-- 用于优化查询性能
-- 示例：`CREATE INDEX person_name_idx IF NOT EXISTS FOR (n:Person) ON (n.name)`
+每个 **边类型** 定义包含以下关键要素：
 
-## 4. 最佳实践
-- 使用有意义的标签名
-- 合理使用索引提升性能
-- 根据查询模式设计数据模型
-"""
+- **标签 (Label):**
+    - **定义:**  **标签 (Label)** 是 **边类型** 的名称或标识符。它用于区分不同类型的关系。
+    - **示例:** 例如， `"Relationship"` (关系) 可以作为一个通用的 **边标签 (Edge Label)**， 或者更具体的标签如 `"LOCATED_IN"` (位于...), `"WORKS_FOR"` (工作于...) 等。
+    - **JSON Schema 示例:** 在提供的 JSON Schema 中，`"label": "Relationship"`  定义了一个 **边类型** 的标签为 `"Relationship"`。
+
+- **约束 (Constraints):**
+    - **定义:**  **约束 (Constraints)**  定义了 **边类型** 可以连接的 **顶点类型** 对。它限制了关系的连接对象类型。
+    - **重要性:**  **约束** 确保了关系的有效性和数据一致性。
+    - **注意事项:**  **约束** 可以包含多个 **顶点类型** 对，表示 **边类型** 可以连接的多种 **顶点类型** 组合。并且，边的连接方向是有序的，即 `(source, target)` 和 `(target, source)` 是不同的。
+    - **示例:**  例如，`"Relationship"`  **边类型** 的 **约束**  `[["Person", "Event"], ["Event", "Location"], ["Person", "Organization"]]` 表示：
+        - `"Relationship"` 边可以连接 `"Person"` 类型的顶点 和 `"Event"` 类型的顶点。
+        - `"Relationship"` 边可以连接 `"Event"` 类型的顶点 和 `"Location"` 类型的顶点。
+        - `"Relationship"` 边可以连接 `"Person"` 类型的顶点 和 `"Organization"` 类型的顶点。
+    - **JSON Schema 示例:**  在 JSON Schema 中，`"constraints": [[ "Person", "Event" ], ... ]`  定义了 `"Relationship"` **边类型** 的 **约束**。
+
+- **属性分离 (Detach Property):**
+    - **定义:**  `"detach_property": true`  标记 **边类型** 的 **属性** 是否可以独立于边本身存储。
+    - **用途:**  `detach_property`  通常用于优化存储和性能，尤其是在属性数据量较大时。
+    - **JSON Schema 示例:**  在 JSON Schema 中，`"detach_property": true` 表示启用了属性分离。
+
+- **属性 (Properties):**
+    - **定义:**  **属性 (Properties)** 描述了 **边** 的特征或信息。 每个 **边类型** 也可以包含多个 **属性**。
+    - **属性要素:**  **边属性** 的结构和要素与 **顶点属性** 相同，包括 **名称 (name)**, **数据类型 (type)**, **可选性 (optional)** 等。
+    - **示例:**  例如，`"relationship_id"`, `"description"`, `"strength"`, `"type"` 可以作为 `"Relationship"` **边类型** 的 **属性**。
+    - **JSON Schema 示例:**  在 JSON Schema 中，`"properties": [...]`  数组定义了 **边类型** 的所有 **属性**，例如 `"type": {"name": "type", "type": "STRING", "optional": false}` 定义了一个名为 `"type"`，类型为 `"STRING"`，非可选的属性。
+
+"""  # noqa: E501

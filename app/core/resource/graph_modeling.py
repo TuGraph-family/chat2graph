@@ -1,198 +1,9 @@
-import json
-import time
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
-from app.core.agent.agent import AgentConfig, Profile
-from app.core.common.system_env import SystemEnv
-from app.core.model.message import ModelMessage
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.reasoner.model_service_factory import ModelServiceFactory
-from app.core.reasoner.reasoner import Reasoner
-from app.core.service.toolkit_service import ToolkitService
-from app.core.toolkit.action import Action
+from app.core.resource.read_doc import SchemaManager
 from app.core.toolkit.tool import Tool
-from app.core.workflow.operator import Operator, OperatorConfig
-from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from app.plugin.tugraph.tugraph_store import get_tugraph
-
-CYPHER_GRAMMER = """
-===== TuGraph Cypher 语法书 =====
-
-createVertexLabelByJson 命令用于创建顶点标签，基本语法：
-
-```
-CALL db.createVertexLabelByJson('{
-    "label": "标签名",
-    "primary": "主键字段名",
-    "type": "VERTEX",
-    "properties": [
-        {
-            "name": "字段名",
-            "type": "字段类型",
-            "optional": True/False,
-            "index": True/False,
-        }
-        // ... 更多属性
-    ]
-}');
-```
-
-createEdgeLabelByJson 命令用于创建边标签，基本语法：
-
-```
-CALL db.createEdgeLabelByJson('{
-    "label": "边标签名",
-    "type": "EDGE",
-    "properties": [
-        {
-            "name": "type",
-            "type": "STRING",
-            "optional": False,
-        },
-        // ... 更多属性
-    ],
-    "constraints": [
-        ["源实体标签名", "目标实体标签名"],
-    ]
-}');
-```
-
-关键参数说明：
-
-1. 顶点标签必填字段：
-   - label: 节点标签名
-   - primary: 主键字段名
-   - type: 必须为 "VERTEX"
-   - properties: 至少包含主键属性
-
-2. 边标签必填字段：
-   - label: 边标签名
-   - type: 必须为 "EDGE"
-   - properties: 至少包含主键属性
-
-属性定义规则：
-- name: 属性名
-- type: 属性类型（见下方支持的数据类型）
-- optional: 是否可选（True/False）
-- index: 是否建立索引（可选参数）(字符串字段如果需要查询，建议设置 index: True)
-
-支持的数据类型：
-- 整数类型：INT8, INT16, INT32, INT64
-- 浮点类型：FLOAT, DOUBLE
-- 其他类型：STRING, BOOL, DATE, DATETIME
-
-重要注意事项：
-
-1. 格式要求：
-   - JSON 必须用单引号包裹
-   - 所有字符串值使用双引号
-   - 标签名和字段名不能包含特殊字符
-
-2. 字段规则：
-   - 主键字段必须设置 optional: False
-
-=====
-"""
-
-# operation 1: Document Analysis
-DOC_ANALYSIS_PROFILE = """
-你是一位专业的文档分析专家，专注于从文档中提取关键信息，为知识图谱的构建奠定坚实基础。
-你需要理解文档内容。请注意，你分析的文档可能只是全集的一个子集，需要通过局部推断全局。
-请注意，你的任务不是需要操作图数据库。你的任务是分析文档，为后续的 knowledge graph modeling 提供重要信息。
-"""  # noqa: E501
-
-DOC_ANALYSIS_INSTRUCTION = """
-请仔细阅读给定的文档，并按以下要求完成任务：
-
-1. 语义层分析
-   - 显式信息（比如，关键词、主题、术语定义）
-   - 隐式信息（比如，深层语义、上下文关联、领域映射）
-
-2. 关系层分析  
-   - 实体关系（比如，直接关系、间接关系、层次关系）。时序关系（比如，状态变迁、演化规律、因果链条）
-
-3. 知识推理
-   - 模式推理、知识补全
-
-请确保你的分析全面、细致，并为每一个结论提供充分的理由。
-"""
-
-DOC_ANALYSIS_OUTPUT_SCHEMA = """
-{
-    "domain": "文档所属领域的详细描述，解释该领域的主要业务和数据特点",
-    "data_full_view": "对文档数据全貌的详细推测，包括数据结构、规模、实体关系等，并提供思考链路和理由",
-    "concepts": [
-        {"concept": "概念名称", "description": "概念的详细描述", "importance": "概念在文档中的重要性"},
-        ...
-    ],
-    "properties": [
-        {"concept": "所属概念", "property": "属性名称", "description": "属性的详细描述", "data_type": "属性的数据类型"},
-        ...
-    ],
-    "potential_relations": [
-        {"relation": "关系类型", "entities_involved": ["实体1", "实体2", ...], "description": "关系的详细描述", "strength": "关系的强度或重要性"},
-        ...
-    ],
-    "document_insights": "其他重要（多条）信息或（多个）发现，它们独属于本文档的特殊内容，请用分号隔开。",
-    "document_snippets": "文档中的关键片段，用于支撑你的分析结论，提供上下文信息。",
-}
-"""  # noqa: E501
-
-# operation 2: Concept Modeling
-CONCEPT_MODELING_PROFILE = """
-你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要设计合适的实体-关系模型，然后操作图数据库，确保任务的顺利完成。
-"""
-
-CONCEPT_MODELING_INSTRUCTION = """
-你应该基于文档分析的结果，完成概念建模的任务，同时确保图建模的正确性和可达性。
-
-1. 实体类型定义
-- 从以下维度思考和定义实体类型：
-  * 时间维度：事件、时期、朝代等时序性实体
-  * 空间维度：地点、区域、地理特征等空间性实体
-  * 社会维度：人物、组织、势力等社会性实体（可选）
-  * 文化维度：思想、文化、典故等抽象实体（可选）
-  * 物理维度：物品、资源、建筑等具象实体（可选）
-- 建立实体类型的层次体系：
-  * 定义上下位关系（如：人物-君主-诸侯）
-  * 确定平行关系（如：军事人物、政治人物、谋士）
-  * 设计多重继承关系（如：既是军事人物又是谋士）
-- 为每个实体类型设计丰富的属性集：
-  * 基础属性：标识符、名称、描述等
-  * 类型特有属性：根据实体类型特点定义
-  * 关联属性：引用其他实体的属性
-- 考虑实体的时态性：
-  * 属性的时效性（如：官职随时间变化）（可选）
-  * 状态的可变性（如：阵营的转变）（可选）
-- 为每个实体类型定义完整的属性集，包括必需属性和可选属性
-- 确保实体类型之间存在潜在的关联路径，但保持概念边界的独立性
-
-2. 关系类型设计
-- 定义实体间的关系类型，包括直接关系、派生关系和潜在关系
-- 明确关系的方向性（有向）、设计关系的属性集
-- 通过关系组合，验证关键实体间的可达性
-- （可选）考虑添加反向关系以增强图的表达能力
-
-3. Schema生成
-- 使用 graph schema creator 的函数，可以使用该函数生成 schema，为 vertex 和 edge 创建特殊的 schema。你不能直接写 cypher 语句，而是使用工具函数来帮助你操作数据库。
-- 请注意：Schema 不是在 DB 中插入节点、关系等具体的数据，而是定义图数据库的模式（schema/label）。预期应该是定义是实体的类型、关系的类型、约束等这些东西。
-- 任务的背景是知识图谱，所以，不要具体的某个实体，而是相对通用的实体。比如，可以从时间、抽象概念、物理实体和社会实体等多个主要维度来考虑。
-- 需要多次读取 TuGraph 现有的 Schema，目的是确保根据 DDL 创建的 schema 符合预期。
-
-4. 验证图的可达性
-- 可达性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不可达，将无法在构建一个完整的知识图谱。
-- 通过查询图数据库，获取图的结构信息，验证实体和关系的可达性。
-"""  # noqa: E501
-
-CONCEPT_MODELING_OUTPUT_SCHEMA = """
-{
-    "reachability": "说明实体和关系之间的可达性，是否存在有效的连接路径",
-    "stauts": "模型状态，是否通过验证等",
-    "entity_label": "成功创建的实体标签",
-    "relation_label": "成功创建的关系标签",
-}
-"""
+from app.plugin.neo4j.neo4j_store import get_neo4j
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回
@@ -228,8 +39,6 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 拚将一死酬知己，致令千秋仰义名。
 """
 
-toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
-
 
 class DocumentReader(Tool):
     """Tool for analyzing document content."""
@@ -257,7 +66,7 @@ class DocumentReader(Tool):
 
 
 class VertexLabelGenerator(Tool):
-    """Tool for generating Cypher statements to create vertex labels in TuGraph."""
+    """Tool for generating Cypher statements to create vertex labels in Neo4j."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
@@ -270,68 +79,86 @@ class VertexLabelGenerator(Tool):
     async def create_vertex_label_by_json_schema(
         self,
         label: str,
-        primary: str,
         properties: List[Dict[str, Union[str, bool]]],
+        primary: str = "id",
     ) -> str:
-        """Generate a TuGraph vertex label statement, and then operator the TuGraph database to
-        create the labels in the database.
-        Field names can only contain letters, numbers, and underscores.
+        """Create a vertex label in Neo4j with specified properties.
+
+        This function defines a new vertex label (node type) in the Neo4j graph database,
+        establishing its property schema and primary key.
 
         Args:
-            label (str): The name of the vertex label to create
-            primary (str): The name of the primary key field
-            properties (List[Dict]): List of property definitions, each containing:
-                - name (str): Property name
-                - type (str): Property type (e.g., 'STRING', 'INT32', 'DOUBLE', 'BOOL', 'DATE',
-                    'DATETIME', do not support 'LIST' and 'MAP')
-                - optional (bool): Whether the property is optional
-                - index (bool, optional): Whether to create an index
-                And make sure the primary key occurs in the properties list and is not optional.
+            label (str): The label name for the vertex type. Must be a valid Neo4j label name.
+            properties (List[Dict[str, Union[str, bool]]]): Property definitions for the label.
+                Each property is defined as a dictionary containing:
+                    - name (str): Property name
+                    - type (str): Data type (e.g., 'STRING', 'INTEGER', 'FLOAT', 'BOOLEAN',
+                        'DATE', 'DATETIME')
+                    - index (bool): Whether to create an index for the property (default: True)
+            primary (str): The property name to be used as the primary key. Must be unique
+                within the label (default: 'id').
 
         Returns:
-            str: The complete Cypher statement for creating the edge label, and it's result.
+            str: Status message indicating successful label creation with constraint and
+                index details.
 
         Example:
+            ```python
             properties = [
                 {
                     "name": "id",
                     "type": "STRING",
-                    "optional": False,
                     "index": True,
                 },
                 {
                     "name": "name",
                     "type": "STRING",
-                    "optional": True
-                },
-                // Add more properties as needed
+                    "index": False,
+                }
             ]
-            execution_result = create_vertex_label_by_json_schema("Person", "id", properties)
+            result = await create_vertex_label_by_json_schema("Person", properties, "id")
+            ```
         """
-        # Validate primary key exists in properties
-        primary_prop = next((p for p in properties if p["name"] == primary), None)
-        if not primary_prop or primary_prop.get("optional", False):
-            properties.append(
+
+        statements = []
+
+        statements.append(
+            f"CREATE CONSTRAINT {label.lower()}_{primary}_unique IF NOT EXISTS "
+            f"FOR (n:{label}) REQUIRE n.{primary} IS UNIQUE"
+        )
+
+        # 为需要索引的属性创建索引
+        for prop in properties:
+            if prop.get("index", True) and prop["name"] != primary:
+                statements.append(
+                    f"CREATE INDEX {label}_{prop['name']}_idx IF NOT EXISTS "
+                    f"FOR (n:{label}) ON (n.{prop['name']})"
+                )
+
+        # 准备 schema 信息
+        property_details = []
+        for p in properties:
+            property_details.append(
                 {
-                    "name": primary,
-                    "type": "STRING",
-                    "optional": False,
+                    "name": p["name"],
+                    "type": p["type"],
+                    "has_index": p.get("index", True),
+                    "index_name": f"{label}_{p['name']}_idx" if p.get("index", True) else None,
                 }
             )
 
-        # Prepare the JSON structure
-        label_json = {
-            "label": label,
-            "primary": primary,
-            "type": "VERTEX",
-            "properties": properties,
-        }
+        store = get_neo4j()
+        with store.conn.session() as session:
+            for statement in statements:
+                print(f"Executing statement: {statement}")
+                session.run(statement)
 
-        # Generate the Cypher statement
-        cypher_exec = CypherExecutor()
-        return await cypher_exec.validate_and_execute_cypher(
-            f"CALL db.createVertexLabelByJson('{json.dumps(label_json)}')"
-        )
+            # 更新 schema 文件
+            schema = await SchemaManager.read_schema()
+            schema["nodes"][label] = {"primary_key": primary, "properties": property_details}
+            await SchemaManager.write_schema(schema)
+
+            return f"Successfully created label {label}"
 
 
 class EdgeLabelGenerator(Tool):
@@ -348,123 +175,92 @@ class EdgeLabelGenerator(Tool):
     async def create_edge_label_by_json_schema(
         self,
         label: str,
-        primary: str,
         properties: List[Dict[str, Union[str, bool]]],
-        constraints: List[List[str]],
+        primary: str = "id",
     ) -> str:
-        """Generate a TuGraph edge label statement, and then operator the TuGraph database to create
-        the labels in the database.
-        Field names can only contain letters, numbers, and underscores. The value of the parameters
-        should be in English.
+        """Create a relationship type in Neo4j with specified properties.
+
+        This function defines a new relationship type in the Neo4j graph database,
+        establishing its property schema, and valid node label pairs
+        for the relationship endpoints.
 
         Args:
-            label (str): The name of the edge label to create
-            primary (str): The name of the primary key field
-            properties (List[Dict]): List of property definitions, each containing:
-                - name (str): Property name
-                - type (str): Property type (e.g., 'STRING', 'INT32')
-                - optional (bool): Whether the property is optional
-            constraints (List[List[str]]): List of source and target vertex label constraints, which
-            presents the direction of the edge.
-                It can configure multiple source and target vertex label constraints,
-                for example, [["source label", "target label"], ["other source label", "other target
-                    label"]]
+            label (str): The label name for the relationship type. Will be automatically
+                converted to uppercase as per Neo4j conventions.
+            properties (List[Dict[str, Union[str, bool]]]): Property definitions for the
+                relationship type. Each property is defined as a dictionary containing:
+                    - name (str): Property name
+                    - type (str): Data type (e.g., 'STRING', 'INTEGER', 'FLOAT', 'BOOLEAN',
+                        'DATE', 'DATETIME')
+                    - index (bool): Whether to create an index for the property (default: True)
+            primary (str): The property name to be used as the unique identifier. Must be
+                unique within the relationship type (default: 'id').
 
         Returns:
-            str: The complete Cypher statement for creating the edge label, and it's result.
+            str: Status message indicating successful relationship type creation with
+                constraint and index details.
 
         Example:
+            ```python
             properties = [
                 {
-                    "name": "type",
+                    "name": "participate",
                     "type": "STRING",
-                    "optional": False
+                    "index": True,
                 },
-                // Add more properties as needed
-            ]
-            execution_result = create_edge_label_by_json_schema(
-                "KNOWS",
-                "id",
-                properties,
-                [
-                    ["Person", "Person"],
-                    ["Organization", "Person"]
-                ]
-            )
-        """
-        primary_prop = next((p for p in properties if p["name"] == primary), None)
-        if not primary_prop or primary_prop.get("optional", False):
-            properties.append(
                 {
-                    "name": primary,
-                    "type": "STRING",
-                    "optional": False,
+                    "name": "since",
+                    "type": "DATETIME",
+                    "index": False,
+                }
+            ]
+            result = await create_edge_label_by_json_schema(
+                "WORKS_FOR", properties, "id"
+            )
+            ```
+        """
+        label = label.upper()
+        statements = []
+
+        # create the constraints for the relationship
+        statements.append(
+            f"CREATE CONSTRAINT {label.lower()}_{primary}_unique IF NOT EXISTS "
+            f"FOR ()-[r:{label}]-() "
+            f"REQUIRE r.{primary} IS UNIQUE"
+        )
+
+        # 创建其他属性的索引
+        for prop in properties:
+            if prop.get("index", True) and prop["name"] != primary:
+                statements.append(
+                    f"CREATE INDEX {label}_{prop['name']}_idx IF NOT EXISTS "
+                    f"FOR ()-[r:{label}]-() ON (r.{prop['name']})"
+                )
+
+        # 准备 schema 信息
+        property_details = []
+        for p in properties:
+            property_details.append(
+                {
+                    "name": p["name"],
+                    "type": p["type"],
+                    "has_index": p.get("index", True),
+                    "index_name": f"{label}_{p['name']}_idx" if p.get("index", True) else None,
                 }
             )
 
-        # prepare the JSON structure
-        label_json = {
-            "label": label,
-            "type": "EDGE",
-            "properties": properties,
-            "constraints": constraints,
-        }
+        store = get_neo4j()
+        with store.conn.session() as session:
+            for statement in statements:
+                print(f"Executing statement: {statement}")
+                session.run(statement)
 
-        cypher_exec = CypherExecutor()
-        return await cypher_exec.validate_and_execute_cypher(
-            f"CALL db.createEdgeLabelByJson('{json.dumps(label_json)}')"
-        )
+        # 更新 schema 文件
+        schema = await SchemaManager.read_schema()
+        schema["relationships"][label] = {"primary_key": primary, "properties": property_details}
+        await SchemaManager.write_schema(schema)
 
-
-class CypherExecutor(Tool):
-    """Tool for validating and executing TuGraph Cypher schema definitions."""
-
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id or str(uuid4()),
-            name=self.validate_and_execute_cypher.__name__,
-            description=self.validate_and_execute_cypher.__doc__ or "",
-            function=self.validate_and_execute_cypher,
-        )
-
-    async def validate_and_execute_cypher(self, cypher_schema: str) -> str:
-        """Validate the TuGraph Cypher and execute it in the TuGraph Database.
-        Make sure the input cypher is only the code without any other information including
-        ```Cypher``` or ```TuGraph Cypher```.
-        This function can only execute one cypher schema at a time.
-        If the schema is valid, return the validation results. Otherwise, return the error message.
-
-        Args:
-            cypher_schema (str): TuGraph Cypher schema including only the code.
-
-        Returns:
-            Validation and execution results.
-        """
-
-        try:
-            store = get_tugraph()
-            store.conn.run(cypher_schema)
-            return f"TuGraph 成功运行如下 schema：\n{cypher_schema}"
-        except Exception as e:
-            prompt = (
-                CYPHER_GRAMMER
-                + f"""假设你是 TuGraph DB 的管理员，请验证我给你 TuGraph Cypher 指令的正确性。标准不要太严格，只要不和 TuGraph Cypher 语法冲突就行。
-    无论你是否验证通过，都应该给出信息反馈。同时，请确保，输入是用于 Create Schema 的 TuGraph Cypher 指令，而不是数据导入的 Cypher 指令。
-    你的最终回答是：语法不合规，然后给出错误信息和修改提示。
-
-    如果输入包含多条 Cypher，则返回错误信息和修改提示，以反映输入的 Cypher 有误。
-
-    经过 TuGraph 内置的验证器，得到了执行错误：{str(e)}
-            """  # noqa: E501
-            )
-
-            message = ModelMessage(
-                payload=cypher_schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
-            )
-
-            _model = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
-            response = await _model.generate(sys_prompt=prompt, messages=[message])
-            raise RuntimeError(response.get_payload()) from e
+        return f"Successfully configured relationship type {label}"
 
 
 class GraphReachabilityGetter(Tool):
@@ -487,267 +283,27 @@ class GraphReachabilityGetter(Tool):
 
         Returns:
             str: The reachability of the graph database in string format
-
-        Example:
-            reachability_str = get_graph_reachability()
         """
-        query = "CALL dbms.graph.getGraphSchema()"
-        store = get_tugraph()
-        schema = store.conn.run(query=query)
+        store = get_neo4j()
+        vertex_labels: List = []
+        relationship_types: List = []
+        with store.conn.session() as session:
+            # get all vertex labels
+            result = session.run("""
+                CALL db.labels() YIELD label 
+                RETURN collect(label) as labels
+            """)
+            vertex_labels = result.single()["labels"]
 
-        edges: List = []
-        vertexes: List = []
-        for element in json.loads(schema[0][0])["schema"]:
-            if element["type"] == "EDGE":
-                edges.append(element)
-            elif element["type"] == "VERTEX":
-                vertexes.append(element)
-        if not edges or not vertexes:
-            return "The graph database schema was not created yet."
+            # get all relationship types and their connected node labels
+            result = session.run("""
+                CALL db.relationshipTypes() YIELD relationshipType
+                RETURN collect(relationshipType) as types
+            """)
+            relationship_types = result.single()["types"]
 
-        # check if there are any isolated vertexes
-        constraints: Set[str] = set()
-        for edge in edges:
-            for constraint in edge["constraints"]:
-                constraints.add(constraint[0])
-                constraints.add(constraint[1])
-        vertex_labels = [vertex["label"] for vertex in vertexes]
-        isolated_labels = []
-        for vertex_label in vertex_labels:
-            if vertex_label not in constraints:
-                isolated_labels.append(vertex_label)
-
-        # return the reachability information
-        return self._format_reachability_info(vertex_labels, edges, isolated_labels)
-
-    def _format_reachability_info(
-        self,
-        vertex_labels: List[str],
-        edges: List[Dict],
-        isolated_labels: Optional[List[str]] = None,
-    ) -> str:
-        """Format the reachability information of the graph database."""
-        lines = ["Got the reachability of the graph:"]
-        lines.append(f"Vertices: {', '.join(f'({label})' for label in vertex_labels)}")
-
-        edge_lines = [
-            f"({cons[0]})-[edge:{edge['label']}]->({cons[1]})"
-            for edge in edges
-            for cons in edge["constraints"]
-        ]
-        lines.extend(edge_lines)
-
-        if isolated_labels:
-            lines.append(
-                "!!! This graph database schema does not have reachability.\n"
-                "!!! Isolated vertices found: "
-                f"{', '.join(f'({label})' for label in isolated_labels)}"
-            )
-        else:
-            lines.append("After verified, the graph database schema has reachability.")
-
-        return "\n".join(lines)
-
-
-read_document = DocumentReader(id="read_document_tool")
-content_understanding_action = Action(
-    id="doc_analysis.content_understanding",
-    name="内容理解",
-    description="通过阅读和批注理解文档的主要内容和结构",
-    tools=[read_document],
-)
-concept_identification_action = Action(
-    id="doc_analysis.concept_identification",
-    name="核心概念识别",
-    description="识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系。",
-)
-relation_pattern_recognition_action = Action(
-    id="doc_analysis.relation_pattern",
-    name="关系模式识别",
-    description="发现概念间的关系模式和交互方式（结构模式、语义模式、演化模式）、提取概念网络特征（局部、全局、动态）。",
-)
-consistency_check_action = Action(
-    id="doc_analysis.consistency_check",
-    name="一致性检查",
-    description="检查文档中的概念和关系是否一致，确保概念和关系已经对齐。并且没有孤立的概念（即，没有相邻的概念）",
-)
-
-
-def get_analysis_operator():
-    """Get the operator for document analysis."""
-
-    operator_config = OperatorConfig(
-        id="analysis_operator",
-        instruction=DOC_ANALYSIS_PROFILE + DOC_ANALYSIS_INSTRUCTION,
-        output_schema=DOC_ANALYSIS_OUTPUT_SCHEMA,
-        actions=[
-            content_understanding_action,
-            concept_identification_action,
-            relation_pattern_recognition_action,
-            consistency_check_action,
-        ],
-    )
-    operator = Operator(config=operator_config)
-
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=content_understanding_action,
-        next_actions=[(concept_identification_action, 1)],
-        prev_actions=[],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=concept_identification_action,
-        next_actions=[(relation_pattern_recognition_action, 1)],
-        prev_actions=[(content_understanding_action, 1)],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=relation_pattern_recognition_action,
-        next_actions=[(consistency_check_action, 1)],
-        prev_actions=[(concept_identification_action, 1)],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=consistency_check_action,
-        next_actions=[],
-        prev_actions=[(relation_pattern_recognition_action, 1)],
-    )
-    toolkit_service.add_tool(
-        id=operator.get_id(),
-        tool=read_document,
-        connected_actions=[(content_understanding_action, 1)],
-    )
-
-    return operator
-
-
-vertex_label_generator = VertexLabelGenerator(id="vertex_label_generator_tool")
-edge_label_generator = EdgeLabelGenerator(id="edge_label_generator_tool")
-graph_reachability_getter = GraphReachabilityGetter(id="graph_reachability_getter_tool")
-
-entity_type_definition_action = Action(
-    id="concept_modeling.entity_type",
-    name="实体类型定义",
-    description="定义和分类文档中识别出的核心实体类型，只需要分析即可",
-)
-relation_type_definition_action = Action(
-    id="concept_modeling.relation_type",
-    name="关系类型定义",
-    description="设计实体间的关系类型和属性，只需要分析即可",
-)
-self_reflection_schema_action = Action(
-    id="concept_modeling.reflection_schema",
-    name="自我反思目前阶段的概念建模",
-    description="不断检查和反思当前概念模型的设计，确保模型的完整性和准确性，并发现潜在概念和关系。最后确保实体关系之间是存在联系的，禁止出现孤立的实体概念（这很重要）。",
-)
-schema_design_action = Action(
-    id="concept_modeling.schema_design",
-    name="Schema设计创建 TuGraph labels",
-    description="将概念模型转化为图数据库 label，并在 TuGraph 中创建 labels",
-    tools=[vertex_label_generator, edge_label_generator],
-)
-graph_validation_action = Action(
-    id="concept_modeling.graph_validation",
-    name="反思和检查图的可达性(Reachability)",
-    description="需要调用相关的工具来检查。可达性指的是每个节点标签和关系标签都有至少一个节点或关系与之关联。如果不连通，则需要在目前的基础上调用工具来解决。",
-    tools=[graph_reachability_getter],
-)
-
-
-def get_concept_modeling_operator():
-    """Get the operator for concept modeling."""
-    operator_config = OperatorConfig(
-        id="concept_modeling_operator",
-        instruction=CONCEPT_MODELING_PROFILE + CONCEPT_MODELING_INSTRUCTION,
-        output_schema=CONCEPT_MODELING_OUTPUT_SCHEMA,
-        actions=[
-            entity_type_definition_action,
-            relation_type_definition_action,
-            self_reflection_schema_action,
-            schema_design_action,
-            graph_validation_action,
-        ],
-    )
-
-    operator = Operator(config=operator_config)
-
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=entity_type_definition_action,
-        next_actions=[(relation_type_definition_action, 1)],
-        prev_actions=[],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=relation_type_definition_action,
-        next_actions=[(self_reflection_schema_action, 1)],
-        prev_actions=[(entity_type_definition_action, 1)],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=self_reflection_schema_action,
-        next_actions=[(schema_design_action, 1)],
-        prev_actions=[(relation_type_definition_action, 1)],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=schema_design_action,
-        next_actions=[(graph_validation_action, 1)],
-        prev_actions=[(self_reflection_schema_action, 1)],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=graph_validation_action,
-        next_actions=[],
-        prev_actions=[(schema_design_action, 1)],
-    )
-    toolkit_service.add_tool(
-        id=operator.get_id(),
-        tool=vertex_label_generator,
-        connected_actions=[(schema_design_action, 1)],
-    )
-    toolkit_service.add_tool(
-        id=operator.get_id(),
-        tool=edge_label_generator,
-        connected_actions=[(schema_design_action, 1)],
-    )
-    toolkit_service.add_tool(
-        id=operator.get_id(),
-        tool=graph_reachability_getter,
-        connected_actions=[(graph_validation_action, 1)],
-    )
-
-    return operator
-
-
-def get_graph_modeling_workflow():
-    """Get the workflow for graph modeling and assemble the operators."""
-    analysis_operator = get_analysis_operator()
-    concept_modeling_operator = get_concept_modeling_operator()
-
-    workflow = DbgptWorkflow()
-    workflow.add_operator(
-        operator=analysis_operator,
-        previous_ops=[],
-        next_ops=[concept_modeling_operator],
-    )
-    workflow.add_operator(
-        operator=concept_modeling_operator,
-        previous_ops=[analysis_operator],
-        next_ops=[],
-    )
-
-    return workflow
-
-
-def get_graph_modeling_expert_config(reasoner: Optional[Reasoner] = None) -> AgentConfig:
-    """Get the expert configuration for graph modeling."""
-
-    expert_config = AgentConfig(
-        profile=Profile(name="Graph Modeling Expert", description=CONCEPT_MODELING_PROFILE),
-        reasoner=reasoner or DualModelReasoner(),
-        workflow=get_graph_modeling_workflow(),
-    )
-
-    return expert_config
+        return (
+            "Here is the schema, you have to check if there exists at least one edge label "
+            "between two vertex labels! If no, create more edges to make the graph more connected.\n"
+            f"Vertex labels: {vertex_labels}\nRelationship types: {relationship_types}"
+        )

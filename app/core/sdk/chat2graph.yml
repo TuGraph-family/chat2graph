@@ -97,7 +97,7 @@ actions:
 
   triplet_data_generation_action: &triplet_data_generation_action
     name: "三元组数据抽取"
-    desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库"
+    desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库（多次抽取，注意抽取数据的多样性）"
     id: "data_generation_and_import.triplet_data_generation_action"
     tools:
       - tool: "DataImport"
