@@ -6,7 +6,7 @@ from app.core.sdk.agentic_service import AgenticService
 
 async def main():
     """Main function."""
-    agentic_service = AgenticService("Chat2Graph").load()
+    agentic_service = AgenticService.load()
 
     # set the user message
     user_message = TextMessage(

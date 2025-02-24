@@ -6,8 +6,7 @@ from app.core.sdk.agentic_service import AgenticService
 
 async def main():
     """Main function."""
-    mas = AgenticService("Chat2Graph")
-    mas.load("app/core/sdk/chat2graph.yml")
+    mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 
     # set the user message
     user_message = TextMessage(payload="通过工具来阅读原文，我需要对《三国演义》中的关系进行建模。")

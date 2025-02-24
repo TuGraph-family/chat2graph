@@ -53,8 +53,32 @@ class AgenticService(metaclass=Singleton):
         job_result: JobResult = await job_wrapper.result()
         return job_result.result
 
+    def train_toolkit(self, id: str, *args, **kwargs) -> Any:
+        """Train the toolkit."""
+        self._toolkit_service.train(id=id, *args, **kwargs)
+
+    def train_workflow(self, workflow_wrapper: WorkflowWrapper, *args, **kwargs) -> Any:
+        """Train the workflow."""
+        # TODO: implement the train workflow
+        raise NotImplementedError("Train workflow is not implemented yet.")
+
+    def leader(self, name: str, description: Optional[str] = None) -> AgentWrapper:
+        """Set the name of the leader."""
+        agent_wrapper = AgentWrapper()
+        agent_wrapper.profile(name=name, description=description).type(Leader)
+
+        return agent_wrapper
+
+    def expert(self, name: str, description: Optional[str] = None) -> AgentWrapper:
+        """Set the name of the expert."""
+        agent_wrapper = AgentWrapper()
+        agent_wrapper.profile(name=name, description=description).type(Expert)
+
+        return agent_wrapper
+
+    @staticmethod
     def load(
-        self, yaml_path: Union[str, Path] = "app/core/sdk/chat2graph.yml", encoding: str = "utf-8"
+        yaml_path: Union[str, Path] = "app/core/sdk/chat2graph.yml", encoding: str = "utf-8"
     ) -> "AgenticService":
         """Load the configuration of the agentic service."""
 
@@ -153,27 +177,4 @@ class AgenticService(metaclass=Singleton):
 
             expert_wrapper.build()
 
-        return self
-
-    def train_toolkit(self, id: str, *args, **kwargs) -> Any:
-        """Train the toolkit."""
-        self._toolkit_service.train(id=id, *args, **kwargs)
-
-    def train_workflow(self, workflow_wrapper: WorkflowWrapper, *args, **kwargs) -> Any:
-        """Train the workflow."""
-        # TODO: implement the train workflow
-        raise NotImplementedError("Train workflow is not implemented yet.")
-
-    def leader(self, name: str, description: Optional[str] = None) -> AgentWrapper:
-        """Set the name of the leader."""
-        agent_wrapper = AgentWrapper()
-        agent_wrapper.profile(name=name, description=description).type(Leader)
-
-        return agent_wrapper
-
-    def expert(self, name: str, description: Optional[str] = None) -> AgentWrapper:
-        """Set the name of the expert."""
-        agent_wrapper = AgentWrapper()
-        agent_wrapper.profile(name=name, description=description).type(Expert)
-
-        return agent_wrapper
+        return mas

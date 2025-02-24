@@ -11,7 +11,7 @@ env: {}
 
 
 plugin:
-  platform: "dbgpt" 
+  platform: "dbgpt"
 
 
 actions:
