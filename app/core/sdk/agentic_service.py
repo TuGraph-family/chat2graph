@@ -13,13 +13,6 @@ from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.sdk.legacy.data_importation import get_data_importation_expert_config
-from app.core.sdk.legacy.graph_analysis import get_graph_analysis_expert_config
-from app.core.sdk.legacy.graph_modeling import get_graph_modeling_expert_config
-from app.core.sdk.legacy.graph_query import get_graph_query_expert_config
-from app.core.sdk.legacy.leader_config import get_leader_config
-from app.core.sdk.legacy.question_answering import get_graph_question_answeing_expert_config
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
@@ -31,12 +24,6 @@ from app.core.service.session_service import SessionService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
-
-graph_modeling_expert_config = get_graph_modeling_expert_config()
-data_importation_expert_config = get_data_importation_expert_config()
-graph_query_expert_config = get_graph_query_expert_config()
-graph_analysis_expert_config = get_graph_analysis_expert_config()
-graph_question_answering_expert_config = get_graph_question_answeing_expert_config()
 
 
 class AgenticService(metaclass=Singleton):
@@ -67,11 +54,9 @@ class AgenticService(metaclass=Singleton):
         return job_result.result
 
     def load(
-        self, yaml_path: Optional[Union[str, Path]] = None, encoding: str = "utf-8"
+        self, yaml_path: Union[str, Path] = "app/core/sdk/chat2graph.yml", encoding: str = "utf-8"
     ) -> "AgenticService":
         """Load the configuration of the agentic service."""
-        if not yaml_path:
-            return self.load_default()
 
         def _load_action(action_config: Dict[str, Any]) -> Action:
             """Load a single action."""
@@ -116,9 +101,13 @@ class AgenticService(metaclass=Singleton):
 
             return operator
 
+        # load the yaml file
         with open(yaml_path, encoding=encoding) as f:
             config = yaml.safe_load(f)
+
         app_config = config.get("app", {})
+
+        # get the plugin configuration
         plugin = config.get("plugin", {})
         platform = plugin.get("platform", None)
         platform_type = PlatformType(platform) if platform else None
@@ -163,23 +152,6 @@ class AgenticService(metaclass=Singleton):
                     )
 
             expert_wrapper.build()
-
-        return self
-
-    def load_default(self) -> "AgenticService":
-        """Load the default configuration of the agentic service."""
-        # TODO: load the default yaml configuration
-
-        # initialize the leader
-        self._agent_service.set_leadder(
-            Leader(agent_config=get_leader_config(reasoner=DualModelReasoner()))
-        )
-
-        # configure the multi-agent system
-        self._agent_service.create_expert(graph_modeling_expert_config)
-        self._agent_service.create_expert(data_importation_expert_config)
-        self._agent_service.create_expert(graph_query_expert_config)
-        self._agent_service.create_expert(graph_analysis_expert_config)
 
         return self
 
