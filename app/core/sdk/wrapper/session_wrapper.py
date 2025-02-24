@@ -25,7 +25,11 @@ class SessionWrapper:
     async def submit(self, message: ChatMessage) -> JobWrapper:
         """Submit the job."""
         assert self._session, "Session is not set. Please call session() first."
-        job = Job(goal=message.get_payload(), session_id=self._session.id)
+        job = Job(
+            goal=message.get_payload(),
+            session_id=self._session.id,
+            assigned_expert_name=message.get_assigned_expert_name(),
+        )
         job_wrapper = JobWrapper(job)
 
         asyncio.create_task(job_wrapper.execute())

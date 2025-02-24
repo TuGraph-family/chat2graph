@@ -1,0 +1,162 @@
+app:
+  name: "Chat2Graph"
+  desc: "An Agentic System on Graph Database."
+  version: "0.0.1"
+
+
+memory: {}
+
+
+env: {}
+
+
+plugin:
+  platform: "dbgpt"
+
+
+actions:
+  # graph query actions
+  query_intention_identification_action: &query_intention_identification_action
+    name: "核心查询意图识别"
+    desc: "识别并理解提供的查询要求，提取出查询针对的图模型名称、查询点的种类和查询条件"
+    id: "query_intention_analysis.query_intention_identification"
+
+  vertex_type_validation_action: &vertex_type_validation_action
+    name: "节点种类验证"
+    desc: "读取图数据现有的 schema，以帮助检查节点类型是否和对应的模型匹配"
+    id: "schema_check.vertex_type_validation_action"
+    tools:
+    - tool: "SchemaGetter"
+      id: "schema_getter_tool"
+      module_path: "app.core.resource.graph_query"
+
+  condition_validation_action: &condition_validation_action
+    name: "查询条件验证"
+    desc: "读取图数据现有的 schema，以帮助检查条件是否和对应的模型匹配"
+    id: "schema_check.condition_validation_action"
+    tools:
+    - tool: "SchemaGetter"
+      id: "schema_getter_tool"
+      module_path: "app.core.resource.graph_query"
+
+  supplement_action: &supplement_action
+    name: "补充缺少内容"
+    desc: "如查询条件/节点类型缺少或不匹配，则需要经过自己的思考和推理，补充缺少的查询内容"
+    id: "schema_check.supplement_aciton"
+
+  grammar_study_action: &grammar_study_action
+    name: "语法学习"
+    desc: "按查询要求在图查询语法文档中学习对应语法"
+    id: "query_design.grammar_study_action"
+    tools:
+    - tool: "GrammerReader"
+      id: "grammer_reader_tool"
+      module_path: "app.core.resource.graph_query"
+
+  query_execution_action: &query_execution_action
+    name: "执行查询"
+    desc: "根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，在对应图上执行查询语句得到结果"
+    id: "query_design.query_execution_aciton"
+    tools:
+    - tool: "SchemaGetter"
+      id: "schema_checker_tool_v2"
+      module_path: "app.core.resource.graph_query"
+    - tool: "VertexQuerier"
+      id: "vertex_querier_tool"
+      module_path: "app.core.resource.graph_query"
+
+
+operators:
+  # graph query operators
+  qery_intention_analysis_operator: &qery_intention_analysis_operator
+    instruction: |
+      你是一位专业的查询意图识别专家。你的工作是，理解给定的输入，给出一些结论，然后为后续的写查询语句做好准备工作。
+      你需要识别图查询的诉求，并校验查询的节点内容和对应的图模型是否匹配。注意你的任务不是将输入进行查询语句的转换，而是识别出存在着单点查询的诉求。
+      如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
+
+      请理解提供的内容和上下文，按要求完成任务：
+
+      1. 内容分析
+      - 理解内容中的单点查询的诉求
+      - 确定描述的单点查询内容是完整的
+      - 识别出有多个节点查询的情况
+
+      2. 查询检测
+      - 验证查询的节点种类是否和对应的模型相匹配
+      - 验证查询的条件是否和对应模型相匹配
+      - 如果有不匹配的情况，需要补充缺少的内容
+
+      3. 避免错误
+      - 请不要将查询的内容转换为查询语句，也不要执行查询语句，这不是你的任务
+    output_schema: |
+      {
+          "analysis": "内容中查询要求",
+          "object_vertex_type": "单点查询点的种类",
+          "query_condition":"查询的条件"
+          "supplement": "需要补充的缺少的或无法匹配的信息"
+      }
+    actions:
+      - *query_intention_identification_action
+      - *vertex_type_validation_action
+      - *condition_validation_action
+      - *supplement_action
+    toolkit:
+      chain:
+        - [
+          *query_intention_identification_action,
+          *vertex_type_validation_action,
+          *condition_validation_action,
+          *supplement_action
+        ]
+      single: []
+
+  query_design_operator: &query_design_operator
+    instruction: |
+      你是一位专业的图查询语言设计专家。你的工作是根据查询要求使用对应的图查询语言语法设计出对应的图查询语言，并执行该查询语句。
+      如节点查询最常用的语法为 MATCH, WHERE, RETURN 等。你不具备写 Cypher 的能力，你只能调用工具来帮助你达到相关的目的。
+
+      基于经验证过的图模型、查询节点和查询条件，按要求完成图查询语言设计的任务：
+
+      1. 语法学习与工具调用
+      - 按查询要求在图查询语法文档中匹配学习对应语法，会正确调用图数据库的工具函数。
+      - 了解图查询语法的基本结构和语法规则，如果得到调用错误信息，需要及时调整查询语句。
+
+      2. 查询结果交付
+      - 在最后，根据查询意图，交付查询的结果。
+    output_schema: |
+      {
+          "query": "需要的图查询指令",
+          "query_result": "查询语言在对应图上的查询结果"
+      }
+    actions:
+      - *grammar_study_action
+      - *query_execution_action
+    toolkit:
+      chain:
+        - [
+          *grammar_study_action,
+          *query_execution_action
+        ]
+      single: []
+
+
+experts:
+  - profile:
+      name: "Graph Query Expert"
+      desc: |
+        你是一位专业的查询意图识别专家。你的工作是，理解给定的输入，给出一些结论，然后为后续的写查询语句做好准备工作。
+        你需要识别图查询的诉求，并校验查询的节点内容和对应的图模型是否匹配。注意你的任务不是将输入进行查询语句的转换，而是识别出存在着单点查询的诉求。
+        如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
+    reasoner:
+      actor_name: "Graph Query Expert"
+      thinker_name: "Graph Query Expert"
+    workflow:
+      chain: 
+        - [
+          *qery_intention_analysis_operator,
+          *query_design_operator
+        ]
+      single: []
+
+
+knowledgebase: {}

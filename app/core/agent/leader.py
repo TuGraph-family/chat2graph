@@ -53,6 +53,21 @@ class Leader(Agent):
         # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
 
         job = agent_message.get_payload()
+        assigned_expert_name: Optional[str] = job.assigned_expert_name
+        if assigned_expert_name:
+            expert = self.state.get_expert_by_name(assigned_expert_name)
+            job_graph: JobGraph = JobGraph()
+            job_graph.add_vertex(
+                job.id,
+                job=SubJob(
+                    id=job.id,
+                    session_id=job.session_id,
+                    goal=job.goal,
+                    context=job.goal + "\n" + job.context,
+                ),
+                expert_id=expert.get_id(),
+            )
+            return job_graph
 
         # get the expert list
         expert_profiles = [e.get_profile() for e in self._leader_state.list_experts()]
@@ -63,12 +78,7 @@ class Leader(Agent):
             ]
         )
 
-        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(
-            num_subtasks="N (not determined)",
-            num_roles="M (not determined)",
-            task=job.goal,
-            role_list=role_list,
-        )
+        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(task=job.goal, role_list=role_list)
         decompsed_job = SubJob(
             session_id=job.session_id,
             goal=job.goal,

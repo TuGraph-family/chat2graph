@@ -1,0 +1,132 @@
+app:
+  name: "Chat2Graph"
+  desc: "An Agentic System on Graph Database."
+  version: "0.0.1"
+
+
+memory: {}
+
+
+env: {}
+
+
+plugin:
+  platform: "dbgpt"
+
+
+actions:
+  # graph analysis actions
+  content_understanding_action_3: &content_understanding_action_3
+    name: "内容理解"
+    desc: "理解和分析用户的需求"
+    id: "algorithms_intention_analysis.content_understanding"
+
+  algorithms_intention_identification_action: &algorithms_intention_identification_action
+    name: "核心算法意图识别"
+    desc: "识别并理解用户需求中的算法要求，调用相关工具函数查找图数据库中支持的算法，然后基于此确定算法的名称和要求"
+    id: "query_intention_analysis.query_intention_identification"
+    tools:
+    - tool: "AlgorithmsGetter"
+      id: "algorithms_getter_tool"
+      module_path: "app.core.resource.graph_analysis"
+
+  algorithms_validation_action: &algorithms_validation_action
+    name: "算法执行验证"
+    desc: "确认当前图数据库中的算法是否支持相关的需求"
+    id: "algorithms_execute.algorithms_validation_action"
+    tools:
+    - tool: "AlgorithmsGetter"
+      id: "algorithms_getter_tool"
+      module_path: "app.core.resource.graph_analysis"
+
+  algorithms_execution_action: &algorithms_execution_action
+    name: "执行查询"
+    desc: "在对应图上执行查询语句返回结果"
+    id: "algorithms_execute.algorithms_execution_aciton"
+    tools:
+    - tool: "AlgorithmsExecutor"
+      id: "algorithms_excute_tool"
+      module_path: "app.core.resource.graph_analysis"
+
+
+operators:
+  # graph analysis operators
+  algorithms_intention_analysis_operator: &algorithms_intention_analysis_operator
+    instruction: |
+      你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
+      你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
+      注意，你不需要执行算法，也不能询问用户更多的信息。
+
+      1.算法需求分析
+      - 分析需求和具体的诉求
+      - 确定需要执行的算法和相关的要求
+    output_schema: |
+      {
+          "algorithms_supported_by_db": ["图数据库支持的算法列表，算法的名字（（名称和数据库中支持的算法名称保持一致）"],
+          "selected_algorithms": [
+              {
+                  "analysis":"算法的要求",
+                  "algorithm_name":"算法的名称（名称和数据库中支持的算法名称保持一致）",
+                  "call_objective":"调用该算法的目的"
+              },
+          ]
+      }
+    actions:
+      - *content_understanding_action_3
+      - *algorithms_intention_identification_action
+    toolkit:
+      chain:
+        - [
+          *content_understanding_action_3,
+          *algorithms_intention_identification_action
+        ]
+      single: []
+  
+  algorithms_execute_operator: &algorithms_execute_operator
+    instruction: |
+      你是一个专业的图算法执行专家。你的工作是根据算法需求执行相应的图算法，并返回结果。
+      注意，你不能够询问用户更多的信息。
+
+      基于验证过的算法、算法参数，按要求完成算法执行任务：
+
+      1.运行算法
+      - 验证算法的可执行性（包括图数据库中是否支持该算法）
+      - 按照算法的输入
+    output_schema: |
+      {
+          "called_algorithms": "调用的算法和参数",
+          "status": "算法执行的状态",
+          "algorithms_result": "算法执行的结果。如果失败，返回失败原因"
+      }
+    actions:
+      - *algorithms_validation_action
+      - *algorithms_execution_action
+    toolkit:
+      chain:
+        - [
+          *algorithms_validation_action,
+          *algorithms_execution_action
+        ]
+      single: []
+
+
+experts:
+  - profile:
+      name: "Graph Analysis Expert"
+      desc: |
+        你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
+        你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
+        注意，你不需要执行算法，也不能询问用户更多的信息。
+    reasoner:
+      actor_name: "Graph Analysis Expert"
+      thinker_name: "Graph Analysis Expert"
+    workflow:
+      chain: 
+        - [
+          *algorithms_intention_analysis_operator,
+          *algorithms_execute_operator,
+        ]
+      single: []
+
+
+knowledgebase: {}

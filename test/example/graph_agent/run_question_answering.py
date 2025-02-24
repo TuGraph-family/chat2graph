@@ -1,11 +1,14 @@
 import asyncio
 
-from app.core.model.job import SubJob
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.sdk.legacy.question_answering import get_question_answering_workflow
+from app.core.model.message import TextMessage
+from app.core.sdk.agentic_service import AgenticService
 
-QUESTION = """
-我在执行Cypher语句
+
+async def main():
+    """Main function"""
+    mas = AgenticService.load("test/example/graph_agent/graph_modeling.yml")
+    user_message = TextMessage(
+        payload="""我在执行Cypher语句
 CALL db.createVertexLabelByJson('{
     "label": "州",
     "primary": "state",
@@ -18,25 +21,11 @@ CALL db.createVertexLabelByJson('{
     ]
 }');
 的时候，遇到报错：执行失败 unknown keyword str: [INT12]，
-请问原因是什么，该如何修改？
-"""
-
-
-async def main():
-    """Main function"""
-    workflow = get_question_answering_workflow()
-
-    job = SubJob(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="「任务」",
-        context=QUESTION,
+请问原因是什么，该如何修改？""",
+        assigned_expert_name="Question Answering Expert",
     )
-    reasoner = DualModelReasoner()
-
-    result = await workflow.execute(job=job, reasoner=reasoner)
-
-    print(f"Final result:\n{result.scratchpad}")
+    service_message = await mas.execute(message=user_message)
+    print(f"Service Result:\n{service_message.get_payload()}")
 
 
 if __name__ == "__main__":

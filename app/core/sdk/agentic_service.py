@@ -44,7 +44,9 @@ class AgenticService(metaclass=Singleton):
 
     async def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
-        job_wrapper = JobWrapper(Job(goal=message.get_payload()))
+        job_wrapper = JobWrapper(
+            Job(goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name())
+        )
 
         # execute the job
         await job_wrapper.execute()
