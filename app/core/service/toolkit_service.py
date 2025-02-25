@@ -206,9 +206,9 @@ class ToolkitService(metaclass=Singleton):
         # TODO: simple reinforcement learning implementation
         raise NotImplementedError("This method is not implemented")
 
-    def train(self, *args: Any, **kwargs: Any) -> Any:
+    def tune(self, *args: Any, **kwargs: Any) -> Any:
         """Train the toolkit by RL."""
-        # TODO: implement the train method
+        # TODO: implement the tune method
         raise NotImplementedError("This method is not implemented")
 
     def visualize(self, graph: Toolkit, title: str, show=True):

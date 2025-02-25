@@ -57,7 +57,7 @@ class AgentWrapper:
     def workflow(
         self,
         *operator_chain: Union[OperatorWrapper, Tuple[OperatorWrapper, ...]],
-        platfor_type: Optional[PlatformType] = None,
+        platform_type: Optional[PlatformType] = None,
     ) -> "AgentWrapper":
         """Set the workflow of the expert."""
 
@@ -65,7 +65,7 @@ class AgentWrapper:
             workflow_wrapper = WorkflowWrapper(workflow=self._workflow)
             self._workflow = workflow_wrapper.chain(*operator_chain).workflow
         else:
-            self._workflow = WorkflowWrapper(platform=platfor_type).chain(*operator_chain).workflow
+            self._workflow = WorkflowWrapper(platform=platform_type).chain(*operator_chain).workflow
         return self
 
     def clear(self) -> "AgentWrapper":

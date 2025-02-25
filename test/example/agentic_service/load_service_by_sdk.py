@@ -74,13 +74,13 @@ async def main():
 
     # leader & expert
     mas.leader(name="Leader").reasoner(thinker_name="Leader", actor_name="Leader").workflow(
-        job_decomposition_operator, platfor_type=PlatformType.DBGPT
+        job_decomposition_operator, platform_type=PlatformType.DBGPT
     ).build()
 
     mas.expert(name="Graph Modeling Expert").reasoner(
         thinker_name="Graph Modeling Expert", actor_name="Graph Modeling Expert"
     ).workflow(
-        (analysis_operator, concept_modeling_operator), platfor_type=PlatformType.DBGPT
+        (analysis_operator, concept_modeling_operator), platform_type=PlatformType.DBGPT
     ).build()
 
     # set the user message

@@ -1,29 +1,19 @@
-import importlib
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-from uuid import uuid4
-
-import yaml  # type: ignore
+from typing import Any, Optional
 
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
-from app.core.common.type import PlatformType
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
-from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
-from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
+from app.core.service.service_factory import ServiceFactory
 from app.core.service.session_service import SessionService
 from app.core.service.toolkit_service import ToolkitService
-from app.core.toolkit.action import Action
-from app.core.toolkit.tool import Tool
 
 
 class AgenticService(metaclass=Singleton):
@@ -33,10 +23,11 @@ class AgenticService(metaclass=Singleton):
         self._service_name = service_name or "Chat2Graph"
 
         # initialize the services
-        self._session_service = SessionService()
-        self._agent_service = AgentService()
-        self._job_service = JobService()
-        self._toolkit_service = ToolkitService()
+        ServiceFactory.initialize()
+        self._session_service: SessionService = SessionService.instance
+        self._agent_service: AgentService = AgentService.instance
+        self._job_service: JobService = JobService.instance
+        self._toolkit_service: ToolkitService = ToolkitService.instance
 
     def session(self, session_id: Optional[str] = None) -> SessionWrapper:
         """Get the session, if not exists or session_id is None, create a new one."""
@@ -55,13 +46,13 @@ class AgenticService(metaclass=Singleton):
         job_result: JobResult = await job_wrapper.result()
         return job_result.result
 
-    def train_toolkit(self, id: str, *args, **kwargs) -> Any:
+    def tune_toolkit(self, id: str, *args, **kwargs) -> Any:
         """Train the toolkit."""
-        self._toolkit_service.train(id=id, *args, **kwargs)
+        self._toolkit_service.tune(id=id, *args, **kwargs)
 
-    def train_workflow(self, workflow_wrapper: WorkflowWrapper, *args, **kwargs) -> Any:
+    def tune_workflow(self, expert: Expert, *args, **kwargs) -> Any:
         """Train the workflow."""
-        # TODO: implement the train workflow
+        # TODO: implement the tune workflow
         raise NotImplementedError("Train workflow is not implemented yet.")
 
     def leader(self, name: str, description: Optional[str] = None) -> AgentWrapper:
