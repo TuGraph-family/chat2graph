@@ -157,7 +157,7 @@ class VertexQuerier(Tool):
             ...     {"field": "status", "operator": "IN", "value": ["active", "pending"]},
             ...     {"field": "description", "operator": "IS NOT NULL"}
             ... ]
-            >>> result = querier.query_vertex("Person", conditions, True)
+            >>> result = await querier.query_vertex("Person", conditions, True)
         """
         where_parts = []
         for condition in conditions:
