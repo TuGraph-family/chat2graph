@@ -3,72 +3,72 @@ app:
   desc: "An Agentic System on Graph Database."
   version: "0.0.1"
 
-
-memory: {}
-
-
-env: {}
-
-
 plugin:
   platform: "dbgpt"
 
+reasoner:
+  type: "dual"
+
+tools:
+  - &schema_getter_tool
+    name: "SchemaGetter"
+    module_path: "app.core.resource.graph_query"
+
+  - &grammer_reader_tool
+    name: "GrammerReader"
+    module_path: "app.core.resource.graph_query"
+
+  - &vertex_querier_tool
+    name: "VertexQuerier"
+    module_path: "app.core.resource.graph_query"
 
 actions:
   # graph query actions
-  query_intention_identification_action: &query_intention_identification_action
-    name: "核心查询意图识别"
+  - &query_intention_identification_action
+    name: "query_intention_identification"
     desc: "识别并理解提供的查询要求，提取出查询针对的图模型名称、查询点的种类和查询条件"
-    id: "query_intention_analysis.query_intention_identification"
 
-  vertex_type_validation_action: &vertex_type_validation_action
-    name: "节点种类验证"
+  - &vertex_type_validation_action
+    name: "vertex_type_validation"
     desc: "读取图数据现有的 schema，以帮助检查节点类型是否和对应的模型匹配"
-    id: "schema_check.vertex_type_validation_action"
     tools:
-    - tool: "SchemaGetter"
-      id: "schema_getter_tool"
-      module_path: "app.core.resource.graph_query"
+      - *schema_getter_tool
 
-  condition_validation_action: &condition_validation_action
-    name: "查询条件验证"
-    desc: "读取图数据现有的 schema，以帮助检查条件是否和对应的模型匹配"
-    id: "schema_check.condition_validation_action"
+  - &condition_validation_action
+    name: "condition_validation"
+    desc: "读取图数据现有的 schema，以帮助检查条件是否和对应模型相匹配"
     tools:
-    - tool: "SchemaGetter"
-      id: "schema_getter_tool"
-      module_path: "app.core.resource.graph_query"
+      - *schema_getter_tool
 
-  supplement_action: &supplement_action
-    name: "补充缺少内容"
+  - &supplement_action
+    name: "supplement"
     desc: "如查询条件/节点类型缺少或不匹配，则需要经过自己的思考和推理，补充缺少的查询内容"
-    id: "schema_check.supplement_aciton"
 
-  grammar_study_action: &grammar_study_action
-    name: "语法学习"
+  - &grammar_study_action
+    name: "grammar_study"
     desc: "按查询要求在图查询语法文档中学习对应语法"
-    id: "query_design.grammar_study_action"
     tools:
-    - tool: "GrammerReader"
-      id: "grammer_reader_tool"
-      module_path: "app.core.resource.graph_query"
+      - *grammer_reader_tool
 
-  query_execution_action: &query_execution_action
-    name: "执行查询"
+  - &query_execution_action
+    name: "query_execution"
     desc: "根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，在对应图上执行查询语句得到结果"
-    id: "query_design.query_execution_aciton"
     tools:
-    - tool: "SchemaGetter"
-      id: "schema_checker_tool_v2"
-      module_path: "app.core.resource.graph_query"
-    - tool: "VertexQuerier"
-      id: "vertex_querier_tool"
-      module_path: "app.core.resource.graph_query"
+      - *schema_getter_tool
+      - *vertex_querier_tool
 
+toolkit:
+  - [
+      *query_intention_identification_action,
+      *vertex_type_validation_action,
+      *condition_validation_action,
+      *supplement_action,
+    ]
+  - [*grammar_study_action, *query_execution_action]
 
 operators:
   # graph query operators
-  qery_intention_analysis_operator: &qery_intention_analysis_operator
+  - &qery_intention_analysis_operator
     instruction: |
       你是一位专业的查询意图识别专家。你的工作是，理解给定的输入，给出一些结论，然后为后续的写查询语句做好准备工作。
       你需要识别图查询的诉求，并校验查询的节点内容和对应的图模型是否匹配。注意你的任务不是将输入进行查询语句的转换，而是识别出存在着单点查询的诉求。
@@ -92,7 +92,7 @@ operators:
       {
           "analysis": "内容中查询要求",
           "object_vertex_type": "单点查询点的种类",
-          "query_condition":"查询的条件"
+          "query_condition":"查询的条件",
           "supplement": "需要补充的缺少的或无法匹配的信息"
       }
     actions:
@@ -100,17 +100,8 @@ operators:
       - *vertex_type_validation_action
       - *condition_validation_action
       - *supplement_action
-    toolkit:
-      chain:
-        - [
-          *query_intention_identification_action,
-          *vertex_type_validation_action,
-          *condition_validation_action,
-          *supplement_action
-        ]
-      single: []
 
-  query_design_operator: &query_design_operator
+  - &query_design_operator
     instruction: |
       你是一位专业的图查询语言设计专家。你的工作是根据查询要求使用对应的图查询语言语法设计出对应的图查询语言，并执行该查询语句。
       如节点查询最常用的语法为 MATCH, WHERE, RETURN 等。你不具备写 Cypher 的能力，你只能调用工具来帮助你达到相关的目的。
@@ -131,14 +122,6 @@ operators:
     actions:
       - *grammar_study_action
       - *query_execution_action
-    toolkit:
-      chain:
-        - [
-          *grammar_study_action,
-          *query_execution_action
-        ]
-      single: []
-
 
 experts:
   - profile:
@@ -151,12 +134,8 @@ experts:
       actor_name: "Graph Query Expert"
       thinker_name: "Graph Query Expert"
     workflow:
-      chain: 
-        - [
-          *qery_intention_analysis_operator,
-          *query_design_operator
-        ]
-      single: []
-
+      - [*qery_intention_analysis_operator, *query_design_operator]
 
 knowledgebase: {}
+memory: {}
+env: {}

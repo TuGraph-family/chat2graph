@@ -1,7 +1,6 @@
 import pytest
 
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
-from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.toolkit.action import Action
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
@@ -86,21 +85,3 @@ def test_operator_wrapper_build_missing_instruction():
     with pytest.raises(ValueError) as excinfo:
         wrapper.build()
     assert "Instruction is required." in str(excinfo.value)
-
-
-def test_operator_toolkit_chain(mocker):
-    """Test the toolkit_chain method."""
-    wrapper = OperatorWrapper()
-    # patch the chain method of ToolkitWrapper
-    mock_chain = mocker.patch.object(ToolkitWrapper, "chain")
-
-    wrapper.instruction("test instruction").build()
-
-    action1 = Action(id="action_1", name="action_1", description="test action 1")
-    action2 = Action(id="action_2", name="action_2", description="test action 2")
-
-    # call the toolkit_chain method with multiple actions
-    wrapper_returned = wrapper.toolkit_chain(action1, action2)
-
-    mock_chain.assert_called_once_with(action1, action2)
-    assert isinstance(wrapper_returned, OperatorWrapper)

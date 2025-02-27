@@ -3,83 +3,92 @@ app:
   desc: "An Agentic System on Graph Database."
   version: "0.0.1"
 
-
-memory: {}
-
-
-env: {}
-
-
 plugin:
   platform: "dbgpt"
 
+reasoner:
+  type: "dual"
+
+tools:
+  - &document_reader_tool
+    name: "DocumentReader"
+    module_path: "app.core.resource.graph_modeling"
+
+  - &vertex_label_generator_tool
+    name: "VertexLabelGenerator"
+    module_path: "app.core.resource.graph_modeling"
+
+  - &edge_label_generator_tool
+    name: "EdgeLabelGenerator"
+    module_path: "app.core.resource.graph_modeling"
+
+  - &graph_reachability_getter_tool
+    name: "GraphReachabilityGetter"
+    module_path: "app.core.resource.graph_modeling"
 
 actions:
   # graph modeling actions
-  content_understanding_action: &content_understanding_action
-    name: "内容理解"
+  - &content_understanding_action
+    name: "content_understanding"
     desc: "通过阅读和批注理解文档的主要内容和结构"
-    id: "doc_analysis.content_understanding"
     tools:
-      - tool: "DocumentReader"
-        id: "read_document_tool"
-        module_path: "app.core.resource.graph_modeling"
+      - *document_reader_tool
 
-  concept_identification_action: &concept_identification_action
-    name: "核心概念识别"
+  - &concept_identification_action
+    name: "concept_identification"
     desc: "识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系"
-    id: "doc_analysis.concept_identification"
 
-  relation_pattern_recognition_action: &relation_pattern_recognition_action
-    name: "关系模式识别"
+  - &relation_pattern_recognition_action
+    name: "relation_pattern_recognition"
     desc: "发现概念间的关系模式和交互方式"
-    id: "doc_analysis.relation_pattern"
 
-  consistency_check_action: &consistency_check_action
-    name: "一致性检查"
+  - &consistency_check_action
+    name: "consistency_check"
     desc: "检查文档中的概念和关系是否一致"
-    id: "doc_analysis.consistency_check"
 
-  entity_type_definition_action: &entity_type_definition_action
-    name: "实体类型定义"
+  - &entity_type_definition_action
+    name: "entity_type_definition"
     desc: "定义和分类文档中识别出的核心实体类型"
-    id: "concept_modeling.entity_type"
 
-  relation_type_definition_action: &relation_type_definition_action
-    name: "关系类型定义"
+  - &relation_type_definition_action
+    name: "relation_type_definition"
     desc: "设计实体间的关系类型和属性"
-    id: "concept_modeling.relation_type"
 
-  self_reflection_schema_action: &self_reflection_schema_action
-    name: "自我反思目前阶段的概念建模"
+  - &self_reflection_schema_action
+    name: "self_reflection_schema"
     desc: "不断检查和反思当前概念模型的设计"
-    id: "concept_modeling.reflection_schema"
 
-  schema_design_action: &schema_design_action
-    name: "Schema设计创建 TuGraph labels"
+  - &schema_design_action
+    name: "schema_design"
     desc: "将概念模型转化为图数据库 label"
-    id: "concept_modeling.schema_design"
     tools:
-      - tool: "VertexLabelGenerator"
-        id: "vertex_label_generator_tool"
-        module_path: "app.core.resource.graph_modeling"
-      - tool: "EdgeLabelGenerator"
-        id: "edge_label_generator_tool"
-        module_path: "app.core.resource.graph_modeling"
+      - *vertex_label_generator_tool
+      - *edge_label_generator_tool
 
-  graph_validation_action: &graph_validation_action
-    name: "反思和检查图的可达性(Reachability)"
-    desc: "需要调用相关的工具来检查"
-    id: "concept_modeling.graph_validation"
+  - &graph_validation_action
+    name: "graph_validation"
+    desc: "反思和检查图的可达性(Reachability)"
     tools:
-      - tool: "GraphReachabilityGetter"
-        id: "graph_reachability_getter_tool"
-        module_path: "app.core.resource.graph_modeling"
+      - *graph_reachability_getter_tool
 
+toolkit:
+  - [
+      *content_understanding_action,
+      *concept_identification_action,
+      *relation_pattern_recognition_action,
+      *consistency_check_action,
+    ]
+  - [
+      *entity_type_definition_action,
+      *relation_type_definition_action,
+      *self_reflection_schema_action,
+      *schema_design_action,
+      *graph_validation_action,
+    ]
 
 operators:
   # graph modeling operators
-  analysis_operator: &analysis_operator
+  - &analysis_operator
     instruction: |
       你是一位专业的文档分析专家，专注于从文档中提取关键信息，为知识图谱的构建奠定坚实基础。
       你需要理解文档内容。请注意，你分析的文档可能只是全集的一个子集，需要通过局部推断全局。
@@ -122,17 +131,8 @@ operators:
       - *concept_identification_action
       - *relation_pattern_recognition_action
       - *consistency_check_action
-    toolkit:
-      chain:
-        - [
-          *content_understanding_action,
-          *concept_identification_action,
-          *relation_pattern_recognition_action,
-          *consistency_check_action,
-        ]
-      single: []
 
-  concept_modeling_operator: &concept_modeling_operator
+  - &concept_modeling_operator
     instruction: |
       你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要设计合适的实体
 
@@ -187,17 +187,6 @@ operators:
       - *self_reflection_schema_action
       - *schema_design_action
       - *graph_validation_action
-    toolkit:
-      chain:
-        - [
-          *entity_type_definition_action,
-          *relation_type_definition_action,
-          *self_reflection_schema_action,
-          *schema_design_action,
-          *graph_validation_action
-        ]
-      single: []
-
 
 experts:
   - profile:
@@ -208,12 +197,8 @@ experts:
       actor_name: "Graph Modeling Expert"
       thinker_name: "Graph Modeling Expert"
     workflow:
-      chain:
-        - [
-            *analysis_operator,
-            *concept_modeling_operator
-          ]
-      single: []
-
+      - [*analysis_operator, *concept_modeling_operator]
 
 knowledgebase: {}
+memory: {}
+env: {}

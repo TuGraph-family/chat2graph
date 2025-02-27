@@ -1,10 +1,8 @@
-import asyncio
-
 from app.core.model.message import TextMessage
 from app.core.sdk.agentic_service import AgenticService
 
 
-async def main():
+def main():
     """Main function."""
     agentic_service = AgenticService.load()
 
@@ -18,11 +16,11 @@ async def main():
     )
 
     # submit the job
-    service_message = await agentic_service.execute(message=user_message)
+    service_message = agentic_service.execute(message=user_message)
 
     # print the result
     print(f"Service Result:\n{service_message.get_payload()}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

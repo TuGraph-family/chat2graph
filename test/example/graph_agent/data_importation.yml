@@ -3,55 +3,60 @@ app:
   desc: "An Agentic System on Graph Database."
   version: "0.0.1"
 
-
-memory: {}
-
-
-env: {}
-
-
 plugin:
   platform: "dbgpt"
 
+reasoner:
+  type: "dual"
+
+tools:
+  - &schema_getter_tool
+    name: "SchemaGetter"
+    module_path: "app.core.resource.data_importation"
+
+  - &document_reader_tool
+    name: "DocumentReader"
+    module_path: "app.core.resource.data_importation"
+
+  - &data_import_tool
+    name: "DataImport"
+    module_path: "app.core.resource.data_importation"
 
 actions:
   # data importation actions
-  schema_understanding_action: &schema_understanding_action
-    name: "图模型理解"
+  - &schema_understanding_action
+    name: "schema_understanding"
     desc: "调用相关工具获取图模型，并对图模型进行分析和理解"
-    id: "data_generation_and_import.schema_understanding_action"
     tools:
-      - tool: "SchemaGetter"
-        id: "get_schema_tool"
-        module_path: "app.core.resource.data_importation"
+      - *schema_getter_tool
 
-  content_understanding_action_2: &content_understanding_action_2
-    name: "文本内容理解"
+  - &content_understanding_action_2
+    name: "content_understanding_2"
     desc: "调用相关工具获取原始文本内容，并结合图模型进行分析和理解"
-    id: "data_generation_and_import.content_understanding_action"
     tools:
-      - tool: "DocumentReader"
-        id: "get_document_tool"
-        module_path: "app.core.resource.data_importation"
+      - *document_reader_tool
 
-  triplet_data_generation_action: &triplet_data_generation_action
-    name: "三元组数据抽取"
+  - &triplet_data_generation_action
+    name: "triplet_data_generation"
     desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库"
-    id: "data_generation_and_import.triplet_data_generation_action"
     tools:
-      - tool: "DataImport"
-        id: "import_data_tool"
-        module_path: "app.core.resource.data_importation"
+      - *data_import_tool
 
-  output_result_action: &output_result_action
-    name: "输出结果"
+  - &output_result_action
+    name: "output_result"
     desc: "输出数据导入结果的汇总信息"
-    id: "data_generation_and_import.output_result"
 
+toolkit:
+  - [
+      *schema_understanding_action,
+      *content_understanding_action_2,
+      *triplet_data_generation_action,
+      *output_result_action,
+    ]
 
 operators:
   # data importation operators
-  data_importation_operator: &data_importation_operator
+  - &data_importation_operator
     instruction: |
       你是一位资深的图数据抽取专家。
       你的使命是，基于已分析的文档内容和图模型，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。
@@ -74,16 +79,6 @@ operators:
       - *content_understanding_action_2
       - *triplet_data_generation_action
       - *output_result_action
-    toolkit:
-      chain:
-        - [
-          *schema_understanding_action,
-          *content_understanding_action_2,
-          *triplet_data_generation_action,
-          *output_result_action,
-        ]
-      single: []
-
 
 experts:
   - profile:
@@ -99,8 +94,8 @@ experts:
       actor_name: "Data Importation Expert"
       thinker_name: "Data Importation Expert"
     workflow:
-      chain: []
-      single: [*data_importation_operator]
-
+      - [*data_importation_operator]
 
 knowledgebase: {}
+memory: {}
+env: {}

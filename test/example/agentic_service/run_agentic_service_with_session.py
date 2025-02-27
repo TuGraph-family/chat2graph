@@ -1,10 +1,8 @@
-import asyncio
-
 from app.core.model.message import TextMessage
 from app.core.sdk.agentic_service import AgenticService
 
 
-async def main():
+def main():
     """Main function."""
     agentic_service = AgenticService.load()
 
@@ -18,14 +16,17 @@ async def main():
     )
 
     # submit the job
-    session = agentic_service.session()
-    job_wrapper = await session.submit(user_message)
-    service_message = await session.wait(job_wrapper.job.id)
-    # or it is also ok to use `await job_wrapper.result()` to get the result directly.
+    service_message = agentic_service.session().submit(user_message).wait()
+
+    # Asynchronous execution
+    # job = agentic_service.session().submit(user_message)
+    # while not job.query_result().has_result():
+    #     print("Waiting for the job to complete...")
+    # service_message = job.query_result().result
 
     # print the result
     print(f"Service Result:\n{service_message.get_payload()}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

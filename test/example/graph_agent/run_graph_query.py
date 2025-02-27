@@ -1,10 +1,8 @@
-import asyncio
-
 from app.core.model.message import TextMessage
 from app.core.sdk.agentic_service import AgenticService
 
 
-async def main():
+def main():
     """Main function"""
     mas = AgenticService.load("test/example/graph_agent/graph_modeling.yml")
     user_message = TextMessage(
@@ -12,9 +10,9 @@ async def main():
         "图数据库的主题是TuGraph。可能需要调用相关的工具（通过函数调用）来操作图数据库。",
         assigned_expert_name="Graph Query Expert",
     )
-    service_message = await mas.execute(message=user_message)
+    service_message = mas.execute(message=user_message)
     print(f"Service Result:\n{service_message.get_payload()}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

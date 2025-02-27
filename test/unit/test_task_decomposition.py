@@ -57,7 +57,7 @@ class MockWorkflow(Workflow):
     def _build_workflow(self, reasoner: Reasoner) -> Any:
         """Build the workflow."""
 
-    async def _execute_workflow(
+    def _execute_workflow(
         self,
         workflow: Any,
         job: Job,
@@ -186,7 +186,7 @@ Final Delivery:
     job_service: JobService = JobService()
     job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
-    job_graph = await leader.execute(AgentMessage(job=job))
+    job_graph = leader.execute(AgentMessage(job=job))
     print(f"job_graph: {job_graph.vertices}")
     job_service.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
 
@@ -212,7 +212,7 @@ Analyzing the task...
     job = Job(session_id="test_session_id", goal="")
 
     with pytest.raises(Exception) as exc_info:
-        job_graph = await leader.execute(AgentMessage(job=job))
+        job_graph = leader.execute(AgentMessage(job=job))
         job_service: JobService = JobService.instance
         job_service.replace_subgraph(new_subgraph=job_graph)
 

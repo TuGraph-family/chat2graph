@@ -3,50 +3,52 @@ app:
   desc: "An Agentic System on Graph Database."
   version: "0.0.1"
 
-
-memory: {}
-
-
-env: {}
-
-
 plugin:
   platform: "dbgpt"
 
+reasoner:
+  type: "dual"
+
+tools:
+  - &knowledge_base_retriever_tool
+    name: "KnowledgeBaseRetriever"
+    module_path: "app.core.resource.question_answering"
+
+  - &internet_retriever_tool
+    name: "InternetRetriever"
+    module_path: "app.core.resource.question_answering"
+
+  - &reference_generator_tool
+    name: "ReferenceGenerator"
+    module_path: "app.core.resource.question_answering"
 
 actions:
   # question answering actions
-  knowledge_base_retrieving_action: &knowledge_base_retrieving_action
-    name: "知识库检索"
+  - &knowledge_base_retrieving_action
+    name: "knowledge_base_retrieving"
     desc: "调用knowledge_base_search工具，从外接知识库中检索得到问题相关的文档"
-    id: "doc_retrieving.vector_retrieving"
     tools:
-      - tool: "KnowledgeBaseRetriever"
-        id: "knowledge_base_search_tool"
-        module_path: "app.core.resource.question_answering"
+      - *knowledge_base_retriever_tool
 
-  internet_retrieving_action: &internet_retrieving_action
-    name: "互联网检索"
+  - &internet_retrieving_action
+    name: "internet_retrieving"
     desc: "调用internet_search工具，从互联网搜索引擎中检索得到问题相关的文档"
-    id: "doc_retrieving.internet_retrieving"
     tools:
-      - tool: "InternetRetriever"
-        id: "internet_search_tool"
-        module_path: "app.core.resource.question_answering"
+      - *internet_retriever_tool
 
-  reference_listing_action: &reference_listing_action
-    name: "原文出处列举"
+  - &reference_listing_action
+    name: "reference_listing"
     desc: "调用reference_list工具，以markdown格式返回推理过程中所涉及的原文出处链接，方便展示"
-    id: "doc_summarizing.reference_listing"
     tools:
-      - tool: "ReferenceGenerator"
-        id: "reference_list_tool"
-        module_path: "app.core.resource.question_answering"
+      - *reference_generator_tool
 
+toolkit:
+  - [*knowledge_base_retrieving_action, *internet_retrieving_action]
+  - [*reference_listing_action]
 
 operators:
   # question answering operators
-  retrieving_operator: &retrieving_operator
+  - &retrieving_operator
     instruction: |
       你是一位专业的文档检索专家。你的工作是，从知识库以及互联网两个信息来源检索与问题相关的文档，
       仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
@@ -64,23 +66,16 @@ operators:
     output_schema: |
       {
           "original_question": "输入的原始提问",
-          "knowledge_base_result": ["知识库中", “检索得到的", "相关内容", "总结"],
-          "knowledge_base_references": ["知识库中", “检索得到的", "相关内容", "对应的", "章节编号"],
-          "internet_result": ["互联网", "搜索引擎中", "检索得到的", "相关内容", "总结"]
+          "knowledge_base_result": ["知识库中", "检索得到的", "相关内容", "总结"],
+          "knowledge_base_references": ["知识库中", "检索得到的", "相关内容", "对应的", "章节编号"],
+          "internet_result": ["互联网", "搜索引擎中", "检索得到的", "相关内容", "总结"],
           "internet_references": ["互联网", "搜索引擎中", "检索得到的", "相关内容", "对应的", "网址"]
       }
     actions:
       - *knowledge_base_retrieving_action
       - *internet_retrieving_action
-    toolkit:
-      chain:
-        - [
-          *knowledge_base_retrieving_action,
-          *internet_retrieving_action
-        ]
-      single: []
 
-  summarizing_operator: &summarizing_operator
+  - &summarizing_operator
     instruction: |
       你是一位文档总结专家,擅长总结归纳不同来源的文档。你需要根据用户的问题，总结归纳出用户需要的答案。
 
@@ -105,13 +100,6 @@ operators:
       }
     actions:
       - *reference_listing_action
-    toolkit:
-      chain:
-        - []
-      single: [
-        *reference_listing_action
-      ]
-
 
 experts:
   - profile:
@@ -125,12 +113,8 @@ experts:
       actor_name: "Question Answering Expert"
       thinker_name: "Question Answering Expert"
     workflow:
-      chain: 
-        - [
-          *retrieving_operator,
-          *summarizing_operator,
-        ]
-      single: []
-
+      - [*retrieving_operator, *summarizing_operator]
 
 knowledgebase: {}
+memory: {}
+env: {}

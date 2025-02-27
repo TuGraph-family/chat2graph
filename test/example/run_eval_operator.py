@@ -1,22 +1,20 @@
-import asyncio
-
 import matplotlib.pyplot as plt
 
 from app.core.common.type import WorkflowStatus
 from app.core.model.job import SubJob
 from app.core.model.message import WorkflowMessage
-from app.core.prompt.operator import (
-    EVAL_OPERATION_INSTRUCTION_PROMPT,
-    EVAL_OPERATION_OUTPUT_PROMPT,
-)
+from app.core.prompt.operator import EVAL_OPERATION_INSTRUCTION_PROMPT, EVAL_OPERATION_OUTPUT_PROMPT
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 
+ServiceFactory.initialize()
 
-async def main():
+
+def main():
     """Main function to demonstrate Operator usage for the evaluation."""
     # initialize
     action1 = Action(
@@ -37,9 +35,7 @@ async def main():
 
     # add actions to toolkit
     toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
-    toolkit_service.add_action(
-        id=operator.get_id(), action=action1, next_actions=[], prev_actions=[]
-    )
+    toolkit_service.add_action(action=action1, next_actions=[], prev_actions=[])
 
     # execute operator (with minimal reasoning rounds for testing)
     job = SubJob(
@@ -59,7 +55,7 @@ async def main():
     input_message_2 = WorkflowMessage(
         payload={"scratchpad": "The end value is 21."},
     )
-    result: WorkflowMessage = await operator.execute(
+    result: WorkflowMessage = operator.execute(
         reasoner=reasoner,
         job=job,
         workflow_messages=[execution_message, input_message_1, input_message_2],
@@ -80,4 +76,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

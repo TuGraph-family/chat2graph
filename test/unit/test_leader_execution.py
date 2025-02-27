@@ -1,7 +1,5 @@
 from typing import List, Optional
 
-import pytest
-
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
 from app.core.common.type import JobStatus
@@ -22,7 +20,7 @@ class TestAgentOperator(Operator):
     def __init__(self, id: str):
         self._config = OperatorConfig(id=id, instruction="", actions=[])
 
-    async def execute(
+    def execute(
         self,
         reasoner: DualModelReasoner,
         job: Job,
@@ -64,8 +62,7 @@ class TestAgentOperator(Operator):
         raise ValueError(f"Unknown operator id: {self._config.id}")
 
 
-@pytest.mark.asyncio
-async def test_agent_job_graph():
+def test_agent_job_graph():
     """test job graph message flow.
 
     graph structure:
@@ -166,7 +163,7 @@ async def test_agent_job_graph():
     )
 
     # execute job graph
-    job_graph: JobGraph = await leader.execute_job_graph(
+    job_graph: JobGraph = leader.execute_job_graph(
         job_graph=job_service.get_job_graph(job_id="test_original_job_id")
     )
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]

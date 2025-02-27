@@ -3,55 +3,55 @@ app:
   desc: "An Agentic System on Graph Database."
   version: "0.0.1"
 
-
-memory: {}
-
-
-env: {}
-
-
 plugin:
   platform: "dbgpt"
 
+reasoner:
+  type: "dual"
+
+tools:
+  - &algorithms_getter_tool
+    name: "AlgorithmsGetter"
+    module_path: "app.core.resource.graph_analysis"
+
+  - &algorithms_executor_tool
+    name: "AlgorithmsExecutor"
+    module_path: "app.core.resource.graph_analysis"
 
 actions:
   # graph analysis actions
-  content_understanding_action_3: &content_understanding_action_3
-    name: "内容理解"
+  - &content_understanding_action_3
+    name: "content_understanding_3"
     desc: "理解和分析用户的需求"
-    id: "algorithms_intention_analysis.content_understanding"
 
-  algorithms_intention_identification_action: &algorithms_intention_identification_action
-    name: "核心算法意图识别"
+  - &algorithms_intention_identification_action
+    name: "algorithms_intention_identification"
     desc: "识别并理解用户需求中的算法要求，调用相关工具函数查找图数据库中支持的算法，然后基于此确定算法的名称和要求"
-    id: "query_intention_analysis.query_intention_identification"
     tools:
-    - tool: "AlgorithmsGetter"
-      id: "algorithms_getter_tool"
-      module_path: "app.core.resource.graph_analysis"
+      - *algorithms_getter_tool
 
-  algorithms_validation_action: &algorithms_validation_action
-    name: "算法执行验证"
+  - &algorithms_validation_action
+    name: "algorithms_validation"
     desc: "确认当前图数据库中的算法是否支持相关的需求"
-    id: "algorithms_execute.algorithms_validation_action"
     tools:
-    - tool: "AlgorithmsGetter"
-      id: "algorithms_getter_tool"
-      module_path: "app.core.resource.graph_analysis"
+      - *algorithms_getter_tool
 
-  algorithms_execution_action: &algorithms_execution_action
-    name: "执行查询"
+  - &algorithms_execution_action
+    name: "algorithms_execution"
     desc: "在对应图上执行查询语句返回结果"
-    id: "algorithms_execute.algorithms_execution_aciton"
     tools:
-    - tool: "AlgorithmsExecutor"
-      id: "algorithms_excute_tool"
-      module_path: "app.core.resource.graph_analysis"
+      - *algorithms_executor_tool
 
+toolkit:
+  - [
+      *content_understanding_action_3,
+      *algorithms_intention_identification_action,
+    ]
+  - [*algorithms_validation_action, *algorithms_execution_action]
 
 operators:
   # graph analysis operators
-  algorithms_intention_analysis_operator: &algorithms_intention_analysis_operator
+  - &algorithms_intention_analysis_operator
     instruction: |
       你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
       你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
@@ -74,15 +74,8 @@ operators:
     actions:
       - *content_understanding_action_3
       - *algorithms_intention_identification_action
-    toolkit:
-      chain:
-        - [
-          *content_understanding_action_3,
-          *algorithms_intention_identification_action
-        ]
-      single: []
-  
-  algorithms_execute_operator: &algorithms_execute_operator
+
+  - &algorithms_execute_operator
     instruction: |
       你是一个专业的图算法执行专家。你的工作是根据算法需求执行相应的图算法，并返回结果。
       注意，你不能够询问用户更多的信息。
@@ -101,14 +94,6 @@ operators:
     actions:
       - *algorithms_validation_action
       - *algorithms_execution_action
-    toolkit:
-      chain:
-        - [
-          *algorithms_validation_action,
-          *algorithms_execution_action
-        ]
-      single: []
-
 
 experts:
   - profile:
@@ -121,12 +106,8 @@ experts:
       actor_name: "Graph Analysis Expert"
       thinker_name: "Graph Analysis Expert"
     workflow:
-      chain: 
-        - [
-          *algorithms_intention_analysis_operator,
-          *algorithms_execute_operator,
-        ]
-      single: []
-
+      - [*algorithms_intention_analysis_operator, *algorithms_execute_operator]
 
 knowledgebase: {}
+memory: {}
+env: {}

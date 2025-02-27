@@ -1,6 +1,4 @@
-import asyncio
-
-from app.core.common.type import PlatformType
+from app.core.common.type import PlatformType, ReasonerType
 from app.core.model.message import TextMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.resource.graph_modeling import (
@@ -14,9 +12,30 @@ from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.toolkit.toolkit import Action
 
 
-async def main():
+def main():
     """Main function."""
     mas = AgenticService("Chat2Graph")
+
+    # reasoner
+    mas.reasoner(ReasonerType.DUAL)
+
+    # toolkit
+    mas.toolkit(
+        (
+            content_understanding_action,
+            concept_identification_action,
+            relation_pattern_recognition_action,
+            consistency_check_action,
+        ),
+    ).toolkit(
+        (
+            entity_type_definition_action,
+            relation_type_definition_action,
+            self_reflection_schema_action,
+            schema_design_action,
+            graph_validation_action,
+        ),
+    )
 
     # operator
     analysis_operator = (
@@ -32,14 +51,6 @@ async def main():
             ]
         )
         .build()
-        .toolkit_chain(
-            (
-                content_understanding_action,
-                concept_identification_action,
-                relation_pattern_recognition_action,
-                consistency_check_action,
-            ),
-        )
     )
     concept_modeling_operator = (
         OperatorWrapper()
@@ -55,15 +66,6 @@ async def main():
             ]
         )
         .build()
-        .toolkit_chain(
-            (
-                entity_type_definition_action,
-                relation_type_definition_action,
-                self_reflection_schema_action,
-                schema_design_action,
-                graph_validation_action,
-            ),
-        )
     )
     job_decomposition_operator = (
         OperatorWrapper()
@@ -73,7 +75,7 @@ async def main():
     )
 
     # leader & expert
-    mas.leader(name="Leader").reasoner(thinker_name="Leader", actor_name="Leader").workflow(
+    mas.leader(name="Leader").workflow(
         job_decomposition_operator, platform_type=PlatformType.DBGPT
     ).build()
 
@@ -87,9 +89,7 @@ async def main():
     user_message = TextMessage(payload="通过工具来阅读原文，我需要对《三国演义》中的关系进行建模。")
 
     # submit the job
-    session = mas.session()
-    job_wrapper = await session.submit(user_message)
-    service_message = await session.wait(job_wrapper)
+    service_message = mas.session().submit(user_message).wait()
 
     # print the result
     print(f"Service Result:\n{service_message.get_payload()}")
@@ -252,4 +252,4 @@ CONCEPT_MODELING_OUTPUT_SCHEMA = """
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

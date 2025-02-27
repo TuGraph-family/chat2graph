@@ -58,28 +58,15 @@ async def operator():
     operator = Operator(config=config)
 
     # add actions to toolkit
+    toolkit_service.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
     toolkit_service.add_action(
-        id=operator.get_id(),
-        action=actions[0],
-        next_actions=[(actions[1], 0.9)],
-        prev_actions=[],
+        action=actions[1], next_actions=[(actions[2], 0.8)], prev_actions=[(actions[0], 0.9)]
     )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=actions[1],
-        next_actions=[(actions[2], 0.8)],
-        prev_actions=[(actions[0], 0.9)],
-    )
-    toolkit_service.add_action(
-        id=operator.get_id(),
-        action=actions[2],
-        next_actions=[],
-        prev_actions=[(actions[1], 0.8)],
-    )
+    toolkit_service.add_action(action=actions[2], next_actions=[], prev_actions=[(actions[1], 0.8)])
 
     # add tools to toolkit
     for tool, action in zip(tools, actions, strict=False):
-        toolkit_service.add_tool(id=operator.get_id(), tool=tool, connected_actions=[(action, 0.9)])
+        toolkit_service.add_tool(tool=tool, connected_actions=[(action, 0.9)])
 
     return operator
 
@@ -88,14 +75,11 @@ async def operator():
 async def test_execute_basic_functionality(operator: Operator, mock_reasoner: AsyncMock):
     """Test basic execution functionality."""
     job = SubJob(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="Test goal",
-        context="Test context",
+        id="test_job_id", session_id="test_session_id", goal="Test goal", context="Test context"
     )
     workflow_message = WorkflowMessage(payload={"scratchpad": "Test scratchpad"})
 
-    op_output = await operator.execute(
+    op_output = operator.execute(
         reasoner=mock_reasoner,
         workflow_messages=[workflow_message],
         job=job,
@@ -123,8 +107,7 @@ async def test_execute_basic_functionality(operator: Operator, mock_reasoner: As
 async def test_get_tools_from_actions(operator: Operator):
     """Test tool retrieval from actions."""
     toolkit_service: ToolkitService = ToolkitService.instance
-    tools, _ = await toolkit_service.recommend_tools(
-        id=operator.get_id(),
+    tools, _ = toolkit_service.recommend_tools_actions(
         actions=operator._config.actions,
         threshold=operator._config.threshold,
         hops=operator._config.hops,
@@ -146,18 +129,10 @@ async def test_execute_error_handling(operator: Operator, mock_reasoner: AsyncMo
     # make reasoner.infer raise an exception
     mock_reasoner.infer.side_effect = Exception("Test error")
 
-    job = SubJob(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="Test goal",
-    )
+    job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
     workflow_message = WorkflowMessage(payload={"scratchpad": "Test scratchpad"})
 
     with pytest.raises(Exception) as excinfo:
-        await operator.execute(
-            reasoner=mock_reasoner,
-            workflow_messages=[workflow_message],
-            job=job,
-        )
+        operator.execute(reasoner=mock_reasoner, workflow_messages=[workflow_message], job=job)
 
     assert str(excinfo.value) == "Test error"

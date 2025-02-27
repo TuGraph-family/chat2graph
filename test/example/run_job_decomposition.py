@@ -1,5 +1,3 @@
-import asyncio
-
 import networkx as nx  # type: ignore
 
 from app.core.agent.agent import AgentConfig, Profile
@@ -11,12 +9,15 @@ from app.core.model.message import AgentMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.service.job_service import JobService
+from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
+ServiceFactory.initialize()
 
-async def main():
+
+def main():
     """Main function."""
     # initialize
     reasoner = MonoModelReasoner()
@@ -71,7 +72,7 @@ async def main():
     job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
     # decompose the job
-    job_graph = await leader.execute(AgentMessage(job=job))
+    job_graph = leader.execute(AgentMessage(job=job))
 
     print("=== Decomposed Subtasks ===")
     for subjob_id in nx.topological_sort(job_graph.get_graph()):
@@ -86,4 +87,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
