@@ -35,7 +35,7 @@ tools:
     module_path: "app.core.resource.data_importation"
 
   - &grammer_reader_tool
-    name: "GrammerReader" # Corrected spelling, added name for consistency
+    name: "GrammerReader"
     module_path: "app.core.resource.graph_query"
 
   - &vertex_querier_tool
@@ -115,7 +115,7 @@ actions:
       - *schema_getter_tool
 
   - &content_understanding_action_2
-    name: "content_understanding_2" # Added name for clarity
+    name: "content_understanding_2"
     desc: "调用相关工具获取原始文本内容，并结合图模型进行分析和理解"
     tools:
       - *document_reader_tool
@@ -166,7 +166,7 @@ actions:
 
   # graph analysis actions
   - &content_understanding_action_3
-    name: "content_understanding_3" # Added name for clarity
+    name: "content_understanding_3"
     desc: "理解和分析用户的需求"
 
   - &algorithms_intention_identification_action
