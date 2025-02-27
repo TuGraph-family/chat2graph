@@ -66,5 +66,5 @@ class Agent(ABC):
         return self._profile
 
     @abstractmethod
-    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> Any:
+    def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> Any:
         """Execute the agent."""

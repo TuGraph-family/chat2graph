@@ -6,7 +6,7 @@ from app.core.model.message import ChatMessage
 
 @dataclass
 class JobResult:
-    """Job resul
+    """Job result data class.
 
     Attributes:
         job_id (str): the unique identifier of the job.
@@ -21,3 +21,7 @@ class JobResult:
     result: ChatMessage
     duration: float = 0.0
     tokens: int = 0
+
+    def has_result(self) -> bool:
+        """Check if the job has result."""
+        return self.status in [JobStatus.FINISHED, JobStatus.FAILED, JobStatus.STOPPED]

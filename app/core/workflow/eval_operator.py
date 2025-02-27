@@ -1,6 +1,7 @@
 import json
 from typing import List, Optional
 
+from app.core.common.async_func import run_async_function
 from app.core.common.type import WorkflowStatus
 from app.core.common.util import parse_json
 from app.core.model.job import Job
@@ -13,7 +14,7 @@ from app.core.workflow.operator import Operator
 class EvalOperator(Operator):
     """Operator for evaluating the performance of the model."""
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -26,9 +27,9 @@ class EvalOperator(Operator):
         )
         previous_op_message = workflow_messages[0].scratchpad
 
-        task = await self._build_task(job, workflow_messages, lesson)
+        task = self._build_task(job, workflow_messages, lesson)
 
-        result = await reasoner.infer(task=task)
+        result = run_async_function(reasoner.infer, task=task)
 
         try:
             result_dict = parse_json(text=result)
@@ -42,7 +43,7 @@ class EvalOperator(Operator):
                 "you generate the json block in <DELIVERABLE>...</DELIVERABLE>. Error info: "
                 + str(e)
             )
-            result = await reasoner.infer(task=task)
+            result = run_async_function(reasoner.infer, task=task)
             result_dict = parse_json(text=result)
 
         return WorkflowMessage(
@@ -54,14 +55,11 @@ class EvalOperator(Operator):
             }
         )
 
-    async def _build_task(
+    def _build_task(
         self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]
     ) -> Task:
-        rec_tools, rec_actions = await self._toolkit_service.recommend_tools(
-            id=self.get_id(),
-            actions=self._config.actions,
-            threshold=self._config.threshold,
-            hops=self._config.hops,
+        rec_tools, rec_actions = self._toolkit_service.recommend_tools_actions(
+            actions=self._config.actions, threshold=self._config.threshold, hops=self._config.hops
         )
 
         # refine the workflow messages to help the LLM to evaluate the performance and the process
@@ -90,8 +88,8 @@ class EvalOperator(Operator):
             workflow_messages=workflow_messages_copy,
             tools=rec_tools,
             actions=rec_actions,
-            knowledge=await self.get_knowledge(),
-            insights=await self.get_env_insights(),
+            knowledge=self.get_knowledge(),
+            insights=self.get_env_insights(),
             lesson=lesson,
         )
         return task

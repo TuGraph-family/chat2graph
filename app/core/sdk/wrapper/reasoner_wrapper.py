@@ -1,13 +1,12 @@
 from typing import List, Optional
 
-from app.core.common.type import MessageSourceType
+from app.core.common.type import ReasonerType
 from app.core.memory.reasoner_memory import ReasonerMemory
 from app.core.model.job import Job
 from app.core.model.message import ModelMessage
 from app.core.model.task import Task
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.reasoner_service import ReasonerService
 
 
 class ReasonerWrapper:
@@ -23,17 +22,13 @@ class ReasonerWrapper:
             raise ValueError("Reasoner is not set.")
         return self._reasoner
 
-    def build(
-        self, actor_name: str = MessageSourceType.MODEL.value, thinker_name: Optional[str] = None
-    ) -> "ReasonerWrapper":
+    def build(self, reasoner_type: ReasonerType) -> "ReasonerWrapper":
         """Set the reasoner of the agent.
 
         If thinker_name is provided, use DualModelReasoner, otherwise use MonoModelReasoner.
         """
-        if thinker_name:
-            self._reasoner = DualModelReasoner(actor_name=actor_name, thinker_name=thinker_name)
-        else:
-            self._reasoner = MonoModelReasoner(model_name=actor_name)
+        reasoner_service: ReasonerService = ReasonerService.instance
+        reasoner_service.init_reasoner(reasoner_type=reasoner_type)
 
         return self
 
