@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
-from app.core.common.agentic_config import AgenticConfig
 from app.core.common.singleton import Singleton
 from app.core.common.type import PlatformType, ReasonerType
+from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
@@ -97,11 +97,6 @@ class AgenticService(metaclass=Singleton):
         """Configure the AgenticService from yaml file."""
 
         agentic_service_config = AgenticConfig.from_yaml(yaml_path, encoding)
-
-        agentic_service_config.export_yaml(yaml_path="app/core/sdk/chat2graph_export.yml")
-        agentic_service_config = AgenticConfig.from_yaml(
-            "app/core/sdk/chat2graph_export.yml", encoding
-        )
 
         # create an instance of AgenticService
         mas = AgenticService(agentic_service_config.app.name)
