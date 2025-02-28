@@ -96,11 +96,12 @@ We share a common interest in collaborating to successfully complete the task by
     <YOUR_SCRATCHPAD>  // The consideration, which is specific, decisive, comprehensive, and direct, to the instruction.
 </scratchpad>
 <action>
-    <YOUR_ACTION>  // Can not be None
+    <YOUR_ACTION>  // Can not be None. You can use <function_call>...</function_call> here to call the functions.
 </action>
 <feedback>
     // When I provided you TASK_DONE, you must use <DELIVERABLE> in your response to indicate task completion.
     // If I did not provide you TASK_DONE, you should never use <DELIVERABLE> in your response.
+    // Do not mock <function_call_result>...</function_call_result> in your response (since it will be provided by the third party).
     <DELIVERABLE>
         1. Task Objective:
             [should be the same as the TASK]
@@ -178,10 +179,11 @@ Example:
     <YOUR_SCRATCHPAD>  // If you are not satisfied with my answer, you can say 'I am not satisfied with the answer, please provide me with another one.'
 </scratchpad>
 <action>
-    <YOUR_ACTION>  // Can not be None
+    <YOUR_ACTION>  // Can not be None. You can use <function_call>...</function_call> here to call the functions.
 </action>
 <feedback>
     // The feedback presents the results of the action (including func calling if it called).
+    // Do not mock <function_call_result>...</function_call_result> in your response (since it will be provided by the third party).
     <DELIVERABLE>
         1. Task Objective:
             [should be the same as the TASK]
