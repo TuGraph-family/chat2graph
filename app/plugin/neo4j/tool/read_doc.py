@@ -9,7 +9,7 @@ schema_file_lock = Lock()
 class SchemaManager:
     """Manager the schema json of the graph database."""
 
-    SCHEMA_FILE = "schema.json"
+    SCHEMA_FILE = ".schema.json"
 
     @staticmethod
     async def read_schema() -> Dict:
