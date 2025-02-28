@@ -1,15 +1,15 @@
 from app.core.common.type import PlatformType, ReasonerType
 from app.core.model.message import TextMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
-from app.core.resource.graph_modeling import (
+from app.core.sdk.agentic_service import AgenticService
+from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
+from app.core.toolkit.toolkit import Action
+from app.plugin.neo4j.resource.graph_modeling import (
     DocumentReader,
     EdgeLabelGenerator,
     GraphReachabilityGetter,
     VertexLabelGenerator,
 )
-from app.core.sdk.agentic_service import AgenticService
-from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
-from app.core.toolkit.toolkit import Action
 
 
 def main():
