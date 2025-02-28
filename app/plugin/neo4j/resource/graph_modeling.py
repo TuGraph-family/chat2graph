@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.neo4j_store import get_neo4j
-from app.plugin.neo4j.tool.read_doc import SchemaManager
+from app.plugin.neo4j.resource.read_doc import SchemaManager
 
 ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
 第五十回

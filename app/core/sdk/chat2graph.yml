@@ -12,55 +12,55 @@ reasoner:
 tools:
   - &document_reader_tool
     name: "DocumentReader"
-    module_path: "app.plugin.neo4j.tool.graph_modeling"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &vertex_label_generator_tool
     name: "VertexLabelGenerator"
-    module_path: "app.plugin.neo4j.tool.graph_modeling"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &edge_label_generator_tool
     name: "EdgeLabelGenerator"
-    module_path: "app.plugin.neo4j.tool.graph_modeling"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &graph_reachability_getter_tool
     name: "GraphReachabilityGetter"
-    module_path: "app.plugin.neo4j.tool.graph_modeling"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &schema_getter_tool
     name: "SchemaGetter"
-    module_path: "app.plugin.neo4j.tool.data_importation"
+    module_path: "app.plugin.neo4j.resource.data_importation"
 
   - &data_import_tool
     name: "DataImport"
-    module_path: "app.plugin.neo4j.tool.data_importation"
+    module_path: "app.plugin.neo4j.resource.data_importation"
 
   - &grammer_reader_tool
     name: "GrammerReader"
-    module_path: "app.plugin.neo4j.tool.graph_query"
+    module_path: "app.plugin.neo4j.resource.graph_query"
 
   - &vertex_querier_tool
     name: "VertexQuerier"
-    module_path: "app.plugin.neo4j.tool.graph_query"
+    module_path: "app.plugin.neo4j.resource.graph_query"
 
   - &algorithms_getter_tool
     name: "AlgorithmsGetter"
-    module_path: "app.plugin.neo4j.tool.graph_analysis"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &algorithms_executor_tool
     name: "AlgorithmsExecutor"
-    module_path: "app.plugin.neo4j.tool.graph_analysis"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &knowledge_base_retriever_tool
     name: "KnowledgeBaseRetriever"
-    module_path: "app.plugin.neo4j.tool.question_answering"
+    module_path: "app.plugin.neo4j.resource.question_answering"
 
   - &internet_retriever_tool
     name: "InternetRetriever"
-    module_path: "app.plugin.neo4j.tool.question_answering"
+    module_path: "app.plugin.neo4j.resource.question_answering"
 
   - &reference_generator_tool
     name: "ReferenceGenerator"
-    module_path: "app.plugin.neo4j.tool.question_answering"
+    module_path: "app.plugin.neo4j.resource.question_answering"
 
 actions:
   # graph modeling actions
