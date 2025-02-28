@@ -46,7 +46,7 @@ Requirements:
 - Focus on demonstrating clear thought progression rather than fixed formats
 - Narration style should be natural, divergent thinking, like having a dialogue with oneself
 
-Example: 
+Example:
 <reasoning_chain>
     // the example reasoning chain is just a example to present the depth of the reasoning, you should provide your own reasoning chain with your own reasoning tone.
     <Basic State ψ> ∵ ..., I understand the current task is... → This leads to several key considerations...

@@ -10,12 +10,6 @@ from test.resource.tool_resource import Query
 
 
 @pytest.fixture
-def operator_id():
-    """Create a unique operator ID for testing."""
-    return "test_operator_id"
-
-
-@pytest.fixture
 def sample_actions():
     """Create sample actions for testing."""
     return [

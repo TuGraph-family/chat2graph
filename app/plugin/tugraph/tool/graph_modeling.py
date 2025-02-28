@@ -6,7 +6,6 @@ from uuid import uuid4
 from app.core.common.system_env import SystemEnv
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
-from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.tool import Tool
 from app.plugin.tugraph.tugraph_store import get_tugraph
 
@@ -221,8 +220,6 @@ ROMANCE_OF_THE_THREE_KINGDOMS_CHAP_50 = """
  
 拚将一死酬知己，致令千秋仰义名。
 """
-
-toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
 
 
 class DocumentReader(Tool):
