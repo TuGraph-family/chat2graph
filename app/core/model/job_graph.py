@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import networkx as nx  # type: ignore
 
-from app.core.model.grpah import Graph
+from app.core.model.graph import Graph
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 

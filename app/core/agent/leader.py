@@ -1,4 +1,5 @@
-import asyncio
+from concurrent.futures import Future, ThreadPoolExecutor
+import time
 import traceback
 from typing import Dict, List, Optional, Set
 
@@ -31,16 +32,16 @@ class Leader(Agent):
         super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
 
-    async def execute_job(self, job: Job) -> JobGraph:
+    def execute_job(self, job: Job) -> JobGraph:
         """Execute a job from the user."""
         # decompose the job by the leader
-        job_graph = await self.execute(agent_message=AgentMessage(job=job))
+        job_graph = self.execute(agent_message=AgentMessage(job=job))
 
         # execute the job graph
         # TODO: make the job graph static, and save the job results by the service
-        return await self.execute_job_graph(job_graph=job_graph)
+        return self.execute_job_graph(job_graph=job_graph)
 
-    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
+    def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
         """Decompose the job and execute the job.
 
         Args:
@@ -53,6 +54,21 @@ class Leader(Agent):
         # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
 
         job = agent_message.get_payload()
+        assigned_expert_name: Optional[str] = job.assigned_expert_name
+        if assigned_expert_name:
+            expert = self.state.get_expert_by_name(assigned_expert_name)
+            job_graph: JobGraph = JobGraph()
+            job_graph.add_vertex(
+                job.id,
+                job=SubJob(
+                    id=job.id,
+                    session_id=job.session_id,
+                    goal=job.goal,
+                    context=job.goal + "\n" + job.context,
+                ),
+                expert_id=expert.get_id(),
+            )
+            return job_graph
 
         # get the expert list
         expert_profiles = [e.get_profile() for e in self._leader_state.list_experts()]
@@ -71,7 +87,7 @@ class Leader(Agent):
         )
 
         # decompose the job by the reasoner in the workflow
-        workflow_message = await self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
+        workflow_message = self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
 
         # extract the subjobs from the json block
         try:
@@ -114,8 +130,8 @@ class Leader(Agent):
 
         return job_graph
 
-    async def execute_job_graph(self, job_graph: JobGraph) -> JobGraph:
-        """Asynchronously execute the job graph with dependency-based parallel execution.
+    def execute_job_graph(self, job_graph: JobGraph) -> JobGraph:
+        """Execute the job graph with dependency-based parallel execution.
 
         Jobs are represented in a directed graph (job_graph) where edges define dependencies.
         Please make sure the job graph is a directed acyclic graph (DAG).
@@ -131,51 +147,55 @@ class Leader(Agent):
         # multi-agent system more flexible, scalable, and distributed.
 
         pending_job_ids: Set[str] = set(job_graph.vertices())
-        running_jobs: Dict[str, asyncio.Task] = {}  # job_id -> asyncio.Task
+        running_jobs: Dict[str, Future] = {}  # job_id -> Future
         job_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (result)
         job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)
 
-        while pending_job_ids:
-            # find jobs that are ready to execute (all dependencies completed)
-            ready_job_ids: Set[str] = set()
-            for job_id in pending_job_ids:
-                # check if all predecessors are completed
-                all_predecessors_completed = all(
-                    pred not in pending_job_ids and pred not in running_jobs
-                    for pred in job_graph.predecessors(job_id)
-                )
-                if all_predecessors_completed:
-                    # form the agent message to the agent
-                    job: Job = job_graph.get_job(job_id)
-                    pred_messages: List[WorkflowMessage] = [
-                        job_results[pred_id] for pred_id in job_graph.predecessors(job_id)
-                    ]
-                    job_inputs[job.id] = AgentMessage(job=job, workflow_messages=pred_messages)
+        with ThreadPoolExecutor() as executor:
+            while pending_job_ids or running_jobs:
+                # find jobs that are ready to execute (all dependencies completed)
+                ready_job_ids: Set[str] = set()
+                for job_id in pending_job_ids:
+                    # check if all predecessors are completed
+                    all_predecessors_completed = all(
+                        pred not in pending_job_ids and pred not in running_jobs
+                        for pred in job_graph.predecessors(job_id)
+                    )
+                    if all_predecessors_completed:
+                        # form the agent message to the agent
+                        job: Job = job_graph.get_job(job_id)
+                        pred_messages: List[WorkflowMessage] = [
+                            job_results[pred_id] for pred_id in job_graph.predecessors(job_id)
+                        ]
+                        job_inputs[job.id] = AgentMessage(job=job, workflow_messages=pred_messages)
+                        ready_job_ids.add(job_id)
 
-                    ready_job_ids.add(job_id)
+                # execute ready jobs
+                for job_id in ready_job_ids:
+                    expert = self._leader_state.get_expert_by_id(job_graph.get_expert_id(job_id))
+                    # submit the job to the executor
+                    running_jobs[job_id] = executor.submit(
+                        self._execute_job, expert, job_inputs[job_id]
+                    )
+                    pending_job_ids.remove(job_id)
 
-            # execute ready jobs
-            for job_id in ready_job_ids:
-                expert = self._leader_state.get_expert_by_id(job_graph.get_expert_id(job_id))
+                # if there are no running jobs but still pending jobs, it may be a deadlock
+                if not running_jobs and pending_job_ids:
+                    raise ValueError(
+                        "Deadlock detected or invalid job graph: some jobs cannot be executed due to dependencies."
+                    )
 
-                running_jobs[job_id] = asyncio.create_task(
-                    self._execute_job(expert, job_inputs[job_id])
-                )
-                pending_job_ids.remove(job_id)
-
-            # wait for any running job to complete
-            if running_jobs:
-                done, _ = await asyncio.wait(
-                    running_jobs.values(), return_when=asyncio.FIRST_COMPLETED
-                )
+                # check for completed jobs
+                completed_job_ids = []
+                for job_id, future in running_jobs.items():
+                    if future.done():
+                        completed_job_ids.append(job_id)
 
                 # process completed jobs
-                for completed_job in done:
-                    completed_job_id = next(
-                        tid for tid, t in running_jobs.items() if t == completed_job
-                    )
+                for completed_job_id in completed_job_ids:
+                    future = running_jobs[completed_job_id]
                     try:
-                        agent_result: AgentMessage = await completed_job
+                        agent_result: AgentMessage = future.result()  # 获取任务结果
 
                         if (
                             agent_result.get_workflow_result_message().status
@@ -215,10 +235,11 @@ class Leader(Agent):
                     # remove from running jobs
                     del running_jobs[completed_job_id]
 
-            # if no jobs are ready but some are pending, wait a bit
-            elif pending_job_ids:
-                await asyncio.sleep(0.5)
+                # if no jobs are ready but some are pending, wait a bit
+                if not completed_job_ids and running_jobs:
+                    time.sleep(0.5)
 
+        # process all job results
         for job_id, job_result in job_results.items():
             job_graph.set_job_result(
                 job_id,
@@ -228,11 +249,12 @@ class Leader(Agent):
                     result=TextMessage(payload=job_result.scratchpad),
                 ),
             )
+
         return job_graph
 
-    async def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
+    def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
         """Execute single job for the first time."""
-        agent_result_message: AgentMessage = await expert.execute(agent_message=agent_message)
+        agent_result_message: AgentMessage = expert.execute(agent_message=agent_message)
         workflow_result: WorkflowMessage = agent_result_message.get_workflow_result_message()
 
         if workflow_result.status == WorkflowStatus.SUCCESS:
@@ -242,7 +264,7 @@ class Leader(Agent):
             return agent_result_message
         elif workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # TODO: implement the decompose job method
-            # job_graph, expert_assignments = await self._decompse_job(
+            # job_graph, expert_assignments = self._decompse_job(
             #     job=job, num_subjobs=2
             # )
             raise NotImplementedError("Decompose the job into subjobs is not implemented.")

@@ -8,6 +8,7 @@ from dbgpt.core.awel import (  # type: ignore
 )
 import networkx as nx  # type: ignore
 
+from app.core.common.async_func import run_async_function
 from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
 from app.core.reasoner.reasoner import Reasoner
@@ -111,7 +112,7 @@ class DbgptWorkflow(Workflow):
 
             return self._tail_map_op
 
-    async def _execute_workflow(
+    def _execute_workflow(
         self,
         workflow: DbgptMapOperator,
         job: Job,
@@ -119,4 +120,4 @@ class DbgptWorkflow(Workflow):
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         """Execute the workflow."""
-        return await workflow.call(call_data=(job, workflow_messages, lesson))
+        return run_async_function(workflow.call, call_data=(job, workflow_messages, lesson))

@@ -16,20 +16,20 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 class TestReasoner(Reasoner):
     """Test reasoner"""
 
-    async def infer(
+    def infer(
         self,
         task: Task,
         tools: Optional[List[Tool]] = None,
     ) -> str:
         """Infer by the reasoner."""
 
-    async def update_knowledge(self, data: Any) -> None:
+    def update_knowledge(self, data: Any) -> None:
         """Update the knowledge."""
 
-    async def evaluate(self, data: Any) -> Any:
+    def evaluate(self, data: Any) -> Any:
         """Evaluate the inference process."""
 
-    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+    def conclude(self, reasoner_memory: ReasonerMemory) -> str:
         """Conclude the inference results."""
 
     def init_memory(self, task: Task) -> ReasonerMemory:
@@ -63,7 +63,7 @@ class MockOperator(Operator):
         self._config = OperatorConfig(id=id, instruction="Test instruction", actions=[])
         self._execution_order = execution_order
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -74,8 +74,7 @@ class MockOperator(Operator):
         return WorkflowMessage(payload={"scratchpad": f"Output from {self._config.id}"})
 
 
-@pytest.mark.asyncio
-async def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):
+def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):
     """Test basic workflow execution with sequential operators."""
     execution_order = []
 
@@ -89,15 +88,14 @@ async def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):
     workflow.add_operator(op2, previous_ops=[op1])
 
     # execute workflow
-    result = await workflow.execute(job=job, reasoner=mock_reasoner)
+    result = workflow.execute(job=job, reasoner=mock_reasoner)
 
     # verify execution order
     assert execution_order == ["op1", "op2"]
     assert result.scratchpad == "Output from op2"
 
 
-@pytest.mark.asyncio
-async def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
+def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
     """Test parallel workflow execution."""
     execution_order = []
 
@@ -113,7 +111,7 @@ async def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
     workflow.add_operator(op3, previous_ops=[op1, op2])
 
     # execute workflow
-    result = await workflow.execute(job=job, reasoner=mock_reasoner)
+    result = workflow.execute(job=job, reasoner=mock_reasoner)
 
     # verify execution
     assert len(execution_order) == 3
@@ -122,14 +120,13 @@ async def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
     assert result.scratchpad == "Output from op3"
 
 
-@pytest.mark.asyncio
-async def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
+def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
     """Test workflow error handling."""
 
     class ErrorOperator(MockOperator):
         """Operator that raises an error during execution."""
 
-        async def execute(
+        def execute(
             self,
             reasoner: Reasoner,
             job: Job,
@@ -144,11 +141,10 @@ async def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
 
     # verify error propagation
     with pytest.raises(ValueError, match="Test error"):
-        await workflow.execute(job=job, reasoner=mock_reasoner)
+        workflow.execute(job=job, reasoner=mock_reasoner)
 
 
-@pytest.mark.asyncio
-async def test_complex_workflow_topology(job: Job, mock_reasoner: Reasoner):
+def test_complex_workflow_topology(job: Job, mock_reasoner: Reasoner):
     """Test complex workflow topology with multiple parallel and sequential paths."""
     execution_order = []
 
@@ -168,7 +164,7 @@ async def test_complex_workflow_topology(job: Job, mock_reasoner: Reasoner):
     workflow.add_operator(op5, previous_ops=[op3, op4])
 
     # execute workflow
-    result = await workflow.execute(job=job, reasoner=mock_reasoner)
+    result = workflow.execute(job=job, reasoner=mock_reasoner)
 
     # verify execution constraints
     assert len(execution_order) == 5

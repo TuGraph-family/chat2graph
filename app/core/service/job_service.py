@@ -19,7 +19,11 @@ class JobService(metaclass=Singleton):
     def __init__(self):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
 
-    async def query_job_result(self, job_id: str) -> JobResult:
+    def get_original_job_ids(self) -> List[str]:
+        """Get all job ids."""
+        return list(self._job_graphs.keys())
+
+    def query_job_result(self, job_id: str) -> JobResult:
         """Query the result of the multi-agent system by original job id."""
         if job_id not in self._job_graphs:
             raise ValueError(
@@ -66,7 +70,7 @@ class JobService(metaclass=Singleton):
 
         return job_result
 
-    async def execute_job(self, job: Job) -> None:
+    def execute_job(self, job: Job) -> None:
         """Execute the job."""
         # submit the job by self
         initial_job_graph: JobGraph = JobGraph()
@@ -75,7 +79,7 @@ class JobService(metaclass=Singleton):
 
         # submit the job to the leader
         agent_service: AgentService = AgentService.instance
-        executed_job_graph = await agent_service.leader.execute_job(job=job)
+        executed_job_graph = agent_service.leader.execute_job(job=job)
 
         # replace the subgraph in the job service
         self.replace_subgraph(

@@ -63,6 +63,26 @@ class SystemEnvMeta(type):
         _env_values[key] = val
         return val
 
+    def __setattr__(cls, name: str, value: Any) -> None:
+        """Set environment variable value in _env_values cache"""
+        key = name.upper()
+
+        # check if key is a valid environment variable
+        key_info = _env_vars.get(key, None)
+        if key_info:
+            key_type, _ = key_info
+
+            # Apply type conversion
+            if key_type is bool:
+                value = str(value).lower() in ("true", "1", "yes") if value else False
+            else:
+                value = key_type(value) if value is not None else None
+
+            # store value in cache
+            _env_values[key] = value
+        else:
+            raise AttributeError(f"Invalid environment variable: {name}")
+
 
 class SystemEnv(metaclass=SystemEnvMeta):
     """Static class to manage system environment variables"""

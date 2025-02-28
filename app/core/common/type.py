@@ -7,6 +7,13 @@ class PlatformType(Enum):
     DBGPT = "dbgpt"
 
 
+class ReasonerType(Enum):
+    """Reasoner type enum."""
+
+    MONO = "mono"
+    DUAL = "dual"
+
+
 class MessageSourceType(Enum):
     """Message source type enum."""
 

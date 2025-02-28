@@ -1,9 +1,8 @@
-import asyncio
-
 import matplotlib.pyplot as plt
 
 from app.core.model.job import SubJob
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.toolkit import Toolkit
@@ -11,8 +10,10 @@ from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
 
+ServiceFactory.initialize()
 
-async def main():
+
+def main():
     """Main function to demonstrate Operator usage."""
     # initialize
     toolkit = Toolkit()
@@ -95,31 +96,24 @@ Answer in Chinese.
     # add actions to toolkit
     toolkit_service: ToolkitService = ToolkitService.instance or ToolkitService()
     toolkit_service.add_action(
-        id=operator.get_id(),
         action=action1,
         next_actions=[(action2, 0.9)],
         prev_actions=[],
     )
     toolkit_service.add_action(
-        id=operator.get_id(),
         action=action2,
         next_actions=[(action3, 0.8)],
         prev_actions=[(action1, 0.9)],
     )
     toolkit_service.add_action(
-        id=operator.get_id(),
         action=action3,
         next_actions=[],
         prev_actions=[(action2, 0.8)],
     )
 
     # add tools to toolkit
-    toolkit_service.add_tool(
-        id=operator.get_id(), tool=search_tool, connected_actions=[(action1, 0.9)]
-    )
-    toolkit_service.add_tool(
-        id=operator.get_id(), tool=analyze_tool, connected_actions=[(action2, 0.9)]
-    )
+    toolkit_service.add_tool(tool=search_tool, connected_actions=[(action1, 0.9)])
+    toolkit_service.add_tool(tool=analyze_tool, connected_actions=[(action2, 0.9)])
 
     # execute operator (with minimal reasoning rounds for testing)
     job = SubJob(
@@ -128,7 +122,7 @@ Answer in Chinese.
         goal="Test goal",
         context=context,
     )
-    result = await operator.execute(reasoner=reasoner, job=job)
+    result = operator.execute(reasoner=reasoner, job=job)
 
     print(f"Operator execution result:\n{result}\n")
     print("Operator execution completed successfully")
@@ -137,4 +131,4 @@ Answer in Chinese.
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

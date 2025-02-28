@@ -16,11 +16,11 @@ class DbgptMapOperator(MapOperator[Tuple[Job, Optional[List[WorkflowMessage]]], 
         self._operator: Operator = operator
         self._reasoner: Reasoner = reasoner
 
-    async def map(
+    def map(
         self, input_value: Tuple[Job, Optional[List[WorkflowMessage]], Optional[str]]
     ) -> WorkflowMessage:
         """Execute the operator."""
         job, workflow_messages, lesson = input_value
-        return await self._operator.execute(
+        return self._operator.execute(
             reasoner=self._reasoner, job=job, workflow_messages=workflow_messages, lesson=lesson
         )

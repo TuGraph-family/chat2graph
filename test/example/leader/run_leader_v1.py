@@ -1,4 +1,3 @@
-import asyncio
 from typing import List, Optional
 
 from app.core.agent.agent import AgentConfig, Profile
@@ -21,7 +20,7 @@ class BaseTestOperator(Operator):
         # Did not Call super().__init__(), because it is a test class
         self._config = OperatorConfig(id=id, instruction="", actions=[])
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -34,7 +33,7 @@ class BaseTestOperator(Operator):
 class NumberGeneratorOperator(BaseTestOperator):
     """Generate a sequence of numbers"""
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -52,7 +51,7 @@ class NumberGeneratorOperator(BaseTestOperator):
 class MultiplyByTwoOperator(BaseTestOperator):
     """Multiply each number by 2"""
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -71,7 +70,7 @@ class MultiplyByTwoOperator(BaseTestOperator):
 class AddTenOperator(BaseTestOperator):
     """Add 10 to each number"""
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -90,7 +89,7 @@ class AddTenOperator(BaseTestOperator):
 class SumOperator(BaseTestOperator):
     """Sum all numbers"""
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -109,7 +108,7 @@ class SumOperator(BaseTestOperator):
 class FormatResultOperator(BaseTestOperator):
     """Format the final result"""
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -127,7 +126,7 @@ class FormatResultOperator(BaseTestOperator):
         return WorkflowMessage(payload={"scratchpad": result})
 
 
-async def main():
+def main():
     """Main function for testing leader execute functionality."""
     # initialize components
     reasoner = DualModelReasoner()
@@ -258,7 +257,7 @@ async def main():
     print("\n=== Starting Leader Execute TestTest ===")
 
     # get the job graph and expert assignments
-    job_graph: JobGraph = await leader.execute_job_graph(
+    job_graph: JobGraph = leader.execute_job_graph(
         job_graph=job_service.get_job_graph("test_original_job_id")
     )
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
@@ -277,7 +276,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
 
 # === Starting Leader Execute TestTest ===
 # NumberGenerator output: 1 2 3 4 5

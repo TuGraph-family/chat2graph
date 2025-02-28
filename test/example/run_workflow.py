@@ -1,4 +1,3 @@
-import asyncio
 import time
 from typing import Any, List, Optional
 
@@ -8,7 +7,6 @@ from app.core.model.job import Job, SubJob
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
-from app.core.toolkit.tool import Tool
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
@@ -17,11 +15,7 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 class TestReasoner(Reasoner):
     """Test reasoner"""
 
-    async def infer(
-        self,
-        task: Task,
-        tools: Optional[List[Tool]] = None,
-    ) -> str:
+    async def infer(self, task: Task) -> str:
         """Infer by the reasoner."""
         return "Test inference"
 
@@ -55,7 +49,7 @@ class BaseTestOperator(Operator):
             actions=[],
         )
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -71,7 +65,7 @@ class UpperOperator(BaseTestOperator):
     def __init__(self, id: str):
         super().__init__(id=id)
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -95,7 +89,7 @@ class AddPrefixOperator(BaseTestOperator):
     def __init__(self, id: str):
         super().__init__(id=id)
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -122,7 +116,7 @@ class AddSuffixOperator(BaseTestOperator):
     def __init__(self, id: str):
         super().__init__(id=id)
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -146,7 +140,7 @@ class EvalOperator(BaseTestOperator):
     def __init__(self, id: str):
         super().__init__(id=id)
 
-    async def execute(
+    def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -173,7 +167,7 @@ class EvalOperator(BaseTestOperator):
         )
 
 
-async def main():
+def main():
     """Test parallel workflow: Upper -> Join <- Prefix"""
     job = SubJob(
         id="test_job_id",
@@ -193,7 +187,7 @@ async def main():
     workflow.add_operator(op3, previous_ops=[op1, op2])
     workflow.set_evaluator(eval_operator)
 
-    result: WorkflowMessage = await workflow.execute(job=job, reasoner=TestReasoner())
+    result: WorkflowMessage = workflow.execute(job=job, reasoner=TestReasoner())
     print(f"Final result: {result.scratchpad}")
 
     assert result.status == WorkflowStatus.SUCCESS.value
@@ -204,4 +198,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

@@ -61,23 +61,11 @@ async def operator():
     eval_operator = EvalOperator(config=config)
 
     # add actions to toolkit
-    toolkit_service.add_action(
-        id=eval_operator.get_id(),
-        action=actions[0],
-        next_actions=[(actions[1], 0.9)],
-        prev_actions=[],
-    )
-    toolkit_service.add_action(
-        id=eval_operator.get_id(),
-        action=actions[1],
-        next_actions=[],
-        prev_actions=[(actions[0], 0.9)],
-    )
+    toolkit_service.add_action(action=actions[0], next_actions=[(actions[1], 0.9)], prev_actions=[])
+    toolkit_service.add_action(action=actions[1], next_actions=[], prev_actions=[(actions[0], 0.9)])
     # add tools to toolkit
     for tool, action in zip(tools, actions, strict=False):
-        toolkit_service.add_tool(
-            id=eval_operator.get_id(), tool=tool, connected_actions=[(action, 0.9)]
-        )
+        toolkit_service.add_tool(tool=tool, connected_actions=[(action, 0.9)])
     return eval_operator
 
 
@@ -92,7 +80,7 @@ async def test_execute_basic_functionality(operator: EvalOperator, mock_reasoner
     )
     workflow_message = WorkflowMessage(payload={"scratchpad": "[2, 3, 5, 7, 11, 13, 17, 19]"})
 
-    op_output = await operator.execute(
+    op_output = operator.execute(
         reasoner=mock_reasoner,
         workflow_messages=[workflow_message],
         job=job,
@@ -121,18 +109,10 @@ async def test_execute_error_handling(operator: EvalOperator, mock_reasoner: Asy
     # make reasoner.infer raise an exception
     mock_reasoner.infer.side_effect = Exception("Test error")
 
-    job = SubJob(
-        id="test_job_id",
-        session_id="test_session_id",
-        goal="Test goal",
-    )
+    job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
     workflow_message = WorkflowMessage(payload={"scratchpad": "[2, 3, 5, 7, 11, 13, 17, 19]"})
 
     with pytest.raises(Exception) as excinfo:
-        await operator.execute(
-            reasoner=mock_reasoner,
-            workflow_messages=[workflow_message],
-            job=job,
-        )
+        operator.execute(reasoner=mock_reasoner, workflow_messages=[workflow_message], job=job)
 
     assert str(excinfo.value) == "Test error"

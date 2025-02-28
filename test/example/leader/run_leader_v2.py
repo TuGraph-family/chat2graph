@@ -1,22 +1,20 @@
-import asyncio
-
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
 from app.core.model.job import SubJob
 from app.core.model.job_graph import JobGraph
-from app.core.prompt.operator import (
-    EVAL_OPERATION_INSTRUCTION_PROMPT,
-    EVAL_OPERATION_OUTPUT_PROMPT,
-)
+from app.core.prompt.operator import EVAL_OPERATION_INSTRUCTION_PROMPT, EVAL_OPERATION_OUTPUT_PROMPT
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.service.job_service import JobService
+from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
+ServiceFactory.initialize()
 
-async def main():
+
+def main():
     """Main function for testing leader execute with academic paper analysis."""
     # initialize components
     reasoner = DualModelReasoner()
@@ -234,7 +232,7 @@ paper content:
 
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
-    job_graph: JobGraph = await leader.execute_job_graph(
+    job_graph: JobGraph = leader.execute_job_graph(
         job_graph=job_service.get_job_graph("test_original_job_id")
     )
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
@@ -252,4 +250,4 @@ paper content:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

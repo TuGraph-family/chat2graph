@@ -196,11 +196,13 @@ class ChatMessage(Message):
     def __init__(
         self,
         payload: Any,
+        assigned_expert_name: Optional[str] = None,
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
         self._payload: str = payload
+        self._assigned_expert_name: Optional[str] = assigned_expert_name
 
     def get_payload(self) -> str:
         """Get the content of the message."""
@@ -214,6 +216,10 @@ class ChatMessage(Message):
         """Get the message id."""
         return self._id
 
+    def get_assigned_expert_name(self) -> Optional[str]:
+        """Get the assigned expert name."""
+        return self._assigned_expert_name
+
     def copy(self) -> "ChatMessage":
         """Copy the message."""
         return ChatMessage(payload=self._payload, timestamp=self._timestamp, id=self._id)
@@ -225,10 +231,13 @@ class TextMessage(ChatMessage):
     def __init__(
         self,
         payload: str,
+        assigned_expert_name: Optional[str] = None,
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
     ):
-        super().__init__(payload=payload, timestamp=timestamp, id=id)
+        super().__init__(
+            payload=payload, assigned_expert_name=assigned_expert_name, timestamp=timestamp, id=id
+        )
 
     def get_payload(self) -> Any:
         """Get the content of the message."""

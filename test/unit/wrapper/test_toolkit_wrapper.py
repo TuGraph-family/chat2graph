@@ -1,8 +1,11 @@
 from unittest import mock
 
 from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
+from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from test.resource.tool_resource import Query
+
+ToolkitService()
 
 
 def test_action(mocker):
@@ -20,7 +23,7 @@ def test_action(mocker):
     wrapper.action(action, tools)
 
     # check add_action was called, and the parameters are correct
-    mock_add_action_method.assert_called_once_with(wrapper._toolkit_id, action, [], [])
+    mock_add_action_method.assert_called_once_with(action, [], [])
 
 
 def test_chain_single_action(mocker):
@@ -48,12 +51,10 @@ def test_chain_single_action(mocker):
     wrapper.chain(action)
 
     # check the add_action method was called once
-    mock_add_action_method.assert_called_once_with(wrapper._toolkit_id, action, [], [])
+    mock_add_action_method.assert_called_once_with(action, [], [])
 
     # check the add_action method was called with by single action
-    mock_add_tool_method.assert_called_once_with(
-        wrapper._toolkit_id, tool, connected_actions=[(action, 1.0)]
-    )
+    mock_add_tool_method.assert_called_once_with(tool, connected_actions=[(action, 1.0)])
 
 
 def test_chain_multiple_actions(mocker):
@@ -90,7 +91,7 @@ def test_chain_multiple_actions(mocker):
 
     # check the add_action method was called with action1 (first call)
     action1_call_args = mock_add_action_method.call_args_list[0]
-    action1_arg_add_action = action1_call_args[0][1]
+    action1_arg_add_action = action1_call_args[0][0]
     assert action1_arg_add_action.id == "action_1"
     assert action1_arg_add_action.tools == []
     next_actions_arg_action1 = action1_call_args[1]["next_actions"]
@@ -103,7 +104,7 @@ def test_chain_multiple_actions(mocker):
 
     # check the add_action method was called with action2 (second call)
     action2_call_args = mock_add_action_method.call_args_list[1]
-    action2_arg_add_action = action2_call_args[0][1]
+    action2_arg_add_action = action2_call_args[0][0]
     assert action2_arg_add_action.id == "action_2"
     assert action2_arg_add_action.tools == []
     next_actions_arg_action2 = action2_call_args[1]["next_actions"]
@@ -119,7 +120,7 @@ def test_chain_multiple_actions(mocker):
 
     # check the add_tool method was called with tool_1 (first call)
     tool1_call_args = mock_add_tool_method.call_args_list[0]
-    tool1_arg_add_tool = tool1_call_args[0][1]
+    tool1_arg_add_tool = tool1_call_args[0][0]
     assert tool1_arg_add_tool.id == "tool_1"
     connected_actions_arg_tool1 = tool1_call_args[1]["connected_actions"]
     assert len(connected_actions_arg_tool1) == 1
@@ -129,7 +130,7 @@ def test_chain_multiple_actions(mocker):
 
     # check the add_tool method was called with tool_2 (second call)
     tool2_call_args = mock_add_tool_method.call_args_list[1]
-    tool2_arg_add_tool = tool2_call_args[0][1]
+    tool2_arg_add_tool = tool2_call_args[0][0]
     assert tool2_arg_add_tool.id == "tool_2"
     connected_actions_arg_tool2 = tool2_call_args[1]["connected_actions"]
     assert len(connected_actions_arg_tool2) == 1

@@ -27,7 +27,7 @@ class Workflow(ABC):
         self._operator_graph: nx.DiGraph = nx.DiGraph()
         self._evaluator: Optional[EvalOperator] = None
 
-    async def execute(
+    def execute(
         self,
         job: Job,
         reasoner: Reasoner,
@@ -53,9 +53,7 @@ class Workflow(ABC):
                     self.__workflow = self._build_workflow(reasoner)
                 return self.__workflow
 
-        workflow_message = await self._execute_workflow(
-            build_workflow(), job, workflow_messages, lesson
-        )
+        workflow_message = self._execute_workflow(build_workflow(), job, workflow_messages, lesson)
         if not self._evaluator:
             workflow_message.status = WorkflowStatus.SUCCESS
             workflow_message.evaluation = "The workflow is executed successfully."
@@ -124,7 +122,7 @@ class Workflow(ABC):
         """Build the workflow."""
 
     @abstractmethod
-    async def _execute_workflow(
+    def _execute_workflow(
         self,
         workflow: Any,
         job: Job,
@@ -146,7 +144,7 @@ class BuiltinWorkflow(Workflow):
         """Build the workflow."""
         raise NotImplementedError("This method is not implemented.")
 
-    async def _execute_workflow(
+    def _execute_workflow(
         self,
         workflow: Any,
         job: Job,

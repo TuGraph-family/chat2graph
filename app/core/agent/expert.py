@@ -9,7 +9,7 @@ from app.core.model.message import AgentMessage, WorkflowMessage
 class Expert(Agent):
     """Expert is a role that can execute a workflow."""
 
-    async def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> AgentMessage:
+    def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> AgentMessage:
         """Execute to resolve the job with enhanced error handling and lesson learned.
 
         Args:
@@ -23,7 +23,7 @@ class Expert(Agent):
         job = agent_message.get_payload()
         workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
 
-        workflow_message: WorkflowMessage = await self._workflow.execute(
+        workflow_message: WorkflowMessage = self._workflow.execute(
             job=job,
             reasoner=self._reasoner,
             workflow_messages=workflow_messages,
@@ -51,7 +51,7 @@ class Expert(Agent):
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
             if retry_count >= max_retry_count:
                 raise Exception("The job cannot be executed successfully after retrying.")
-            return await self.execute(agent_message=agent_message, retry_count=retry_count + 1)
+            return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         elif workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
             # (3) WorkflowStatus.INPUT_DATA_ERROR
 

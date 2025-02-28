@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import matplotlib
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import networkx as nx  # type: ignore
@@ -9,25 +10,26 @@ from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.toolkit import Toolkit
 
+# use non-interactive backend for matplotlib, to avoid blocking
+matplotlib.use("Agg")
+
 
 class ToolkitService(metaclass=Singleton):
     """The toolkit service provides functionalities for the toolkit."""
 
     def __init__(self):
-        self._toolkits: Dict[str, Toolkit] = {}  # id -> toolkit
+        self._toolkit: Toolkit = Toolkit()
 
-    def get_toolkit(self, id: str) -> Toolkit:
+    def get_toolkit(self) -> Toolkit:
         """Get the current toolkit."""
-        if id not in self._toolkits:
-            self._toolkits[id] = Toolkit()
-        return self._toolkits[id]
+        return self._toolkit
 
     def with_store(self, store_type: Any) -> "ToolkitService":
         """Use the store for the toolkit."""
         # TODO: implement the persistent storage for the toolkit
         raise NotImplementedError("This method is not implemented")
 
-    def add_tool(self, id: str, tool: Tool, connected_actions: List[tuple[Action, float]]):
+    def add_tool(self, tool: Tool, connected_actions: List[tuple[Action, float]]):
         """Add tool to toolkit graph. Action --Call--> Tool.
 
         Args:
@@ -37,25 +39,24 @@ class ToolkitService(metaclass=Singleton):
         """
         has_connected_actions = False
         # add tool vertex if not exists
-        if tool.id not in self.get_toolkit(id).vertices():
-            self.get_toolkit(id).add_vertex(tool.id, data=tool)
+        if tool.id not in self.get_toolkit().vertices():
+            self.get_toolkit().add_vertex(tool.id, data=tool)
 
         # add edges from actions to tool
         for action, score in connected_actions:
-            if action.id in self.get_toolkit(id).vertices():
-                self.get_toolkit(id).add_edge(action.id, tool.id)
-                self.get_toolkit(id).set_score(action.id, tool.id, score)
+            if action.id in self.get_toolkit().vertices():
+                self.get_toolkit().add_edge(action.id, tool.id)
+                self.get_toolkit().set_score(action.id, tool.id, score)
                 has_connected_actions = True
             else:
                 print(f"warning: Action {action.id} not in the toolkit graph")
 
         if not has_connected_actions:
             print(f"warning: Tool {tool.id} has no connected actions")
-            self.get_toolkit(id).remove_vertex(tool.id)
+            self.get_toolkit().remove_vertex(tool.id)
 
     def add_action(
         self,
-        id: str,
         action: Action,
         next_actions: List[tuple[Action, float]],
         prev_actions: List[tuple[Action, float]],
@@ -70,38 +71,38 @@ class ToolkitService(metaclass=Singleton):
                 this action
         """
         # add action vertex if not exists
-        if action.id not in self.get_toolkit(id).vertices():
-            self.get_toolkit(id).add_vertex(action.id, data=action)
+        if action.id not in self.get_toolkit().vertices():
+            self.get_toolkit().add_vertex(action.id, data=action)
 
         # add edges to next actions
         for next_action, score in next_actions:
-            if next_action.id in self.get_toolkit(id).vertices():
-                self.get_toolkit(id).add_edge(action.id, next_action.id)
-                self.get_toolkit(id).set_score(action.id, next_action.id, score)
+            if next_action.id in self.get_toolkit().vertices():
+                self.get_toolkit().add_edge(action.id, next_action.id)
+                self.get_toolkit().set_score(action.id, next_action.id, score)
 
         # add edges from previous actions
         for prev_action, score in prev_actions:
-            if prev_action.id in self.get_toolkit(id).vertices():
-                self.get_toolkit(id).add_edge(prev_action.id, action.id)
-                self.get_toolkit(id).set_score(prev_action.id, action.id, score)
+            if prev_action.id in self.get_toolkit().vertices():
+                self.get_toolkit().add_edge(prev_action.id, action.id)
+                self.get_toolkit().set_score(prev_action.id, action.id, score)
 
     def get_action(self, id: str, action_id: str) -> Action:
         """Get action from the toolkit graph."""
-        action: Optional[Action] = self.get_toolkit(id).get_action(action_id)
+        action: Optional[Action] = self.get_toolkit().get_action(action_id)
         if not action:
             raise ValueError(f"Action {action_id} not found in the toolkit graph")
         return action
 
     def remove_tool(self, id: str, tool_id: str):
         """Remove tool from the toolkit graph."""
-        self.get_toolkit(id).remove_vertex(tool_id)
+        self.get_toolkit().remove_vertex(tool_id)
 
     def remove_action(self, id: str, action_id: str):
         """Remove action from the toolkit graph."""
-        self.get_toolkit(id).remove_vertex(action_id)
+        self.get_toolkit().remove_vertex(action_id)
 
-    async def recommend_subgraph(
-        self, id: str, actions: List[Action], threshold: float = 0.5, hops: int = 0
+    def recommend_subgraph(
+        self, actions: List[Action], threshold: float = 0.5, hops: int = 0
     ) -> Toolkit:
         """It is a recommendation engine that extracts a relevant subgraph from a
         toolkit graph based on input actions. It performs a weighted breadth-first
@@ -116,7 +117,6 @@ class ToolkitService(metaclass=Singleton):
         3. Filters edges based on score threshold and returns the final subgraph
 
         Args:
-            id (str): The operator ID to identify the toolkit
             actions (List[Action]): The input actions to search for recommendations
             threshold (float): Minimum edge score to consider
             hops (int): Number of steps to search in the graph
@@ -126,7 +126,7 @@ class ToolkitService(metaclass=Singleton):
         """
         # get initial action vertex ids
         vertex_ids_to_keep: Set[str] = {
-            action.id for action in actions if action.id in self.get_toolkit(id).vertices()
+            action.id for action in actions if action.id in self.get_toolkit().vertices()
         }
 
         # do BFS to get all action vertex ids within hops
@@ -135,11 +135,11 @@ class ToolkitService(metaclass=Singleton):
             next_vertex_ids: Set[str] = set()
             for vertex_id in current_vertex_ids:
                 # find next actions connected with score >= threshold
-                for neighbor_id in self.get_toolkit(id).successors(vertex_id):
+                for neighbor_id in self.get_toolkit().successors(vertex_id):
                     if (
-                        self.get_toolkit(id).get_action(vertex_id)
-                        and self.get_toolkit(id).get_action(neighbor_id)
-                        and self.get_toolkit(id).get_score(vertex_id, neighbor_id) >= threshold
+                        self.get_toolkit().get_action(vertex_id)
+                        and self.get_toolkit().get_action(neighbor_id)
+                        and self.get_toolkit().get_score(vertex_id, neighbor_id) >= threshold
                     ):
                         next_vertex_ids.add(neighbor_id)
                         vertex_ids_to_keep.add(neighbor_id)
@@ -151,15 +151,15 @@ class ToolkitService(metaclass=Singleton):
         # for all found actions, add their connected tools to the found actions
         action_vertex_ids: Set[str] = set(vertex_ids_to_keep)
         for action_vertex_id in action_vertex_ids:
-            for tool_id in self.get_toolkit(id).successors(action_vertex_id):
+            for tool_id in self.get_toolkit().successors(action_vertex_id):
                 if (
-                    self.get_toolkit(id).get_action(action_vertex_id)
-                    and self.get_toolkit(id).get_tool(tool_id)
-                    and self.get_toolkit(id).get_score(action_vertex_id, tool_id) >= threshold
+                    self.get_toolkit().get_action(action_vertex_id)
+                    and self.get_toolkit().get_tool(tool_id)
+                    and self.get_toolkit().get_score(action_vertex_id, tool_id) >= threshold
                 ):
                     vertex_ids_to_keep.add(tool_id)
 
-        toolkit_subgraph: Toolkit = self.get_toolkit(id).subgraph(list(vertex_ids_to_keep))
+        toolkit_subgraph: Toolkit = self.get_toolkit().subgraph(list(vertex_ids_to_keep))
 
         # remove edges that don't meet the threshold
         for u, v in toolkit_subgraph.edges():
@@ -169,13 +169,12 @@ class ToolkitService(metaclass=Singleton):
 
         return toolkit_subgraph
 
-    async def recommend_tools(
-        self, id: str, actions: List[Action], threshold: float = 0.5, hops: int = 0
+    def recommend_tools_actions(
+        self, actions: List[Action], threshold: float = 0.5, hops: int = 0
     ) -> Tuple[List[Tool], List[Action]]:
         """Recommend tools and actions.
 
         Args:
-            id: The operator ID to identify the toolkit
             actions: List of actions to recommend tools for
             threshold: Minimum score threshold for recommendations
             hops: Number of hops to search for recommendations
@@ -183,7 +182,7 @@ class ToolkitService(metaclass=Singleton):
         Returns:
             nx.DiGraph: The toolkit subgraph with recommended tools
         """
-        subgraph = await self.recommend_subgraph(id, actions, threshold, hops)
+        subgraph = self.recommend_subgraph(actions, threshold, hops)
         rec_actions: List[Action] = []
         rec_tools: List[Tool] = []
         for n in subgraph.vertices():
@@ -196,7 +195,7 @@ class ToolkitService(metaclass=Singleton):
 
         return rec_tools, rec_actions
 
-    async def update_action(self, text: str, called_tools: List[Tool]):
+    def update_action(self, text: str, called_tools: List[Tool]):
         """Update the toolkit graph by reinforcement learning.
 
         Args:
@@ -206,9 +205,9 @@ class ToolkitService(metaclass=Singleton):
         # TODO: simple reinforcement learning implementation
         raise NotImplementedError("This method is not implemented")
 
-    def train(self, *args: Any, **kwargs: Any) -> Any:
+    def tune(self, *args: Any, **kwargs: Any) -> Any:
         """Train the toolkit by RL."""
-        # TODO: implement the train method
+        # TODO: implement the tune method
         raise NotImplementedError("This method is not implemented")
 
     def visualize(self, graph: Toolkit, title: str, show=True):
