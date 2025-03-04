@@ -1,101 +1,189 @@
-from datetime import datetime, timezone
-import os
+from typing import Dict, List, Optional
 
-from openai import OpenAI
-
-from app.plugin.sqlite.sqlite_model import Message, db
-from app.server.common.api_tool import ParameterException, ServiceException
-
-PROXY_API_KEY = os.getenv("PROXY_API_KEY")
-PROXY_SERVER_URL = os.getenv("PROXY_SERVER_URL")
-PROXYLLM_BACKEND = os.getenv("PROXYLLM_BACKEND")
-client = OpenAI(api_key=PROXY_API_KEY, base_url=PROXY_SERVER_URL)
+from app.core.common.singleton import Singleton
+from app.core.dal.dao import MessageDAO
+from app.core.dal.database import DB
+from app.core.model.message import ChatMessage
+from app.server.common.util import ServiceException
 
 
-def get_all_messages(session_id):
-    messages = Message.query.filter_by(session_id=session_id).all()
-    return [
-        {
-            "id": message.id,
-            "session_id": message.session_id,
-            "role": message.role,
-            "message": message.message,
-            "timestamp": message.timestamp.isoformat(),
-        }
-        for message in messages
-    ]
+class MessageService(metaclass=Singleton):
+    """ChatMessage service"""
 
+    def __init__(self):
+        self._messages: Dict[str, ChatMessage] = {}
+        self._dao = MessageDAO(DB())
 
-def create_message(session_id, role, message_content):
-    if not role or not message_content:
-        raise ParameterException("Message content are required")
+    def create_message(
+        self,
+        session_id: str,
+        message_type: str,
+        role: str,
+        message: str,
+        job_id: Optional[str] = None,
+        others: Optional[str] = None,
+    ) -> ChatMessage:
+        """Create a new message.
 
-    new_message = Message(
-        session_id=session_id,
-        role=role,
-        message=message_content,
-        timestamp=datetime.now(timezone.utc),
-    )
+        Args:
+            session_id (str): ID of the associated session
+            message_type (str): Type of the message
+            role (str): Role of the sender
+            message (str): Content of the message
+            job_id (Optional[str]): Job ID related to the message.
+            others (Optional[str]): Additional information.
 
-    try:
-        db.session.add(new_message)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        raise ServiceException(f"Failed to create message: {str(e)}") from e
-
-    return {
-        "id": new_message.id,
-        "session_id": new_message.session_id,
-        "role": new_message.role,
-        "message": new_message.message,
-        "timestamp": new_message.timestamp.isoformat(),
-    }
-
-
-def get_message(message_id):
-    message = Message.query.get(message_id)
-    if message is None:
-        raise ParameterException("Message not found")
-
-    return {
-        "id": message.id,
-        "session_id": message.session_id,
-        "role": message.role,
-        "message": message.message,
-        "timestamp": message.timestamp.isoformat(),
-    }
-
-
-def delete_message(message_id):
-    message = Message.query.get(message_id)
-    if message is None:
-        raise ParameterException("Message not found")
-    try:
-        db.session.delete(message)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        raise ServiceException(f"Failed to delete message: {str(e)}") from e
-
-    return {"message": "Message deleted successfully"}
-
-
-def handle_user_message(session_id, user_message):
-    user_message_data = create_message(session_id, "user", user_message)
-    model_response = call_model(session_id, user_message)
-    assistant_message_data = create_message(session_id, "system", model_response)
-    return {"user_message": user_message_data, "assistant_message": assistant_message_data}
-
-
-def call_model(session_id, user_message):
-    try:
-        completion = client.chat.completions.create(
-            model=PROXYLLM_BACKEND, messages=[{"role": "user", "content": user_message}]
+        Returns:
+            ChatMessage: ChatMessage object
+        """
+        # create the message
+        result = self._dao.create(
+            session_id=session_id,
+            message_type=message_type,
+            job_id=job_id,
+            role=role,
+            message=message,
+            others=others,
         )
-        answer = completion.choices[0].message
-        return answer.content
-    except Exception as e:
-        error_message = f"Failed to call OpenAI API: {str(e)}"
-        create_message(session_id, "system", error_message)
-        raise ServiceException(error_message) from e
+        return ChatMessage(
+            id=result.id,
+            session_id=result.session_id,
+            message_type=result.message_type,
+            job_id=result.job_id,
+            role=result.role,
+            payload=result.message,
+            timestamp=result.timestamp,
+            others=result.others,
+        )
+
+    def get_message(self, id: str) -> ChatMessage:
+        """Get a message by ID."""
+        # fetch the message
+        result = self._dao.get_by_id(id=id)
+        if not result:
+            raise ServiceException(f"ChatMessage with ID {id} not found")
+        return ChatMessage(
+            id=result.id,
+            session_id=result.session_id,
+            message_type=result.message_type,
+            job_id=result.job_id,
+            role=result.role,
+            payload=result.message,
+            timestamp=result.timestamp,
+            others=result.others,
+        )
+
+    def delete_message(self, id: str):
+        """Delete a message by ID."""
+        # delete the message
+        message = self._dao.get_by_id(id=id)
+        if not message:
+            raise ServiceException(f"ChatMessage with ID {id} not found")
+        self._dao.delete(id=id)
+
+    def update_message(
+        self,
+        id: str,
+        message_type: Optional[str] = None,
+        job_id: Optional[str] = None,
+        role: Optional[str] = None,
+        message: Optional[str] = None,
+        others: Optional[str] = None,
+    ) -> ChatMessage:
+        """Update a message by ID.
+
+        Args:
+            id (str): ID of the message
+            message_type (Optional[str]): Updated type of the message
+            job_id (Optional[str]): Updated job ID
+            role (Optional[str]): Updated role
+            message (Optional[str]): Updated content of the message
+            others (Optional[str]): Updated additional information
+
+        Returns:
+            ChatMessage: Updated ChatMessage object
+        """
+        # fetch the existing message
+        existing_message = self._dao.get_by_id(id=id)
+        if not existing_message:
+            raise ServiceException(f"ChatMessage with ID {id} not found")
+
+        # prepare update fields
+        update_fields = {}
+        if message_type is not None and message_type != existing_message.message_type:
+            update_fields["message_type"] = message_type
+        if job_id is not None and job_id != existing_message.job_id:
+            update_fields["job_id"] = job_id
+        if role is not None and role != existing_message.role:
+            update_fields["role"] = role
+        if message is not None and message != existing_message.message:
+            update_fields["message"] = message
+        if others is not None and others != existing_message.others:
+            update_fields["others"] = others
+
+        # update only if there are changes
+        if update_fields:
+            updated_message = self._dao.update(id=id, **update_fields)
+            return ChatMessage(
+                id=updated_message.id,
+                session_id=updated_message.session_id,
+                message_type=updated_message.message_type,
+                job_id=updated_message.job_id,
+                role=updated_message.role,
+                payload=updated_message.message,
+                timestamp=updated_message.timestamp,
+                others=updated_message.others,
+            )
+        return ChatMessage(
+            id=existing_message.id,
+            session_id=existing_message.session_id,
+            message_type=existing_message.message_type,
+            job_id=existing_message.job_id,
+            role=existing_message.role,
+            payload=existing_message.message,
+            timestamp=existing_message.timestamp,
+            others=existing_message.others,
+        )
+
+    def get_all_messages(self) -> List[ChatMessage]:
+        """Get all messages."""
+
+        results = self._dao.get_all()
+        return [
+            ChatMessage(
+                id=result.id,
+                session_id=result.session_id,
+                message_type=result.message_type,
+                job_id=result.job_id,
+                role=result.role,
+                payload=result.message,
+                timestamp=result.timestamp,
+                others=result.others,
+            )
+            for result in results
+        ]
+
+    def filter_messages_by_session(self, session_id: str) -> List[ChatMessage]:
+        """Filter messages by session ID.
+
+        Args:
+            session_id (str): ID of the session
+
+        Returns:
+            List[ChatMessage]: List of ChatMessage objects
+        """
+        # fetch filtered messages
+        results = self._dao.filter_by(session_id=session_id)
+        return [
+            ChatMessage(
+                id=result.id,
+                session_id=result.session_id,
+                message_type=result.message_type,
+                job_id=result.job_id,
+                role=result.role,
+                payload=result.message,
+                timestamp=result.timestamp,
+                others=result.others,
+            )
+            for result in results
+        ]

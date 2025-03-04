@@ -1,0 +1,134 @@
+.wrapper {
+  display: flex;
+  height: 100vh;
+}
+
+.sider {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  width: 300px;
+  height: 100%;
+  background-color: #fbfbfb;
+  transition: all 0.3s;
+
+  &-collapsed {
+    width: 80px;
+
+    .create-conversation {
+      font-size: 24px;
+      line-height: 32px;
+    }
+
+    &-icon {
+      font-size: 24px;
+      line-height: 32px;
+      color: #6a6b71;
+    }
+
+    .title-text,
+    .conversations,
+    .tips {
+      display: none;
+      transition: all 0.3s;
+    }
+  }
+
+
+  :global {
+    .ant-conversations {
+      padding: 0;
+      margin: 16px 0;
+    }
+
+    .ant-conversations-icon {
+      font-size: 12px;
+    }
+
+    .ant-conversations .ant-conversations-item-active {
+      background-color: #e6f4ff;
+    }
+
+    .ant-conversations .ant-conversations-item-active .ant-conversations-label,
+    .ant-conversations .ant-conversations-item-active .ant-conversations-menu-icon,
+    .ant-conversations .ant-conversations-item-active .ant-conversations-icon {
+      color: #1677ff;
+    }
+
+    .ant-btn-variant-text:not(:disabled):not(.ant-btn-disabled):hover {
+      color: #6a6b71;
+    }
+  }
+}
+
+.title {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  font-size: 24px;
+  line-height: 32px;
+  font-style: italic;
+}
+
+.tips {
+  border-top: 1px solid #eee;
+  padding: 12px 0;
+  font-size: 12px;
+  text-align: center;
+  color: #999;
+}
+
+.chat {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .messages {
+    width: 800px;
+    flex: 1;
+    text-align: center;
+    transition: all 0.5s;
+    padding: 24px;
+
+    :global {
+      .ant-welcome {
+        margin-bottom: 120px;
+      }
+
+      .ant-prompts-item {
+        flex: none !important;
+        width: 394px;
+      }
+  
+      .ant-prompts .ant-prompts-item .ant-prompts-content {
+        align-items: center;
+      }
+
+      .ant-bubble-content.ant-bubble-content-filled {
+        text-align: left;
+      }
+
+      .ant-bubble-content pre {
+        margin-bottom: 0;
+        white-space: pre-wrap;
+      }
+    }
+  }
+
+  .welcome {
+    flex: none;
+  }
+
+  .footer {
+    width: 800px;
+    margin: 32px auto;
+    :global {
+      .ant-sender {
+        margin-top: 16px;
+      }
+    }
+  }
+}

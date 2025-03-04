@@ -19,6 +19,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "PRINT_REASONER_OUTPUT": (bool, True),
     "LIFE_CYCLE": (int, 3),
     "MAX_RETRY_COUNT": (int, 3),
+    "DATABASE_URL": (str, "sqlite:///instance/chat2graph.db"),
 }
 
 # system environment variable value cache.

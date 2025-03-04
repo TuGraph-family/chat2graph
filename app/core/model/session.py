@@ -1,9 +1,10 @@
-from dataclasses import dataclass, field
-from uuid import uuid4
+from dataclasses import dataclass
 
 
 @dataclass
 class Session:
     """Session class"""
-
-    id: str = field(default_factory=lambda: str(uuid4()))
+    id: str
+    name: str
+    created_at: str
+    

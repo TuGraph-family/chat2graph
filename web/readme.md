@@ -1,7 +1,4 @@
-# ChatTuGraph WebUI
+# README
 
-ChatTuGraph可视化页面
+`@umijs/max` 模板项目，更多功能参考 [Umi Max 简介](https://umijs.org/docs/max/introduce)
 
-## 环境
-node v20.11.0
-npm v 10.2.4

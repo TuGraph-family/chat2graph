@@ -1,0 +1,1 @@
+python ./app/server/bootstrap.py

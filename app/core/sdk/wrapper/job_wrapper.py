@@ -17,6 +17,11 @@ class JobWrapper:
         """Get the job."""
         return self._job
 
+    @property
+    def id(self) -> Job:
+        """Get the job id."""
+        return self._job.id
+
     def execute(self):
         """Submit the job."""
         job_service: JobService = JobService.instance

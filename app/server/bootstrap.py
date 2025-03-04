@@ -1,40 +1,42 @@
 import os
 
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_cors import CORS
 
-from app.plugin.sqlite.sqlite_model import db
+from app.core.dal.database import init_db
 from app.server.api import register_blueprints
-from app.server.common.api_tool import BaseException, make_error_response
-from app.server.config.sqilte_config import SqliteConfig
+from app.server.common.util import BaseException, make_error_response
 
 
 def create_app():
-    app = Flask(__name__)
+    static_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+    app = Flask(__name__, static_folder=static_folder_path)
+
+    @app.route("/")
+    def serve_index():
+        return send_from_directory(app.static_folder, "index.html")
+
+    @app.route("/<path:filename>")
+    def serve_static(filename):
+        try:
+            return send_from_directory(app.static_folder, filename)
+        except:  # noqa: E722
+            return send_from_directory(app.static_folder, "index.html")
+
     CORS(app)
-    app.config.from_object(SqliteConfig)
 
-    # 确保 instance 文件夹存在
-    instance_path = os.path.join(app.root_path, 'instance')
-    if not os.path.exists(instance_path):
-        os.makedirs(instance_path)
-
-    # 初始化数据库
-    db.init_app(app)
-
-    # 注册蓝图
     register_blueprints(app)
 
-    # 注册全局异常处理器
     @app.errorhandler(BaseException)
     def handle_base_exception(e):
         return make_error_response(e.status_code, e.message)
 
     with app.app_context():
-        db.create_all()
+        init_db()
 
     return app
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=False)
