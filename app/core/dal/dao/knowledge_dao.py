@@ -1,11 +1,37 @@
-from sqlalchemy.orm import Session as SqlAlchemySession
+from sqlalchemy.orm import Session as SessionType
 
-from app.core.dal.dao.dao import Dao
-from app.core.dal.do.knowledge_do import KnowledgeBaseDo
+from app.core.dal.dao.dao import DAO
+from app.core.dal.model.knowledge_model import (
+    FileModel,
+    GraphDBModel,
+    KbToFileModel,
+    KnowledgeBaseModel,
+)
 
 
-class KnowledgeBaseDao(Dao[KnowledgeBaseDo]):
+class KnowledgeBaseDAO(DAO[KnowledgeBaseModel]):
     """Knowledge Base Data Access Object"""
 
-    def __init__(self, session: SqlAlchemySession):
-        super().__init__(KnowledgeBaseDo, session)
+    def __init__(self, session: SessionType):
+        super().__init__(KnowledgeBaseModel, session)
+
+
+class FileDAO(DAO[FileModel]):
+    """File Data Access Object"""
+
+    def __init__(self, session: SessionType):
+        super().__init__(FileModel, session)
+
+
+class KBToFileDAO(DAO[KbToFileModel]):
+    """Knowledge Base to File Data Access Object"""
+
+    def __init__(self, session: SessionType):
+        super().__init__(KbToFileModel, session)
+
+
+class GraphDbDAO(DAO[GraphDBModel]):
+    """Graph Database Data Access Object"""
+
+    def __init__(self, session: SessionType):
+        super().__init__(GraphDBModel, session)
