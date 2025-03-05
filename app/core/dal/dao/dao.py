@@ -2,8 +2,6 @@ from typing import Any, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy.orm import Session as SessionType
 
-from app.core.model.sql_model import File, GraphDB, KBToFile, KnowledgeBase, Message, Session
-
 T = TypeVar("T")
 
 
@@ -49,45 +47,3 @@ class DAO(Generic[T]):
             self._session.delete(obj)
             self._session.commit()
         return obj
-
-
-class SessionDAO(DAO[Session]):
-    """Session Data Access Object"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(Session, session)
-
-
-class MessageDAO(DAO[Message]):
-    """Message Data Access Object"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(Message, session)
-
-
-class KnowledgeBaseDAO(DAO[KnowledgeBase]):
-    """Knowledge Base Data Access Object"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(KnowledgeBase, session)
-
-
-class FileDAO(DAO[File]):
-    """File Data Access Object"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(File, session)
-
-
-class KBToFileDAO(DAO[KBToFile]):
-    """Knowledge Base to File Data Access Object"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(KBToFile, session)
-
-
-class GraphDbDAO(DAO[GraphDB]):
-    """Graph Database Data Access Object"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(GraphDB, session)

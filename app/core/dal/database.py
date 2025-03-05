@@ -15,8 +15,3 @@ instance_path.mkdir(exist_ok=True)
 engine = create_engine(SystemEnv.DATABASE_URL)
 DB = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base: DeclarativeMeta = declarative_base()
-
-
-def init_db() -> None:
-    """Initialize database tables."""
-    Base.metadata.create_all(bind=engine)
