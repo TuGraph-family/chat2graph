@@ -9,7 +9,9 @@ class Reasoner(ABC):
     """Base Reasoner, an env element of the multi-agent system."""
 
     def __init__(self):
-        self._memories: Dict[str, Dict[str, Dict[str, ReasonerMemory]]] = {}
+        self._memories: Dict[
+            str, Dict[str, Dict[str, ReasonerMemory]]
+        ] = {}  # session_id -> job_id -> operator_id -> memory
 
     @abstractmethod
     async def infer(self, task: Task) -> str:
