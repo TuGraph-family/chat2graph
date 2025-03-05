@@ -225,12 +225,32 @@ class ChatMessage(Message):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
+        chat_message_type: Optional[str] = None,
+        job_id: Optional[str] = None,
+        role: Optional[str] = None,
         others: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
     ):
-        super().__init__(job_id=job_id, timestamp=timestamp, id=id)
+        """
+        Initialize a ChatMessage instance.
+
+        Args:
+            payload (Any): The content of the message
+            timestamp (Optional[str]): Timestamp of the message (defaults to current UTC time)
+            id (Optional[str]): Unique identifier for the message
+            session_id (Optional[str]): ID of the associated session
+            chat_message_type (Optional[str]): Type of the message
+            job_id (Optional[str]): Job ID related to the message
+            role (Optional[str]): Role of the sender
+            others (Optional[str]): Additional information
+            assigned_expert_name (Optional[str]): Name of the assigned expert
+        """
+        super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
         self._payload: Any = payload
         self._session_id: Optional[str] = session_id
+        self._chat_message_type: Optional[str] = chat_message_type
+        self._job_id: Optional[str] = job_id
+        self._role: Optional[str] = role
         self._others: Optional[str] = others
         self._assigned_expert_name: Optional[str] = assigned_expert_name
 
@@ -249,6 +269,18 @@ class ChatMessage(Message):
     def get_session_id(self) -> Optional[str]:
         """Get the session ID."""
         return self._session_id
+
+    def get_chat_message_type(self) -> Optional[str]:
+        """Get the message type."""
+        return self._chat_message_type
+
+    def get_job_id(self) -> Optional[str]:
+        """Get the job ID."""
+        return self._job_id
+
+    def get_role(self) -> Optional[str]:
+        """Get the role."""
+        return self._role
 
     def get_others(self) -> Optional[str]:
         """Get the additional information."""
@@ -270,6 +302,9 @@ class ChatMessage(Message):
             timestamp=self._timestamp,
             id=self._id,
             session_id=self._session_id,
+            chat_message_type=self._chat_message_type,
+            job_id=self._job_id,
+            role=self._role,
             others=self._others,
         )
 
@@ -309,13 +344,4 @@ class TextMessage(ChatMessage):
 
     def copy(self) -> "TextMessage":
         """Copy the message."""
-        return TextMessage(
-            payload=self._payload,
-            job_id=self._job_id,
-            timestamp=self._timestamp,
-            id=self._id,
-            session_id=self._session_id,
-            role=self._role,
-            assigned_expert_name=self._assigned_expert_name,
-            others=self._others,
-        )
+        return super().copy()
