@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao import GraphDbDAO
+from app.core.dal.dao.knowledge_dao import GraphDbDAO
 from app.core.dal.database import DB
 from app.core.model.graph_db import GraphDB
 from app.server.common.util import ServiceException

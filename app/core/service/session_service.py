@@ -2,8 +2,10 @@ from typing import Dict, List, Optional
 from uuid import uuid4
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao import SessionDAO
+from app.core.common.util import utc_now
+from app.core.dal.dao.seesion_dao import SessionDAO
 from app.core.dal.database import DB
+from app.core.dal.model.session_model import SessionModel
 from app.core.model.session import Session
 from app.server.common.util import ServiceException
 
@@ -24,8 +26,9 @@ class SessionService(metaclass=Singleton):
             Session: Session object
         """
         # create the session
-        result = self._dao.create(name=name)
-        return Session(id=result.id, name=result.name, created_at=result.created_at)
+        created_at = utc_now()
+        result: SessionModel = self._dao.create(name=name, created_at=created_at)
+        return Session(id=result.id, name=name, created_at=created_at)
 
     def get_session(self, session_id: Optional[str] = None) -> Session:
         """Get the session by ID.
@@ -41,9 +44,9 @@ class SessionService(metaclass=Singleton):
         result = self._dao.get_by_id(id=session_id)
         if not result:
             raise ServiceException(f"Session with ID {id} not found")
-        return Session(id=result.id, name=result.name, created_at=result.created_at)
+        return Session(id=result.id)
 
-    def delete_session(self, id: str):
+    def delete_session(self, id: str) -> None:
         """Delete the session by ID.
 
         Args:
