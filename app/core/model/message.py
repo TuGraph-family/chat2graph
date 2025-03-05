@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import time
 from typing import Any, Dict, List, Optional
-import uuid
 from uuid import uuid4
 
 from app.core.common.type import MessageSourceType
@@ -200,7 +199,7 @@ class ChatMessage(Message):
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
-        message_type: Optional[str] = None,
+        chat_message_type: Optional[str] = None,
         job_id: Optional[str] = None,
         role: Optional[str] = None,
         others: Optional[str] = None,
@@ -214,22 +213,19 @@ class ChatMessage(Message):
             timestamp (Optional[str]): Timestamp of the message (defaults to current UTC time)
             id (Optional[str]): Unique identifier for the message
             session_id (Optional[str]): ID of the associated session
-            message_type (Optional[str]): Type of the message
+            chat_message_type (Optional[str]): Type of the message
             job_id (Optional[str]): Job ID related to the message
             role (Optional[str]): Role of the sender
             others (Optional[str]): Additional information
             assigned_expert_name (Optional[str]): Name of the assigned expert
         """
-        self._id = id or str(uuid.uuid4())
-        self._payload = str(payload)
-        self._timestamp = timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ")  # 默认当前时间
-        self._session_id = session_id
-        self._message_type = message_type
-        self._job_id = job_id
-        self._role = role
-        self._others = others
         super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
-        self._payload: str = payload
+        self._payload: Any = payload
+        self._session_id: Optional[str] = session_id
+        self._chat_message_type: Optional[str] = chat_message_type
+        self._job_id: Optional[str] = job_id
+        self._role: Optional[str] = role
+        self._others: Optional[str] = others
         self._assigned_expert_name: Optional[str] = assigned_expert_name
 
     def get_payload(self) -> str:
@@ -248,9 +244,9 @@ class ChatMessage(Message):
         """Get the session ID."""
         return self._session_id
 
-    def get_message_type(self) -> Optional[str]:
+    def get_chat_message_type(self) -> Optional[str]:
         """Get the message type."""
-        return self._message_type
+        return self._chat_message_type
 
     def get_job_id(self) -> Optional[str]:
         """Get the job ID."""
@@ -275,7 +271,7 @@ class ChatMessage(Message):
             timestamp=self._timestamp,
             id=self._id,
             session_id=self._session_id,
-            message_type=self._message_type,
+            chat_message_type=self._chat_message_type,
             job_id=self._job_id,
             role=self._role,
             others=self._others,
@@ -314,4 +310,4 @@ class TextMessage(ChatMessage):
 
     def copy(self) -> "TextMessage":
         """Copy the message."""
-        return TextMessage(payload=self._payload, timestamp=self._timestamp, id=self._id)
+        return super().copy()
