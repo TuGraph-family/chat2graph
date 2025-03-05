@@ -3,12 +3,13 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 
-from app.core.dal.database import init_db
+from app.core.dal.init_db import init_db
 from app.server.api import register_blueprints
-from app.server.common.util import BaseException, make_error_response
+from app.server.common.util import ApiException, make_error_response
 
 
 def create_app():
+    """Create the Flask app."""
     static_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
     app = Flask(__name__, static_folder=static_folder_path)
 
@@ -20,14 +21,14 @@ def create_app():
     def serve_static(filename):
         try:
             return send_from_directory(app.static_folder, filename)
-        except:  # noqa: E722
+        except Exception:
             return send_from_directory(app.static_folder, "index.html")
 
     CORS(app)
 
     register_blueprints(app)
 
-    @app.errorhandler(BaseException)
+    @app.errorhandler(ApiException)
     def handle_base_exception(e):
         return make_error_response(e.status_code, e.message)
 

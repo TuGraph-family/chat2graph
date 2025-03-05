@@ -1,9 +1,9 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from flask import jsonify
 
 
-class BaseException(Exception):
+class ApiException(Exception):
     """Base exception class."""
 
     def __init__(self, message: str, status_code: int = 400):
@@ -11,21 +11,21 @@ class BaseException(Exception):
         self.status_code: int = status_code
 
 
-class ParameterException(BaseException):
+class ParameterException(ApiException):
     """Exception for invalid parameters."""
 
     def __init__(self, message="Invalid parameter"):
         super().__init__(message, 400)
 
 
-class ServiceException(BaseException):
+class ServiceException(ApiException):
     """Exception for service errors."""
 
     def __init__(self, message="Service error"):
         super().__init__(message, 500)
 
 
-def make_response(success, data=None, message=""):
+def make_response(success: bool, data: Optional[Any] = None, message: str = ""):
     """Create a JSON response."""
     response = {"success": success, "data": data if data is not None else {}, "message": message}
     return jsonify(response), 200 if success else 400
