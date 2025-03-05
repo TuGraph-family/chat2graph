@@ -1,21 +1,22 @@
-pip install poetry || { echo "Failed to install poetry"; exit 1; }
+# install dependencies
+pip install poetry || { echo "Failed to install poetry"; }
+poetry lock || { echo "Failed to update lock file"; }
+poetry install || { echo "Failed to poetry install"; }
 
-poetry install || { echo "Failed to poetry install"; exit 1; }
+# prepare target directory
+cd ./app || { echo "Failed to change to app directory"; return 1; }
+mkdir -p server/web || { echo "Failed to create server/web folder"; }
 
-cd ./app/server
+# build web assets
+cd ../web || { echo "Failed to change to web directory"; return 1; }
+npm cache clean --force || { echo "Failed to clear npm cache"; }
+npm install || { echo "npm install failed"; }
+npm run build || { echo "npm run build failed"; }
 
-mkdir -p web || { echo "Failed to create web folder"; exit 1; }
+# copy build artifacts
+cp -rf ./dist/* ../app/server/web || { echo "Failed to copy dist contents"; }
+rm -rf ./dist || { echo "Failed to remove dist directory"; }
 
-cd ../../web
-
-npm cache clean --force || { echo "Failed to clear npm cache"; exit 1; }
-
-npm install || { echo "npm install failed"; exit 1; }
-
-npm run build || { echo "npm run build failed"; exit 1; }
-
-cp -rf ./dist/* ../app/server/web || { echo "Failed to copy dist contents"; exit 1; }
-
-rm -rf ./dist || { echo "Failed to remove dist directory"; exit 1; }
-
-echo "Build successfully!"
+# return to root directory
+cd ..
+echo "Build successful!"
