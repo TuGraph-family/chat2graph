@@ -1,7 +1,8 @@
 from typing import List, Optional
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao.graph_db_dao import GraphDbDao
+from app.core.dal.dao.knowledge_dao import GraphDbDAO
+from app.core.dal.database import DB
 from app.core.model.graph_db import GraphDB
 
 
