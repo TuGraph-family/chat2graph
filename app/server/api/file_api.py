@@ -35,7 +35,7 @@ def upload_file():
             message="File uploaded successfully",
         )
     except Exception as e:
-        raise BaseException(f"Failed to upload file: {str(e)}")
+        raise BaseException(f"Failed to upload file: {str(e)}") from e
 
 
 @files_bp.route("/delete/<string:filename>", methods=["DELETE"])
@@ -52,4 +52,4 @@ def delete_file(filename):
         os.remove(file_path)
         return make_response(True, message=f"File '{filename}' deleted successfully")
     except Exception as e:
-        raise BaseException(f"Failed to delete file: {str(e)}")
+        raise BaseException(f"Failed to delete file: {str(e)}") from e
