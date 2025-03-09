@@ -25,10 +25,8 @@ class KnowledgeBaseService(metaclass=Singleton):
             KnowledgeBase: Knowledge base object
         """
         # create the knowledge base
-        result = self._knowledge_base_dao.create(
-            name=name, knowledge_type=knowledge_type, session_id=session_id
-        )
-        return Knowledge(
+        result = self._dao.create(name=name, knowledge_type=knowledge_type, session_id=session_id)
+        return KnowledgeBase(
             id=str(result.id),
             name=str(result.name),
             knowledge_type=str(result.knowledge_type),
@@ -46,8 +44,8 @@ class KnowledgeBaseService(metaclass=Singleton):
         # fetch the knowledge base
         result = self._knowledge_base_dao.get_by_id(id=id)
         if not result:
-            raise ValueError(f"Knowledge base with ID {id} not found")
-        return Knowledge(
+            raise ServiceException(f"Knowledge base with ID {id} not found")
+        return KnowledgeBase(
             id=str(result.id),
             name=str(result.name),
             knowledge_type=str(result.knowledge_type),
@@ -77,7 +75,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
         results = self._knowledge_base_dao.get_all()
         return [
-            Knowledge(
+            KnowledgeBase(
                 id=str(result.id),
                 name=str(result.name),
                 knowledge_type=str(result.knowledge_type),

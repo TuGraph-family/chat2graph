@@ -1,4 +1,5 @@
-from typing import List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional, cast
 from uuid import uuid4
 
 from app.core.common.singleton import Singleton
@@ -26,7 +27,7 @@ class SessionService(metaclass=Singleton):
         # create the session
         created_at = utc_now()
         result: SessionModel = self._dao.create(name=name, created_at=created_at)
-        return Session(id=result.id, name=name, created_at=created_at)
+        return Session(id=str(result.id), name=name, created_at=created_at)
 
     def get_session(self, session_id: Optional[str] = None) -> Session:
         """Get the session by ID. If ID is not provided, create a new session.
@@ -43,7 +44,11 @@ class SessionService(metaclass=Singleton):
         result = self._session_dao.get_by_id(id=session_id)
         if not result:
             raise ServiceException(f"Session with ID {id} not found")
-        return Session(id=result.id)
+        return Session(
+            id=str(result.id),
+            name=str(result.name),
+            created_at=cast(datetime, result.created_at),
+        )
 
     def delete_session(self, id: str) -> None:
         """Delete the session by ID.
@@ -94,10 +99,6 @@ class SessionService(metaclass=Singleton):
 
         results = self._session_dao.get_all()
         return [
-            Session(
-                id=str(result.id),
-                name=str(result.name),
-                timestamp=int(result.timestamp) if result.timestamp is not None else None,
-            )
+            Session(id=str(result.id), name=result.name, created_at=result.created_at)
             for result in results
         ]
