@@ -31,6 +31,7 @@ class Leader(Agent):
         super().__init__(agent_config=agent_config, id=id)
         # self._workflow of the leader is used to decompose the job
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
+        self._job_service: JobService = JobService.instance
 
     def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
         """Decompose the job into subjobs.
@@ -44,11 +45,7 @@ class Leader(Agent):
         """
         # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
 
-        job_id = agent_message.get_job_id()
-        try:
-            job: Job = self._job_service.get_orignal_job(original_job_id=job_id)
-        except ValueError:
-            job = self._job_service.get_subjob(job_id=job_id)
+        job = agent_message.get_payload()
 
         # check if the job is already assigned to an expert
         assigned_expert_name: Optional[str] = job.assigned_expert_name
@@ -131,10 +128,10 @@ class Leader(Agent):
 
         return job_graph
 
-    def execute_job(self, job: Job) -> None:
+    def execute_job(self, job: SubJob) -> None:
         """Execute the job."""
         # decompose the job into decomposed job graph
-        decomposed_job_graph: JobGraph = self.execute(agent_message=AgentMessage(job_id=job.id))
+        decomposed_job_graph: JobGraph = self.execute(agent_message=AgentMessage(job=job))
 
         # update the decomposed job graph in the job service
         self._job_service.replace_subgraph(
@@ -249,8 +246,7 @@ class Leader(Agent):
                                     job_id=completed_job_id,
                                     status=JobStatus.FINISHED,
                                     result=TextMessage(
-                                        payload=agent_result.get_workflow_result_message().scratchpad,
-                                        job_id=completed_job_id,
+                                        payload=agent_result.get_workflow_result_message().scratchpad
                                     ),
                                 ),
                             )
@@ -273,6 +269,15 @@ class Leader(Agent):
                                     payload=str(e) + "\n" + traceback.format_exc(),
                                     job_id=completed_job_id,
                                 ),
+                            ),
+                        )
+                        # update the result in the job service
+                        self._job_service.get_job_graph(original_job_id).set_job_result(
+                            completed_job_id,
+                            JobResult(
+                                job_id=completed_job_id,
+                                status=JobStatus.FAILED,
+                                result=TextMessage(payload=str(e) + "\n" + traceback.format_exc()),
                             ),
                         )
 

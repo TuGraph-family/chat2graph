@@ -36,7 +36,8 @@ class Expert(Agent):
             lesson=agent_message.get_lesson(),
         )
 
-        message_service: MessageService = MessageService.instance
+        # save the workflow message in the database
+        message_service.create_workflow_message(workflow_message=workflow_message, job_id=job.id)
 
         if workflow_message.status == WorkflowStatus.SUCCESS:
             # (1) WorkflowStatus.SUCCESS
