@@ -1,228 +1,178 @@
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
-from sqlalchemy.orm import Session as SessionType
+from sqlalchemy.orm import Session as SqlAlchemySession
 
 from app.core.dal.dao.dao import DAO
 from app.core.dal.model.message_model import (
     AgentMessageModel,
-    ChatMessageModel,
     MessageModel,
+    MessageType,
     ModelMessageModel,
     TextMessageModel,
     WorkflowMessageModel,
 )
+from app.core.model.job import Job
+from app.core.model.message import AgentMessage, Message, ModelMessage, TextMessage, WorkflowMessage
+
+
+class MessageModelFactory:
+    """Factory class to create message model instances."""
+
+    @staticmethod
+    def create_message_model(message: Message, **kwargs: Any) -> MessageModel:
+        """Create a message model instance."""
+
+        if isinstance(message, WorkflowMessage):
+            assert "job_id" in kwargs and isinstance(kwargs["job_id"], str), (
+                "job_id is required, and must be a string"
+            )
+            return WorkflowMessageModel(
+                type=MessageType.WORKFLOW_MESSAGE.value,
+                payload=WorkflowMessage.serialize_payload(message.get_payload()),
+                job_id=kwargs["job_id"],
+                id=message.get_id(),
+                timestamp=message.get_timestamp(),
+            )
+
+        if isinstance(message, AgentMessage):
+            linked_workflow_ids: List[str] = [wf.get_id() for wf in message.get_workflow_messages()]
+            return AgentMessageModel(
+                type=MessageType.AGENT_MESSAGE.value,
+                job_id=message.get_payload().id,
+                lesson=message.get_lesson(),
+                linked_workflow_ids=linked_workflow_ids,
+                timestamp=message.get_timestamp(),
+                id=message.get_id(),
+            )
+
+        if isinstance(message, ModelMessage):
+            # TODO: to refine the fields for model message
+            # source_type: MessageSourceType = MessageSourceType.MODEL, # TODO
+            # function_calls: Optional[List[FunctionCallResult]] = None,# TODO
+
+            assert "job_id" in kwargs and isinstance(kwargs["job_id"], str), (
+                "job_id is required, and must be a string"
+            )
+            assert "step" in kwargs and isinstance(kwargs["step"], str), (
+                "step is required, and must be a string"
+            )
+            return ModelMessageModel(
+                type=MessageType.MODEL_MESSAGE.value,
+                payload=message.get_payload(),
+                timestamp=message.get_timestamp(),
+                id=message.get_id(),
+                job_id=kwargs["job_id"],
+                step=kwargs["step"],
+            )
+
+        if isinstance(message, TextMessage):
+            return TextMessageModel(
+                type=MessageType.TEXT_MESSAGE.value,
+                id=message.get_id(),
+                payload=message.get_payload(),
+                timestamp=message.get_timestamp(),
+                session_id=message.get_session_id(),
+                chat_message_type=message.get_chat_message_type(),
+                job_id=message.get_job_id(),
+                role=message.get_role(),
+                assigned_expert_name=message.get_assigned_expert_name(),
+                others=message.get_others(),
+            )
+        raise ValueError(f"Unsupported message type: {type(message)}")
 
 
 class MessageDAO(DAO[MessageModel]):
-    """message base dao"""
+    """Message dao"""
 
-    def __init__(self, session: SessionType):
+    def __init__(self, session: SqlAlchemySession):
         super().__init__(MessageModel, session)
 
-    def get_by_time_range(self, start_time: str, end_time: str) -> List[MessageModel]:
-        """get messages by time range"""
-        return (
-            self._session.query(self._model)
-            .filter(self._model.timestamp >= start_time, self._model.timestamp <= end_time)
+    def create_message(self, message: Message, **kwargs) -> MessageModel:
+        """Create a new message."""
+        try:
+            message_model = MessageModelFactory.create_message_model(message, **kwargs)
+            self.session.add(message_model)
+            self.session.commit()
+            return message_model
+        except Exception as e:
+            self.session.rollback()
+            raise e
+
+    def get_by_type(self, type: MessageType) -> List[MessageModel]:
+        """get messages by type"""
+        return self.session.query(self._model).filter(self._model.type == type.value).all()
+
+    def get_workflow_message(self, id: str) -> WorkflowMessage:
+        """Get a message by ID."""
+        # fetch the message
+        result = self.get_by_id(id=id)
+        if not result:
+            raise ValueError(f"Workflow message with ID {id} not found")
+        payload: Dict[str, Any] = WorkflowMessage.deserialize_payload(str(result.payload))
+        return WorkflowMessage(
+            id=str(result.id),
+            payload=payload,
+            timestamp=str(result.timestamp),
+        )
+
+    def get_workflow_message_payload(self, workflow_message_id: str) -> Optional[Dict[str, Any]]:
+        """get message payload"""
+        message = self.get_by_id(workflow_message_id)
+        if message and message.payload:
+            return WorkflowMessage.deserialize_payload(str(message.payload))
+        raise ValueError(f"Workflow message {workflow_message_id} not found")
+
+    def get_agent_messages_by_job(self, job: Job) -> List[AgentMessage]:
+        """Get agent messages by job ID."""
+        # fetch agent messages
+        results: List[AgentMessageModel] = (
+            self.session.query(self._model)
+            .filter(
+                self._model.type == MessageType.AGENT_MESSAGE.value,
+                self._model.job_id == job.id,
+            )
             .all()
         )
 
-    def get_by_type(self, type: str) -> List[MessageModel]:
-        """get messages by type"""
-        return self._session.query(self._model).filter(self._model.type == type).all()
+        if len(results) > 1:
+            print(f"[Warning] The job {id} is executed multiple times.")
 
+        agent_messages: List[AgentMessage] = [
+            AgentMessage(
+                id=str(result.id),
+                job=job,
+                workflow_messages=[
+                    self.get_workflow_message(wf_id)
+                    for wf_id in list(result.linked_workflow_ids or [])
+                ],
+                timestamp=str(result.timestamp),
+            )
+            for result in results
+        ]
 
-class ModelMessageDAO(DAO[ModelMessageModel]):
-    """model message dao"""
+        return agent_messages
 
-    def __init__(self, session: SessionType):
-        super().__init__(ModelMessageModel, session)
-
-    def get_by_source_type(self, source_type: str) -> List[ModelMessageModel]:
-        """get model messages by source type"""
-        return self._session.query(self._model).filter(self._model.source_type == source_type).all()
-
-    def get_by_session(self, session_id: str) -> List[ModelMessageModel]:
-        """get model messages by session id"""
-        return self._session.query(self._model).filter(self._model.session_id == session_id).all()
-
-    def get_by_job(self, job_id: str) -> List[ModelMessageModel]:
-        """get model messages by job id"""
-        return self._session.query(self._model).filter(self._model.job_id == job_id).all()
-
-    def get_by_operator(self, operator_id: str) -> List[ModelMessageModel]:
-        """get model messages by operator id"""
-        return self._session.query(self._model).filter(self._model.operator_id == operator_id).all()
-
-    def get_by_step(self, step: str) -> List[ModelMessageModel]:
-        """get model messages by step"""
-        return self._session.query(self._model).filter(self._model.step == step).all()
-
-    def get_payload(self, id: str) -> Optional[str]:
-        """get message content"""
-        message = self.get_by_id(id)
-        return message.payload if message else None
-
-    def get_function_calls(self, id: str) -> Optional[List]:
-        """get function calls"""
-        message = self.get_by_id(id)
-        if message and message.function_calls_json:
-            return json.loads(message.function_calls_json)
-        return None
-
-    def update_function_calls(self, id: str, function_calls: List) -> Optional[ModelMessageModel]:
-        """update function calls"""
-        return self.update(id, function_calls_json=json.dumps(function_calls))
-
-
-class WorkflowMessageDAO(DAO[WorkflowMessageModel]):
-    """workflow message dao"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(WorkflowMessageModel, session)
-
-    def get_payload(self, id: str) -> Optional[Dict]:
-        """get message payload"""
-        message = self.get_by_id(id)
-        if message and message.payload_json:
-            return json.loads(message.payload_json)
-        return None
-
-    def get_attribute(self, id: str, attr_name: str) -> Any:
-        """get dynamic attribute value"""
-        payload = self.get_payload(id)
-        return payload.get(attr_name) if payload else None
-
-    def set_attribute(
-        self, id: str, attr_name: str, attr_value: Any
-    ) -> Optional[WorkflowMessageModel]:
-        """set dynamic attribute value"""
-        message = self.get_by_id(id)
-        if message:
-            payload = json.loads(message.payload_json) if message.payload_json else {}
-            payload[attr_name] = attr_value
-            message.payload_json = json.dumps(payload)
-            self._session.commit()
-        return message
-
-    def update_payload(
-        self, id: str, new_payload: Dict[str, Any]
-    ) -> Optional[WorkflowMessageModel]:
-        """update entire payload"""
-        return self.update(id, payload_json=json.dumps(new_payload))
-
-
-class AgentMessageDAO(DAO[AgentMessageModel]):
-    """agent message dao"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(AgentMessageModel, session)
-
-    def get_by_job_id(self, job_id: str) -> List[AgentMessageModel]:
-        """get agent messages by job id"""
-        return self._session.query(self._model).filter(self._model.job.id == job_id).all()
-
-    def get_lesson(self, id: str) -> Optional[str]:
-        """get lesson content"""
-        message = self.get_by_id(id)
-        return message.lesson if message else None
-
-    def set_lesson(self, id: str, lesson: str) -> Optional[AgentMessageModel]:
-        """set lesson content"""
-        return self.update(id, lesson=lesson)
-
-    def get_linked_workflow_ids(self, id: str) -> List[str]:
+    def get_agent_linked_workflow_ids(self, id: str) -> List[str]:
         """get linked workflow ids"""
         message = self.get_by_id(id)
         if message and message.linked_workflow_ids:
-            return json.loads(message.linked_workflow_ids)
+            return cast(List[str], message.linked_workflow_ids)
         return []
 
-    def set_linked_workflow_ids(
-        self, id: str, workflow_ids: List[str]
-    ) -> Optional[AgentMessageModel]:
-        """set linked workflow ids"""
-        return self.update(id, linked_workflow_ids=json.dumps(workflow_ids))
-
-    def add_workflow_message(self, agent_id: str, workflow_id: str) -> None:
-        """add a workflow message reference to an agent message"""
-        agent_message = self.get_by_id(agent_id)
-        if agent_message:
-            workflow_ids = self.get_linked_workflow_ids(agent_id)
-            if workflow_id not in workflow_ids:
-                workflow_ids.append(workflow_id)
-                self.set_linked_workflow_ids(agent_id, workflow_ids)
-
-    def remove_workflow_message(self, agent_id: str, workflow_id: str) -> None:
-        """remove a workflow message reference from an agent message"""
-        agent_message = self.get_by_id(agent_id)
-        if agent_message:
-            workflow_ids = self.get_linked_workflow_ids(agent_id)
-            if workflow_id in workflow_ids:
-                workflow_ids.remove(workflow_id)
-                self.set_linked_workflow_ids(agent_id, workflow_ids)
-
-    def get_workflow_messages(self, id: str) -> List[WorkflowMessageModel]:
+    def get_agent_workflow_messages(self, id: str) -> List[WorkflowMessageModel]:
         """get all workflow messages linked to this agent message"""
-        workflow_ids = self.get_linked_workflow_ids(id)
+        workflow_ids = self.get_agent_linked_workflow_ids(id)
         if workflow_ids:
             return (
-                self._session.query(WorkflowMessageModel)
+                self.session.query(WorkflowMessageModel)
                 .filter(WorkflowMessageModel.id.in_(workflow_ids))
                 .all()
             )
         return []
 
-    def get_workflow_result_message(self, id: str) -> Optional[WorkflowMessageModel]:
+    def get_agent_workflow_result_message(self, id: str) -> Optional[WorkflowMessageModel]:
         """get the workflow result message (assumes only one exists)"""
-        workflow_messages = self.get_workflow_messages(id)
+        workflow_messages = self.get_agent_workflow_messages(id)
         if len(workflow_messages) != 1:
-            raise ValueError("the agent message received no or multiple workflow result messages")
+            raise ValueError("The agent message received no or multiple workflow result messages.")
         return workflow_messages[0] if workflow_messages else None
-
-
-class ChatMessageDAO(DAO[ChatMessageModel]):
-    """chat message dao"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(ChatMessageModel, session)
-
-    def get_by_session_id(self, session_id: str) -> List[ChatMessageModel]:
-        """get chat messages by session id"""
-        return self._session.query(self._model).filter(self._model.session_id == session_id).all()
-
-    def get_by_role(self, role: str) -> List[ChatMessageModel]:
-        """get chat messages by role"""
-        return self._session.query(self._model).filter(self._model.role == role).all()
-
-    def get_by_session_and_role(self, session_id: str, role: str) -> List[ChatMessageModel]:
-        """get chat messages by session id and role"""
-        return (
-            self._session.query(self._model)
-            .filter(self._model.session_id == session_id, self._model.role == role)
-            .all()
-        )
-
-    def get_by_chat_message_type(self, subtype: str) -> List[ChatMessageModel]:
-        """get chat messages by subtype"""
-        return (
-            self._session.query(self._model).filter(self._model.chat_message_type == subtype).all()
-        )
-
-    def get_payload(self, id: str) -> Optional[str]:
-        """get message content"""
-        message = self.get_by_id(id)
-        return message.payload if message else None
-
-
-class TextMessageDAO(DAO[TextMessageModel]):
-    """text message dao"""
-
-    def __init__(self, session: SessionType):
-        super().__init__(TextMessageModel, session)
-
-    def get_payload(self, id: str) -> Optional[str]:
-        """get text content"""
-        message = self.get_by_id(id)
-        return message.payload if message else None
