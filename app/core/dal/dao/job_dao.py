@@ -25,7 +25,26 @@ class JobDAO(DAO[JobModel]):
         return self.create(
             goal=job.goal,
             context=job.context,
-            id=id,
+            id=job.id,
+            session_id=job.session_id,
+            assigned_expert_name=job.assigned_expert_name,
+        )
+
+    def update_job(self, job: Job) -> JobModel:
+        """Update a job model."""
+        if isinstance(job, SubJob):
+            return self.update(
+                id=job.id,
+                goal=job.goal,
+                context=job.context,
+                session_id=job.session_id,
+                output_schema=job.output_schema,
+                life_cycle=job.life_cycle,
+            )
+        return self.update(
+            id=job.id,
+            goal=job.goal,
+            context=job.context,
             session_id=job.session_id,
             assigned_expert_name=job.assigned_expert_name,
         )
@@ -51,3 +70,7 @@ class JobDAO(DAO[JobModel]):
             output_schema=str(result.output_schema),
             life_cycle=int(result.life_cycle),
         )
+
+    def remove_job(self, id: str) -> None:
+        """Remove a job by ID."""
+        self.delete(id=id)

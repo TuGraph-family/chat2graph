@@ -10,7 +10,7 @@ from app.core.dal.model.message_model import (
     TextMessageModel,
 )
 from app.core.model.job import Job
-from app.core.model.message import AgentMessage, ChatMessage, TextMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
 from app.server.common.util import ServiceException
 
 
@@ -30,20 +30,13 @@ class MessageService(metaclass=Singleton):
     def create_agent_message(self, agent_message: AgentMessage) -> AgentMessage:
         """Save a new agent message.
 
-        Note that it does not save the job of the agent message in the database.
+        Note that it dose not save the job of the agent message in the database.
+        And it dose not either save the workflow messages of the agent message in the database.
         """
-        # create workflow messages
-        for workflow_message in agent_message.get_workflow_messages():
-            self.create_workflow_message(
-                workflow_message=workflow_message,
-                job_id=agent_message.get_payload().id,
-            )
-
-        # create agent message
         self._message_dao.create_message(message=agent_message)
         return agent_message
 
-    def create_text_message(self, text_message: TextMessage) -> ChatMessage:
+    def create_text_message(self, text_message: TextMessage) -> TextMessage:
         """Save a new text message."""
         # create the message
         self._message_dao.create_message(message=text_message)
@@ -54,13 +47,13 @@ class MessageService(metaclass=Singleton):
         # fetch agent messages
         return self._message_dao.get_agent_messages_by_job(job=job)
 
-    def get_text_message(self, id: str) -> ChatMessage:
+    def get_text_message(self, id: str) -> TextMessage:
         """Get a message by ID."""
         # fetch the message
         result = self._message_dao.get_by_id(id=id)
         if not result:
-            raise ServiceException(f"ChatMessage with ID {id} not found")
-        return ChatMessage(
+            raise ServiceException(f"TextMessage with ID {id} not found")
+        return TextMessage(
             id=str(result.id),
             session_id=str(result.session_id),
             chat_message_type=str(result.chat_message_type),
@@ -76,7 +69,7 @@ class MessageService(metaclass=Singleton):
         # delete the message
         message = self._message_dao.get_by_id(id=id)
         if not message:
-            raise ServiceException(f"ChatMessage with ID {id} not found")
+            raise ServiceException(f"TexttMessage with ID {id} not found")
         self._message_dao.delete(id=id)
 
     def update_text_message(
@@ -104,7 +97,7 @@ class MessageService(metaclass=Singleton):
         # fetch the existing message
         existing_message: Optional[TextMessageModel] = self._message_dao.get_by_id(id=id)
         if not existing_message:
-            raise ValueError(f"TextMessage with ID {id} not found")
+            raise ServiceException(f"TextMessage with ID {id} not found")
 
         # prepare update fields
         update_fields: Dict[str, Any] = {}
@@ -124,7 +117,7 @@ class MessageService(metaclass=Singleton):
         # update only if there are changes
         if update_fields:
             updated_message: TextMessageModel = self._message_dao.update(id=id, **update_fields)
-            return ChatMessage(
+            return TextMessage(
                 id=str(updated_message.id),
                 session_id=str(updated_message.session_id),
                 chat_message_type=str(updated_message.chat_message_type),
@@ -135,7 +128,7 @@ class MessageService(metaclass=Singleton):
                 others=str(updated_message.others),
             )
 
-        return ChatMessage(
+        return TextMessage(
             id=str(existing_message.id),
             session_id=str(existing_message.session_id),
             chat_message_type=str(existing_message.chat_message_type),
@@ -146,12 +139,12 @@ class MessageService(metaclass=Singleton):
             others=str(existing_message.others),
         )
 
-    def get_all_text_messages(self) -> List[ChatMessage]:
+    def get_all_text_messages(self) -> List[TextMessage]:
         """Get all messages."""
 
         results = self._message_dao.get_by_type(type=MessageType.TEXT_MESSAGE)
         return [
-            ChatMessage(
+            TextMessage(
                 id=str(result.id),
                 session_id=str(result.session_id),
                 chat_message_type=str(result.chat_message_type),
@@ -164,7 +157,7 @@ class MessageService(metaclass=Singleton):
             for result in results
         ]
 
-    def filter_text_messages_by_session(self, session_id: str) -> List[ChatMessage]:
+    def filter_text_messages_by_session(self, session_id: str) -> List[TextMessage]:
         """Filter messages by session ID.
 
         Args:
@@ -176,7 +169,7 @@ class MessageService(metaclass=Singleton):
         # fetch filtered messages
         results = self._message_dao.filter_by(session_id=session_id)
         return [
-            ChatMessage(
+            TextMessage(
                 id=str(result.id),
                 session_id=str(result.session_id),
                 chat_message_type=str(result.chat_message_type),

@@ -9,8 +9,7 @@ from app.core.dal.database import DB
 from app.core.model.job import Job
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
-from app.core.model.message import AgentMessage, TextMessage
-from app.core.service.agent_service import AgentService
+from app.core.model.message import TextMessage
 
 
 class JobService(metaclass=Singleton):
@@ -20,9 +19,17 @@ class JobService(metaclass=Singleton):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
         self._job_dao: JobDAO = JobDAO(DB())
 
-    def create_job(self, job: Job) -> Job:
+    def _create_job(self, job: Job) -> Job:
         """Save a new job."""
         self._job_dao.create_job(job=job)
+        return job
+
+    def update_job(self, job: Job) -> Job:
+        """Update a job."""
+        if not self._job_dao.get_by_id(job.id):
+            return self._create_job(job=job)
+
+        self._job_dao.update_job(job=job)
         return job
 
     def get_original_job_ids(self) -> List[str]:
@@ -36,7 +43,8 @@ class JobService(metaclass=Singleton):
     def get_subjobs(self, original_job_id: str) -> List[Job]:
         """Get all subjobs."""
         return [
-            self.get_job(original_job_id, job_id) for job_id in self.get_subjob_ids(original_job_id)
+            self.get_subjob(original_job_id, job_id)
+            for job_id in self.get_subjob_ids(original_job_id)
         ]
 
     def query_job_result(self, job_id: str) -> JobResult:
@@ -83,38 +91,6 @@ class JobService(metaclass=Singleton):
 
         return job_result
 
-    def execute_job(self, job: Job) -> None:
-        """Execute the job."""
-        # submit the job by self
-        initial_job_graph: JobGraph = JobGraph()
-        initial_job_graph.add_vertex(id=job.id, job=job)
-        self.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
-
-        # submit the job to the leader
-        agent_service: AgentService = AgentService.instance
-        decomposed_job_graph: JobGraph = agent_service.leader.execute(
-            agent_message=AgentMessage(job=job)
-        )
-        # replace the subgraph in the job service
-        self.replace_subgraph(
-            original_job_id=job.id,
-            new_subgraph=decomposed_job_graph,
-            old_subgraph=self.get_job_graph(job.id),
-        )
-
-        # save the decomposed job graph to the job service
-        for subjob in self.get_subjobs(job.id):
-            self._job_dao.create_job(job=subjob)
-
-        executed_job_graph = agent_service.leader.execute_job_graph(job_graph=decomposed_job_graph)
-
-        # replace the executed subgraph in the job service
-        self.replace_subgraph(
-            original_job_id=job.id,
-            new_subgraph=executed_job_graph,
-            old_subgraph=self.get_job_graph(job.id),
-        )
-
     def get_job_graph(self, job_id: str) -> JobGraph:
         """Get the job graph by the inital job id."""
         if job_id not in self._job_graphs:
@@ -144,6 +120,9 @@ class JobService(metaclass=Singleton):
         job_graph = self.get_job_graph(original_job_id)
         job_graph.add_vertex(job.id, job=job, expert_id=expert_id)
 
+        # save the job to the database
+        self.update_job(job=job)
+
         if not predecessors:
             predecessors = []
         if not successors:
@@ -164,6 +143,10 @@ class JobService(metaclass=Singleton):
         job_graph = self.get_job_graph(original_job_id)
         job_graph.remove_vertex(job_id)
         self._job_graphs[original_job_id] = job_graph
+
+    def get_subjob(self, original_job_id: str, job_id: str) -> Job:
+        """Get a Job from the Job registry."""
+        return self.get_job_graph(original_job_id).get_job(job_id)
 
     def replace_subgraph(
         self,
