@@ -156,3 +156,4 @@ class GraphDbService(metaclass=Singleton):
 
     def validate_graph_connection(self, ip: str, port: str, user: str, pwd: str) -> bool:
         """Validate connection to a graph database."""
+        raise NotImplementedError("Method not implemented")

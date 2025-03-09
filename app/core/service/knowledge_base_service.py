@@ -30,10 +30,10 @@ class KnowledgeBaseService(metaclass=Singleton):
         # create the knowledge base
         result = self._dao.create(name=name, knowledge_type=knowledge_type, session_id=session_id)
         return KnowledgeBase(
-            id=result.id,
-            name=result.name,
-            knowledge_type=result.knowledge_type,
-            session_id=result.session_id,
+            id=str(result.id),
+            name=str(result.name),
+            knowledge_type=str(result.knowledge_type),
+            session_id=str(result.session_id),
         )
 
     def get_knowledge_base(self, id: str) -> KnowledgeBase:
@@ -49,10 +49,10 @@ class KnowledgeBaseService(metaclass=Singleton):
         if not result:
             raise ServiceException(f"Knowledge base with ID {id} not found")
         return KnowledgeBase(
-            id=result.id,
-            name=result.name,
-            knowledge_type=result.knowledge_type,
-            session_id=result.session_id,
+            id=str(result.id),
+            name=str(result.name),
+            knowledge_type=str(result.knowledge_type),
+            session_id=str(result.session_id),
         )
 
     def delete_knowledge_base(self, id: str):
@@ -68,6 +68,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
     def update_knowledge_base(self) -> KnowledgeBase:
         """Update a knowledge base by ID."""
+        raise NotImplementedError("Method not implemented")
 
     def get_all_knowledge_bases(self) -> List[KnowledgeBase]:
         """Get all knowledge bases.
@@ -78,10 +79,10 @@ class KnowledgeBaseService(metaclass=Singleton):
         results = self._dao.get_all()
         return [
             KnowledgeBase(
-                id=result.id,
-                name=result.name,
-                knowledge_type=result.knowledge_type,
-                session_id=result.session_id,
+                id=str(result.id),
+                name=str(result.name),
+                knowledge_type=str(result.knowledge_type),
+                session_id=str(result.session_id),
             )
             for result in results
         ]

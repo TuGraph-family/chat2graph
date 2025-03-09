@@ -3,13 +3,14 @@ from typing import Dict, List, Optional, Set
 
 import networkx as nx  # type: ignore
 
-from app.core.agent.expert import Expert
 from app.core.common.singleton import Singleton
 from app.core.common.type import JobStatus
+from app.core.dal.dao.job_dao import JobDAO
+from app.core.dal.database import DB
 from app.core.model.job import Job
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
-from app.core.model.message import TextMessage
+from app.core.model.message import AgentMessage, TextMessage
 from app.core.service.agent_service import AgentService
 
 
@@ -18,10 +19,26 @@ class JobService(metaclass=Singleton):
 
     def __init__(self):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
+        self._job_dao: JobDAO = JobDAO(DB())
+
+    def create_job(self, job: Job) -> Job:
+        """Save a new job."""
+        self._job_dao.create_job(job=job)
+        return job
 
     def get_original_job_ids(self) -> List[str]:
         """Get all job ids."""
         return list(self._job_graphs.keys())
+
+    def get_subjob_ids(self, original_job_id: str) -> List[str]:
+        """Get all subjob ids."""
+        return self.get_job_graph(original_job_id).vertices()
+
+    def get_subjobs(self, original_job_id: str) -> List[Job]:
+        """Get all subjobs."""
+        return [
+            self.get_job(original_job_id, job_id) for job_id in self.get_subjob_ids(original_job_id)
+        ]
 
     def query_job_result(self, job_id: str) -> JobResult:
         """Query the result of the multi-agent system by original job id."""
@@ -43,7 +60,7 @@ class JobService(metaclass=Singleton):
         for tail_vertex in tail_vertices:
             job_result: Optional[JobResult] = job_graph.get_job_result(tail_vertex)
             if not job_result:
-                chat_message = TextMessage(
+                text_message = TextMessage(
                     payload="The job is not completed yet.",
                     timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 )
@@ -52,7 +69,7 @@ class JobService(metaclass=Singleton):
                     status=JobStatus.RUNNING,
                     duration=0,  # TODO: calculate the duration
                     tokens=0,  # TODO: calculate the tokens
-                    result=chat_message,
+                    result=text_message,
                 )
             mutli_agent_payload += job_result.result.get_payload() + "\n"
 
@@ -79,9 +96,23 @@ class JobService(metaclass=Singleton):
 
         # submit the job to the leader
         agent_service: AgentService = AgentService.instance
-        executed_job_graph = agent_service.leader.execute_job(job=job)
-
+        decomposed_job_graph: JobGraph = agent_service.leader.execute(
+            agent_message=AgentMessage(job=job)
+        )
         # replace the subgraph in the job service
+        self.replace_subgraph(
+            original_job_id=job.id,
+            new_subgraph=decomposed_job_graph,
+            old_subgraph=self.get_job_graph(job.id),
+        )
+
+        # save the decomposed job graph to the job service
+        for subjob in self.get_subjobs(job.id):
+            self._job_dao.create_job(job=subjob)
+
+        executed_job_graph = agent_service.leader.execute_job_graph(job_graph=decomposed_job_graph)
+
+        # replace the executed subgraph in the job service
         self.replace_subgraph(
             original_job_id=job.id,
             new_subgraph=executed_job_graph,
@@ -104,7 +135,7 @@ class JobService(metaclass=Singleton):
         self,
         original_job_id: str,
         job: Job,
-        expert: Expert,
+        expert_id: str,
         predecessors: Optional[List[Job]] = None,
         successors: Optional[List[Job]] = None,
     ) -> None:
@@ -112,7 +143,7 @@ class JobService(metaclass=Singleton):
 
         # add job to the jobs graph
         job_graph = self.get_job_graph(original_job_id)
-        job_graph.add_vertex(job.id, job=job, expert_id=expert.get_id())
+        job_graph.add_vertex(job.id, job=job, expert_id=expert_id)
 
         if not predecessors:
             predecessors = []
