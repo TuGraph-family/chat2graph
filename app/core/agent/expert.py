@@ -19,6 +19,8 @@ class Expert(Agent):
         Returns:
             Job: The job with the response (WorkflowMessage).
         """
+        message_service: MessageService = MessageService.instance
+
         # TODO: convert to a state machine (?)
 
         job = agent_message.get_payload()
@@ -31,7 +33,8 @@ class Expert(Agent):
             lesson=agent_message.get_lesson(),
         )
 
-        message_service: MessageService = MessageService.instance
+        # save the workflow message in the database
+        message_service.create_workflow_message(workflow_message=workflow_message, job_id=job.id)
 
         if workflow_message.status == WorkflowStatus.SUCCESS:
             # (1) WorkflowStatus.SUCCESS
