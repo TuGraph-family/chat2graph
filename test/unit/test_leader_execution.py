@@ -16,6 +16,7 @@ from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
+job_service: JobService = JobService()
 MessageService()
 init_db()
 
