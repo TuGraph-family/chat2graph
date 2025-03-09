@@ -1,9 +1,8 @@
 from app.core.dal.init_db import init_db
-from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
 
-AgenticService()
 init_db()
+SessionService()
 
 
 def test_session_wrapper_init(mocker):

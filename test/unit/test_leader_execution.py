@@ -11,12 +11,12 @@ from app.core.model.message import WorkflowMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
-AgenticService()
-job_service: JobService = JobService.instance
+MessageService()
 init_db()
 
 
