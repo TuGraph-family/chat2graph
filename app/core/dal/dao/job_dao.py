@@ -1,50 +1,31 @@
 from sqlalchemy.orm import Session as SqlAlchemySession
 
-from app.core.dal.dao.dao import Dao
-from app.core.dal.do.job_do import JobDo
+from app.core.dal.dao.dao import DAO
+from app.core.dal.model.job_model import JobModel
 from app.core.model.job import Job, SubJob
 
 
-class JobDao(Dao[JobDo]):
+class JobDAO(DAO[JobModel]):
     """Job Data Access Object"""
 
     def __init__(self, session: SqlAlchemySession):
-        super().__init__(JobDo, session)
+        super().__init__(JobModel, session)
 
-    def save_job(self, job: Job) -> JobDo:
+    def create_job(self, job: Job) -> JobModel:
         """Create a new job model."""
         if isinstance(job, SubJob):
             return self.create(
-                id=job.id,
                 goal=job.goal,
                 context=job.context,
+                id=job.id,
                 session_id=job.session_id,
                 output_schema=job.output_schema,
                 life_cycle=job.life_cycle,
             )
         return self.create(
-            id=job.id,
             goal=job.goal,
             context=job.context,
-            session_id=job.session_id,
-            assigned_expert_name=job.assigned_expert_name,
-        )
-
-    def update_job(self, job: Job) -> JobDo:
-        """Update a job model."""
-        if isinstance(job, SubJob):
-            return self.update(
-                id=job.id,
-                goal=job.goal,
-                context=job.context,
-                session_id=job.session_id,
-                output_schema=job.output_schema,
-                life_cycle=job.life_cycle,
-            )
-        return self.update(
-            id=job.id,
-            goal=job.goal,
-            context=job.context,
+            id=id,
             session_id=job.session_id,
             assigned_expert_name=job.assigned_expert_name,
         )
@@ -70,7 +51,3 @@ class JobDao(Dao[JobDo]):
             output_schema=str(result.output_schema),
             life_cycle=int(result.life_cycle),
         )
-
-    def remove_job(self, id: str) -> None:
-        """Remove a job by ID."""
-        self.delete(id=id)
