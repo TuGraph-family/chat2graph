@@ -5,7 +5,6 @@ from app.core.common.system_env import SystemEnv
 from app.core.common.type import WorkflowStatus
 from app.core.model.job import Job
 from app.core.model.message import AgentMessage, WorkflowMessage
-from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
 
 
@@ -37,17 +36,15 @@ class Expert(Agent):
             lesson=agent_message.get_lesson(),
         )
 
-        # save the workflow message in the database
-        message_service.save_message(message=workflow_message)
+        message_service: MessageService = MessageService.instance
 
         if workflow_message.status == WorkflowStatus.SUCCESS:
             # (1) WorkflowStatus.SUCCESS
             # color: bright green
             print(f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m")
 
-            agent_message = AgentMessage(job_id=job.id, workflow_messages=[workflow_message])
-            message_service.save_message(message=agent_message)
-            return agent_message
+            agent_message = AgentMessage(job=job, workflow_messages=[workflow_message])
+            return message_service.create_agent_message(agent_message=agent_message)
         if workflow_message.status == WorkflowStatus.EXECUTION_ERROR:
             # (2) WorkflowStatus.EXECUTION_ERROR
 
@@ -77,9 +74,9 @@ class Expert(Agent):
 
             # return the agent message to the leader, and let the leader handle the error
             agent_message = AgentMessage(
-                job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
+                job=job, workflow_messages=[workflow_message], lesson=lesson
             )
-            return agent_message
+            return message_service.create_agent_message(agent_message=agent_message)
         if workflow_message.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # (4) WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
             # color: orange
@@ -91,7 +88,7 @@ class Expert(Agent):
             # workflow experience -> agent lesson
             lesson = "The job is too complicated to be executed by the expert"
             agent_message = AgentMessage(
-                job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
+                job=job, workflow_messages=[workflow_message], lesson=lesson
             )
-            return agent_message
+            return message_service.create_agent_message(agent_message=agent_message)
         raise Exception("The workflow status is not defined.")

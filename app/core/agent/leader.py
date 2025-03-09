@@ -31,7 +31,6 @@ class Leader(Agent):
         super().__init__(agent_config=agent_config, id=id)
         # self._workflow of the leader is used to decompose the job
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
-        self._job_service: JobService = JobService.instance
 
     def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
         """Decompose the job into subjobs.
