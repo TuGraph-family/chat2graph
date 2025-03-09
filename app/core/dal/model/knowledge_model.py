@@ -1,4 +1,4 @@
-import uuid
+from uuid import uuid4
 
 from sqlalchemy import Boolean, Column, ForeignKey, String, Text
 from sqlalchemy.orm import relationship
@@ -11,7 +11,7 @@ class KnowledgeBaseModel(Base):  # type: ignore
 
     __tablename__ = "knowledge_base"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     name = Column(Text, nullable=False)
     knowledge_type = Column(Text, nullable=False)
     session_id = Column(
@@ -26,7 +26,7 @@ class FileModel(Base):  # type: ignore
 
     __tablename__ = "file"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     message_id = Column(
         String(36), ForeignKey("message.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -50,7 +50,7 @@ class GraphDBModel(Base):  # type: ignore
 
     __tablename__ = "graph_db"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     ip = Column(Text, nullable=False)
     port = Column(Text, nullable=False)
     user = Column(Text, nullable=False)
