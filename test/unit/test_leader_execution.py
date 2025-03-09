@@ -3,15 +3,20 @@ from typing import List, Optional
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
 from app.core.common.type import JobStatus
+from app.core.dal.init_db import init_db
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
 from app.core.model.message import WorkflowMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+
+MessageService()
+init_db()
 
 
 class TestAgentOperator(Operator):
@@ -125,7 +130,7 @@ def test_agent_job_graph():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[0],
-        expert=leader.state.get_expert_by_name("Expert 1"),
+        expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
         predecessors=[],
         successors=[jobs[1], jobs[2]],
     )
@@ -133,7 +138,7 @@ def test_agent_job_graph():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[1],
-        expert=leader.state.get_expert_by_name("Expert 2"),
+        expert_id=leader.state.get_expert_by_name("Expert 2").get_id(),
         predecessors=[jobs[0]],
         successors=[jobs[4]],
     )
@@ -141,7 +146,7 @@ def test_agent_job_graph():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[2],
-        expert=leader.state.get_expert_by_name("Expert 3"),
+        expert_id=leader.state.get_expert_by_name("Expert 3").get_id(),
         predecessors=[jobs[0]],
         successors=[jobs[3]],
     )
@@ -149,7 +154,7 @@ def test_agent_job_graph():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[3],
-        expert=leader.state.get_expert_by_name("Expert 4"),
+        expert_id=leader.state.get_expert_by_name("Expert 4").get_id(),
         predecessors=[jobs[2]],
         successors=[],
     )
@@ -157,7 +162,7 @@ def test_agent_job_graph():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[4],
-        expert=leader.state.get_expert_by_name("Expert 5"),
+        expert_id=leader.state.get_expert_by_name("Expert 5").get_id(),
         predecessors=[jobs[1], jobs[2]],
         successors=[],
     )
@@ -170,6 +175,8 @@ def test_agent_job_graph():
     terminal_job_results: List[JobResult] = [
         job_graph.get_job_result(vertex) for vertex in tail_vertices
     ]
+    job_ids = job_graph._job_results.keys()
+    results = [msg.result._payload for msg in job_graph._job_results.values()]
 
     # verify we only get messages from terminal vertices (job4 and job5)
     assert len(tail_vertices) == 2, "Should receive 2 messages from terminal vertices"

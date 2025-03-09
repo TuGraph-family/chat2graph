@@ -217,7 +217,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert=leader.state.get_expert_by_name("Expert 1"),
+        expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
         predecessors=[],
         successors=[job_2, job_3],
     )
@@ -225,7 +225,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert=leader.state.get_expert_by_name("Expert 2"),
+        expert_id=leader.state.get_expert_by_name("Expert 2").get_id(),
         predecessors=[job_1],
         successors=[job_5],
     )
@@ -233,7 +233,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert=leader.state.get_expert_by_name("Expert 3"),
+        expert_id=leader.state.get_expert_by_name("Expert 3").get_id(),
         predecessors=[job_1],
         successors=[job_4],
     )
@@ -241,7 +241,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert=leader.state.get_expert_by_name("Expert 4"),
+        expert_id=leader.state.get_expert_by_name("Expert 4").get_id(),
         predecessors=[job_3],
         successors=[],
     )
@@ -249,7 +249,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert=leader.state.get_expert_by_name("Expert 5"),
+        expert_id=leader.state.get_expert_by_name("Expert 5").get_id(),
         predecessors=[job_2, job_3],
         successors=[],
     )
