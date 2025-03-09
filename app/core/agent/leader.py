@@ -32,17 +32,8 @@ class Leader(Agent):
         super().__init__(agent_config=agent_config, id=id)
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
 
-    def execute_job(self, job: Job) -> JobGraph:
-        """Execute a job from the user."""
-        # decompose the job by the leader
-        job_graph = self.execute(agent_message=AgentMessage(job=job))
-
-        # execute the job graph
-        # TODO: make the job graph static, and save the job results by the service
-        return self.execute_job_graph(job_graph=job_graph)
-
     def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
-        """Decompose the job and execute the job.
+        """Decompose the job into subjobs.
 
         Args:
             agent_message (AgentMessage): The agent message including the job to be decomposed.
@@ -71,7 +62,7 @@ class Leader(Agent):
             return job_graph
 
         # get the expert list
-        expert_profiles = [e.get_profile() for e in self._leader_state.list_experts()]
+        expert_profiles = [e.get_profile() for e in self.state.list_experts()]
         role_list = "\n".join(
             [
                 f"Expert name: {profile.name}\nDescription: {profile.description}"
@@ -116,7 +107,7 @@ class Leader(Agent):
             job_graph.add_vertex(
                 job_id,
                 job=subjob,
-                expert_id=self._leader_state.get_expert_by_name(
+                expert_id=self.state.get_expert_by_name(
                     subjob_dict.get("assigned_expert", "")
                 ).get_id(),
             )
@@ -172,7 +163,7 @@ class Leader(Agent):
 
                 # execute ready jobs
                 for job_id in ready_job_ids:
-                    expert = self._leader_state.get_expert_by_id(job_graph.get_expert_id(job_id))
+                    expert = self.state.get_expert_by_id(job_graph.get_expert_id(job_id))
                     # submit the job to the executor
                     running_jobs[job_id] = executor.submit(
                         self._execute_job, expert, job_inputs[job_id]
@@ -195,7 +186,8 @@ class Leader(Agent):
                 for completed_job_id in completed_job_ids:
                     future = running_jobs[completed_job_id]
                     try:
-                        agent_result: AgentMessage = future.result()  # 获取任务结果
+                        # get the agent result
+                        agent_result: AgentMessage = future.result()
 
                         if (
                             agent_result.get_workflow_result_message().status
@@ -253,7 +245,7 @@ class Leader(Agent):
         return job_graph
 
     def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
-        """Execute single job for the first time."""
+        """Dispatch the job to the expert, and handle the result."""
         agent_result_message: AgentMessage = expert.execute(agent_message=agent_message)
         workflow_result: WorkflowMessage = agent_result_message.get_workflow_result_message()
 
