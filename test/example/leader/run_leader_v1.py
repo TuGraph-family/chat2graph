@@ -257,9 +257,8 @@ def main():
     print("\n=== Starting Leader Execute TestTest ===")
 
     # get the job graph and expert assignments
-    job_graph: JobGraph = leader.execute_job_graph(
-        job_graph=job_service.get_job_graph("test_original_job_id")
-    )
+    leader.execute_job_graph(original_job_id="test_original_job_id")
+    job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
 
     print("\n=== Execution Results ===")

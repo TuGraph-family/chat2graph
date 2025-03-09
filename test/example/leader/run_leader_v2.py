@@ -232,9 +232,8 @@ paper content:
 
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
-    job_graph: JobGraph = leader.execute_job_graph(
-        job_graph=job_service.get_job_graph("test_original_job_id")
-    )
+    leader.execute_job_graph(job_graph=job_service.get_job_graph("test_original_job_id"))
+    job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
 
     for tail_vertex in tail_vertices:

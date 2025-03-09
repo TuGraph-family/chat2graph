@@ -15,6 +15,7 @@ from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
+job_service: JobService = JobService()
 MessageService()
 init_db()
 
@@ -126,7 +127,6 @@ def test_agent_job_graph():
         )
 
     # build job graph
-    job_service: JobService = JobService()
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=jobs[0],
@@ -168,9 +168,8 @@ def test_agent_job_graph():
     )
 
     # execute job graph
-    job_graph: JobGraph = leader.execute_job_graph(
-        job_graph=job_service.get_job_graph(job_id="test_original_job_id")
-    )
+    leader.execute_job_graph(original_job_id="test_original_job_id")
+    job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
     terminal_job_results: List[JobResult] = [
         job_graph.get_job_result(vertex) for vertex in tail_vertices
