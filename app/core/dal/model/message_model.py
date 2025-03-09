@@ -36,7 +36,7 @@ agent_workflow_links = Table(
 )
 
 
-class MessageModel(Base):
+class MessageModel(Base):  # type: ignore
     """Base message class"""
 
     __tablename__ = "message"
@@ -54,19 +54,18 @@ class MessageModel(Base):
     source_type = Column(String(50), nullable=True)
     function_calls_json = Column(JSON, nullable=True)
 
-    # workflow message fields
-    payload_json = Column(JSON, nullable=True)
-
     # common fields shared by multiple types
     session_id = Column(
         String(36),
         ForeignKey("session.id", use_alter=True, name="fk_message_session", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
-    job_id = Column(
-        String(36), ForeignKey("job.id", use_alter=True, name="fk_message_job"), nullable=True
-    )
+    # TODO: relate the job_id to job table
+    # job_id = Column(
+    #     String(36), ForeignKey("job.id", use_alter=True, name="fk_message_job"), nullable=True
+    # )
+    job_id = Column(String(36), nullable=True)
 
     # model message specific fields
     operator_id = Column(String(36), nullable=True)  # TODO: set the FK constraint
@@ -94,7 +93,7 @@ class ModelMessageModel(MessageModel):
     """Model message"""
 
     __mapper_args__ = {
-        "polymorphic_identity": MessageType.MODEL_MESSAGE.value,
+        "polymorphic_identity": MessageType.MODEL_MESSAGE.value,  # type: ignore
     }
 
 
@@ -102,7 +101,7 @@ class WorkflowMessageModel(MessageModel):
     """Workflow message, used to communicate between the operators in the workflow."""
 
     __mapper_args__ = {
-        "polymorphic_identity": MessageType.WORKFLOW_MESSAGE.value,
+        "polymorphic_identity": MessageType.WORKFLOW_MESSAGE.value,  # type: ignore
     }
 
 
@@ -110,7 +109,7 @@ class AgentMessageModel(MessageModel):
     """agent message"""
 
     __mapper_args__ = {
-        "polymorphic_identity": MessageType.AGENT_MESSAGE.value,
+        "polymorphic_identity": MessageType.AGENT_MESSAGE.value,  # type: ignore
     }
 
 
@@ -118,7 +117,7 @@ class ChatMessageModel(MessageModel):
     """chat message"""
 
     __mapper_args__ = {
-        "polymorphic_identity": MessageType.CHAT_MESSAGE.value,
+        "polymorphic_identity": MessageType.CHAT_MESSAGE.value,  # type: ignore
         # "polymorphic_on": "chat_message_type",
     }
 
@@ -127,5 +126,5 @@ class TextMessageModel(ChatMessageModel):
     """text message"""
 
     __mapper_args__ = {
-        "polymorphic_identity": MessageType.TEXT_MESSAGE.value,
+        "polymorphic_identity": MessageType.TEXT_MESSAGE.value,  # type: ignore
     }

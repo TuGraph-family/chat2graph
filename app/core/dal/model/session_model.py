@@ -7,7 +7,7 @@ from app.core.common.util import utc_now
 from app.core.dal.database import Base
 
 
-class SessionModel(Base):
+class SessionModel(Base):  # type: ignore
     """Session to store session details."""
 
     __tablename__ = "session"

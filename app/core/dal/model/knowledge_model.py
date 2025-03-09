@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from app.core.dal.database import Base
 
 
-class KnowledgeBaseModel(Base):
+class KnowledgeBaseModel(Base):  # type: ignore
     """Knowledge Base to store knowledge base details"""
 
     __tablename__ = "knowledge_base"
@@ -21,7 +21,7 @@ class KnowledgeBaseModel(Base):
     files = relationship("FileModel", secondary="kb_to_file", backref="knowledge_bases")
 
 
-class FileModel(Base):
+class FileModel(Base):  # type: ignore
     """File to store file details."""
 
     __tablename__ = "file"
@@ -34,7 +34,7 @@ class FileModel(Base):
     path = Column(Text, nullable=False)
 
 
-class KbToFileModel(Base):
+class KbToFileModel(Base):  # type: ignore
     """Knowledge Base to File association model."""
 
     __tablename__ = "kb_to_file"
@@ -45,7 +45,7 @@ class KbToFileModel(Base):
     file_id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"), primary_key=True)
 
 
-class GraphDBModel(Base):
+class GraphDBModel(Base):  # type: ignore
     """GraphDB to store graph database details."""
 
     __tablename__ = "graph_db"
