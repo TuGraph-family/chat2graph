@@ -126,9 +126,11 @@ class JobGraph(Graph):
 
     def get_job(self, id: str) -> Job:
         """Return the job by id."""
-        if id not in self._jobs:
-            raise ValueError(f"Job with id {id} does not exist.")
-        return self._jobs[id]
+        if id in self._jobs:
+            return self._jobs[id]
+        if id in self._legacy_jobs:
+            return self._legacy_jobs[id]
+        raise ValueError(f"Job with id {id} does not exist.")
 
     def get_expert_id(self, id: str) -> str:
         """Return the expert id by job id."""

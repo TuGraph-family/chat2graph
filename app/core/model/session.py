@@ -8,6 +8,6 @@ class Session:
     """Session class"""
 
     id: str
-    name: Optional[str] = None
+    name: Optional[str]
     # TOOD: replace to timpstamps string
-    created_at: Optional[datetime] = None
+    created_at: Optional[datetime]

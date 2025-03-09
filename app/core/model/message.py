@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+import json
 import time
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.core.common.type import MessageSourceType
+from app.core.common.type import MessageSourceType, WorkflowStatus
 from app.core.model.job import Job
 from app.core.toolkit.tool import FunctionCallResult
 
@@ -128,6 +130,25 @@ class WorkflowMessage(Message):
     def copy(self) -> "WorkflowMessage":
         """Copy the message."""
         return WorkflowMessage(payload=self._payload.copy(), timestamp=self._timestamp, id=self._id)
+
+    @staticmethod
+    def serialize_payload(payload: Dict[str, Any]) -> str:
+        """Serialize the payload."""
+
+        def enum_handler(obj):
+            if isinstance(obj, Enum):
+                return obj.value
+            raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+        return json.dumps(payload, default=enum_handler)
+
+    @staticmethod
+    def deserialize_payload(payload: str) -> Dict[str, Any]:
+        """Deserialize the payload."""
+        payload_dict = json.loads(payload)
+        if "status" in payload_dict:
+            payload_dict["status"] = WorkflowStatus(payload_dict["status"])
+        return payload_dict
 
 
 class AgentMessage(Message):
@@ -274,6 +295,7 @@ class ChatMessage(Message):
             chat_message_type=self._chat_message_type,
             job_id=self._job_id,
             role=self._role,
+            assigned_expert_name=self._assigned_expert_name,
             others=self._others,
         )
 
@@ -284,15 +306,28 @@ class TextMessage(ChatMessage):
     def __init__(
         self,
         payload: str,
-        assigned_expert_name: Optional[str] = None,
         timestamp: Optional[str] = None,
         id: Optional[str] = None,
+        session_id: Optional[str] = None,
+        chat_message_type: Optional[str] = None,
+        job_id: Optional[str] = None,
+        role: Optional[str] = None,
+        others: Optional[str] = None,
+        assigned_expert_name: Optional[str] = None,
     ):
         super().__init__(
-            payload=payload, assigned_expert_name=assigned_expert_name, timestamp=timestamp, id=id
+            payload=payload,
+            timestamp=timestamp,
+            id=id,
+            session_id=session_id,
+            chat_message_type=chat_message_type,
+            job_id=job_id,
+            role=role,
+            others=others,
+            assigned_expert_name=assigned_expert_name,
         )
 
-    def get_payload(self) -> Any:
+    def get_payload(self) -> str:
         """Get the content of the message."""
         return self._payload
 
@@ -310,4 +345,14 @@ class TextMessage(ChatMessage):
 
     def copy(self) -> "TextMessage":
         """Copy the message."""
-        return super().copy()
+        return TextMessage(
+            payload=self._payload,
+            timestamp=self._timestamp,
+            id=self._id,
+            session_id=self._session_id,
+            chat_message_type=self._chat_message_type,
+            job_id=self._job_id,
+            role=self._role,
+            assigned_expert_name=self._assigned_expert_name,
+            others=self._others,
+        )
