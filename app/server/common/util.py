@@ -25,7 +25,7 @@ class ServiceException(ApiException):
         super().__init__(message, 500)
 
 
-def make_response(success: bool, data: Optional[Any] = None, message: str = ""):
+def make_response(success: bool, data: Optional[Any] = None, message: str = "") -> Any:
     """Create a JSON response."""
     response = {"success": success, "data": data if data is not None else {}, "message": message}
     return jsonify(response), 200 if success else 400
