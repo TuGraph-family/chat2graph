@@ -1,7 +1,7 @@
 import os
 
 from flask import Flask, send_from_directory
-from flask_cors import CORS
+from flask_cors import CORS  # type: ignore
 
 from app.core.dal.init_db import init_db
 from app.server.api import register_blueprints

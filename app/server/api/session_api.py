@@ -1,3 +1,5 @@
+from typing import Optional
+
 from flask import Blueprint, request
 
 from app.server.common.util import ApiException, make_response
@@ -60,6 +62,8 @@ def update_session_by_id(session_id):
     data = request.json
     try:
         name = data.get("name")
+        assert isinstance(name, Optional[str]), "Name should be a string or None"
+
         updated_session, message = manager.update_session(id=session_id, name=name)
         return make_response(True, data=updated_session, message=message)
     except ApiException as e:
