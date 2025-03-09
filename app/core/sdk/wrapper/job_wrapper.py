@@ -18,7 +18,7 @@ class JobWrapper:
         return self._job
 
     @property
-    def id(self) -> Job:
+    def id(self) -> str:
         """Get the job id."""
         return self._job.id
 
