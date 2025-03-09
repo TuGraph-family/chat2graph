@@ -135,7 +135,7 @@ class JobGraph(Graph):
     def get_expert_id(self, id: str) -> str:
         """Return the expert id by job id."""
         if id not in self._expert_ids:
-            raise ValueError(f"Expert with id {id} does not exist.")
+            raise ValueError(f"Job with id {id} is not assigned an expert.")
         return self._expert_ids[id]
 
     def get_legacy_job(self, id: str) -> Optional[Job]:
@@ -146,6 +146,10 @@ class JobGraph(Graph):
         """Return the job result by job id."""
         return self._job_results.get(id, None)
 
+    def get_job_results(self) -> Dict[str, JobResult]:
+        """Return the job results."""
+        return self._job_results
+
     def set_legacy_job(self, id: str) -> None:
         """Set the legacy job. Please note that, it dosen't remove the legacy job from the graph."""
         self._legacy_jobs[id] = self._jobs[id]
@@ -153,3 +157,7 @@ class JobGraph(Graph):
     def set_job_result(self, id: str, job_result: JobResult) -> None:
         """Set the job result by job id."""
         self._job_results[id] = job_result
+
+    def remmove_job_result(self, id: str) -> None:
+        """Remove the job result by job id."""
+        self._job_results.pop(id, None)
