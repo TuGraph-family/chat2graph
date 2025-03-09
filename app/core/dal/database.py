@@ -12,6 +12,14 @@ instance_path = project_root / "instance"
 instance_path.mkdir(exist_ok=True)
 
 # engine and session factory
-engine = create_engine(SystemEnv.DATABASE_URL)
+# TODO: config the sqlalchemy settings in the .env file
+engine = create_engine(
+    SystemEnv.DATABASE_URL,
+    pool_size=50,
+    max_overflow=50,
+    pool_timeout=60,
+    pool_recycle=3600,
+    pool_pre_ping=True,
+)
 DB = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base: DeclarativeMeta = declarative_base()
