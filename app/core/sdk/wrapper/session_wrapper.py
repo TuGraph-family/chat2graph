@@ -19,10 +19,14 @@ class SessionWrapper:
     def submit(self, message: ChatMessage) -> JobWrapper:
         """Submit the job."""
         # get chat history (text messages), and it will be used as the context of the job
-        message_service: MessageService = MessageService.instance
-        history_text_messages = message_service.filter_text_messages_by_session(
-            session_id=message.get_session_id()
-        )
+        session_id: Optional[str] = message.get_session_id()
+        if session_id:
+            message_service: MessageService = MessageService.instance
+            history_text_messages: List[TextMessage] = (
+                message_service.filter_text_messages_by_session(session_id=session_id)
+            )
+        else:
+            history_text_messages = []
 
         job = Job(
             goal=message.get_payload(),
