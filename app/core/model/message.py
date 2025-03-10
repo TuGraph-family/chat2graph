@@ -212,7 +212,19 @@ class AgentMessage(Message):
 
 
 class ChatMessage(Message):
-    """Chat message"""
+    """Chat message
+
+    Attributes:
+        _id str: Unique identifier for the message
+        _timestamp str: Timestamp of the message (defaults to current UTC time)
+        _payload (Any): The content of the message
+        _session_id (Optional[str]): ID of the associated session
+        _chat_message_type (Optional[str]): Type of the message
+        _job_id (Optional[str]): Job ID related to the message
+        _role (Optional[str]): Role of the sender
+        _others (Optional[str]): Additional information
+        _assigned_expert_name (Optional[str]): Name of the assigned expert
+    """
 
     def __init__(
         self,
@@ -226,20 +238,6 @@ class ChatMessage(Message):
         others: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
     ):
-        """
-        Initialize a ChatMessage instance.
-
-        Args:
-            payload (Any): The content of the message
-            timestamp (Optional[str]): Timestamp of the message (defaults to current UTC time)
-            id (Optional[str]): Unique identifier for the message
-            session_id (Optional[str]): ID of the associated session
-            chat_message_type (Optional[str]): Type of the message
-            job_id (Optional[str]): Job ID related to the message
-            role (Optional[str]): Role of the sender
-            others (Optional[str]): Additional information
-            assigned_expert_name (Optional[str]): Name of the assigned expert
-        """
         super().__init__(timestamp=timestamp or time.strftime("%Y-%m-%dT%H:%M:%SZ"), id=id)
         self._payload: Any = payload
         self._session_id: Optional[str] = session_id
