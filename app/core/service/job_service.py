@@ -4,7 +4,7 @@ import networkx as nx  # type: ignore
 
 from app.core.common.singleton import Singleton
 from app.core.common.type import JobStatus
-from app.core.dal.dao.job_dao import JobDAO
+from app.core.dal.dao.job_dao import JobDao
 from app.core.dal.database import DB
 from app.core.model.job import Job
 from app.core.model.job_graph import JobGraph
@@ -17,7 +17,7 @@ class JobService(metaclass=Singleton):
 
     def __init__(self):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
-        self._job_dao: JobDAO = JobDAO(DB())
+        self._job_dao: JobDao = JobDao(DB())
 
     def _create_job(self, job: Job) -> Job:
         """Save a new job."""
@@ -67,10 +67,7 @@ class JobService(metaclass=Singleton):
         for tail_vertex in tail_vertices:
             job_result: Optional[JobResult] = job_graph.get_job_result(tail_vertex)
             if not job_result:
-                text_message = TextMessage(
-                    payload="The job is not completed yet.",
-                    timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                )
+                text_message = TextMessage(payload="The job is not completed yet.")
                 return JobResult(
                     job_id=job_id,
                     status=JobStatus.RUNNING,
@@ -86,7 +83,7 @@ class JobService(metaclass=Singleton):
             status=JobStatus.FINISHED,
             duration=0,  # TODO: calculate the duration
             tokens=0,  # TODO: calculate the tokens
-            result=TextMessage(payload=mutli_agent_payload, job_id=job_id),
+            result=TextMessage(payload=mutli_agent_payload),
         )
 
         return job_result

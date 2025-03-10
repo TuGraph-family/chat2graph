@@ -34,7 +34,7 @@ class Query(Tool):
         model_service = ModelServiceFactory.create(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
         sys_prompt = """Suppose you are the database or the document terminal.
 I will ask you for help. If you don't know the answer, you can make up a reasonable one."""
-        message = ModelMessage(payload=text, job_id="query_id", step=1)
+        message = ModelMessage(payload=text)
         response: ModelMessage = await model_service.generate(
             sys_prompt=sys_prompt, messages=[message]
         )

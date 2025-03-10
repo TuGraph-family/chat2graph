@@ -67,8 +67,6 @@ class DualModelReasoner(Reasoner):
                 "<action>\nEmpty\n</action>\n"
                 "<feedback>\nNo feadback\n</feedback>\n"
             ),
-            job_id=task.job.id,
-            step=1,
         )
 
         # init the memory

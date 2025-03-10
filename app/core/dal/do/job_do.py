@@ -4,10 +4,10 @@ from sqlalchemy import Column, String, Text
 from sqlalchemy.sql.sqltypes import Integer
 
 from app.core.common.system_env import SystemEnv
-from app.core.dal.database import Do
+from app.core.dal.database import Base
 
 
-class JobDo(Do):  # type: ignore
+class JobDo(Base):  # type: ignore
     """Job table for storing job information"""
 
     __tablename__ = "job"

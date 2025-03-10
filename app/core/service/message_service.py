@@ -1,13 +1,14 @@
 from typing import Any, Dict, List, Optional
 
 from app.core.common.singleton import Singleton
+from app.core.common.type import ChatMessageType
 from app.core.dal.dao.message_dao import (
-    MessageDAO,
+    MessageDao,
 )
 from app.core.dal.database import DB
-from app.core.dal.model.message_model import (
+from app.core.dal.do.message_do import (
     MessageType,
-    TextMessageModel,
+    TextMessageDo,
 )
 from app.core.model.job import Job
 from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
@@ -18,13 +19,13 @@ class MessageService(metaclass=Singleton):
     """ChatMessage service"""
 
     def __init__(self):
-        self._message_dao: MessageDAO = MessageDAO(DB())
+        self._message_dao: MessageDao = MessageDao(DB())
 
     def create_workflow_message(
         self, workflow_message: WorkflowMessage, job_id: str
     ) -> WorkflowMessage:
         """Save a new workflow message."""
-        self._message_dao.create_message(message=workflow_message, job_id=job_id)
+        self._message_dao.create_message_do(message=workflow_message, job_id=job_id)
         return workflow_message
 
     def create_agent_message(self, agent_message: AgentMessage) -> AgentMessage:
@@ -33,13 +34,13 @@ class MessageService(metaclass=Singleton):
         Note that it dose not save the job of the agent message in the database.
         And it dose not either save the workflow messages of the agent message in the database.
         """
-        self._message_dao.create_message(message=agent_message)
+        self._message_dao.create_message_do(message=agent_message)
         return agent_message
 
     def create_text_message(self, text_message: TextMessage) -> TextMessage:
         """Save a new text message."""
         # create the message
-        self._message_dao.create_message(message=text_message)
+        self._message_dao.create_message_do(message=text_message)
         return text_message
 
     def get_agent_messages_by_job_id(self, job: Job) -> List[AgentMessage]:
@@ -56,7 +57,7 @@ class MessageService(metaclass=Singleton):
         return TextMessage(
             id=str(result.id),
             session_id=str(result.session_id),
-            chat_message_type=str(result.chat_message_type),
+            chat_message_type=ChatMessageType(str(result.chat_message_type)),
             job_id=str(result.job_id),
             role=str(result.role),
             payload=str(result.payload),
@@ -75,7 +76,7 @@ class MessageService(metaclass=Singleton):
     def update_text_message(
         self,
         id: str,
-        chat_message_type: Optional[str] = None,
+        chat_message_type: ChatMessageType = ChatMessageType.TEXT,
         job_id: Optional[str] = None,
         role: Optional[str] = None,
         payload: Optional[str] = None,
@@ -95,15 +96,13 @@ class MessageService(metaclass=Singleton):
             TextMessage: Updated TextMessage object
         """
         # fetch the existing message
-        existing_message: Optional[TextMessageModel] = self._message_dao.get_by_id(id=id)
+        existing_message: Optional[TextMessageDo] = self._message_dao.get_by_id(id=id)
         if not existing_message:
             raise ServiceException(f"TextMessage with ID {id} not found")
 
         # prepare update fields
         update_fields: Dict[str, Any] = {}
-        if chat_message_type is not None and chat_message_type != str(
-            existing_message.chat_message_type
-        ):
+        if chat_message_type.value != str(existing_message.chat_message_type):
             update_fields["chat_message_type"] = chat_message_type
         if job_id is not None and job_id != str(existing_message.job_id):
             update_fields["job_id"] = job_id
@@ -116,11 +115,11 @@ class MessageService(metaclass=Singleton):
 
         # update only if there are changes
         if update_fields:
-            updated_message: TextMessageModel = self._message_dao.update(id=id, **update_fields)
+            updated_message: TextMessageDo = self._message_dao.update(id=id, **update_fields)
             return TextMessage(
                 id=str(updated_message.id),
                 session_id=str(updated_message.session_id),
-                chat_message_type=str(updated_message.chat_message_type),
+                chat_message_type=ChatMessageType(str(updated_message.chat_message_type)),
                 job_id=str(updated_message.job_id),
                 role=str(updated_message.role),
                 payload=str(updated_message.payload),
@@ -131,7 +130,7 @@ class MessageService(metaclass=Singleton):
         return TextMessage(
             id=str(existing_message.id),
             session_id=str(existing_message.session_id),
-            chat_message_type=str(existing_message.chat_message_type),
+            chat_message_type=ChatMessageType(str(existing_message.chat_message_type)),
             job_id=str(existing_message.job_id),
             role=str(existing_message.role),
             payload=str(existing_message.payload),
@@ -147,7 +146,7 @@ class MessageService(metaclass=Singleton):
             TextMessage(
                 id=str(result.id),
                 session_id=str(result.session_id),
-                chat_message_type=str(result.chat_message_type),
+                chat_message_type=ChatMessageType(str(result.chat_message_type)),
                 job_id=str(result.job_id),
                 role=str(result.role),
                 payload=str(result.payload),
@@ -172,7 +171,7 @@ class MessageService(metaclass=Singleton):
             TextMessage(
                 id=str(result.id),
                 session_id=str(result.session_id),
-                chat_message_type=str(result.chat_message_type),
+                chat_message_type=ChatMessageType(str(result.chat_message_type)),
                 job_id=str(result.job_id),
                 role=str(result.role),
                 payload=str(result.payload),

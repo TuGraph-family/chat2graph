@@ -1,20 +1,20 @@
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, Integer, String, Text
+from sqlalchemy import Boolean, Column, String, Text
 
-from app.core.dal.database import Do
+from app.core.dal.database import Base
 
 
-class GraphDbDo(Do):  # type: ignore
+class GraphDbDo(Base):  # type: ignore
     """GraphDB to store graph database details."""
 
     __tablename__ = "graph_db"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    ip = Column(String(45), nullable=False)  # IPv6 max length is 45 chars
-    port = Column(Integer, nullable=False)
-    user = Column(String(36), nullable=False)
-    pwd = Column(String(36), nullable=False)
+    ip = Column(Text, nullable=False)
+    port = Column(Text, nullable=False)
+    user = Column(Text, nullable=False)
+    pwd = Column(Text, nullable=False)
     desc = Column(Text, nullable=False)
-    name = Column(String(36), nullable=False)
+    name = Column(Text, nullable=False)
     is_default_db = Column(Boolean, nullable=False)

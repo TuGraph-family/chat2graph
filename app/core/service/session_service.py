@@ -4,9 +4,9 @@ from uuid import uuid4
 
 from app.core.common.singleton import Singleton
 from app.core.common.util import utc_now
-from app.core.dal.dao.seesion_dao import SessionDAO
+from app.core.dal.dao.seesion_dao import SessionDao
 from app.core.dal.database import DB
-from app.core.dal.model.session_model import SessionModel
+from app.core.dal.do.session_do import SessionDo
 from app.core.model.session import Session
 
 
@@ -14,7 +14,8 @@ class SessionService(metaclass=Singleton):
     """Session service"""
 
     def __init__(self):
-        self._session_dao: SessionDao = SessionDao.instance
+        self._sessions: Dict[str, Session] = {}
+        self._dao = SessionDao(DB())
 
     def create_session(self, name: str) -> Session:
         """Create the session by name.
@@ -26,7 +27,7 @@ class SessionService(metaclass=Singleton):
         """
         # create the session
         created_at = utc_now()
-        result: SessionModel = self._dao.create(name=name, created_at=created_at)
+        result: SessionDo = self._dao.create(name=name, created_at=created_at)
         return Session(id=str(result.id), name=name, created_at=created_at)
 
     def get_session(self, session_id: Optional[str] = None) -> Session:

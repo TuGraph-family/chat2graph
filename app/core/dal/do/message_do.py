@@ -1,21 +1,31 @@
+from enum import Enum
+import time
 from uuid import uuid4
 
-from sqlalchemy import JSON, BigInteger, Column, String, Text, func
+from sqlalchemy import JSON, Column, String, Text
 
-from app.core.dal.database import Do
-from app.core.model.message import MessageType
+from app.core.dal.database import Base
 
 
-class MessageDo(Do):  # type: ignore
+class MessageType(Enum):
+    """Message types"""
+
+    MODEL_MESSAGE = "ModelMessage"
+    WORKFLOW_MESSAGE = "WorkflowMessage"
+    AGENT_MESSAGE = "AgentMessage"
+    CHAT_MESSAGE = "ChatMessage"
+    TEXT_MESSAGE = "TextMessage"
+
+
+class MessageDo(Base):  # type: ignore
     """Base message class"""
 
     __tablename__ = "message"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
-
-    job_id = Column(String(36), nullable=False)  # FK constraint
-
+    timestamp = Column(
+        String(30), nullable=False, default=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    )
     type = Column(
         String(50), nullable=False
     )  # identify the type to be used in polymorphic message queries (e.g. ModelMessageAO)
@@ -34,6 +44,8 @@ class MessageDo(Do):  # type: ignore
 
     # common fields shared by multiple types
     session_id = Column(String(36), nullable=True)  # FK constraint
+    # TODO: relate the job_id to job table
+    job_id = Column(String(36), nullable=True)  # FK constraint
 
     # model message specific fields
     operator_id = Column(String(36), nullable=True)  # FK constraint
@@ -44,6 +56,7 @@ class MessageDo(Do):  # type: ignore
     related_message_ids = Column(JSON, nullable=True)
 
     # chat/text message fields
+    chat_message_type = Column(String(50), nullable=True)
     role = Column(String(50), nullable=True)
     assigned_expert_name = Column(String(100), nullable=True)
     others = Column(Text, nullable=True)
@@ -82,6 +95,7 @@ class ChatMessageDo(MessageDo):
 
     __mapper_args__ = {
         "polymorphic_identity": MessageType.CHAT_MESSAGE.value,  # type: ignore
+        # "polymorphic_on": "chat_message_type",
     }
 
 

@@ -2,6 +2,7 @@ from typing import Optional
 
 from flask import Blueprint, request
 
+from app.core.common.type import ChatMessageType
 from app.server.common.util import ApiException, make_response
 from app.server.manager.message_manager import MessageManager
 from app.server.manager.view.session_view import SessionView
@@ -28,14 +29,14 @@ def chat():
         payload = data.get("message")
         assert isinstance(payload, str), "Message should be a string"
 
-        # TODO: rename message_type to chat_message_type, and replace the default value with enum
-        chat_message_type = data.get("message_type", "chat")
-        assert isinstance(chat_message_type, str), "Message type should be a string"
+        # TODO: rename message_type to chat_message_type
+        chat_message_type = ChatMessageType(data.get("message_type", ChatMessageType.TEXT.value))
 
         others = data.get("others")
-        assert others is None or isinstance(others, Optional[str]), (
-            "Others should be a string or None"
-        )
+        assert isinstance(others, Optional[str]), "Others should be a string or None"
+
+        file_paths = data.get("file_paths", [])
+        assert isinstance(file_paths, list), "File paths should be a list of strings"
 
         response_data, message = manager.chat(
             session_id=session_id,

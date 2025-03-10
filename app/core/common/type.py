@@ -31,6 +31,15 @@ class ChatMessageType(Enum):
     AUDIO = "AUDIO"
 
 
+class ChatMessageType(Enum):
+    """Chat message type enum."""
+
+    TEXT = "text"
+    FILE = "file"
+    IMAGE = "image"
+    AUDIO = "audio"
+
+
 class InsightType(Enum):
     """Insight Type"""
 

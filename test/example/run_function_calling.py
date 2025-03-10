@@ -99,8 +99,6 @@ class TestModelService(ModelService):
         return ModelMessage(
             source_type=MessageSourceType.ACTOR,
             payload="test",
-            job_id=messages[-1].get_job_id(),
-            step=messages[-1].get_step() + 1,
         )
 
 
@@ -121,8 +119,6 @@ async def main():
                 '<function_call>{"name": "sync_add", "call_objective": "Add two numbers", '
                 '"args": {"a": 1, "b": 2}}</function_call>'
             ),
-            job_id=job_id,
-            step=1,
         ),
         # test async function
         ModelMessage(
@@ -131,8 +127,6 @@ async def main():
                 '<function_call>{"name": "async_multiply", "call_objective": '
                 '"Multiply two numbers", "args": {"a": 2, "b": 3}}</function_call>'
             ),
-            job_id=job_id,
-            step=2,
         ),
         # test multiple function calls
         ModelMessage(
@@ -140,16 +134,12 @@ async def main():
             payload='<function_call>{"name": "sync_add", "call_objective": "Add two numbers", '
             '"args": {"a": 2, "b": 3}}</function_call>\n<function_call>{"name": "async_multiply", '
             '"call_objective": "Multiply two numbers", "args": {"a": 4, "b": 6}}</function_call>',
-            job_id=job_id,
-            step=3,
         ),
         # test invalid function
         ModelMessage(
             source_type=MessageSourceType.MODEL,
             payload='<function_call>{"name": "invalid_function", "call_objective": '
             '"Call invalid function", "args": {"a": 1, "b": 2}}</function_call>',
-            job_id=job_id,
-            step=4,
         ),
         # test complex fuction call
         ModelMessage(
@@ -162,8 +152,6 @@ async def main():
                     "config": {"enabled": true},
                     "special_str": "test"
                 }}</function_call>""",
-            job_id=job_id,
-            step=5,
         ),
     ]
 
