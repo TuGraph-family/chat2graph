@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Session as SqlAlchemySession
 T = TypeVar("T", bound=DeclarativeBase)
 
 
-class DAO(Generic[T]):
+class Dao(Generic[T]):
     """Data Access Object"""
 
     # thread local storage

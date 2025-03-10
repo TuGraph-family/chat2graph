@@ -1,13 +1,13 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, ForeignKey, String, Text
+from sqlalchemy import Column, String, Text
 from sqlalchemy.sql.sqltypes import Integer
 
 from app.core.common.system_env import SystemEnv
 from app.core.dal.database import Base
 
 
-class JobModel(Base):  # type: ignore
+class JobDo(Base):  # type: ignore
     """Job table for storing job information"""
 
     __tablename__ = "job"
@@ -15,9 +15,7 @@ class JobModel(Base):  # type: ignore
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     goal = Column(Text, nullable=False)
     context = Column(Text, nullable=True)
-    session_id = Column(
-        String(36), ForeignKey("session.id", use_alter=True, name="fk_job_session"), nullable=False
-    )
+    session_id = Column(String(36), nullable=False)  # FK constraint
     assigned_expert_name = Column(String(100), nullable=True)
 
     # sub job attributes

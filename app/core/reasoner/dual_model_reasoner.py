@@ -1,5 +1,4 @@
 import re
-import time
 from typing import Any
 
 from app.core.common.system_env import SystemEnv
@@ -68,7 +67,6 @@ class DualModelReasoner(Reasoner):
                 "<action>\nEmpty\n</action>\n"
                 "<feedback>\nNo feadback\n</feedback>\n"
             ),
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
         # init the memory

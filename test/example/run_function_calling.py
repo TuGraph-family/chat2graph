@@ -1,5 +1,4 @@
 import asyncio
-import time
 from typing import List, Optional
 from uuid import uuid4
 
@@ -100,7 +99,6 @@ class TestModelService(ModelService):
         return ModelMessage(
             source_type=MessageSourceType.ACTOR,
             payload="test",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
 
@@ -119,7 +117,6 @@ async def main():
                 '<function_call>{"name": "sync_add", "call_objective": "Add two numbers", '
                 '"args": {"a": 1, "b": 2}}</function_call>'
             ),
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test async function
         ModelMessage(
@@ -128,7 +125,6 @@ async def main():
                 '<function_call>{"name": "async_multiply", "call_objective": '
                 '"Multiply two numbers", "args": {"a": 2, "b": 3}}</function_call>'
             ),
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test multiple function calls
         ModelMessage(
@@ -136,14 +132,12 @@ async def main():
             payload='<function_call>{"name": "sync_add", "call_objective": "Add two numbers", '
             '"args": {"a": 2, "b": 3}}</function_call>\n<function_call>{"name": "async_multiply", '
             '"call_objective": "Multiply two numbers", "args": {"a": 4, "b": 6}}</function_call>',
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test invalid function
         ModelMessage(
             source_type=MessageSourceType.MODEL,
             payload='<function_call>{"name": "invalid_function", "call_objective": '
             '"Call invalid function", "args": {"a": 1, "b": 2}}</function_call>',
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         # test complex fuction call
         ModelMessage(
@@ -156,7 +150,6 @@ async def main():
                     "config": {"enabled": true},
                     "special_str": "test"
                 }}</function_call>""",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
     ]
 

@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao.knowledge_dao import KnowledgeBaseDAO
+from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao
 from app.core.dal.database import DB
 from app.core.model.knowledge_base import KnowledgeBase
 from app.server.common.util import ServiceException
@@ -12,7 +12,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
     def __init__(self):
         self._knowledge_bases: Dict[str, KnowledgeBase] = {}
-        self._dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
+        self._dao: KnowledgeBaseDao = KnowledgeBaseDao(DB())
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str

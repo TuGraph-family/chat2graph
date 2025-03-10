@@ -1,5 +1,4 @@
 import asyncio
-import time
 from typing import List
 
 from app.core.common.system_env import SystemEnv
@@ -19,19 +18,16 @@ async def main():
             id="1",
             source_type=MessageSourceType.THINKER,
             payload="Hello, how are you? I am Alice.",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         ModelMessage(
             id="2",
             source_type=MessageSourceType.ACTOR,
             payload="I'm fine, thank you.",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
         ModelMessage(
             id="3",
             source_type=MessageSourceType.THINKER,
             payload="What's my name?",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         ),
     ]
 

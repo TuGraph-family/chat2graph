@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao.knowledge_dao import GraphDbDAO
+from app.core.dal.dao.graph_db_dao import GraphDbDao
 from app.core.dal.database import DB
 from app.core.model.graph_db import GraphDB
 from app.server.common.util import ServiceException
@@ -12,7 +12,7 @@ class GraphDbService(metaclass=Singleton):
 
     def __init__(self):
         self._graph_dbs: Dict[str, Any] = {}
-        self._dao = GraphDbDAO(DB())
+        self._dao = GraphDbDao(DB())
 
     def create_graph_db(
         self, ip: str, port: str, user: str, pwd: str, desc: str, name: str, is_default_db: bool

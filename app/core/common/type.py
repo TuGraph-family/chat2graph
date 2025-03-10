@@ -22,6 +22,15 @@ class MessageSourceType(Enum):
     MODEL = "Model"
 
 
+class ChatMessageType(Enum):
+    """Chat message type enum."""
+
+    TEXT = "text"
+    FILE = "file"
+    IMAGE = "image"
+    AUDIO = "audio"
+
+
 class InsightType(Enum):
     """Insight Type"""
 

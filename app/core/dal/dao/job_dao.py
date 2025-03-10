@@ -1,17 +1,17 @@
 from sqlalchemy.orm import Session as SqlAlchemySession
 
-from app.core.dal.dao.dao import DAO
-from app.core.dal.model.job_model import JobModel
+from app.core.dal.dao.dao import Dao
+from app.core.dal.do.job_do import JobDo
 from app.core.model.job import Job, SubJob
 
 
-class JobDAO(DAO[JobModel]):
+class JobDao(Dao[JobDo]):
     """Job Data Access Object"""
 
     def __init__(self, session: SqlAlchemySession):
-        super().__init__(JobModel, session)
+        super().__init__(JobDo, session)
 
-    def create_job(self, job: Job) -> JobModel:
+    def create_job(self, job: Job) -> JobDo:
         """Create a new job model."""
         if isinstance(job, SubJob):
             return self.create(
@@ -30,7 +30,7 @@ class JobDAO(DAO[JobModel]):
             assigned_expert_name=job.assigned_expert_name,
         )
 
-    def update_job(self, job: Job) -> JobModel:
+    def update_job(self, job: Job) -> JobDo:
         """Update a job model."""
         if isinstance(job, SubJob):
             return self.update(

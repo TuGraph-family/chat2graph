@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.common.type import JobStatus
+from app.core.common.type import ChatMessageType, JobStatus
 from app.core.model.message import TextMessage, WorkflowMessage
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.agent_service import AgentService
@@ -21,7 +21,7 @@ class MessageManager:
         self,
         session_id: str,
         payload: str,
-        chat_message_type: str,
+        chat_message_type: ChatMessageType = ChatMessageType.TEXT,
         others: Optional[str] = None,
     ) -> Tuple[Dict[str, Any], str]:
         """Create user message and system message return the response data.
@@ -29,8 +29,9 @@ class MessageManager:
         Args:
             session_id (str): ID of the associated session
             payload (str): Content of the message
-            chat_message_type (str): Type of the message
-            others (Optional[str], optional): Additional information. Defaults to None.
+            chat_message_type (ChatMessageType): Type of the message.
+                Defaults to ChatMessageType.TEXT.
+            others (Optional[str]): Additional information. Defaults to None.
 
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing message details and success message.
@@ -54,17 +55,17 @@ class MessageManager:
         # create system message
         system_chat_message = TextMessage(
             session_id=session_id,
-            chat_message_type="chat",  # chat/text/graph/file/code
+            chat_message_type=ChatMessageType.TEXT,
             job_id=job_wrapper.id,
             role="system",
-            payload="",
+            payload="",  # TODO: to be handled
             others=others,
         )
         self._message_service.create_text_message(system_chat_message)
         system_data = {
             "id": system_chat_message.get_id(),
             "session_id": system_chat_message.get_session_id(),
-            "chat_message_type": system_chat_message.get_chat_message_type(),
+            "chat_message_type": system_chat_message.get_chat_message_type().value,
             "job_id": system_chat_message.get_job_id(),
             "role": system_chat_message.get_role(),
             "message": system_chat_message.get_payload(),
@@ -118,6 +119,8 @@ class MessageManager:
     def get_text_message(self, id: str) -> Tuple[Dict[str, Any], str]:
         """Get message details by ID.
 
+        If the job result is available, it will return the job result in the message details.
+
         Args:
             id (str): ID of the message
 
@@ -149,11 +152,11 @@ class MessageManager:
         data = {
             "id": new_message.get_id(),
             "session_id": new_message.get_session_id(),
-            "chat_message_type": new_message.get_chat_message_type(),
+            "chat_message_type": new_message.get_chat_message_type().value,
             "job_id": new_message.get_job_id(),
             "status": job_result.status.value,
             "role": new_message.get_role(),
-            "message": new_message.get_payload(),
+            "message": new_message.get_payload(),  # TODO: to rename the message to payload
             "timestamp": new_message.get_timestamp(),
             "others": new_message.get_others(),
         }
@@ -174,7 +177,7 @@ class MessageManager:
             {
                 "id": msg.get_id(),
                 "session_id": msg.get_session_id(),
-                "chat_message_type": msg.get_chat_message_type(),
+                "chat_message_type": msg.get_chat_message_type().value,
                 "job_id": msg.get_job_id(),
                 "role": msg.get_role(),
                 "message": msg.get_payload(),

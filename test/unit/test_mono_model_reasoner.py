@@ -1,4 +1,3 @@
-import time
 from unittest.mock import AsyncMock
 
 import pytest
@@ -27,7 +26,6 @@ async def mock_reasoner() -> MonoModelReasoner:
     response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
         payload="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
-        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
 
     reasoner._model.generate = AsyncMock(return_value=response)

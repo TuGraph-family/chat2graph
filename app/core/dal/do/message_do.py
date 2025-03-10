@@ -2,7 +2,7 @@ from enum import Enum
 import time
 from uuid import uuid4
 
-from sqlalchemy import JSON, Column, ForeignKey, String, Table, Text
+from sqlalchemy import JSON, Column, String, Text
 
 from app.core.dal.database import Base
 
@@ -17,26 +17,7 @@ class MessageType(Enum):
     TEXT_MESSAGE = "TextMessage"
 
 
-# agent workflow relationship table
-agent_workflow_links = Table(
-    "agent_workflow_links",
-    Base.metadata,
-    Column(
-        "agent_message_id",
-        String(36),
-        ForeignKey("message.id", use_alter=True, name="fk_agent_message"),
-        primary_key=True,
-    ),
-    Column(
-        "workflow_message_id",
-        String(36),
-        ForeignKey("message.id", use_alter=True, name="fk_workflow_message"),
-        primary_key=True,
-    ),
-)
-
-
-class MessageModel(Base):  # type: ignore
+class MessageDo(Base):  # type: ignore
     """Base message class"""
 
     __tablename__ = "message"
@@ -45,7 +26,14 @@ class MessageModel(Base):  # type: ignore
     timestamp = Column(
         String(30), nullable=False, default=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ")
     )
-    type = Column(String(50), nullable=False)  # identify the type to be used in polymorphic queries
+    type = Column(
+        String(50), nullable=False
+    )  # identify the type to be used in polymorphic message queries (e.g. ModelMessageAO)
+
+    resource_id = Column(String(36), nullable=True)  # FK constraint
+    resource_type = Column(String(50), nullable=True)
+    target_id = Column(String(36), nullable=True)  # FK constraint
+    target_type = Column(String(50), nullable=True)
 
     # all possible fields from all message types in a single table
 
@@ -55,25 +43,17 @@ class MessageModel(Base):  # type: ignore
     function_calls_json = Column(JSON, nullable=True)
 
     # common fields shared by multiple types
-    session_id = Column(
-        String(36),
-        ForeignKey("session.id", use_alter=True, name="fk_message_session", ondelete="CASCADE"),
-        nullable=True,
-        index=True,
-    )
+    session_id = Column(String(36), nullable=True)  # FK constraint
     # TODO: relate the job_id to job table
-    # job_id = Column(
-    #     String(36), ForeignKey("job.id", use_alter=True, name="fk_message_job"), nullable=True
-    # )
-    job_id = Column(String(36), nullable=True)
+    job_id = Column(String(36), nullable=True)  # FK constraint
 
     # model message specific fields
-    operator_id = Column(String(36), nullable=True)  # TODO: set the FK constraint
+    operator_id = Column(String(36), nullable=True)  # FK constraint
     step = Column(String(50), nullable=True)
 
     # agent message fields
     lesson = Column(Text, nullable=True)
-    linked_workflow_ids = Column(JSON, nullable=True)  # store workflow ids as json array
+    related_message_ids = Column(JSON, nullable=True)
 
     # chat/text message fields
     chat_message_type = Column(String(50), nullable=True)
@@ -81,15 +61,12 @@ class MessageModel(Base):  # type: ignore
     assigned_expert_name = Column(String(100), nullable=True)
     others = Column(Text, nullable=True)
 
-    # relationship definitions
-    # TODO: files = relationship("FileModel", backref="message", cascade="all, delete-orphan")
-
     __mapper_args__ = {
         "polymorphic_on": type,
     }
 
 
-class ModelMessageModel(MessageModel):
+class ModelMessageAO(MessageDo):
     """Model message"""
 
     __mapper_args__ = {
@@ -97,7 +74,7 @@ class ModelMessageModel(MessageModel):
     }
 
 
-class WorkflowMessageModel(MessageModel):
+class WorkflowMessageDo(MessageDo):
     """Workflow message, used to communicate between the operators in the workflow."""
 
     __mapper_args__ = {
@@ -105,7 +82,7 @@ class WorkflowMessageModel(MessageModel):
     }
 
 
-class AgentMessageModel(MessageModel):
+class AgentMessageDo(MessageDo):
     """agent message"""
 
     __mapper_args__ = {
@@ -113,7 +90,7 @@ class AgentMessageModel(MessageModel):
     }
 
 
-class ChatMessageModel(MessageModel):
+class ChatMessageDo(MessageDo):
     """chat message"""
 
     __mapper_args__ = {
@@ -122,7 +99,7 @@ class ChatMessageModel(MessageModel):
     }
 
 
-class TextMessageModel(ChatMessageModel):
+class TextMessageDo(ChatMessageDo):
     """text message"""
 
     __mapper_args__ = {
