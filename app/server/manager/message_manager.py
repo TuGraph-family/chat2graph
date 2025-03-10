@@ -42,15 +42,14 @@ class MessageManager:
             role="user",
             payload=payload,
             others=others,
+            assigned_expert_name="Question Answering Expert",  # TODO: to be removed
         )
         self._message_service.create_text_message(text_message=text_message)
 
         # make the chat message to the mulit-agent system
         session_wrapper = self._agentic_service.session(session_id=session_id)
         # TODO: refactor the chat message to a more generic message
-        job_wrapper = session_wrapper.submit(
-            message=TextMessage(payload=payload, assigned_expert_name="Question Answering Expert")
-        )
+        job_wrapper = session_wrapper.submit(message=text_message)
 
         # create system message
         system_chat_message = TextMessage(

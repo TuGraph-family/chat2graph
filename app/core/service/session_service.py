@@ -32,7 +32,8 @@ class SessionService(metaclass=Singleton):
         return Session(id=str(result.id), name=name, created_at=created_at)
 
     def get_session(self, session_id: Optional[str] = None) -> Session:
-        """Get the session by ID.
+        """Get the session by ID. If ID is not provided, create a new session.
+        If the session already exists, return the existing session.
 
         Args:
             id (Optional[str]): ID of the session

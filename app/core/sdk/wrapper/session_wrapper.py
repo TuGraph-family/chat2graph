@@ -5,6 +5,7 @@ from app.core.model.job import Job
 from app.core.model.message import ChatMessage
 from app.core.model.session import Session
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
+from app.core.service.message_service import MessageService
 from app.core.service.session_service import SessionService
 
 
@@ -17,9 +18,21 @@ class SessionWrapper:
 
     def submit(self, message: ChatMessage) -> JobWrapper:
         """Submit the job."""
-        assert self._session, "Session is not set. Please call session() first."
+        # get chat history (text messages), and it will be used as the context of the job
+        message_service: MessageService = MessageService.instance
+        history_text_messages = message_service.filter_text_messages_by_session(
+            session_id=message.get_session_id()
+        )
+
         job = Job(
             goal=message.get_payload(),
+            context="Chat history of the job goal:\n"
+            + "\n".join(
+                [
+                    f"[{message.get_role()}]: {message.get_payload()}"
+                    for message in history_text_messages
+                ]
+            ),
             session_id=self._session.id,
             assigned_expert_name=message.get_assigned_expert_name(),
         )
