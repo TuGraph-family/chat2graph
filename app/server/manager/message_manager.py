@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Tuple
 
 from app.core.common.type import JobStatus
-from app.core.model.message import TextMessage
+from app.core.model.message import ChatMessage, TextMessage
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
@@ -19,45 +19,23 @@ class MessageManager:
         self._agent_service: AgentService = AgentService.instance
         self._message_view: MessageView = MessageView()
 
-    def chat(
-        self,
-        session_id: str,
-        payload: str,
-        others: Optional[str] = None,
-    ) -> Tuple[Dict[str, Any], str]:
-        """Create user message and system message return the response data.
-
-        Args:
-            session_id (str): ID of the associated session
-            payload (str): Content of the message
-            others (Optional[str]): Additional information. Defaults to None.
-
-        Returns:
-            Tuple[List[Dict[str, Any]], str]: A tuple containing a list of agent message details and
-                success message
-        """
+    def chat(self, chat_message: ChatMessage) -> Tuple[Dict[str, Any], str]:
+        """Create user message and system message return the response data."""
         # create user message
-        text_message = TextMessage(
-            session_id=session_id,
-            role="user",
-            payload=payload,
-            others=others,
-            assigned_expert_name="Question Answering Expert",  # TODO: to be removed
-        )
-        self._message_service.save_message(message=text_message)
+        chat_message.set_assigned_expert_name("Question Answering Expert")  # TODO: to be removed
+        self._message_service.save_message(message=chat_message)
 
         # make the chat message to the mulit-agent system
-        session_wrapper = self._agentic_service.session(session_id=session_id)
+        session_wrapper = self._agentic_service.session(session_id=chat_message.get_session_id())
         # TODO: refactor the chat message to a more generic message
-        job_wrapper = session_wrapper.submit(message=text_message)
+        job_wrapper = session_wrapper.submit(message=chat_message)
 
         # create system message
         system_chat_message = TextMessage(
-            session_id=session_id,
+            session_id=chat_message.get_session_id(),
             job_id=job_wrapper.id,
             role="system",
             payload="",  # TODO: to be handled
-            others=others,
         )
         self._message_service.save_message(message=system_chat_message)
 
