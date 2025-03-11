@@ -45,7 +45,7 @@ class NumberGeneratorOperator(BaseTestOperator):
         result = "\n" + " ".join(str(x) for x in numbers)
         print(f"NumberGenerator output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class MultiplyByTwoOperator(BaseTestOperator):
@@ -64,7 +64,7 @@ class MultiplyByTwoOperator(BaseTestOperator):
         result = " ".join(str(x * 2) for x in numbers)
         print(f"MultiplyByTwo output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class AddTenOperator(BaseTestOperator):
@@ -83,7 +83,7 @@ class AddTenOperator(BaseTestOperator):
         result = " ".join(str(x + 10) for x in numbers)
         print(f"AddTen output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class SumOperator(BaseTestOperator):
@@ -102,7 +102,7 @@ class SumOperator(BaseTestOperator):
         result = str(sum(numbers))
         print(f"Sum output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class FormatResultOperator(BaseTestOperator):
@@ -123,7 +123,7 @@ class FormatResultOperator(BaseTestOperator):
         )
         print(f"Format output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 def main():

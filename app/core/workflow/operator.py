@@ -34,7 +34,7 @@ class Operator:
 
         result = run_async_function(reasoner.infer, task=task)
 
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
     def _build_task(
         self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]

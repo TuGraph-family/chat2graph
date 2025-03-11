@@ -138,7 +138,11 @@ class DbgptLlmClient(ModelService):
             source_type = MessageSourceType.ACTOR
 
         response = ModelMessage(
-            payload=model_response.text, source_type=source_type, function_calls=func_call_results
+            payload=model_response.text,
+            job_id=messages[-1].get_job_id(),
+            step=messages[-1].get_step() + 1,
+            source_type=source_type,
+            function_calls=func_call_results,
         )
 
         return response

@@ -14,27 +14,25 @@ class MessageService(metaclass=Singleton):
     def __init__(self):
         self._message_dao: MessageDao = MessageDao.instance
 
-    def save_workflow_message(
-        self, workflow_message: WorkflowMessage, job_id: str
-    ) -> WorkflowMessage:
+    def save_workflow_message(self, message: WorkflowMessage, job_id: str) -> WorkflowMessage:
         """Save a new workflow message."""
-        self._message_dao.create_message_do(message=workflow_message, job_id=job_id)
-        return workflow_message
+        self._message_dao.create_message_do(message=message, job_id=job_id)
+        return message
 
-    def save_agent_message(self, agent_message: AgentMessage) -> AgentMessage:
+    def save_agent_message(self, message: AgentMessage) -> AgentMessage:
         """Save a new agent message.
 
         Note that it dose not save the job of the agent message in the database.
         And it dose not either save the workflow messages of the agent message in the database.
         """
-        self._message_dao.create_message_do(message=agent_message)
-        return agent_message
+        self._message_dao.create_message_do(message=message)
+        return message
 
-    def save_text_message(self, text_message: TextMessage) -> TextMessage:
+    def save_text_message(self, message: TextMessage) -> TextMessage:
         """Save a new text message."""
         # create the message
-        self._message_dao.create_message_do(message=text_message)
-        return text_message
+        self._message_dao.create_message_do(message=message)
+        return message
 
     def get_agent_messages_by_job_id(self, job: Job) -> List[AgentMessage]:
         """Get agent messages by job ID."""
@@ -45,6 +43,10 @@ class MessageService(metaclass=Singleton):
         """Get a message by ID."""
         # fetch the message
         result = self._message_dao.get_by_id(id=id)
+        for do in self._message_dao.get_all():
+            print(
+                f"[DEBUG] id: {do.id}, type: {do.type}, payload: {str(do.payload)}, job_id: {do.job_id}, role: {do.role}"
+            )
         if not result:
             raise ValueError(f"TextMessage with ID {id} not found")
         return TextMessage(

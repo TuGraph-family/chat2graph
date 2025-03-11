@@ -71,7 +71,9 @@ class MockOperator(Operator):
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         self._execution_order.append(self._config.id)
-        return WorkflowMessage(payload={"scratchpad": f"Output from {self._config.id}"})
+        return WorkflowMessage(
+            payload={"scratchpad": f"Output from {self._config.id}"}, job_id=job.id
+        )
 
 
 def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):

@@ -11,6 +11,7 @@ async def main():
     """Main function."""
     # create model service using factory method
     model_service = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
+    job_id: str = "test_job_id"
 
     # create test messages
     messages: List[ModelMessage] = [
@@ -18,16 +19,22 @@ async def main():
             id="1",
             source_type=MessageSourceType.THINKER,
             payload="Hello, how are you? I am Alice.",
+            job_id=job_id,
+            step=1,
         ),
         ModelMessage(
             id="2",
             source_type=MessageSourceType.ACTOR,
             payload="I'm fine, thank you.",
+            job_id=job_id,
+            step=2,
         ),
         ModelMessage(
             id="3",
             source_type=MessageSourceType.THINKER,
             payload="What's my name?",
+            job_id=job_id,
+            step=3,
         ),
     ]
 

@@ -51,9 +51,11 @@ class AgenticService(metaclass=Singleton):
 
     def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
-        job_wrapper = JobWrapper(
-            Job(goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name())
+        job = Job(
+            goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name()
         )
+        self._job_service.save_job(job=job)
+        job_wrapper = JobWrapper(job)
 
         # execute the job
         job_wrapper.execute()

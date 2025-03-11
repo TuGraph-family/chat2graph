@@ -51,7 +51,7 @@ class MessageDao(Dao[MessageDo]):
             related_message_ids: List[str] = [wf.get_id() for wf in message.get_workflow_messages()]
             return AgentMessageDo(
                 type=MessageType.AGENT_MESSAGE.value,
-                job_id=message.get_payload().id,
+                job_id=message.get_job_id(),
                 lesson=message.get_lesson(),
                 related_message_ids=related_message_ids,
                 timestamp=message.get_timestamp(),
@@ -107,7 +107,8 @@ class MessageDao(Dao[MessageDo]):
         return WorkflowMessage(
             id=str(result.id),
             payload=payload,
-            timestamp=int(result.timestamp) if result.timestamp else None,
+            job_id=str(result.job_id),
+            timestamp=int(result.timestamp),
         )
 
     def get_workflow_message_payload(self, workflow_message_id: str) -> Optional[Dict[str, Any]]:
@@ -135,7 +136,7 @@ class MessageDao(Dao[MessageDo]):
         agent_messages: List[AgentMessage] = [
             AgentMessage(
                 id=str(result.id),
-                job=job,
+                job_id=job.id,
                 workflow_messages=[
                     self.get_workflow_message(wf_id)
                     for wf_id in list(result.related_message_ids or [])

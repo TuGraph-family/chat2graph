@@ -48,12 +48,15 @@ def main():
         payload={
             "scratchpad": "After the generation, the result is [2, 3, 5, 7, 11, 13, 17, 19, 23, 24]"
         },
+        job_id=job.id,
     )
     input_message_1 = WorkflowMessage(
         payload={"scratchpad": "The start value is 1."},
+        job_id=job.id,
     )
     input_message_2 = WorkflowMessage(
         payload={"scratchpad": "The end value is 21."},
+        job_id=job.id,
     )
     result: WorkflowMessage = operator.execute(
         reasoner=reasoner,

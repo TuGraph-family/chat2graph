@@ -45,7 +45,7 @@ class MessageManager:
             others=others,
             assigned_expert_name="Question Answering Expert",  # TODO: to be removed
         )
-        self._message_service.save_text_message(text_message=text_message)
+        self._message_service.save_text_message(message=text_message)
 
         # make the chat message to the mulit-agent system
         session_wrapper = self._agentic_service.session(session_id=session_id)
@@ -95,11 +95,11 @@ class MessageManager:
                 [
                     {
                         "id": msg.get_id(),
-                        "job_id": msg.get_payload().id,
-                        "job_goal": msg.get_payload().goal,
+                        "job_id": msg.get_job_id(),
+                        "job_goal": self._job_service.get_subjob(job_id=msg.get_job_id()).goal,
                         "assigned_expert_name": self._agent_service.leader.state.get_expert_by_id(
                             self._job_service.get_job_graph(job_id=job.id).get_expert_id(
-                                msg.get_payload().id
+                                msg.get_job_id()
                             )
                         )
                         .get_profile()

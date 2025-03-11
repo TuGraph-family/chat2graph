@@ -24,6 +24,7 @@ class MessageDo(Base):  # type: ignore
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     timestamp = Column(BigInteger, default=utc_now)
+    job_id = Column(String(36), nullable=False)  # FK constraint
 
     type = Column(
         String(50), nullable=False
@@ -43,8 +44,6 @@ class MessageDo(Base):  # type: ignore
 
     # common fields shared by multiple types
     session_id = Column(String(36), nullable=True)  # FK constraint
-    # TODO: relate the job_id to job table
-    job_id = Column(String(36), nullable=True)  # FK constraint
 
     # model message specific fields
     operator_id = Column(String(36), nullable=True)  # FK constraint
