@@ -39,7 +39,7 @@ class MessageManager:
         )
         self._message_service.save_message(message=system_chat_message)
 
-        # Use MessageView to serialize the message for API response
+        # use MessageView to serialize the message for API response
         system_data = self._message_view.serialize_message(system_chat_message)
         return system_data, "Message created successfully"
 
@@ -99,7 +99,7 @@ class MessageManager:
             id=id, payload=job_result.result.get_payload()
         )
 
-        # Use MessageView to serialize the message
+        # use MessageView to serialize the message
         data = self._message_view.serialize_message(new_message)
         # Add job status to the response
         data["status"] = job_result.status.value
@@ -120,7 +120,7 @@ class MessageManager:
             session_id=session_id
         )
 
-        # Use MessageView to serialize all messages
+        # use MessageView to serialize all messages
         message_list = self._message_view.serialize_messages(text_messages)
 
         return message_list, f"Messages filtered by session ID {session_id} successfully"
