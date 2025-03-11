@@ -9,7 +9,7 @@ class GraphDbService(metaclass=Singleton):
     """GraphDB Service"""
 
     def __init__(self):
-        self._dao: GraphDbDao = GraphDbDao.instance
+        self._graph_db_dao: GraphDbDao = GraphDbDao.instance
 
     def create_graph_db(
         self, ip: str, port: str, user: str, pwd: str, desc: str, name: str, is_default_db: bool
@@ -64,7 +64,7 @@ class GraphDbService(metaclass=Singleton):
         graph_db = self._graph_db_dao.get_by_id(id=id)
         if not graph_db:
             raise ValueError(f"GraphDB with ID {id} not found")
-        self._dao.delete(id=id)
+        self._graph_db_dao.delete(id=id)
 
     def update_graph_db(
         self,

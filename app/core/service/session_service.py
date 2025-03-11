@@ -12,7 +12,7 @@ class SessionService(metaclass=Singleton):
     """Session service"""
 
     def __init__(self):
-        self._dao: SessionDao = SessionDao.instance
+        self._session_dao: SessionDao = SessionDao.instance
 
     def create_session(self, name: str) -> Session:
         """Create the session by name.
@@ -24,7 +24,7 @@ class SessionService(metaclass=Singleton):
         """
         # create the session
         timestamp = utc_now()
-        result: SessionDo = self._dao.create(name=name, timestamp=timestamp)
+        result: SessionDo = self._session_dao.create(name=name, timestamp=timestamp)
         return Session(id=str(result.id), name=name, timestamp=timestamp)
 
     def get_session(self, session_id: Optional[str] = None) -> Session:
@@ -58,7 +58,7 @@ class SessionService(metaclass=Singleton):
         session = self._session_dao.get_by_id(id=id)
         if not session:
             raise ValueError(f"Session with ID {id} not found")
-        self._dao.delete(id=id)
+        self._session_dao.delete(id=id)
 
     def update_session(self, id: str, name: Optional[str] = None) -> Session:
         """Update the session by ID.
