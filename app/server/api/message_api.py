@@ -2,7 +2,6 @@ from typing import Optional
 
 from flask import Blueprint, request
 
-from app.core.common.type import ChatMessageType
 from app.server.common.util import ApiException, make_response
 from app.server.manager.message_manager import MessageManager
 from app.server.manager.view.session_view import SessionView
@@ -28,9 +27,6 @@ def chat():
         payload = data.get("message")
         assert isinstance(payload, str), "Message should be a string"
 
-        # TODO: rename message_type to chat_message_type
-        chat_message_type = ChatMessageType(data.get("message_type", ChatMessageType.TEXT.value))
-
         others = data.get("others")
         assert isinstance(others, Optional[str]), "Others should be a string or None"
 
@@ -40,7 +36,6 @@ def chat():
         response_data, message = manager.chat(
             session_id=session_id,
             payload=payload,
-            chat_message_type=chat_message_type,
             others=others,
         )
         response_data, message = manager.chat(text_message)

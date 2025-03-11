@@ -76,7 +76,6 @@ class MessageDao(Dao[MessageDo]):
                 payload=message.get_payload(),
                 timestamp=message.get_timestamp(),
                 session_id=message.get_session_id(),
-                chat_message_type=message.get_chat_message_type().value,
                 job_id=message.get_job_id(),
                 role=message.get_role(),
                 assigned_expert_name=message.get_assigned_expert_name(),

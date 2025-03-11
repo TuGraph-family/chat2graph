@@ -54,7 +54,6 @@ class MessageDo(Base):  # type: ignore
     related_message_ids = Column(JSON, nullable=True)
 
     # chat/text message fields
-    chat_message_type = Column(String(50), nullable=True)
     role = Column(String(50), nullable=True)
     assigned_expert_name = Column(String(100), nullable=True)
     others = Column(Text, nullable=True)
@@ -93,7 +92,6 @@ class ChatMessageDo(MessageDo):
 
     __mapper_args__ = {
         "polymorphic_identity": MessageType.CHAT_MESSAGE.value,  # type: ignore
-        # "polymorphic_on": "chat_message_type",
     }
 
 
