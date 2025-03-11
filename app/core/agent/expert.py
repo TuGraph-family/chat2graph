@@ -38,7 +38,7 @@ class Expert(Agent):
         )
 
         # save the workflow message in the database
-        message_service.save_workflow_message(message=workflow_message, job_id=job.id)
+        message_service.save_message(message=workflow_message)
 
         if workflow_message.status == WorkflowStatus.SUCCESS:
             # (1) WorkflowStatus.SUCCESS
@@ -46,7 +46,8 @@ class Expert(Agent):
             print(f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m")
 
             agent_message = AgentMessage(job_id=job.id, workflow_messages=[workflow_message])
-            return message_service.save_agent_message(message=agent_message)
+            message_service.save_message(message=agent_message)
+            return agent_message
         if workflow_message.status == WorkflowStatus.EXECUTION_ERROR:
             # (2) WorkflowStatus.EXECUTION_ERROR
 
@@ -78,7 +79,8 @@ class Expert(Agent):
             agent_message = AgentMessage(
                 job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
             )
-            return message_service.save_agent_message(message=agent_message)
+            message_service.save_message(message=agent_message)
+            return agent_message
         if workflow_message.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # (4) WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
             # color: orange
@@ -92,5 +94,6 @@ class Expert(Agent):
             agent_message = AgentMessage(
                 job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
             )
-            return message_service.save_agent_message(message=agent_message)
+            message_service.save_message(message=agent_message)
+            return agent_message
         raise Exception("The workflow status is not defined.")
