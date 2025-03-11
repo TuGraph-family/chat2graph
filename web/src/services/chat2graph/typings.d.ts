@@ -1,6 +1,6 @@
 declare namespace API {
   interface SessionVO {
-    created_at?: string;
+    timestamp?: string;
     id?: string;
     name?: string;
     knowledgebase_id?: string;

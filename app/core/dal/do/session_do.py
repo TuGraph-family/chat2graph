@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, String
+from sqlalchemy import BigInteger, Column, String
 
 from app.core.common.util import utc_now
 from app.core.dal.database import Base
@@ -12,5 +12,5 @@ class SessionDo(Base):  # type: ignore
     __tablename__ = "session"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    created_at = Column(DateTime, default=utc_now, nullable=False)
+    timestamp = Column(BigInteger, default=utc_now, nullable=False)
     name = Column(String(80), nullable=True)

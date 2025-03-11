@@ -1,9 +1,9 @@
 from enum import Enum
-import time
 from uuid import uuid4
 
-from sqlalchemy import JSON, Column, String, Text
+from sqlalchemy import JSON, BigInteger, Column, String, Text
 
+from app.core.common.util import utc_now
 from app.core.dal.database import Base
 
 
@@ -23,9 +23,8 @@ class MessageDo(Base):  # type: ignore
     __tablename__ = "message"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    timestamp = Column(
-        String(30), nullable=False, default=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ")
-    )
+    timestamp = Column(BigInteger, default=utc_now)
+
     type = Column(
         String(50), nullable=False
     )  # identify the type to be used in polymorphic message queries (e.g. ModelMessageAO)

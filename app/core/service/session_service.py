@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import List, Optional, cast
+from typing import List, Optional
 from uuid import uuid4
 
 from app.core.common.singleton import Singleton
@@ -24,9 +23,9 @@ class SessionService(metaclass=Singleton):
             Session: Session object
         """
         # create the session
-        created_at = utc_now()
-        result: SessionDo = self._dao.create(name=name, created_at=created_at)
-        return Session(id=str(result.id), name=name, created_at=created_at)
+        timestamp = utc_now()
+        result: SessionDo = self._dao.create(name=name, timestamp=timestamp)
+        return Session(id=str(result.id), name=name, timestamp=timestamp)
 
     def get_session(self, session_id: Optional[str] = None) -> Session:
         """Get the session by ID. If ID is not provided, create a new session.
@@ -46,7 +45,7 @@ class SessionService(metaclass=Singleton):
         return Session(
             id=str(result.id),
             name=str(result.name),
-            created_at=cast(datetime, result.created_at),
+            timestamp=int(result.timestamp) if result.timestamp is not None else None,
         )
 
     def delete_session(self, id: str) -> None:
@@ -79,12 +78,14 @@ class SessionService(metaclass=Singleton):
             return Session(
                 id=str(updated_session.id),
                 name=str(updated_session.name),
-                created_at=cast(datetime, updated_session.created_at),
+                timestamp=int(updated_session.timestamp)
+                if updated_session.timestamp is not None
+                else None,
             )
         return Session(
             id=str(session.id),
             name=str(session.name),
-            created_at=cast(datetime, session.created_at),
+            timestamp=int(session.timestamp) if session.timestamp is not None else None,
         )
 
     def get_all_sessions(self) -> List[Session]:
@@ -99,7 +100,7 @@ class SessionService(metaclass=Singleton):
             Session(
                 id=str(result.id),
                 name=str(result.name),
-                created_at=cast(datetime, result.created_at),
+                timestamp=int(result.timestamp) if result.timestamp is not None else None,
             )
             for result in results
         ]

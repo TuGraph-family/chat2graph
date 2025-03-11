@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Optional
 
 
@@ -9,5 +8,4 @@ class Session:
 
     id: str
     name: Optional[str]
-    # TOOD: replace to timpstamps string
-    created_at: Optional[datetime]
+    timestamp: Optional[int]

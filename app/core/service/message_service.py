@@ -54,7 +54,7 @@ class MessageService(metaclass=Singleton):
             job_id=str(result.job_id),
             role=str(result.role),
             payload=str(result.payload),
-            timestamp=str(result.timestamp),
+            timestamp=int(result.timestamp),
             others=str(result.others),
         )
 
@@ -116,7 +116,7 @@ class MessageService(metaclass=Singleton):
                 job_id=str(updated_message.job_id),
                 role=str(updated_message.role),
                 payload=str(updated_message.payload),
-                timestamp=str(updated_message.timestamp),
+                timestamp=int(updated_message.timestamp),
                 others=str(updated_message.others),
             )
 
@@ -127,7 +127,7 @@ class MessageService(metaclass=Singleton):
             job_id=str(existing_message.job_id),
             role=str(existing_message.role),
             payload=str(existing_message.payload),
-            timestamp=str(existing_message.timestamp),
+            timestamp=int(existing_message.timestamp),
             others=str(existing_message.others),
         )
 
@@ -143,7 +143,7 @@ class MessageService(metaclass=Singleton):
                 job_id=str(result.job_id),
                 role=str(result.role),
                 payload=str(result.payload),
-                timestamp=str(result.timestamp),
+                timestamp=int(result.timestamp),
                 others=str(result.others),
             )
             for result in results
@@ -168,7 +168,7 @@ class MessageService(metaclass=Singleton):
                 job_id=str(result.job_id),
                 role=str(result.role),
                 payload=str(result.payload),
-                timestamp=str(result.timestamp),
+                timestamp=int(result.timestamp),
                 others=str(result.others),
             )
             for result in results

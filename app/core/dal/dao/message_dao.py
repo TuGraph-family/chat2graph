@@ -107,7 +107,7 @@ class MessageDao(Dao[MessageDo]):
         return WorkflowMessage(
             id=str(result.id),
             payload=payload,
-            timestamp=str(result.timestamp),
+            timestamp=int(result.timestamp) if result.timestamp else None,
         )
 
     def get_workflow_message_payload(self, workflow_message_id: str) -> Optional[Dict[str, Any]]:
@@ -140,7 +140,7 @@ class MessageDao(Dao[MessageDo]):
                     self.get_workflow_message(wf_id)
                     for wf_id in list(result.related_message_ids or [])
                 ],
-                timestamp=str(result.timestamp),
+                timestamp=int(result.timestamp),
             )
             for result in results
         ]

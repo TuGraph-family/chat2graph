@@ -12,8 +12,8 @@ from app.core.toolkit.tool import FunctionCallResult
 class Message(ABC):
     """Interface for the Message message."""
 
-    def __init__(self, timestamp: Optional[str], id: Optional[str] = None):
-        self._timestamp: Optional[str] = timestamp
+    def __init__(self, timestamp: Optional[int], id: Optional[str] = None):
+        self._timestamp: Optional[int] = timestamp
         self._id: str = id or str(uuid4())
 
     @abstractmethod
@@ -21,7 +21,7 @@ class Message(ABC):
         """Get the content of the message."""
 
     @abstractmethod
-    def get_timestamp(self) -> Optional[str]:
+    def get_timestamp(self) -> Optional[int]:
         """Get the timestamp of the message."""
 
     @abstractmethod
@@ -39,7 +39,7 @@ class ModelMessage(Message):
     def __init__(
         self,
         payload: str,
-        timestamp: Optional[str] = None,
+        timestamp: Optional[int] = None,
         id: Optional[str] = None,
         source_type: MessageSourceType = MessageSourceType.MODEL,
         function_calls: Optional[List[FunctionCallResult]] = None,
@@ -53,7 +53,7 @@ class ModelMessage(Message):
         """Get the content of the message."""
         return self._payload
 
-    def get_timestamp(self) -> Optional[str]:
+    def get_timestamp(self) -> Optional[int]:
         """Get the timestamp of the message."""
         return self._timestamp
 
@@ -90,7 +90,7 @@ class WorkflowMessage(Message):
     def __init__(
         self,
         payload: Dict[str, Any],
-        timestamp: Optional[str] = None,
+        timestamp: Optional[int] = None,
         id: Optional[str] = None,
     ):
         super().__init__(timestamp=timestamp, id=id)
@@ -118,7 +118,7 @@ class WorkflowMessage(Message):
             else:
                 super().__setattr__(name, value)
 
-    def get_timestamp(self) -> Optional[str]:
+    def get_timestamp(self) -> Optional[int]:
         """Get the timestamp of the message."""
         return self._timestamp
 
@@ -158,7 +158,7 @@ class AgentMessage(Message):
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
-        timestamp: Optional[str] = None,
+        timestamp: Optional[int] = None,
         id: Optional[str] = None,
     ):
         super().__init__(timestamp=timestamp, id=id)
@@ -187,7 +187,7 @@ class AgentMessage(Message):
         """Get the lesson of the execution of the job."""
         return self._lesson
 
-    def get_timestamp(self) -> Optional[str]:
+    def get_timestamp(self) -> Optional[int]:
         """Get the timestamp of the message."""
         return self._timestamp
 
@@ -215,7 +215,7 @@ class ChatMessage(Message):
 
     Attributes:
         _id str: Unique identifier for the message
-        _timestamp str: Timestamp of the message (defaults to current UTC time)
+        _timestamp int: Timestamp of the message (defaults to current UTC time)
         _payload (Any): The content of the message
         _session_id (Optional[str]): ID of the associated session
         _chat_message_type (ChatMessageType): Type of the message (default is TEXT)
@@ -226,7 +226,7 @@ class ChatMessage(Message):
     def __init__(
         self,
         payload: Any,
-        timestamp: Optional[str] = None,
+        timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
         chat_message_type: ChatMessageType = ChatMessageType.TEXT,
@@ -244,7 +244,7 @@ class ChatMessage(Message):
         """Get the content of the message."""
         return self._payload
 
-    def get_timestamp(self) -> Optional[str]:
+    def get_timestamp(self) -> Optional[int]:
         """Get the timestamp of the message."""
         return self._timestamp
 
@@ -286,7 +286,7 @@ class TextMessage(ChatMessage):
     def __init__(
         self,
         payload: str,
-        timestamp: Optional[str] = None,
+        timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
         chat_message_type: ChatMessageType = ChatMessageType.TEXT,
