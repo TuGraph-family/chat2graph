@@ -8,6 +8,16 @@ from app.core.common.type import MessageSourceType, WorkflowStatus
 from app.core.toolkit.tool import FunctionCallResult
 
 
+class MessageType(Enum):
+    """Message types"""
+
+    MODEL_MESSAGE = "ModelMessage"
+    WORKFLOW_MESSAGE = "WorkflowMessage"
+    AGENT_MESSAGE = "AgentMessage"
+    CHAT_MESSAGE = "ChatMessage"
+    TEXT_MESSAGE = "TextMessage"
+
+
 class Message(ABC):
     """Interface for the Message message."""
 
@@ -247,6 +257,10 @@ class ChatMessage(Message):
     def get_assigned_expert_name(self) -> Optional[str]:
         """Get the assigned expert name."""
         return self._assigned_expert_name
+
+    def set_assigned_expert_name(self, assigned_expert_name: str):
+        """Set the assigned expert name."""
+        self._assigned_expert_name = assigned_expert_name
 
     def copy(self) -> "ChatMessage":
         """Copy the message."""

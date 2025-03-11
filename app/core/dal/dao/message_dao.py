@@ -6,13 +6,19 @@ from app.core.dal.dao.dao import Dao
 from app.core.dal.do.message_do import (
     AgentMessageDo,
     MessageDo,
-    MessageType,
     ModelMessageAO,
     TextMessageDo,
     WorkflowMessageDo,
 )
 from app.core.model.job import Job
-from app.core.model.message import AgentMessage, Message, ModelMessage, TextMessage, WorkflowMessage
+from app.core.model.message import (
+    AgentMessage,
+    Message,
+    MessageType,
+    ModelMessage,
+    TextMessage,
+    WorkflowMessage,
+)
 
 
 class MessageDao(Dao[MessageDo]):

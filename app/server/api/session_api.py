@@ -2,9 +2,11 @@ from typing import Optional
 
 from flask import Blueprint, request
 
+from app.core.model.message import MessageType, TextMessage
 from app.server.common.util import ApiException, make_response
 from app.server.manager.message_manager import MessageManager
 from app.server.manager.session_manager import SessionManager
+from app.server.manager.view.session_view import SessionView
 
 sessions_bp = Blueprint("sessions", __name__)
 
@@ -77,27 +79,14 @@ def chat(session_id):
     manager = MessageManager()
     data = request.json
     try:
-        if not data or "message" not in data:
-            raise ApiException("Message is required")
+        if not data:
+            raise ApiException("Data is required")
+        data["session_id"] = session_id
 
-        # Session ID now comes from URL parameter
-        assert isinstance(session_id, str), "Session ID should be a string"
-
-        # TODO: rename message to payload
-        payload = data.get("message")
-        assert isinstance(payload, str), "Message should be a string"
-
-        others = data.get("others")
-        assert isinstance(others, Optional[str]), "Others should be a string or None"
-
-        file_paths = data.get("file_paths", [])
-        assert isinstance(file_paths, list), "File paths should be a list of strings"
-
-        response_data, message = manager.chat(
-            session_id=session_id,
-            payload=payload,
-            others=others,
+        text_message: TextMessage = SessionView.deserialize_message(
+            message=data, message_type=MessageType.TEXT_MESSAGE
         )
+        response_data, message = manager.chat(text_message)
         return make_response(True, data=response_data, message=message)
     except ApiException as e:
         return make_response(False, message=str(e))

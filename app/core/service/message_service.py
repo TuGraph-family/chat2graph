@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional
 
 from app.core.common.singleton import Singleton
 from app.core.dal.dao.message_dao import MessageDao
-from app.core.dal.do.message_do import MessageType, TextMessageDo
+from app.core.dal.do.message_do import TextMessageDo
 from app.core.model.job import Job
-from app.core.model.message import AgentMessage, Message, TextMessage
+from app.core.model.message import AgentMessage, Message, MessageType, TextMessage
 
 
 class MessageService(metaclass=Singleton):

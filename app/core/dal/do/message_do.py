@@ -1,20 +1,10 @@
-from enum import Enum
 from uuid import uuid4
 
 from sqlalchemy import JSON, BigInteger, Column, String, Text
 
 from app.core.common.util import utc_now
 from app.core.dal.database import Base
-
-
-class MessageType(Enum):
-    """Message types"""
-
-    MODEL_MESSAGE = "ModelMessage"
-    WORKFLOW_MESSAGE = "WorkflowMessage"
-    AGENT_MESSAGE = "AgentMessage"
-    CHAT_MESSAGE = "ChatMessage"
-    TEXT_MESSAGE = "TextMessage"
+from app.core.model.message import MessageType
 
 
 class MessageDo(Base):  # type: ignore
