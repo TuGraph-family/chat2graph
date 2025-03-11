@@ -2,7 +2,6 @@ from typing import List, Optional
 from uuid import uuid4
 
 from app.core.common.singleton import Singleton
-from app.core.common.util import utc_now
 from app.core.dal.dao.seesion_dao import SessionDao
 from app.core.dal.do.session_do import SessionDo
 from app.core.model.session import Session
@@ -23,9 +22,8 @@ class SessionService(metaclass=Singleton):
             Session: Session object
         """
         # create the session
-        timestamp = utc_now()
-        result: SessionDo = self._session_dao.create(name=name, timestamp=timestamp)
-        return Session(id=str(result.id), name=name, timestamp=timestamp)
+        result: SessionDo = self._session_dao.create(name=name)
+        return Session(id=str(result.id), name=name, timestamp=int(result.timestamp))
 
     def get_session(self, session_id: Optional[str] = None) -> Session:
         """Get the session by ID. If ID is not provided, create a new session.

@@ -1,11 +1,5 @@
-from datetime import datetime, timezone
 import json
 from typing import Dict
-
-
-def utc_now() -> int:
-    """Get the current time in UTC as a Unix timestamp."""
-    return int(datetime.now(timezone.utc).timestamp())
 
 
 def parse_json(
