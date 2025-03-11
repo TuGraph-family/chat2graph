@@ -21,10 +21,10 @@ class MessageDao(Dao[MessageDo]):
     def __init__(self, session: SqlAlchemySession):
         super().__init__(MessageDo, session)
 
-    def create_message_do(self, message: Message, **kwargs) -> MessageDo:
+    def create_message_do(self, message: Message) -> MessageDo:
         """Create a new message."""
         try:
-            message_model = self.__create_message_do(message, **kwargs)
+            message_model = self.__create_message_do(message)
             self.session.add(message_model)
             self.session.commit()
             return message_model
@@ -32,17 +32,14 @@ class MessageDao(Dao[MessageDo]):
             self.session.rollback()
             raise e
 
-    def __create_message_do(self, message: Message, **kwargs: Any) -> MessageDo:
+    def __create_message_do(self, message: Message) -> MessageDo:
         """Create a message model instance."""
 
         if isinstance(message, WorkflowMessage):
-            assert "job_id" in kwargs and isinstance(kwargs["job_id"], str), (
-                "job_id is required, and must be a string"
-            )
             return WorkflowMessageDo(
                 type=MessageType.WORKFLOW_MESSAGE.value,
                 payload=WorkflowMessage.serialize_payload(message.get_payload()),
-                job_id=kwargs["job_id"],
+                job_id=message.get_id(),
                 id=message.get_id(),
                 timestamp=message.get_timestamp(),
             )
@@ -63,19 +60,13 @@ class MessageDao(Dao[MessageDo]):
             # source_type: MessageSourceType = MessageSourceType.MODEL, # TODO
             # function_calls: Optional[List[FunctionCallResult]] = None,# TODO
 
-            assert "job_id" in kwargs and isinstance(kwargs["job_id"], str), (
-                "job_id is required, and must be a string"
-            )
-            assert "step" in kwargs and isinstance(kwargs["step"], str), (
-                "step is required, and must be a string"
-            )
             return ModelMessageAO(
                 type=MessageType.MODEL_MESSAGE.value,
                 payload=message.get_payload(),
                 timestamp=message.get_timestamp(),
                 id=message.get_id(),
-                job_id=kwargs["job_id"],
-                step=kwargs["step"],
+                job_id=message.get_job_id(),
+                step=message.get_step(),
             )
 
         if isinstance(message, TextMessage):

@@ -16,13 +16,13 @@ class KnowledgeBaseDo(Base):  # type: ignore
     knowledge_type = Column(Text, nullable=False)
     session_id = Column(String(36), nullable=False)  # FK constraint
 
-    files = relationship("FileDo", secondary="kb_to_file", backref="knowledge_bases")
+    files = relationship("FileDo", secondary="kb_file_mapping", backref="knowledge_bases")
 
 
 class KbFileMappingDo(Base):  # type: ignore
     """Knowledge Base to File association model."""
 
-    __tablename__ = "kb_to_file"
+    __tablename__ = "kb_file_mapping"
 
     kb_id = Column(
         String(36), ForeignKey("knowledge_base.id", ondelete="CASCADE"), primary_key=True

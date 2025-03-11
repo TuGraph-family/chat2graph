@@ -1,11 +1,12 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.common.type import ChatMessageType, JobStatus
-from app.core.model.message import TextMessage, WorkflowMessage
+from app.core.model.message import TextMessage
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
+from app.server.manager.view.message_view import MessageView
 
 
 class MessageManager:
@@ -16,6 +17,7 @@ class MessageManager:
         self._message_service: MessageService = MessageService.instance
         self._job_service: JobService = JobService.instance
         self._agent_service: AgentService = AgentService.instance
+        self._message_view: MessageView = MessageView()
 
     def chat(
         self,
@@ -45,7 +47,7 @@ class MessageManager:
             others=others,
             assigned_expert_name="Question Answering Expert",  # TODO: to be removed
         )
-        self._message_service.save_text_message(message=text_message)
+        self._message_service.save_message(message=text_message)
 
         # make the chat message to the mulit-agent system
         session_wrapper = self._agentic_service.session(session_id=session_id)
@@ -61,17 +63,10 @@ class MessageManager:
             payload="",  # TODO: to be handled
             others=others,
         )
-        self._message_service.save_text_message(system_chat_message)
-        system_data = {
-            "id": system_chat_message.get_id(),
-            "session_id": system_chat_message.get_session_id(),
-            "chat_message_type": system_chat_message.get_chat_message_type().value,
-            "job_id": system_chat_message.get_job_id(),
-            "role": system_chat_message.get_role(),
-            "message": system_chat_message.get_payload(),
-            "timestamp": system_chat_message.get_timestamp(),
-            "others": system_chat_message.get_others(),
-        }
+        self._message_service.save_message(message=system_chat_message)
+
+        # Use MessageView to serialize the message for API response
+        system_data = self._message_view.serialize_message(system_chat_message)
         return system_data, "Message created successfully"
 
     def get_agent_messages_by_job(self, original_job_id: str) -> Tuple[List[Dict[str, Any]], str]:
@@ -86,34 +81,15 @@ class MessageManager:
         """
         jobs = self._job_service.get_subjobs(original_job_id=original_job_id)
         data: List[Dict[str, Any]] = []
+
         for job in jobs:
             # get the agent messages
             agent_messages = self._message_service.get_agent_messages_by_job_id(job=job)
 
-            # prepare the data
-            data.extend(
-                [
-                    {
-                        "id": msg.get_id(),
-                        "job_id": msg.get_job_id(),
-                        "job_goal": self._job_service.get_subjob(job_id=msg.get_job_id()).goal,
-                        "assigned_expert_name": self._agent_service.leader.state.get_expert_by_id(
-                            self._job_service.get_job_graph(job_id=job.id).get_expert_id(
-                                msg.get_job_id()
-                            )
-                        )
-                        .get_profile()
-                        .name,
-                        "agent_result": WorkflowMessage.serialize_payload(
-                            msg.get_workflow_result_message().get_payload()
-                        ),
-                        "timestamp": msg.get_timestamp(),
-                        "chat_message_type": "text",
-                        "role": "agent",
-                    }
-                    for msg in agent_messages
-                ]
-            )
+            # prepare the data using MessageView
+            for msg in agent_messages:
+                data.append(self._message_view.serialize_message(message=msg))
+
         return data, "Agent messages fetched successfully"
 
     def get_text_message(self, id: str) -> Tuple[Dict[str, Any], str]:
@@ -149,17 +125,11 @@ class MessageManager:
             id=id, payload=job_result.result.get_payload()
         )
 
-        data = {
-            "id": new_message.get_id(),
-            "session_id": new_message.get_session_id(),
-            "chat_message_type": new_message.get_chat_message_type().value,
-            "job_id": new_message.get_job_id(),
-            "status": job_result.status.value,
-            "role": new_message.get_role(),
-            "message": new_message.get_payload(),  # TODO: to rename the message to payload
-            "timestamp": new_message.get_timestamp(),
-            "others": new_message.get_others(),
-        }
+        # Use MessageView to serialize the message
+        data = self._message_view.serialize_message(new_message)
+        # Add job status to the response
+        data["status"] = job_result.status.value
+
         return data, "Message fetched successfully"
 
     def filter_text_messages_by_session(self, session_id: str) -> Tuple[List[Dict], str]:
@@ -172,18 +142,11 @@ class MessageManager:
             Tuple[List[Dict], str]: A tuple containing a list of filtered message details and
                 success message
         """
-        chat_messages = self._message_service.filter_text_messages_by_session(session_id=session_id)
-        message_list = [
-            {
-                "id": msg.get_id(),
-                "session_id": msg.get_session_id(),
-                "chat_message_type": msg.get_chat_message_type().value,
-                "job_id": msg.get_job_id(),
-                "role": msg.get_role(),
-                "message": msg.get_payload(),
-                "timestamp": msg.get_timestamp(),
-                "others": msg.get_others(),
-            }
-            for msg in chat_messages
-        ]
+        text_messages: List[TextMessage] = self._message_service.filter_text_messages_by_session(
+            session_id=session_id
+        )
+
+        # Use MessageView to serialize all messages
+        message_list = self._message_view.serialize_messages(text_messages)
+
         return message_list, f"Messages filtered by session ID {session_id} successfully"

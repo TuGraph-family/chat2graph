@@ -5,7 +5,7 @@ from app.core.common.type import ChatMessageType
 from app.core.dal.dao.message_dao import MessageDao
 from app.core.dal.do.message_do import MessageType, TextMessageDo
 from app.core.model.job import Job
-from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, Message, TextMessage
 
 
 class MessageService(metaclass=Singleton):
@@ -14,22 +14,8 @@ class MessageService(metaclass=Singleton):
     def __init__(self):
         self._message_dao: MessageDao = MessageDao.instance
 
-    def save_workflow_message(self, message: WorkflowMessage, job_id: str) -> WorkflowMessage:
-        """Save a new workflow message."""
-        self._message_dao.create_message_do(message=message, job_id=job_id)
-        return message
-
-    def save_agent_message(self, message: AgentMessage) -> AgentMessage:
-        """Save a new agent message.
-
-        Note that it dose not save the job of the agent message in the database.
-        And it dose not either save the workflow messages of the agent message in the database.
-        """
-        self._message_dao.create_message_do(message=message)
-        return message
-
-    def save_text_message(self, message: TextMessage) -> TextMessage:
-        """Save a new text message."""
+    def save_message(self, message: Message) -> Message:
+        """Save a new message."""
         # create the message
         self._message_dao.create_message_do(message=message)
         return message
@@ -44,6 +30,7 @@ class MessageService(metaclass=Singleton):
         # fetch the message
         result = self._message_dao.get_by_id(id=id)
         for do in self._message_dao.get_all():
+            # TODO: remove this debug print
             print(
                 f"[DEBUG] id: {do.id}, type: {do.type}, payload: {str(do.payload)}, job_id: {do.job_id}, role: {do.role}"
             )
