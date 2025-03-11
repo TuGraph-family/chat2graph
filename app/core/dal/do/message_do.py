@@ -1,8 +1,7 @@
 from uuid import uuid4
 
-from sqlalchemy import JSON, BigInteger, Column, String, Text
+from sqlalchemy import JSON, BigInteger, Column, String, Text, func
 
-from app.core.common.util import utc_now
 from app.core.dal.database import Base
 from app.core.model.message import MessageType
 
@@ -13,7 +12,8 @@ class MessageDo(Base):  # type: ignore
     __tablename__ = "message"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    timestamp = Column(BigInteger, default=utc_now)
+    timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
+
     job_id = Column(String(36), nullable=False)  # FK constraint
 
     type = Column(
