@@ -5,7 +5,6 @@ import networkx as nx  # type: ignore
 from app.core.common.singleton import Singleton
 from app.core.common.type import JobStatus
 from app.core.dal.dao.job_dao import JobDao
-from app.core.dal.database import DB
 from app.core.model.job import Job
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
@@ -17,7 +16,7 @@ class JobService(metaclass=Singleton):
 
     def __init__(self):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
-        self._job_dao: JobDao = JobDao(DB())
+        self._job_dao: JobDao = JobDao.instance
 
     def _create_job(self, job: Job) -> Job:
         """Save a new job."""

@@ -2,7 +2,9 @@ from typing import Optional
 
 from flask import Blueprint, request
 
+from app.core.common.type import ChatMessageType
 from app.server.common.util import ApiException, make_response
+from app.server.manager.message_manager import MessageManager
 from app.server.manager.session_manager import SessionManager
 from app.server.manager.view.session_view import SessionView
 
@@ -67,5 +69,41 @@ def update_session_by_id(session_id):
 
         updated_session, message = manager.update_session(id=session_id, name=name)
         return make_response(True, data=updated_session, message=message)
+    except ApiException as e:
+        return make_response(False, message=str(e))
+
+
+@sessions_bp.route("/<string:session_id>/chat", methods=["POST"])
+def chat(session_id):
+    """Handle chat message creation."""
+    manager = MessageManager()
+    data = request.json
+    try:
+        if not data or "message" not in data:
+            raise ApiException("Message is required")
+
+        # Session ID now comes from URL parameter
+        assert isinstance(session_id, str), "Session ID should be a string"
+
+        # TODO: rename message to payload
+        payload = data.get("message")
+        assert isinstance(payload, str), "Message should be a string"
+
+        # TODO: rename message_type to chat_message_type
+        chat_message_type = ChatMessageType(data.get("message_type", ChatMessageType.TEXT.value))
+
+        others = data.get("others")
+        assert isinstance(others, Optional[str]), "Others should be a string or None"
+
+        file_paths = data.get("file_paths", [])
+        assert isinstance(file_paths, list), "File paths should be a list of strings"
+
+        response_data, message = manager.chat(
+            session_id=session_id,
+            payload=payload,
+            chat_message_type=chat_message_type,
+            others=others,
+        )
+        return make_response(True, data=response_data, message=message)
     except ApiException as e:
         return make_response(False, message=str(e))

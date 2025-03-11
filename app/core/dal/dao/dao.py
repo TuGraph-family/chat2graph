@@ -3,10 +3,12 @@ from typing import Any, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy.orm import DeclarativeBase, Session as SqlAlchemySession
 
+from app.core.common.singleton import Singleton
+
 T = TypeVar("T", bound=DeclarativeBase)
 
 
-class Dao(Generic[T]):
+class Dao(Generic[T], metaclass=Singleton):
     """Data Access Object"""
 
     # thread local storage

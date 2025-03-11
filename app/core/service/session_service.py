@@ -1,11 +1,10 @@
 from datetime import datetime
-from typing import Dict, List, Optional, cast
+from typing import List, Optional, cast
 from uuid import uuid4
 
 from app.core.common.singleton import Singleton
 from app.core.common.util import utc_now
 from app.core.dal.dao.seesion_dao import SessionDao
-from app.core.dal.database import DB
 from app.core.dal.do.session_do import SessionDo
 from app.core.model.session import Session
 
@@ -14,8 +13,7 @@ class SessionService(metaclass=Singleton):
     """Session service"""
 
     def __init__(self):
-        self._sessions: Dict[str, Session] = {}
-        self._dao = SessionDao(DB())
+        self._dao: SessionDao = SessionDao.instance
 
     def create_session(self, name: str) -> Session:
         """Create the session by name.
@@ -44,7 +42,7 @@ class SessionService(metaclass=Singleton):
         # fetch the session
         result = self._session_dao.get_by_id(id=session_id)
         if not result:
-            raise ServiceException(f"Session with ID {id} not found")
+            raise ValueError(f"Session with ID {id} not found")
         return Session(
             id=str(result.id),
             name=str(result.name),
@@ -61,7 +59,7 @@ class SessionService(metaclass=Singleton):
         session = self._session_dao.get_by_id(id=id)
         if not session:
             raise ValueError(f"Session with ID {id} not found")
-        self._session_dao.delete(id=id)
+        self._dao.delete(id=id)
 
     def update_session(self, id: str, name: Optional[str] = None) -> Session:
         """Update the session by ID.
@@ -81,14 +79,12 @@ class SessionService(metaclass=Singleton):
             return Session(
                 id=str(updated_session.id),
                 name=str(updated_session.name),
-                timestamp=int(updated_session.timestamp)
-                if updated_session.timestamp is not None
-                else None,
+                created_at=cast(datetime, updated_session.created_at),
             )
         return Session(
             id=str(session.id),
             name=str(session.name),
-            timestamp=int(session.timestamp) if session.timestamp is not None else None,
+            created_at=cast(datetime, session.created_at),
         )
 
     def get_all_sessions(self) -> List[Session]:
@@ -100,6 +96,10 @@ class SessionService(metaclass=Singleton):
 
         results = self._session_dao.get_all()
         return [
-            Session(id=str(result.id), name=result.name, created_at=result.created_at)
+            Session(
+                id=str(result.id),
+                name=str(result.name),
+                created_at=cast(datetime, result.created_at),
+            )
             for result in results
         ]

@@ -2,7 +2,6 @@ from typing import List, Optional
 
 from app.core.common.singleton import Singleton
 from app.core.dal.dao.graph_db_dao import GraphDbDao
-from app.core.dal.database import DB
 from app.core.model.graph_db import GraphDB
 
 
@@ -10,8 +9,7 @@ class GraphDbService(metaclass=Singleton):
     """GraphDB Service"""
 
     def __init__(self):
-        self._graph_dbs: Dict[str, Any] = {}
-        self._dao = GraphDbDao(DB())
+        self._dao: GraphDbDao = GraphDbDao.instance
 
     def create_graph_db(
         self, ip: str, port: str, user: str, pwd: str, desc: str, name: str, is_default_db: bool
@@ -37,7 +35,7 @@ class GraphDbService(metaclass=Singleton):
         return GraphDB(
             ip=str(result.ip),
             id=str(result.id),
-            port=int(result.port),
+            port=str(result.port),
             user=str(result.user),
             pwd=str(result.pwd),
             desc=str(result.desc),
@@ -53,7 +51,7 @@ class GraphDbService(metaclass=Singleton):
         return GraphDB(
             id=str(result.id),
             ip=str(result.ip),
-            port=int(result.port),
+            port=str(result.port),
             user=str(result.user),
             pwd=str(result.pwd),
             desc=str(result.desc),
@@ -66,7 +64,7 @@ class GraphDbService(metaclass=Singleton):
         graph_db = self._graph_db_dao.get_by_id(id=id)
         if not graph_db:
             raise ValueError(f"GraphDB with ID {id} not found")
-        self._graph_db_dao.delete(id=id)
+        self._dao.delete(id=id)
 
     def update_graph_db(
         self,
@@ -117,7 +115,7 @@ class GraphDbService(metaclass=Singleton):
             return GraphDB(
                 id=str(updated_graph_db.id),
                 ip=str(updated_graph_db.ip),
-                port=int(updated_graph_db.port),
+                port=str(updated_graph_db.port),
                 user=str(updated_graph_db.user),
                 pwd=str(updated_graph_db.pwd),
                 desc=str(updated_graph_db.desc),
@@ -127,7 +125,7 @@ class GraphDbService(metaclass=Singleton):
         return GraphDB(
             id=str(graph_db.id),
             ip=str(graph_db.ip),
-            port=int(graph_db.port),
+            port=str(graph_db.port),
             user=str(graph_db.user),
             pwd=str(graph_db.pwd),
             desc=str(graph_db.desc),
@@ -143,7 +141,7 @@ class GraphDbService(metaclass=Singleton):
             GraphDB(
                 ip=str(result.ip),
                 id=str(result.id),
-                port=int(result.port),
+                port=str(result.port),
                 user=str(result.user),
                 pwd=str(result.pwd),
                 desc=str(result.desc),
