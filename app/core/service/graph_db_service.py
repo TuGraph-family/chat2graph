@@ -9,7 +9,7 @@ class GraphDbService(metaclass=Singleton):
     """GraphDB Service"""
 
     def __init__(self):
-        self._dao: GraphDbDao = GraphDbDao.instance
+        self._graph_db_dao: GraphDbDao = GraphDbDao.instance
 
     def create_graph_db(
         self, ip: str, port: str, user: str, pwd: str, desc: str, name: str, is_default_db: bool
@@ -29,7 +29,7 @@ class GraphDbService(metaclass=Singleton):
             GraphDB: GraphDB object
         """
         # create the GraphDB
-        result = self._dao.create(
+        result = self._graph_db_dao.create(
             ip=ip, port=port, user=user, pwd=pwd, desc=desc, name=name, is_default_db=is_default_db
         )
         return GraphDB(
@@ -45,7 +45,7 @@ class GraphDbService(metaclass=Singleton):
 
     def get_graph_db(self, id: str) -> GraphDB:
         """Get a GraphDB by ID."""
-        result = self._dao.get_by_id(id=id)
+        result = self._graph_db_dao.get_by_id(id=id)
         if not result:
             raise ValueError(f"GraphDB with ID {id} not found")
         return GraphDB(
@@ -61,10 +61,10 @@ class GraphDbService(metaclass=Singleton):
 
     def delete_graph_db(self, id: str):
         """Delete a GraphDB by ID."""
-        graph_db = self._dao.get_by_id(id=id)
+        graph_db = self._graph_db_dao.get_by_id(id=id)
         if not graph_db:
             raise ValueError(f"GraphDB with ID {id} not found")
-        self._dao.delete(id=id)
+        self._graph_db_dao.delete(id=id)
 
     def update_graph_db(
         self,
@@ -91,7 +91,7 @@ class GraphDbService(metaclass=Singleton):
         Returns:
             GraphDB: Updated GraphDB object
         """
-        graph_db = self._dao.get_by_id(id=id)
+        graph_db = self._graph_db_dao.get_by_id(id=id)
         if not graph_db:
             raise ValueError(f"GraphDB with ID {id} not found")
         update_fields = {
@@ -111,7 +111,7 @@ class GraphDbService(metaclass=Singleton):
         }
 
         if fields_to_update:
-            updated_graph_db = self._dao.update(id=id, **fields_to_update)
+            updated_graph_db = self._graph_db_dao.update(id=id, **fields_to_update)
             return GraphDB(
                 id=str(updated_graph_db.id),
                 ip=str(updated_graph_db.ip),
@@ -136,7 +136,7 @@ class GraphDbService(metaclass=Singleton):
     def get_all_graph_dbs(self) -> List[GraphDB]:
         """Get all GraphDBs."""
 
-        results = self._dao.get_all()
+        results = self._graph_db_dao.get_all()
         return [
             GraphDB(
                 ip=str(result.ip),

@@ -9,7 +9,7 @@ class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
 
     def __init__(self):
-        self._dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
+        self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -25,7 +25,9 @@ class KnowledgeBaseService(metaclass=Singleton):
             KnowledgeBase: Knowledge base object
         """
         # create the knowledge base
-        result = self._dao.create(name=name, knowledge_type=knowledge_type, session_id=session_id)
+        result = self._knowledge_base_dao.create(
+            name=name, knowledge_type=knowledge_type, session_id=session_id
+        )
         return KnowledgeBase(
             id=str(result.id),
             name=str(result.name),
@@ -42,7 +44,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             KnowledgeBase: Knowledge base object
         """
         # fetch the knowledge base
-        result = self._dao.get_by_id(id=id)
+        result = self._knowledge_base_dao.get_by_id(id=id)
         if not result:
             raise ValueError(f"Knowledge base with ID {id} not found")
         return KnowledgeBase(
@@ -58,10 +60,10 @@ class KnowledgeBaseService(metaclass=Singleton):
             id (str): ID of the knowledge base
         """
         # delete the knowledge base
-        knowledge_base = self._dao.get_by_id(id=id)
+        knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
             raise ValueError(f"Knowledge base with ID {id} not found")
-        self._dao.delete(id=id)
+        self._knowledge_base_dao.delete(id=id)
 
     def update_knowledge_base(self) -> KnowledgeBase:
         """Update a knowledge base by ID."""
@@ -73,7 +75,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             List[KnowledgeBase]: List of knowledge bases
         """
 
-        results = self._dao.get_all()
+        results = self._knowledge_base_dao.get_all()
         return [
             KnowledgeBase(
                 id=str(result.id),
