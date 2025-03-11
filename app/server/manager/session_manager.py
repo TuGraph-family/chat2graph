@@ -30,7 +30,7 @@ class SessionManager:
             "id": session.id,
             "knowledgebase_id": knowledgebase.id,
             "name": session.name,
-            "created_at": session.created_at.isoformat() if session.created_at else None,
+            "timestamp": session.timestamp,
         }
         return data, "Session created successfully"
 
@@ -47,7 +47,7 @@ class SessionManager:
         data = {
             "id": session.id,
             "name": session.name,
-            "created_at": session.created_at.isoformat() if session.created_at else None,
+            "timestamp": session.timestamp,
         }
         return data, "Session fetched successfully"
 
@@ -77,7 +77,7 @@ class SessionManager:
         data = {
             "id": session.id,
             "name": session.name,
-            "created_at": session.created_at.isoformat() if session.created_at else None,
+            "timestamp": session.timestamp,
         }
         return data, "Session updated successfully"
 
@@ -92,7 +92,7 @@ class SessionManager:
             {
                 "id": session.id,
                 "name": session.name,
-                "created_at": session.created_at.isoformat() if session.created_at else None,
+                "timestamp": session.timestamp,
             }
             for session in sessions
         ]
