@@ -12,7 +12,7 @@ class MessageManager:
     """Message Manager class to handle business logic"""
 
     def __init__(self):
-        self._agentic_service: AgenticService = AgenticService.instance or AgenticService.load()
+        self._agentic_service: AgenticService = AgenticService.instance
         self._message_service: MessageService = MessageService.instance
         self._job_service: JobService = JobService.instance
         self._agent_service: AgentService = AgentService.instance
@@ -45,7 +45,7 @@ class MessageManager:
             others=others,
             assigned_expert_name="Question Answering Expert",  # TODO: to be removed
         )
-        self._message_service.create_text_message(text_message=text_message)
+        self._message_service.save_text_message(text_message=text_message)
 
         # make the chat message to the mulit-agent system
         session_wrapper = self._agentic_service.session(session_id=session_id)
@@ -61,7 +61,7 @@ class MessageManager:
             payload="",  # TODO: to be handled
             others=others,
         )
-        self._message_service.create_text_message(system_chat_message)
+        self._message_service.save_text_message(system_chat_message)
         system_data = {
             "id": system_chat_message.get_id(),
             "session_id": system_chat_message.get_session_id(),

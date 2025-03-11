@@ -6,6 +6,8 @@ from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
 from app.core.common.type import PlatformType, ReasonerType
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DB
 from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
@@ -31,6 +33,9 @@ class AgenticService(metaclass=Singleton):
 
     def __init__(self, service_name: Optional[str] = None):
         self._service_name = service_name or "Chat2Graph"
+
+        # initialize the dao
+        DaoFactory.initialize(DB())
 
         # initialize the services
         ServiceFactory.initialize()

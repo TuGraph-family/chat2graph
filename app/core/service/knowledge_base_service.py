@@ -1,18 +1,15 @@
-from typing import Dict, List
+from typing import List
 
 from app.core.common.singleton import Singleton
 from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao
-from app.core.dal.database import DB
 from app.core.model.knowledge_base import KnowledgeBase
-from app.server.common.util import ServiceException
 
 
 class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
 
     def __init__(self):
-        self._knowledge_bases: Dict[str, KnowledgeBase] = {}
-        self._dao: KnowledgeBaseDao = KnowledgeBaseDao(DB())
+        self._dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -47,7 +44,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # fetch the knowledge base
         result = self._dao.get_by_id(id=id)
         if not result:
-            raise ServiceException(f"Knowledge base with ID {id} not found")
+            raise ValueError(f"Knowledge base with ID {id} not found")
         return KnowledgeBase(
             id=str(result.id),
             name=str(result.name),
@@ -63,7 +60,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete the knowledge base
         knowledge_base = self._dao.get_by_id(id=id)
         if not knowledge_base:
-            raise ServiceException(f"Knowledge base with ID {id} not found")
+            raise ValueError(f"Knowledge base with ID {id} not found")
         self._dao.delete(id=id)
 
     def update_knowledge_base(self) -> KnowledgeBase:

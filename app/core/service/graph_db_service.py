@@ -1,18 +1,15 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from app.core.common.singleton import Singleton
 from app.core.dal.dao.graph_db_dao import GraphDbDao
-from app.core.dal.database import DB
 from app.core.model.graph_db import GraphDB
-from app.server.common.util import ServiceException
 
 
 class GraphDbService(metaclass=Singleton):
     """GraphDB Service"""
 
     def __init__(self):
-        self._graph_dbs: Dict[str, Any] = {}
-        self._dao = GraphDbDao(DB())
+        self._dao: GraphDbDao = GraphDbDao.instance
 
     def create_graph_db(
         self, ip: str, port: str, user: str, pwd: str, desc: str, name: str, is_default_db: bool
@@ -36,37 +33,37 @@ class GraphDbService(metaclass=Singleton):
             ip=ip, port=port, user=user, pwd=pwd, desc=desc, name=name, is_default_db=is_default_db
         )
         return GraphDB(
-            ip=result.ip,
-            id=result.id,
-            port=result.port,
-            user=result.user,
-            pwd=result.pwd,
-            desc=result.desc,
-            name=result.name,
-            is_default_db=result.is_default_db,
+            ip=str(result.ip),
+            id=str(result.id),
+            port=str(result.port),
+            user=str(result.user),
+            pwd=str(result.pwd),
+            desc=str(result.desc),
+            name=str(result.name),
+            is_default_db=bool(result.is_default_db),
         )
 
     def get_graph_db(self, id: str) -> GraphDB:
         """Get a GraphDB by ID."""
         result = self._dao.get_by_id(id=id)
         if not result:
-            raise ServiceException(f"GraphDB with ID {id} not found")
+            raise ValueError(f"GraphDB with ID {id} not found")
         return GraphDB(
-            id=result.id,
-            ip=result.ip,
-            port=result.port,
-            user=result.user,
-            pwd=result.pwd,
-            desc=result.desc,
-            name=result.name,
-            is_default_db=result.is_default_db,
+            id=str(result.id),
+            ip=str(result.ip),
+            port=str(result.port),
+            user=str(result.user),
+            pwd=str(result.pwd),
+            desc=str(result.desc),
+            name=str(result.name),
+            is_default_db=bool(result.is_default_db),
         )
 
     def delete_graph_db(self, id: str):
         """Delete a GraphDB by ID."""
         graph_db = self._dao.get_by_id(id=id)
         if not graph_db:
-            raise ServiceException(f"GraphDB with ID {id} not found")
+            raise ValueError(f"GraphDB with ID {id} not found")
         self._dao.delete(id=id)
 
     def update_graph_db(
@@ -96,7 +93,7 @@ class GraphDbService(metaclass=Singleton):
         """
         graph_db = self._dao.get_by_id(id=id)
         if not graph_db:
-            raise ServiceException(f"GraphDB with ID {id} not found")
+            raise ValueError(f"GraphDB with ID {id} not found")
         update_fields = {
             "ip": ip,
             "port": port,
@@ -116,24 +113,24 @@ class GraphDbService(metaclass=Singleton):
         if fields_to_update:
             updated_graph_db = self._dao.update(id=id, **fields_to_update)
             return GraphDB(
-                id=updated_graph_db.id,
-                ip=updated_graph_db.ip,
-                port=updated_graph_db.port,
-                user=updated_graph_db.user,
-                pwd=updated_graph_db.pwd,
-                desc=updated_graph_db.desc,
-                name=updated_graph_db.name,
-                is_default_db=updated_graph_db.is_default_db,
+                id=str(updated_graph_db.id),
+                ip=str(updated_graph_db.ip),
+                port=str(updated_graph_db.port),
+                user=str(updated_graph_db.user),
+                pwd=str(updated_graph_db.pwd),
+                desc=str(updated_graph_db.desc),
+                name=str(updated_graph_db.name),
+                is_default_db=bool(updated_graph_db.is_default_db),
             )
         return GraphDB(
-            id=graph_db.id,
-            ip=graph_db.ip,
-            port=graph_db.port,
-            user=graph_db.user,
-            pwd=graph_db.pwd,
-            desc=graph_db.desc,
-            name=graph_db.name,
-            is_default_db=graph_db.is_default_db,
+            id=str(graph_db.id),
+            ip=str(graph_db.ip),
+            port=str(graph_db.port),
+            user=str(graph_db.user),
+            pwd=str(graph_db.pwd),
+            desc=str(graph_db.desc),
+            name=str(graph_db.name),
+            is_default_db=bool(graph_db.is_default_db),
         )
 
     def get_all_graph_dbs(self) -> List[GraphDB]:
@@ -142,14 +139,14 @@ class GraphDbService(metaclass=Singleton):
         results = self._dao.get_all()
         return [
             GraphDB(
-                ip=result.ip,
-                id=result.id,
-                port=result.port,
-                user=result.user,
-                pwd=result.pwd,
-                desc=result.desc,
-                name=result.name,
-                is_default_db=result.is_default_db,
+                ip=str(result.ip),
+                id=str(result.id),
+                port=str(result.port),
+                user=str(result.user),
+                pwd=str(result.pwd),
+                desc=str(result.desc),
+                name=str(result.name),
+                is_default_db=bool(result.is_default_db),
             )
             for result in results
         ]

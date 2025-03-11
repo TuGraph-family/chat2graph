@@ -11,7 +11,9 @@ messages_bp = Blueprint("messages", __name__)
 
 @messages_bp.route("/chat", methods=["POST"])
 def chat():
-    """Handle chat message creation."""
+    """Handle chat message creation.
+    Warning: This method is deprecated and will be removed to the session API.
+    """
     manager = MessageManager()
     data = request.json
     try:

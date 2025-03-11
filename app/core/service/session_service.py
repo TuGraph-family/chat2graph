@@ -1,22 +1,19 @@
 from datetime import datetime
-from typing import Dict, List, Optional, cast
+from typing import List, Optional, cast
 from uuid import uuid4
 
 from app.core.common.singleton import Singleton
 from app.core.common.util import utc_now
 from app.core.dal.dao.seesion_dao import SessionDao
-from app.core.dal.database import DB
 from app.core.dal.do.session_do import SessionDo
 from app.core.model.session import Session
-from app.server.common.util import ServiceException
 
 
 class SessionService(metaclass=Singleton):
     """Session service"""
 
     def __init__(self):
-        self._sessions: Dict[str, Session] = {}
-        self._dao = SessionDao(DB())
+        self._dao: SessionDao = SessionDao.instance
 
     def create_session(self, name: str) -> Session:
         """Create the session by name.
@@ -45,7 +42,7 @@ class SessionService(metaclass=Singleton):
         # fetch the session
         result = self._dao.get_by_id(id=session_id)
         if not result:
-            raise ServiceException(f"Session with ID {id} not found")
+            raise ValueError(f"Session with ID {id} not found")
         return Session(
             id=str(result.id),
             name=str(result.name),
@@ -61,7 +58,7 @@ class SessionService(metaclass=Singleton):
         # delete the session
         session = self._dao.get_by_id(id=id)
         if not session:
-            raise ServiceException(f"Session with ID {id} not found")
+            raise ValueError(f"Session with ID {id} not found")
         self._dao.delete(id=id)
 
     def update_session(self, id: str, name: Optional[str] = None) -> Session:
@@ -74,17 +71,21 @@ class SessionService(metaclass=Singleton):
         # fetch the existing session
         session = self._dao.get_by_id(id=id)
         if not session:
-            raise ServiceException(f"Session with ID {id} not found")
+            raise ValueError(f"Session with ID {id} not found")
 
         # update only if a new name is provided and it's different from the current name
         if name is not None and name != session.name:
             updated_session = self._dao.update(id=id, name=name)
             return Session(
-                id=updated_session.id,
-                name=updated_session.name,
-                created_at=updated_session.created_at,
+                id=str(updated_session.id),
+                name=str(updated_session.name),
+                created_at=cast(datetime, updated_session.created_at),
             )
-        return Session(id=session.id, name=session.name, created_at=session.created_at)
+        return Session(
+            id=str(session.id),
+            name=str(session.name),
+            created_at=cast(datetime, session.created_at),
+        )
 
     def get_all_sessions(self) -> List[Session]:
         """Get all sessions.
@@ -95,6 +96,10 @@ class SessionService(metaclass=Singleton):
 
         results = self._dao.get_all()
         return [
-            Session(id=str(result.id), name=result.name, created_at=result.created_at)
+            Session(
+                id=str(result.id),
+                name=str(result.name),
+                created_at=cast(datetime, result.created_at),
+            )
             for result in results
         ]

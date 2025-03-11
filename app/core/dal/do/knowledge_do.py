@@ -19,7 +19,7 @@ class KnowledgeBaseDo(Base):  # type: ignore
     files = relationship("FileDo", secondary="kb_to_file", backref="knowledge_bases")
 
 
-class KbToFileDo(Base):  # type: ignore
+class KbFileMappingDo(Base):  # type: ignore
     """Knowledge Base to File association model."""
 
     __tablename__ = "kb_to_file"
