@@ -28,6 +28,8 @@ async def mock_reasoner() -> MonoModelReasoner:
     response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
         payload="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
+        job_id=job_id,
+        step=1,
     )
 
     reasoner._model.generate = AsyncMock(return_value=response)

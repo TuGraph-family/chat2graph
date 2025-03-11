@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.core.common.type import ChatMessageType, MessageSourceType, WorkflowStatus
-from app.core.model.job import Job
 from app.core.toolkit.tool import FunctionCallResult
 
 
@@ -22,16 +21,11 @@ class MessageType(Enum):
 class Message(ABC):
     """Interface for the Message message."""
 
-    def __init__(self, timestamp: Optional[int], id: Optional[str] = None):
+    def __init__(self, job_id: str, timestamp: Optional[int], id: Optional[str] = None):
         self._timestamp: Optional[int] = timestamp
         self._id: str = id or str(uuid4())
         self._job_id: str = job_id
 
-    @abstractmethod
-    def get_payload(self) -> Any:
-        """Get the content of the message."""
-
-    @abstractmethod
     def get_timestamp(self) -> Optional[int]:
         """Get the timestamp of the message."""
         return self._timestamp
@@ -55,6 +49,8 @@ class ModelMessage(Message):
     def __init__(
         self,
         payload: str,
+        job_id: str,
+        step: int,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         source_type: MessageSourceType = MessageSourceType.MODEL,
@@ -70,13 +66,9 @@ class ModelMessage(Message):
         """Get the content of the message."""
         return self._payload
 
-    def get_timestamp(self) -> Optional[int]:
-        """Get the timestamp of the message."""
-        return self._timestamp
-
-    def get_id(self) -> str:
-        """Get the message id."""
-        return self._id
+    def get_step(self) -> int:
+        """Get the step of the message."""
+        return self._step
 
     def get_source_type(self) -> MessageSourceType:
         """Get the source type of the message."""
@@ -109,10 +101,11 @@ class WorkflowMessage(Message):
     def __init__(
         self,
         payload: Dict[str, Any],
+        job_id=str,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
     ):
-        super().__init__(timestamp=timestamp, id=id)
+        super().__init__(timestamp=timestamp, id=id, job_id=job_id)
         self._payload: Dict[str, Any] = payload
         for key, value in payload.items():
             setattr(self, key, value)
@@ -137,14 +130,6 @@ class WorkflowMessage(Message):
             else:
                 super().__setattr__(name, value)
 
-    def get_timestamp(self) -> Optional[int]:
-        """Get the timestamp of the message."""
-        return self._timestamp
-
-    def get_id(self) -> str:
-        """Get the message id."""
-        return self._id
-
     def copy(self) -> "WorkflowMessage":
         """Copy the message."""
         return WorkflowMessage(
@@ -153,25 +138,6 @@ class WorkflowMessage(Message):
             id=self._id,
             job_id=self._job_id,
         )
-
-    @staticmethod
-    def serialize_payload(payload: Dict[str, Any]) -> str:
-        """Serialize the payload."""
-
-        def enum_handler(obj):
-            if isinstance(obj, Enum):
-                return obj.value
-            raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
-
-        return json.dumps(payload, default=enum_handler)
-
-    @staticmethod
-    def deserialize_payload(payload: str) -> Dict[str, Any]:
-        """Deserialize the payload."""
-        payload_dict = json.loads(payload)
-        if "status" in payload_dict:
-            payload_dict["status"] = WorkflowStatus(payload_dict["status"])
-        return payload_dict
 
     @staticmethod
     def serialize_payload(payload: Dict[str, Any]) -> str:
@@ -204,8 +170,7 @@ class AgentMessage(Message):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
     ):
-        super().__init__(timestamp=timestamp, id=id)
-        self._job: Job = job
+        super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         self._workflow_messages: List[WorkflowMessage] = workflow_messages or []
         self._lesson: Optional[str] = lesson
 
@@ -225,14 +190,6 @@ class AgentMessage(Message):
     def get_lesson(self) -> Optional[str]:
         """Get the lesson of the execution of the job."""
         return self._lesson
-
-    def get_timestamp(self) -> Optional[int]:
-        """Get the timestamp of the message."""
-        return self._timestamp
-
-    def get_id(self) -> str:
-        """Get the message id."""
-        return self._id
 
     def set_lesson(self, lesson: str):
         """Set the lesson of the execution of the job."""
@@ -265,6 +222,7 @@ class ChatMessage(Message):
     def __init__(
         self,
         payload: Any,
+        job_id: str,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
@@ -272,7 +230,7 @@ class ChatMessage(Message):
         others: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
     ):
-        super().__init__(timestamp=timestamp, id=id)
+        super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         self._payload: Any = payload
         self._session_id: Optional[str] = session_id
         self._chat_message_type: ChatMessageType = chat_message_type
@@ -330,17 +288,18 @@ class TextMessage(ChatMessage):
     def __init__(
         self,
         payload: str,
+        job_id: Optional[str] = None,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
         chat_message_type: ChatMessageType = ChatMessageType.TEXT,
-        job_id: Optional[str] = None,
         role: Optional[str] = None,
         others: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
     ):
         super().__init__(
             payload=payload,
+            job_id=job_id or "temp_job_id",
             timestamp=timestamp,
             id=id,
             session_id=session_id,
@@ -348,16 +307,11 @@ class TextMessage(ChatMessage):
             others=others,
             assigned_expert_name=assigned_expert_name,
         )
-        self._job_id: Optional[str] = job_id
         self._role: Optional[str] = role
 
     def get_payload(self) -> str:
         """Get the string content of the message."""
         return self._payload
-
-    def get_job_id(self) -> Optional[str]:
-        """Get the job ID."""
-        return self._job_id
 
     def get_role(self) -> Optional[str]:
         """Get the role."""
@@ -371,11 +325,11 @@ class TextMessage(ChatMessage):
         """Copy the message."""
         return TextMessage(
             payload=self._payload,
+            job_id=self._job_id,
             timestamp=self._timestamp,
             id=self._id,
             session_id=self._session_id,
             chat_message_type=self._chat_message_type,
-            job_id=self._job_id,
             role=self._role,
             assigned_expert_name=self._assigned_expert_name,
             others=self._others,

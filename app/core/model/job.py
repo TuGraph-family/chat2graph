@@ -23,6 +23,16 @@ class Job:
     session_id: str = field(default_factory=lambda: str(uuid4()))
     assigned_expert_name: Optional[str] = None
 
+    def copy(self):
+        """Copy the job."""
+        return Job(
+            goal=self.goal,
+            context=self.context,
+            id=self.id,
+            session_id=self.session_id,
+            assigned_expert_name=self.assigned_expert_name,
+        )
+
 
 @dataclass
 class SubJob(Job):
@@ -37,3 +47,14 @@ class SubJob(Job):
     output_schema: str = "Output schema is not determined."
     life_cycle: int = SystemEnv.LIFE_CYCLE
     assigned_expert_name: None = field(default=None, init=False)
+
+    def copy(self):
+        """Copy the sub job."""
+        return SubJob(
+            goal=self.goal,
+            context=self.context,
+            id=self.id,
+            session_id=self.session_id,
+            output_schema=self.output_schema,
+            life_cycle=self.life_cycle,
+        )

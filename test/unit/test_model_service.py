@@ -23,6 +23,8 @@ def mock_model_service():
             id="4",
             source_type=MessageSourceType.ACTOR,
             payload="Your name is Alice, as you mentioned earlier.",
+            job_id=job_id,
+            step=1,
         )
         mock_service.generate = AsyncMock(return_value=mock_response)
 
@@ -40,16 +42,22 @@ def test_messages() -> List[ModelMessage]:
             id="1",
             source_type=MessageSourceType.THINKER,
             payload="Hello, how are you? I am Alice.",
+            job_id=job_id,
+            step=1,
         ),
         ModelMessage(
             id="2",
             source_type=MessageSourceType.ACTOR,
             payload="I'm fine, thank you.",
+            job_id=job_id,
+            step=2,
         ),
         ModelMessage(
             id="3",
             source_type=MessageSourceType.THINKER,
             payload="What's my name?",
+            job_id=job_id,
+            step=3,
         ),
     ]
 
@@ -98,8 +106,12 @@ def test_agent_message_creation():
         id="test",
         source_type=MessageSourceType.THINKER,
         payload="Test message",
+        job_id=job_id,
+        step=1,
     )
 
     assert message.get_id() == "test"
     assert message.get_source_type() == MessageSourceType.THINKER
     assert message.get_payload() == "Test message"
+    assert message.get_job_id() == job_id
+    assert message.get_step() == 1

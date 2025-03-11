@@ -279,7 +279,7 @@ class CypherExecutor(Tool):
 """  # noqa: E501
             )
 
-            message = ModelMessage(payload=cypher)
+            message = ModelMessage(payload=cypher, job_id="validate_and_execute_cypher_id", step=1)
 
             _model = ModelServiceFactory.create(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
             response = await _model.generate(sys_prompt=prompt, messages=[message])

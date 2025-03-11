@@ -11,21 +11,21 @@ class JobDao(Dao[JobDo]):
     def __init__(self, session: SqlAlchemySession):
         super().__init__(JobDo, session)
 
-    def create_job(self, job: Job) -> JobDo:
+    def save_job(self, job: Job) -> JobDo:
         """Create a new job model."""
         if isinstance(job, SubJob):
             return self.create(
+                id=job.id,
                 goal=job.goal,
                 context=job.context,
-                id=job.id,
                 session_id=job.session_id,
                 output_schema=job.output_schema,
                 life_cycle=job.life_cycle,
             )
         return self.create(
+            id=job.id,
             goal=job.goal,
             context=job.context,
-            id=job.id,
             session_id=job.session_id,
             assigned_expert_name=job.assigned_expert_name,
         )
