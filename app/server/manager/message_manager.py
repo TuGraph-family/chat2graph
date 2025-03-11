@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.common.type import ChatMessageType, JobStatus
+from app.core.common.type import JobStatus
 from app.core.model.message import TextMessage
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.agent_service import AgentService
@@ -23,7 +23,6 @@ class MessageManager:
         self,
         session_id: str,
         payload: str,
-        chat_message_type: ChatMessageType = ChatMessageType.TEXT,
         others: Optional[str] = None,
     ) -> Tuple[Dict[str, Any], str]:
         """Create user message and system message return the response data.
@@ -31,8 +30,6 @@ class MessageManager:
         Args:
             session_id (str): ID of the associated session
             payload (str): Content of the message
-            chat_message_type (ChatMessageType): Type of the message.
-                Defaults to ChatMessageType.TEXT.
             others (Optional[str]): Additional information. Defaults to None.
 
         Returns:
@@ -41,7 +38,6 @@ class MessageManager:
         # create user message
         text_message = TextMessage(
             session_id=session_id,
-            chat_message_type=chat_message_type,
             role="user",
             payload=payload,
             others=others,
@@ -57,7 +53,6 @@ class MessageManager:
         # create system message
         system_chat_message = TextMessage(
             session_id=session_id,
-            chat_message_type=ChatMessageType.TEXT,
             job_id=job_wrapper.id,
             role="system",
             payload="",  # TODO: to be handled

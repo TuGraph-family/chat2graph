@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.core.common.type import ChatMessageType, MessageSourceType, WorkflowStatus
+from app.core.common.type import MessageSourceType, WorkflowStatus
 from app.core.toolkit.tool import FunctionCallResult
 
 
@@ -204,7 +204,6 @@ class ChatMessage(Message):
         _timestamp int: Timestamp of the message (defaults to current UTC time)
         _payload (Any): The content of the message
         _session_id (Optional[str]): ID of the associated session
-        _chat_message_type (ChatMessageType): Type of the message (default is TEXT)
         _others (Optional[str]): Additional information
         _assigned_expert_name (Optional[str]): Name of the assigned expert
     """
@@ -216,14 +215,12 @@ class ChatMessage(Message):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
-        chat_message_type: ChatMessageType = ChatMessageType.TEXT,
         others: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
     ):
         super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         self._payload: Any = payload
         self._session_id: Optional[str] = session_id
-        self._chat_message_type: ChatMessageType = chat_message_type
         self._others: Optional[str] = others
         self._assigned_expert_name: Optional[str] = assigned_expert_name
 
@@ -243,10 +240,6 @@ class ChatMessage(Message):
         """Get the session ID."""
         return self._session_id
 
-    def get_chat_message_type(self) -> ChatMessageType:
-        """Get the message type."""
-        return self._chat_message_type
-
     def get_others(self) -> Optional[str]:
         """Get the additional information."""
         return self._others
@@ -263,7 +256,6 @@ class ChatMessage(Message):
             timestamp=self._timestamp,
             id=self._id,
             session_id=self._session_id,
-            chat_message_type=self._chat_message_type,
             others=self._others,
         )
 
@@ -278,7 +270,6 @@ class TextMessage(ChatMessage):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
-        chat_message_type: ChatMessageType = ChatMessageType.TEXT,
         role: Optional[str] = None,
         others: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
@@ -289,7 +280,6 @@ class TextMessage(ChatMessage):
             timestamp=timestamp,
             id=id,
             session_id=session_id,
-            chat_message_type=chat_message_type,
             others=others,
             assigned_expert_name=assigned_expert_name,
         )
@@ -311,7 +301,6 @@ class TextMessage(ChatMessage):
             timestamp=self._timestamp,
             id=self._id,
             session_id=self._session_id,
-            chat_message_type=self._chat_message_type,
             role=self._role,
             assigned_expert_name=self._assigned_expert_name,
             others=self._others,

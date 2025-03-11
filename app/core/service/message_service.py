@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional
 
 from app.core.common.singleton import Singleton
-from app.core.common.type import ChatMessageType
 from app.core.dal.dao.message_dao import MessageDao
 from app.core.dal.do.message_do import MessageType, TextMessageDo
 from app.core.model.job import Job
@@ -39,7 +38,6 @@ class MessageService(metaclass=Singleton):
         return TextMessage(
             id=str(result.id),
             session_id=str(result.session_id),
-            chat_message_type=ChatMessageType(str(result.chat_message_type)),
             job_id=str(result.job_id),
             role=str(result.role),
             payload=str(result.payload),
@@ -58,7 +56,6 @@ class MessageService(metaclass=Singleton):
     def update_text_message(
         self,
         id: str,
-        chat_message_type: ChatMessageType = ChatMessageType.TEXT,
         job_id: Optional[str] = None,
         role: Optional[str] = None,
         payload: Optional[str] = None,
@@ -68,7 +65,6 @@ class MessageService(metaclass=Singleton):
 
         Args:
             id (str): ID of the message
-            chat_message_type (Optional[str]): Updated type of the message
             job_id (Optional[str]): Updated job ID
             role (Optional[str]): Updated role
             payload (Optional[str]): Updated content of the message
@@ -84,8 +80,6 @@ class MessageService(metaclass=Singleton):
 
         # prepare update fields
         update_fields: Dict[str, Any] = {}
-        if chat_message_type.value != str(existing_message.chat_message_type):
-            update_fields["chat_message_type"] = chat_message_type
         if job_id is not None and job_id != str(existing_message.job_id):
             update_fields["job_id"] = job_id
         if role is not None and role != str(existing_message.role):
@@ -101,7 +95,6 @@ class MessageService(metaclass=Singleton):
             return TextMessage(
                 id=str(updated_message.id),
                 session_id=str(updated_message.session_id),
-                chat_message_type=ChatMessageType(str(updated_message.chat_message_type)),
                 job_id=str(updated_message.job_id),
                 role=str(updated_message.role),
                 payload=str(updated_message.payload),
@@ -112,7 +105,6 @@ class MessageService(metaclass=Singleton):
         return TextMessage(
             id=str(existing_message.id),
             session_id=str(existing_message.session_id),
-            chat_message_type=ChatMessageType(str(existing_message.chat_message_type)),
             job_id=str(existing_message.job_id),
             role=str(existing_message.role),
             payload=str(existing_message.payload),
@@ -128,7 +120,6 @@ class MessageService(metaclass=Singleton):
             TextMessage(
                 id=str(result.id),
                 session_id=str(result.session_id),
-                chat_message_type=ChatMessageType(str(result.chat_message_type)),
                 job_id=str(result.job_id),
                 role=str(result.role),
                 payload=str(result.payload),
@@ -153,7 +144,6 @@ class MessageService(metaclass=Singleton):
             TextMessage(
                 id=str(result.id),
                 session_id=str(result.session_id),
-                chat_message_type=ChatMessageType(str(result.chat_message_type)),
                 job_id=str(result.job_id),
                 role=str(result.role),
                 payload=str(result.payload),
