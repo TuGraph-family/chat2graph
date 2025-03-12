@@ -22,4 +22,4 @@ web/dist
 web/.mfsu
 web/.swc
 .env
-uploads/*
+files/*

@@ -6,11 +6,19 @@ from flask_cors import CORS
 from app.core.dal.database import init_db
 from app.server.api import register_blueprints
 from app.server.common.util import BaseException, make_error_response
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 def create_app():
     static_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
     app = Flask(__name__, static_folder=static_folder_path)
+
+    UPLOAD_FOLDER = os.getenv("APP_ROOT", f"{os.getcwd()}/files")
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
 
     @app.route("/")
     def serve_index():
