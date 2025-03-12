@@ -7,7 +7,7 @@ from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
 from app.core.common.type import PlatformType, ReasonerType
 from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DB
+from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
@@ -35,7 +35,7 @@ class AgenticService(metaclass=Singleton):
         self._service_name = service_name or "Chat2Graph"
 
         # initialize the dao
-        DaoFactory.initialize(DB())
+        DaoFactory.initialize(DbSession())
 
         # initialize the services
         ServiceFactory.initialize()
@@ -147,8 +147,8 @@ class AgenticService(metaclass=Singleton):
         )
 
         platform_type = None
-        if agentic_service_config.plugin.platform:
-            platform_type = PlatformType(agentic_service_config.plugin.platform)
+        if agentic_service_config.plugin.model_platform:
+            platform_type = PlatformType(agentic_service_config.plugin.model_platform)
 
         mas.leader(name="Leader Test").workflow(
             job_decomposition_operator, platform_type=platform_type

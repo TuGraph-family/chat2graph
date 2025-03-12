@@ -31,7 +31,7 @@ class MonoModelReasoner(Reasoner):
 
         self._model_name = model_name
         self._model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.PLATFORM_TYPE
+            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
     async def infer(self, task: Task) -> str:

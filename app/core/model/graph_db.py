@@ -7,7 +7,7 @@ class GraphDB:
 
     id: str
     ip: str
-    port: str
+    port: int
     user: str
     pwd: str
     desc: str

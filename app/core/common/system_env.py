@@ -8,7 +8,7 @@ from app.core.common.type import PlatformType
 
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {
-    "PLATFORM_TYPE": (PlatformType, PlatformType.DBGPT),
+    "MODEL_PLATFORM_TYPE": (PlatformType, PlatformType.DBGPT),
     "PROXYLLM_BACKEND": (str, "gpt-4o-mini"),
     "PROXY_SERVER_URL": (str, None),
     "PROXY_API_KEY": (str, None),

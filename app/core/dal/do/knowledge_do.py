@@ -3,10 +3,10 @@ from uuid import uuid4
 from sqlalchemy import Column, ForeignKey, String, Text
 from sqlalchemy.orm import relationship
 
-from app.core.dal.database import Base
+from app.core.dal.database import Do
 
 
-class KnowledgeBaseDo(Base):  # type: ignore
+class KnowledgeBaseDo(Do):  # type: ignore
     """Knowledge Base to store knowledge base details"""
 
     __tablename__ = "knowledge_base"
@@ -19,7 +19,7 @@ class KnowledgeBaseDo(Base):  # type: ignore
     files = relationship("FileDo", secondary="kb_file_mapping", backref="knowledge_bases")
 
 
-class KbFileMappingDo(Base):  # type: ignore
+class KbFileMappingDo(Do):  # type: ignore
     """Knowledge Base to File association model."""
 
     __tablename__ = "kb_file_mapping"

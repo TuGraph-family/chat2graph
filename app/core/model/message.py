@@ -11,11 +11,11 @@ from app.core.toolkit.tool import FunctionCallResult
 class MessageType(Enum):
     """Message types"""
 
-    MODEL_MESSAGE = "ModelMessage"
-    WORKFLOW_MESSAGE = "WorkflowMessage"
-    AGENT_MESSAGE = "AgentMessage"
-    CHAT_MESSAGE = "ChatMessage"
-    TEXT_MESSAGE = "TextMessage"
+    MODEL_MESSAGE = "MODEL_MESSAGE"
+    WORKFLOW_MESSAGE = "WORKFLOW_MESSAGE"
+    AGENT_MESSAGE = "AGENT_MESSAGE"
+    CHAT_MESSAGE = "CHAT_MESSAGE"
+    TEXT_MESSAGE = "TEXT_MESSAGE"
 
 
 class Message(ABC):

@@ -34,10 +34,10 @@ class DualModelReasoner(Reasoner):
         self._actor_name = actor_name
         self._thinker_name = thinker_name
         self._actor_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.PLATFORM_TYPE
+            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.PLATFORM_TYPE
+            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
     async def infer(self, task: Task) -> str:

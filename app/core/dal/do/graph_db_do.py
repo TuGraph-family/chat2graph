@@ -2,10 +2,10 @@ from uuid import uuid4
 
 from sqlalchemy import Boolean, Column, String, Text
 
-from app.core.dal.database import Base
+from app.core.dal.database import Do
 
 
-class GraphDbDo(Base):  # type: ignore
+class GraphDbDo(Do):  # type: ignore
     """GraphDB to store graph database details."""
 
     __tablename__ = "graph_db"
