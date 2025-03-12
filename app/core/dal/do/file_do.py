@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, ForeignKey, String, Text
+from sqlalchemy import Column, ForeignKey, String
 
 from app.core.dal.database import Do
 
@@ -14,5 +14,5 @@ class FileDo(Do):  # type: ignore
     message_id = Column(
         String(36), ForeignKey("message.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    name = Column(Text, nullable=False)
-    path = Column(Text, nullable=False)
+    name = Column(String(36), nullable=False)
+    path = Column(String(256), nullable=False)

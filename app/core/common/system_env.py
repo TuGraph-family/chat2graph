@@ -20,6 +20,11 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "LIFE_CYCLE": (int, 3),
     "MAX_RETRY_COUNT": (int, 3),
     "DATABASE_URL": (str, "sqlite:///instance/chat2graph.db"),
+    "DATABASE_POOL_SIZE": (int, 50),
+    "DATABASE_MAX_OVERFLOW": (int, 50),
+    "DATABASE_POOL_TIMEOUT": (int, 60),
+    "DATABASE_POOL_RECYCLE": (int, 3600),
+    "DATABASE_POOL_PRE_PING": (bool, True),
 }
 
 # system environment variable value cache.
