@@ -82,17 +82,16 @@ class MessageManager:
 
         # query the job result
         job_id = chat_message.get_job_id()
-        assert job_id, "Job ID is not defined in the message"
         job_result = self._job_service.query_job_result(job_id=job_id)
 
         # check the job status
         if job_result.status == JobStatus.FAILED:
             print(f"Job failed for job_id: {job_id}")
-            return {"status": job_result.status.value}, "Job failed"
+            return {"status": job_result.status.value.lower()}, "Job failed"
 
         if job_result.status in [JobStatus.CREATED, JobStatus.RUNNING]:
             print(f"Job still in progress for job_id: {job_id}")
-            return {"status": job_result.status.value}, "Job still in progress"
+            return {"status": job_result.status.value.lower()}, "Job still in progress"
 
         # update the message with the job result
         new_message = self._message_service.update_text_message(
@@ -102,7 +101,7 @@ class MessageManager:
         # use MessageView to serialize the message
         data = self._message_view.serialize_message(new_message)
         # Add job status to the response
-        data["status"] = job_result.status.value
+        data["status"] = job_result.status.value.lower()
 
         return data, "Message fetched successfully"
 

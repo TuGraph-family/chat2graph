@@ -2,11 +2,11 @@ from uuid import uuid4
 
 from sqlalchemy import JSON, BigInteger, Column, String, Text, func
 
-from app.core.dal.database import Base
+from app.core.dal.database import Do
 from app.core.model.message import MessageType
 
 
-class MessageDo(Base):  # type: ignore
+class MessageDo(Do):  # type: ignore
     """Base message class"""
 
     __tablename__ = "message"

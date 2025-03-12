@@ -16,7 +16,7 @@ class MessageService(metaclass=Singleton):
     def save_message(self, message: Message) -> Message:
         """Save a new message."""
         # create the message
-        self._message_dao.create_message_do(message=message)
+        self._message_dao.save_message_do(message=message)
         return message
 
     def get_agent_messages_by_job_id(self, job: Job) -> List[AgentMessage]:
@@ -28,11 +28,6 @@ class MessageService(metaclass=Singleton):
         """Get a message by ID."""
         # fetch the message
         result = self._message_dao.get_by_id(id=id)
-        for do in self._message_dao.get_all():
-            # TODO: remove this debug print
-            print(
-                f"[DEBUG] id: {do.id}, type: {do.type}, payload: {str(do.payload)}, job_id: {do.job_id}, role: {do.role}"
-            )
         if not result:
             raise ValueError(f"TextMessage with ID {id} not found")
         return TextMessage(

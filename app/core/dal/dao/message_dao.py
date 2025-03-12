@@ -27,10 +27,10 @@ class MessageDao(Dao[MessageDo]):
     def __init__(self, session: SqlAlchemySession):
         super().__init__(MessageDo, session)
 
-    def create_message_do(self, message: Message) -> MessageDo:
+    def save_message_do(self, message: Message) -> MessageDo:
         """Create a new message."""
         try:
-            message_model = self.__create_message_do(message)
+            message_model = self.__save_message_do(message)
             self.session.add(message_model)
             self.session.commit()
             return message_model
@@ -38,7 +38,7 @@ class MessageDao(Dao[MessageDo]):
             self.session.rollback()
             raise e
 
-    def __create_message_do(self, message: Message) -> MessageDo:
+    def __save_message_do(self, message: Message) -> MessageDo:
         """Create a message model instance."""
 
         if isinstance(message, WorkflowMessage):

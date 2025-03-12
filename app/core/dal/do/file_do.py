@@ -2,10 +2,10 @@ from uuid import uuid4
 
 from sqlalchemy import Column, ForeignKey, String, Text
 
-from app.core.dal.database import Base
+from app.core.dal.database import Do
 
 
-class FileDo(Base):  # type: ignore
+class FileDo(Do):  # type: ignore
     """File to store file details."""
 
     __tablename__ = "file"

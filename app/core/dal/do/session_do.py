@@ -2,10 +2,10 @@ from uuid import uuid4
 
 from sqlalchemy import BigInteger, Column, String, func
 
-from app.core.dal.database import Base
+from app.core.dal.database import Do
 
 
-class SessionDo(Base):  # type: ignore
+class SessionDo(Do):  # type: ignore
     """Session to store session details."""
 
     __tablename__ = "session"
