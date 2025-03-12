@@ -38,27 +38,6 @@ export default defineConfig({
       component: './Manager',
     },
 
-    // {
-    //   path: '/',
-    //   component: '@/layouts/index',
-    //   routes: [
-    //     {
-    //       path: '/',
-    //       redirect: '/home',
-    //     },
-    //     {
-    //       name: '首页',
-    //       path: '/home',
-    //       component: './Home',
-    //     },
-    //     {
-    //       name: '管理',
-    //       path: '/manager/*',
-    //       component: './Manager',
-    //     },
-    //   ],
-    // },
-
   ],
   npmClient: 'tnpm',
   locale: {
