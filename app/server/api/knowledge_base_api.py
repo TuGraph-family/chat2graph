@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from app.server.common.util import BaseException, make_response
+from app.server.common.util import ApiException, make_response
 from app.server.manager.knowledge_base_manager import KnowledgeBaseManager
 
 knowledgebases_bp = Blueprint("knowledgebases", __name__)
@@ -13,7 +13,7 @@ def get_all_knowledge_bases():
     try:
         knowledge_bases, message = manager.get_all_knowledge_bases()
         return make_response(True, data=knowledge_bases, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -25,7 +25,7 @@ def create_knowledge_base():
     try:
         required_fields = ["name", "knowledge_type", "session_id"]
         if not data or not all(field in data for field in required_fields):
-            raise BaseException(
+            raise ApiException(
                 "Missing required fields. Required: name, knowledge_type, session_id"
             )
 
@@ -35,7 +35,7 @@ def create_knowledge_base():
             session_id=data.get("session_id"),
         )
         return make_response(True, data=new_knowledge_base, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -46,7 +46,7 @@ def get_knowledge_base_by_id(knowledge_base_id):
     try:
         knowledge_base, message = manager.get_knowledge_base(id=knowledge_base_id)
         return make_response(True, data=knowledge_base, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -57,5 +57,5 @@ def delete_knowledge_base_by_id(knowledge_base_id):
     try:
         result, message = manager.delete_knowledge_base(id=knowledge_base_id)
         return make_response(True, data=result, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))

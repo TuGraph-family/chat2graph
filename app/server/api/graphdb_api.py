@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from app.server.common.util import BaseException, make_response
+from app.server.common.util import ApiException, make_response
 from app.server.manager.graph_db_manager import GraphDBManager
 
 graphdbs_bp = Blueprint("graphdbs", __name__)
@@ -15,7 +15,7 @@ def get_all_graph_dbs():
     try:
         graph_dbs, message = manager.get_all_graph_dbs()
         return make_response(True, data=graph_dbs, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -29,7 +29,7 @@ def create_graph_db():
     try:
         required_fields = ["ip", "port", "user", "pwd", "desc", "name", "is_default_db"]
         if not data or not all(field in data for field in required_fields):
-            raise BaseException(
+            raise ApiException(
                 "Missing required fields. Required: ip, port, user, pwd, desc, name, is_default_db"
             )
 
@@ -43,7 +43,7 @@ def create_graph_db():
             is_default_db=data.get("is_default_db"),
         )
         return make_response(True, data=new_graph_db, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -56,7 +56,7 @@ def get_graph_db_by_id(graph_db_id):
     try:
         graph_db, message = manager.get_graph_db(id=graph_db_id)
         return make_response(True, data=graph_db, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -69,7 +69,7 @@ def delete_graph_db_by_id(graph_db_id):
     try:
         result, message = manager.delete_graph_db(id=graph_db_id)
         return make_response(True, data=result, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -92,7 +92,7 @@ def update_graph_db_by_id(graph_db_id):
             is_default_db=data.get("is_default_db"),
         )
         return make_response(True, data=updated_graph_db, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -106,11 +106,11 @@ def validate_graph_connection():
     try:
         required_fields = ["ip", "port", "user", "pwd"]
         if not data or not all(field in data for field in required_fields):
-            raise BaseException("Missing required fields. Required: ip, port, user, pwd")
+            raise ApiException("Missing required fields. Required: ip, port, user, pwd")
 
         is_valid, message = manager.validate_graph_connection(
             ip=data.get("ip"), port=data.get("port"), user=data.get("user"), pwd=data.get("pwd")
         )
         return make_response(True, data={"is_valid": is_valid}, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))

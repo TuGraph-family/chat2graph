@@ -1,4 +1,3 @@
-import time
 from typing import List
 from unittest.mock import AsyncMock
 
@@ -12,6 +11,8 @@ from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.toolkit.tool import Tool
 from app.core.workflow.operator_config import OperatorConfig
 
+job_id: str = "test_job_id"
+
 
 @pytest.fixture
 async def mock_reasoner() -> DualModelReasoner:
@@ -21,12 +22,14 @@ async def mock_reasoner() -> DualModelReasoner:
     actor_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
         payload="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
-        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        job_id=job_id,
+        step=1,
     )
     thinker_response = ModelMessage(
         source_type=MessageSourceType.THINKER,
         payload="<instruction>\nTest instruction\n</instruction>\n<input>\nTest input\n</input>",
-        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        job_id=job_id,
+        step=2,
     )
 
     reasoner._actor_model.generate = AsyncMock(return_value=actor_response)
@@ -72,7 +75,8 @@ async def test_infer_early_stop(mock_reasoner: DualModelReasoner, task: Task):
     stop_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
         payload="<scratchpad>\nDone\n</scratchpad>\n<action>\nStop\n</action>\n<feedback>\n<DELIVERABLE></DELIVERABLE>\n</feedback>",
-        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        job_id=job_id,
+        step=1,
     )
     mock_reasoner._thinker_model.generate = AsyncMock(return_value=stop_response)
     mock_reasoner._actor_model.generate = AsyncMock(return_value=stop_response)
@@ -101,7 +105,8 @@ async def test_infer_multiple_rounds(mock_reasoner: DualModelReasoner, task: Tas
             if round_count % 2 == 0
             else MessageSourceType.THINKER,
             payload=f"Round {round_count} content",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            job_id=job_id,
+            step=round_count,
         )
 
     # set both models to use round-based generation

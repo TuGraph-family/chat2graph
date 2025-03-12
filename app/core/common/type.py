@@ -4,47 +4,56 @@ from enum import Enum
 class PlatformType(Enum):
     """Model type enum."""
 
-    DBGPT = "dbgpt"
+    DBGPT = "DBGPT"
 
 
 class ReasonerType(Enum):
     """Reasoner type enum."""
 
-    MONO = "mono"
-    DUAL = "dual"
+    MONO = "MONO"
+    DUAL = "DUAL"
 
 
 class MessageSourceType(Enum):
     """Message source type enum."""
 
-    THINKER = "Thinker"
-    ACTOR = "Actor"
-    MODEL = "Model"
+    THINKER = "THINKER"
+    ACTOR = "ACTOR"
+    MODEL = "MODEL"
+
+
+class ChatMessageType(Enum):
+    """Chat message type enum."""
+
+    TEXT = "TEXT"
+    FILE = "FILE"
+    IMAGE = "IMAGE"
+    AUDIO = "AUDIO"
 
 
 class InsightType(Enum):
     """Insight Type"""
 
-    TEXT = "text"
-    IMAGE = "image"
-    TABLE = "table"
+    TEXT = "TEXT"
+    IMAGE = "IMAGE"
+    TABLE = "TABLE"
 
 
 class WorkflowStatus(Enum):
     """WorkflowStatus defines the execution status which is evaluated by the eval_operator."""
 
-    SUCCESS = "success"
-    EXECUTION_ERROR = "execution_error"
-    INPUT_DATA_ERROR = "input_data_error"
-    JOB_TOO_COMPLICATED_ERROR = "job_too_complicated_error"
-    MAX_RETRIES_REACHED = "max_retries_reached"
+    SUCCESS = "SUCCESS"
+    EXECUTION_ERROR = "EXECUTION_ERROR"
+    INPUT_DATA_ERROR = "INPUT_DATA_ERROR"
+    JOB_TOO_COMPLICATED_ERROR = "JOB_TOO_COMPLICATED_ERROR"
+    MAX_RETRIES_REACHED = "MAX_RETRIES_REACHED"
 
 
 class JobStatus(Enum):
     """Job status type."""
 
-    CREATED = "created"
-    RUNNING = "running"
-    FINISHED = "finished"
-    FAILED = "failed"
-    STOPPED = "stopped"
+    CREATED = "CREATED"
+    RUNNING = "RUNNING"
+    FINISHED = "FINISHED"
+    FAILED = "FAILED"
+    STOPPED = "STOPPED"

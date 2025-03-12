@@ -87,7 +87,8 @@ class Graph:
         """Update current graph with vertices and edges from other graph.
 
         Args:
-            other (Graph): Another JobGraph instance whose vertices and edges will be added to this graph.
+            other (Graph): Another graph instance whose vertices and edges will be added to this
+                graph.
         """
 
     @abstractmethod

@@ -12,11 +12,13 @@ instance_path = project_root / "instance"
 instance_path.mkdir(exist_ok=True)
 
 # engine and session factory
-engine = create_engine(SystemEnv.DATABASE_URL)
-DB = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base: DeclarativeMeta = declarative_base()
-
-
-def init_db() -> None:
-    """Initialize database tables."""
-    Base.metadata.create_all(bind=engine)
+engine = create_engine(
+    SystemEnv.DATABASE_URL,
+    pool_size=SystemEnv.DATABASE_POOL_SIZE,
+    max_overflow=SystemEnv.DATABASE_MAX_OVERFLOW,
+    pool_timeout=SystemEnv.DATABASE_POOL_TIMEOUT,
+    pool_recycle=SystemEnv.DATABASE_POOL_RECYCLE,
+    pool_pre_ping=SystemEnv.DATABASE_POOL_PRE_PING,
+)
+DbSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Do: DeclarativeMeta = declarative_base()

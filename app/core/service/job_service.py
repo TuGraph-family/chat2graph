@@ -1,16 +1,14 @@
-import time
 from typing import Dict, List, Optional, Set
 
 import networkx as nx  # type: ignore
 
-from app.core.agent.expert import Expert
 from app.core.common.singleton import Singleton
 from app.core.common.type import JobStatus
+from app.core.dal.dao.job_dao import JobDao
 from app.core.model.job import Job
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
 from app.core.model.message import TextMessage
-from app.core.service.agent_service import AgentService
 
 
 class JobService(metaclass=Singleton):
@@ -18,10 +16,57 @@ class JobService(metaclass=Singleton):
 
     def __init__(self):
         self._job_graphs: Dict[str, JobGraph] = {}  # original_job_id -> nx.DiGraph
+        self._job_dao: JobDao = JobDao.instance
+
+    def save_job(self, job: Job) -> Job:
+        """Save a new job."""
+        self._job_dao.save_job(job=job)
+        # updated_job: Job = job.copy()
+        # updated_job.id = str(job_do.id)
+        return job
+
+    def update_job(self, job: Job) -> Job:
+        """Update a job."""
+        if not self._job_dao.get_by_id(job.id):
+            return self.save_job(job=job)
+
+        self._job_dao.update_job(job=job)
+        return job
 
     def get_original_job_ids(self) -> List[str]:
         """Get all job ids."""
         return list(self._job_graphs.keys())
+
+    def get_orignal_job(self, original_job_id: str) -> Job:
+        """Get a Job from the Job registry."""
+        return self._job_dao.get_job_by_id(original_job_id)
+
+    def get_subjob_ids(self, original_job_id: str) -> List[str]:
+        """Get all subjob ids."""
+        return self.get_job_graph(original_job_id).vertices()
+
+    def get_subjobs(self, original_job_id: Optional[str] = None) -> List[Job]:
+        """Get all subjobs."""
+        if original_job_id:
+            return [
+                self.get_subjob(job_id, original_job_id)
+                for job_id in self.get_subjob_ids(original_job_id)
+            ]
+
+        # get all subjobs from all job graphs
+        subjobs: List[Job] = []
+        for job_graph in self._job_graphs.values():
+            subjobs.extend([job_graph.get_job(job_id) for job_id in job_graph.vertices()])
+        return subjobs
+
+    def get_subjob(self, job_id: str, original_job_id: Optional[str] = None) -> Job:
+        """Get a Job from the Job registry."""
+        if original_job_id:
+            return self.get_job_graph(original_job_id).get_job(job_id)
+        for job_graph in self._job_graphs.values():
+            if job_id in job_graph.vertices():
+                return job_graph.get_job(job_id)
+        raise ValueError(f"Job with ID {job_id} not found in the job registry")
 
     def query_job_result(self, job_id: str) -> JobResult:
         """Query the result of the multi-agent system by original job id."""
@@ -43,16 +88,13 @@ class JobService(metaclass=Singleton):
         for tail_vertex in tail_vertices:
             job_result: Optional[JobResult] = job_graph.get_job_result(tail_vertex)
             if not job_result:
-                chat_message = TextMessage(
-                    payload="The job is not completed yet.",
-                    timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                )
+                text_message = TextMessage(payload="The job is not completed yet.", job_id=job_id)
                 return JobResult(
                     job_id=job_id,
                     status=JobStatus.RUNNING,
                     duration=0,  # TODO: calculate the duration
                     tokens=0,  # TODO: calculate the tokens
-                    result=chat_message,
+                    result=text_message,
                 )
             mutli_agent_payload += job_result.result.get_payload() + "\n"
 
@@ -62,31 +104,10 @@ class JobService(metaclass=Singleton):
             status=JobStatus.FINISHED,
             duration=0,  # TODO: calculate the duration
             tokens=0,  # TODO: calculate the tokens
-            result=TextMessage(
-                payload=mutli_agent_payload,
-                timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            ),
+            result=TextMessage(payload=mutli_agent_payload, job_id=job_id),
         )
 
         return job_result
-
-    def execute_job(self, job: Job) -> None:
-        """Execute the job."""
-        # submit the job by self
-        initial_job_graph: JobGraph = JobGraph()
-        initial_job_graph.add_vertex(id=job.id, job=job)
-        self.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
-
-        # submit the job to the leader
-        agent_service: AgentService = AgentService.instance
-        executed_job_graph = agent_service.leader.execute_job(job=job)
-
-        # replace the subgraph in the job service
-        self.replace_subgraph(
-            original_job_id=job.id,
-            new_subgraph=executed_job_graph,
-            old_subgraph=self.get_job_graph(job.id),
-        )
 
     def get_job_graph(self, job_id: str) -> JobGraph:
         """Get the job graph by the inital job id."""
@@ -98,21 +119,27 @@ class JobService(metaclass=Singleton):
 
     def set_job_graph(self, job_id: str, job_graph: JobGraph) -> None:
         """Set the job graph by the inital job id."""
+        # save the jobs to the databases
+        for subjob_id in job_graph.vertices():
+            self.update_job(job=job_graph.get_job(subjob_id))
+
         self._job_graphs[job_id] = job_graph
 
     def add_job(
         self,
         original_job_id: str,
         job: Job,
-        expert: Expert,
+        expert_id: str,
         predecessors: Optional[List[Job]] = None,
         successors: Optional[List[Job]] = None,
     ) -> None:
         """Assign a job to an expert and return the expert instance."""
-
         # add job to the jobs graph
         job_graph = self.get_job_graph(original_job_id)
-        job_graph.add_vertex(job.id, job=job, expert_id=expert.get_id())
+        job_graph.add_vertex(job.id, job=job, expert_id=expert_id)
+
+        # save the job to the database
+        self.update_job(job=job)
 
         if not predecessors:
             predecessors = []
@@ -127,13 +154,13 @@ class JobService(metaclass=Singleton):
 
     def remove_job(self, original_job_id: str, job_id: str) -> None:
         """Remove a Job from the Job registry."""
+        # remove the job from the database
+        self._job_dao.remove_job(job_id)
+
+        # update the state of the job service
         job_graph = self.get_job_graph(original_job_id)
         job_graph.remove_vertex(job_id)
         self._job_graphs[original_job_id] = job_graph
-
-    def get_job(self, original_job_id: str, job_id: str) -> Job:
-        """Get a Job from the Job registry."""
-        return self.get_job_graph(original_job_id).get_job(job_id)
 
     def replace_subgraph(
         self,
@@ -189,6 +216,11 @@ class JobService(metaclass=Singleton):
 
         if not old_subgraph:
             job_graph.update(new_subgraph)
+
+            # save the updated jobs to the database
+            for subjob_id in new_subgraph.vertices():
+                subjob = job_graph.get_job(subjob_id)
+                self.update_job(job=subjob)
             return
 
         old_subgraph_vertices: Set[str] = set(old_subgraph.vertices())
@@ -248,3 +280,8 @@ class JobService(metaclass=Singleton):
             job_graph.add_edge(tail_vertex, successor)
 
         self._job_graphs[original_job_id] = job_graph
+
+        # save the updated jobs to the database
+        for subjob_id in new_subgraph.vertices():
+            subjob = job_graph.get_job(subjob_id)
+            self.update_job(job=subjob)

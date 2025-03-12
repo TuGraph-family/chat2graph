@@ -45,7 +45,7 @@ class NumberGeneratorOperator(BaseTestOperator):
         result = "\n" + " ".join(str(x) for x in numbers)
         print(f"NumberGenerator output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class MultiplyByTwoOperator(BaseTestOperator):
@@ -64,7 +64,7 @@ class MultiplyByTwoOperator(BaseTestOperator):
         result = " ".join(str(x * 2) for x in numbers)
         print(f"MultiplyByTwo output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class AddTenOperator(BaseTestOperator):
@@ -83,7 +83,7 @@ class AddTenOperator(BaseTestOperator):
         result = " ".join(str(x + 10) for x in numbers)
         print(f"AddTen output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class SumOperator(BaseTestOperator):
@@ -102,7 +102,7 @@ class SumOperator(BaseTestOperator):
         result = str(sum(numbers))
         print(f"Sum output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 class FormatResultOperator(BaseTestOperator):
@@ -123,7 +123,7 @@ class FormatResultOperator(BaseTestOperator):
         )
         print(f"Format output: {result}")
         print("-" * 50)
-        return WorkflowMessage(payload={"scratchpad": result})
+        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
 
 def main():
@@ -217,7 +217,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert=leader.state.get_expert_by_name("Expert 1"),
+        expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
         predecessors=[],
         successors=[job_2, job_3],
     )
@@ -225,7 +225,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert=leader.state.get_expert_by_name("Expert 2"),
+        expert_id=leader.state.get_expert_by_name("Expert 2").get_id(),
         predecessors=[job_1],
         successors=[job_5],
     )
@@ -233,7 +233,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert=leader.state.get_expert_by_name("Expert 3"),
+        expert_id=leader.state.get_expert_by_name("Expert 3").get_id(),
         predecessors=[job_1],
         successors=[job_4],
     )
@@ -241,7 +241,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert=leader.state.get_expert_by_name("Expert 4"),
+        expert_id=leader.state.get_expert_by_name("Expert 4").get_id(),
         predecessors=[job_3],
         successors=[],
     )
@@ -249,7 +249,7 @@ def main():
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert=leader.state.get_expert_by_name("Expert 5"),
+        expert_id=leader.state.get_expert_by_name("Expert 5").get_id(),
         predecessors=[job_2, job_3],
         successors=[],
     )
@@ -257,9 +257,8 @@ def main():
     print("\n=== Starting Leader Execute TestTest ===")
 
     # get the job graph and expert assignments
-    job_graph: JobGraph = leader.execute_job_graph(
-        job_graph=job_service.get_job_graph("test_original_job_id")
-    )
+    leader.execute_job_graph(original_job_id="test_original_job_id")
+    job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
 
     print("\n=== Execution Results ===")

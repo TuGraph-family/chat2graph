@@ -16,6 +16,7 @@ from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_PROMPT
+from app.core.service.job_service import JobService
 
 
 class Leader(Agent):
@@ -27,22 +28,13 @@ class Leader(Agent):
         id: Optional[str] = None,
         leader_state: Optional[LeaderState] = None,
     ):
-        # self._workflow of the leader is used to decompose the job
-
         super().__init__(agent_config=agent_config, id=id)
+        # self._workflow of the leader is used to decompose the job
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
-
-    def execute_job(self, job: Job) -> JobGraph:
-        """Execute a job from the user."""
-        # decompose the job by the leader
-        job_graph = self.execute(agent_message=AgentMessage(job=job))
-
-        # execute the job graph
-        # TODO: make the job graph static, and save the job results by the service
-        return self.execute_job_graph(job_graph=job_graph)
+        self._job_service: JobService = JobService.instance
 
     def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
-        """Decompose the job and execute the job.
+        """Decompose the job into subjobs.
 
         Args:
             agent_message (AgentMessage): The agent message including the job to be decomposed.
@@ -53,7 +45,13 @@ class Leader(Agent):
         """
         # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
 
-        job = agent_message.get_payload()
+        job_id = agent_message.get_job_id()
+        try:
+            job: Job = self._job_service.get_orignal_job(original_job_id=job_id)
+        except ValueError:
+            job = self._job_service.get_subjob(job_id=job_id)
+
+        # check if the job is already assigned to an expert
         assigned_expert_name: Optional[str] = job.assigned_expert_name
         if assigned_expert_name:
             expert = self.state.get_expert_by_name(assigned_expert_name)
@@ -70,8 +68,9 @@ class Leader(Agent):
             )
             return job_graph
 
+        # else, the job is not assigned to an expert, then decompose the job
         # get the expert list
-        expert_profiles = [e.get_profile() for e in self._leader_state.list_experts()]
+        expert_profiles = [e.get_profile() for e in self.state.list_experts()]
         role_list = "\n".join(
             [
                 f"Expert name: {profile.name}\nDescription: {profile.description}"
@@ -99,8 +98,10 @@ class Leader(Agent):
                 f"Input content:\n{workflow_message.scratchpad}"
             ) from e
 
+        # init the decomposed job graph
         job_graph = JobGraph()
 
+        # create the subjobs, and add them to the decomposed job graph
         for job_id, subjob_dict in job_dict.items():
             subjob = SubJob(
                 id=job_id,
@@ -116,7 +117,7 @@ class Leader(Agent):
             job_graph.add_vertex(
                 job_id,
                 job=subjob,
-                expert_id=self._leader_state.get_expert_by_name(
+                expert_id=self.state.get_expert_by_name(
                     subjob_dict.get("assigned_expert", "")
                 ).get_id(),
             )
@@ -125,30 +126,42 @@ class Leader(Agent):
             for dep_id in subjob_dict.get("dependencies", []):
                 job_graph.add_edge(dep_id, job_id)  # dep_id -> job_id shows dependency
 
+        # the job graph should not be a directed acyclic graph (DAG)
         if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
             raise ValueError("The job graph is not a directed acyclic graph.")
 
         return job_graph
 
-    def execute_job_graph(self, job_graph: JobGraph) -> JobGraph:
+    def execute_job(self, job: Job) -> None:
+        """Execute the job."""
+        # decompose the job into decomposed job graph
+        decomposed_job_graph: JobGraph = self.execute(agent_message=AgentMessage(job_id=job.id))
+
+        # update the decomposed job graph in the job service
+        self._job_service.replace_subgraph(
+            original_job_id=job.id, new_subgraph=decomposed_job_graph
+        )
+
+        # execute the decomposed job graph
+        self.execute_job_graph(original_job_id=job.id)
+
+    def execute_job_graph(self, original_job_id: str) -> None:
         """Execute the job graph with dependency-based parallel execution.
 
         Jobs are represented in a directed graph (job_graph) where edges define dependencies.
         Please make sure the job graph is a directed acyclic graph (DAG).
 
         Args:
-            job_graph (JobGraph): The job graph to be executed.
-
-        Returns:
-            JobGraph: The job graph with the results of the jobs.
+            original_job_id (str): The original job id.
         """
         # TODO: move the router functionality to the experts, and make the experts be able to
         # dispatch the agent messages to the corresponding agents. The objective is to make the
         # multi-agent system more flexible, scalable, and distributed.
 
+        job_graph: JobGraph = self._job_service.get_job_graph(original_job_id)
         pending_job_ids: Set[str] = set(job_graph.vertices())
-        running_jobs: Dict[str, Future] = {}  # job_id -> Future
-        job_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (result)
+        running_jobs: Dict[str, Future] = {}  # job_id -> Concurrent Future
+        expert_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (expert result)
         job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)
 
         with ThreadPoolExecutor() as executor:
@@ -165,14 +178,16 @@ class Leader(Agent):
                         # form the agent message to the agent
                         job: Job = job_graph.get_job(job_id)
                         pred_messages: List[WorkflowMessage] = [
-                            job_results[pred_id] for pred_id in job_graph.predecessors(job_id)
+                            expert_results[pred_id] for pred_id in job_graph.predecessors(job_id)
                         ]
-                        job_inputs[job.id] = AgentMessage(job=job, workflow_messages=pred_messages)
+                        job_inputs[job.id] = AgentMessage(
+                            job_id=job.id, workflow_messages=pred_messages
+                        )
                         ready_job_ids.add(job_id)
 
                 # execute ready jobs
                 for job_id in ready_job_ids:
-                    expert = self._leader_state.get_expert_by_id(job_graph.get_expert_id(job_id))
+                    expert = self.state.get_expert_by_id(job_graph.get_expert_id(job_id))
                     # submit the job to the executor
                     running_jobs[job_id] = executor.submit(
                         self._execute_job, expert, job_inputs[job_id]
@@ -195,7 +210,8 @@ class Leader(Agent):
                 for completed_job_id in completed_job_ids:
                     future = running_jobs[completed_job_id]
                     try:
-                        agent_result: AgentMessage = future.result()  # 获取任务结果
+                        # get the agent result
+                        agent_result: AgentMessage = future.result()
 
                         if (
                             agent_result.get_workflow_result_message().status
@@ -210,8 +226,12 @@ class Leader(Agent):
                             if predecessors:
                                 for pred_id in predecessors:
                                     # remove the job result
-                                    if pred_id in job_results:
-                                        del job_results[pred_id]
+                                    if pred_id in expert_results:
+                                        del expert_results[pred_id]
+                                        # update the result in the job service
+                                        self._job_service.get_job_graph(
+                                            original_job_id
+                                        ).remmove_job_result(id=pred_id)
 
                                     # update the lesson in the agent message
                                     input_agent_message = job_inputs[pred_id]
@@ -220,16 +240,41 @@ class Leader(Agent):
                                     input_agent_message.set_lesson(lesson)
                                     job_inputs[pred_id] = input_agent_message
                         else:
-                            job_results[completed_job_id] = (
+                            expert_results[completed_job_id] = (
                                 agent_result.get_workflow_result_message()
                             )
+                            # update the result in the job service
+                            self._job_service.get_job_graph(original_job_id).set_job_result(
+                                completed_job_id,
+                                JobResult(
+                                    job_id=completed_job_id,
+                                    status=JobStatus.FINISHED,
+                                    result=TextMessage(
+                                        payload=agent_result.get_workflow_result_message().scratchpad,
+                                        job_id=completed_job_id,
+                                    ),
+                                ),
+                            )
                     except Exception as e:
-                        job_results[completed_job_id] = WorkflowMessage(
+                        expert_results[completed_job_id] = WorkflowMessage(
                             payload={
                                 "status": WorkflowStatus.EXECUTION_ERROR,
                                 "scratchpad": str(e) + "\n" + traceback.format_exc(),
                                 "evaluation": "Some evaluation",
-                            }
+                            },
+                            job_id=completed_job_id,
+                        )
+                        # update the result in the job service
+                        self._job_service.get_job_graph(original_job_id).set_job_result(
+                            completed_job_id,
+                            JobResult(
+                                job_id=completed_job_id,
+                                status=JobStatus.FAILED,
+                                result=TextMessage(
+                                    payload=str(e) + "\n" + traceback.format_exc(),
+                                    job_id=completed_job_id,
+                                ),
+                            ),
                         )
 
                     # remove from running jobs
@@ -239,21 +284,8 @@ class Leader(Agent):
                 if not completed_job_ids and running_jobs:
                     time.sleep(0.5)
 
-        # process all job results
-        for job_id, job_result in job_results.items():
-            job_graph.set_job_result(
-                job_id,
-                JobResult(
-                    job_id=job_id,
-                    status=JobStatus.FINISHED,
-                    result=TextMessage(payload=job_result.scratchpad),
-                ),
-            )
-
-        return job_graph
-
     def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
-        """Execute single job for the first time."""
+        """Dispatch the job to the expert, and handle the result."""
         agent_result_message: AgentMessage = expert.execute(agent_message=agent_message)
         workflow_result: WorkflowMessage = agent_result_message.get_workflow_result_message()
 

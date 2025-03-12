@@ -1,4 +1,3 @@
-import time
 from typing import Optional
 from uuid import uuid4
 
@@ -32,13 +31,10 @@ class Query(Tool):
             The result of the query from the database/document.
         """
         # TODO: implement the query function
-        model_service = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
+        model_service = ModelServiceFactory.create(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
         sys_prompt = """Suppose you are the database or the document terminal.
 I will ask you for help. If you don't know the answer, you can make up a reasonable one."""
-        message = ModelMessage(
-            payload=text,
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        )
+        message = ModelMessage(payload=text, job_id="query_id", step=1)
         response: ModelMessage = await model_service.generate(
             sys_prompt=sys_prompt, messages=[message]
         )

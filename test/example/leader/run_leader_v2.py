@@ -193,7 +193,7 @@ paper content:
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
-        expert=leader.state.get_expert_by_name("Information Extractor"),
+        expert_id=leader.state.get_expert_by_name("Information Extractor").get_id(),
         predecessors=[],
         successors=[job_2, job_3],
     )
@@ -201,7 +201,7 @@ paper content:
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_2,
-        expert=leader.state.get_expert_by_name("Methodology Expert"),
+        expert_id=leader.state.get_expert_by_name("Methodology Expert").get_id(),
         predecessors=[job_1],
         successors=[job_4],
     )
@@ -209,7 +209,7 @@ paper content:
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_3,
-        expert=leader.state.get_expert_by_name("Results Analyst"),
+        expert_id=leader.state.get_expert_by_name("Results Analyst").get_id(),
         predecessors=[job_1],
         successors=[job_5],
     )
@@ -217,7 +217,7 @@ paper content:
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_4,
-        expert=leader.state.get_expert_by_name("Technical Reviewer"),
+        expert_id=leader.state.get_expert_by_name("Technical Reviewer").get_id(),
         predecessors=[job_2],
         successors=[job_5],
     )
@@ -225,16 +225,15 @@ paper content:
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_5,
-        expert=leader.state.get_expert_by_name("Research Synthesizer"),
+        expert_id=leader.state.get_expert_by_name("Research Synthesizer").get_id(),
         predecessors=[job_3, job_4],
         successors=[],
     )
 
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
-    job_graph: JobGraph = leader.execute_job_graph(
-        job_graph=job_service.get_job_graph("test_original_job_id")
-    )
+    leader.execute_job_graph(job_graph=job_service.get_job_graph("test_original_job_id"))
+    job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
 
     for tail_vertex in tail_vertices:

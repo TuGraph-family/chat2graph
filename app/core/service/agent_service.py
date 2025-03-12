@@ -10,7 +10,6 @@ class AgentService(metaclass=Singleton):
     """Leader service"""
 
     def __init__(self):
-        # initialize the leader
         self._leaders: List[Leader] = []
 
     def set_leadder(self, leader: Leader) -> None:

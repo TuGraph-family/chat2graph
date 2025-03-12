@@ -1,7 +1,12 @@
+from typing import Optional
+
 from flask import Blueprint, request
 
-from app.server.common.util import BaseException, make_response
+from app.core.model.message import MessageType, TextMessage
+from app.server.common.util import ApiException, make_response
+from app.server.manager.message_manager import MessageManager
 from app.server.manager.session_manager import SessionManager
+from app.server.manager.view.session_view import SessionView
 
 sessions_bp = Blueprint("sessions", __name__)
 
@@ -13,7 +18,7 @@ def get_sessions():
     try:
         sessions, message = manager.get_all_sessions()
         return make_response(True, data=sessions, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -24,10 +29,10 @@ def create_session():
     data = request.json
     try:
         if not data or "name" not in data:
-            raise BaseException("Session name is required")
+            raise ApiException("Session name is required")
         new_session, message = manager.create_session(name=data.get("name"))
         return make_response(True, data=new_session, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -38,7 +43,7 @@ def get_session_by_id(session_id):
     try:
         session, message = manager.get_session(session_id=session_id)
         return make_response(True, data=session, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -49,7 +54,7 @@ def delete_session_by_id(session_id):
     try:
         result, message = manager.delete_session(id=session_id)
         return make_response(True, data=result, message=message)
-    except BaseException as e:
+    except ApiException as e:
         return make_response(False, message=str(e))
 
 
@@ -60,7 +65,28 @@ def update_session_by_id(session_id):
     data = request.json
     try:
         name = data.get("name")
+        assert isinstance(name, Optional[str]), "Name should be a string or None"
+
         updated_session, message = manager.update_session(id=session_id, name=name)
         return make_response(True, data=updated_session, message=message)
-    except BaseException as e:
+    except ApiException as e:
+        return make_response(False, message=str(e))
+
+
+@sessions_bp.route("/<string:session_id>/chat", methods=["POST"])
+def chat(session_id):
+    """Handle chat message creation."""
+    manager = MessageManager()
+    data = request.json
+    try:
+        if not data:
+            raise ApiException("Data is required")
+        data["session_id"] = session_id
+
+        text_message: TextMessage = SessionView.deserialize_message(
+            message=data, message_type=MessageType.TEXT_MESSAGE
+        )
+        response_data, message = manager.chat(text_message)
+        return make_response(True, data=response_data, message=message)
+    except ApiException as e:
         return make_response(False, message=str(e))

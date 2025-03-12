@@ -1,5 +1,4 @@
 import re
-import time
 from typing import Any
 
 from app.core.common.system_env import SystemEnv
@@ -35,10 +34,10 @@ class DualModelReasoner(Reasoner):
         self._actor_name = actor_name
         self._thinker_name = thinker_name
         self._actor_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.PLATFORM_TYPE
+            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.PLATFORM_TYPE
+            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
     async def infer(self, task: Task) -> str:
@@ -68,7 +67,8 @@ class DualModelReasoner(Reasoner):
                 "<action>\nEmpty\n</action>\n"
                 "<feedback>\nNo feadback\n</feedback>\n"
             ),
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            job_id=task.job.id,
+            step=1,
         )
 
         # init the memory

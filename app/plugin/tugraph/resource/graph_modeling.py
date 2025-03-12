@@ -1,5 +1,4 @@
 import json
-import time
 from typing import Dict, List, Optional, Set, Union
 from uuid import uuid4
 
@@ -573,11 +572,9 @@ class CypherExecutor(Tool):
             """  # noqa: E501
             )
 
-            message = ModelMessage(
-                payload=cypher_schema, timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
-            )
+            message = ModelMessage(payload=cypher_schema, job_id="cypher_validation_id", step=1)
 
-            _model = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
+            _model = ModelServiceFactory.create(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
             response = await _model.generate(sys_prompt=prompt, messages=[message])
             raise RuntimeError(response.get_payload()) from e
 

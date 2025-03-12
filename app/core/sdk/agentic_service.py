@@ -6,6 +6,8 @@ from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
 from app.core.common.type import PlatformType, ReasonerType
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
@@ -32,6 +34,9 @@ class AgenticService(metaclass=Singleton):
     def __init__(self, service_name: Optional[str] = None):
         self._service_name = service_name or "Chat2Graph"
 
+        # initialize the dao
+        DaoFactory.initialize(DbSession())
+
         # initialize the services
         ServiceFactory.initialize()
         self._session_service: SessionService = SessionService.instance
@@ -46,9 +51,11 @@ class AgenticService(metaclass=Singleton):
 
     def execute(self, message: ChatMessage) -> ChatMessage:
         """Execute the service synchronously."""
-        job_wrapper = JobWrapper(
-            Job(goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name())
+        job = Job(
+            goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name()
         )
+        self._job_service.save_job(job=job)
+        job_wrapper = JobWrapper(job)
 
         # execute the job
         job_wrapper.execute()
@@ -140,8 +147,8 @@ class AgenticService(metaclass=Singleton):
         )
 
         platform_type = None
-        if agentic_service_config.plugin.platform:
-            platform_type = PlatformType(agentic_service_config.plugin.platform)
+        if agentic_service_config.plugin.model_platform:
+            platform_type = PlatformType(agentic_service_config.plugin.model_platform)
 
         mas.leader(name="Leader Test").workflow(
             job_decomposition_operator, platform_type=platform_type

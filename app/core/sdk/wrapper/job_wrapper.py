@@ -3,6 +3,7 @@ import time
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
 from app.core.model.message import ChatMessage
+from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 
 
@@ -18,14 +19,14 @@ class JobWrapper:
         return self._job
 
     @property
-    def id(self) -> Job:
+    def id(self) -> str:
         """Get the job id."""
         return self._job.id
 
     def execute(self):
         """Submit the job."""
-        job_service: JobService = JobService.instance
-        job_service.execute_job(job=self._job)
+        agent_service: AgentService = AgentService.instance
+        agent_service.leader.execute_job(job=self._job)
 
     def get_stream(self):
         """Get the stream of the job."""

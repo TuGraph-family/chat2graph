@@ -1,4 +1,3 @@
-import time
 from typing import List
 from unittest.mock import AsyncMock, patch
 
@@ -8,6 +7,8 @@ from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
+
+job_id: str = "test_job_id"
 
 
 @pytest.fixture
@@ -22,7 +23,8 @@ def mock_model_service():
             id="4",
             source_type=MessageSourceType.ACTOR,
             payload="Your name is Alice, as you mentioned earlier.",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            job_id=job_id,
+            step=1,
         )
         mock_service.generate = AsyncMock(return_value=mock_response)
 
@@ -40,19 +42,22 @@ def test_messages() -> List[ModelMessage]:
             id="1",
             source_type=MessageSourceType.THINKER,
             payload="Hello, how are you? I am Alice.",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            job_id=job_id,
+            step=1,
         ),
         ModelMessage(
             id="2",
             source_type=MessageSourceType.ACTOR,
             payload="I'm fine, thank you.",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            job_id=job_id,
+            step=2,
         ),
         ModelMessage(
             id="3",
             source_type=MessageSourceType.THINKER,
             payload="What's my name?",
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            job_id=job_id,
+            step=3,
         ),
     ]
 
@@ -87,25 +92,26 @@ async def test_model_service_factory():
         mock_create.return_value = mock_service
 
         # create service using factory
-        service = ModelServiceFactory.create(platform_type=SystemEnv.PLATFORM_TYPE)
+        service = ModelServiceFactory.create(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
 
         # Assertions
         assert service is not None
         assert service == mock_service
-        mock_create.assert_called_once_with(platform_type=SystemEnv.PLATFORM_TYPE)
+        mock_create.assert_called_once_with(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
 
 
 def test_agent_message_creation():
     """Test the creation of ModelMessage objects."""
-    timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
     message = ModelMessage(
         id="test",
         source_type=MessageSourceType.THINKER,
         payload="Test message",
-        timestamp=timestamp,
+        job_id=job_id,
+        step=1,
     )
 
     assert message.get_id() == "test"
     assert message.get_source_type() == MessageSourceType.THINKER
     assert message.get_payload() == "Test message"
-    assert message.get_timestamp() == timestamp
+    assert message.get_job_id() == job_id
+    assert message.get_step() == 1

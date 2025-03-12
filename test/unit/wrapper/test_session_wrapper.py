@@ -1,12 +1,15 @@
+from app.core.dal.init_db import init_db
+from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
-from app.core.service.session_service import SessionService
 
-SessionService()
+AgenticService()
+init_db()
 
 
-def test_session_wrapper_init():
+def test_session_wrapper_init(mocker):
     """Test session wrapper init method."""
     wrapper = SessionWrapper()
+
     assert wrapper._session is not None
 
 

@@ -13,11 +13,14 @@ from app.core.model.message import AgentMessage, WorkflowMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.sdk.agentic_service import AgenticService
 from app.core.service.job_service import JobService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.workflow.workflow import Workflow
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+
+AgenticService()
 
 
 class MockWorkflow(Workflow):
@@ -183,10 +186,10 @@ Final Delivery:
     # configure the initial job graph
     initial_job_graph: JobGraph = JobGraph()
     initial_job_graph.add_vertex(id=job.id, job=job)
-    job_service: JobService = JobService()
+    job_service: JobService = JobService.instance
     job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
-    job_graph = leader.execute(AgentMessage(job=job))
+    job_graph = leader.execute(AgentMessage(job_id=job.id))
     print(f"job_graph: {job_graph.vertices}")
     job_service.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
 
@@ -210,10 +213,17 @@ Analyzing the task...
     mock_reasoner.infer.return_value = mock_response
 
     job = Job(session_id="test_session_id", goal="")
+    job_service: JobService = JobService.instance
+    job_service.add_job(
+        original_job_id="test_original_job_id",
+        job=job,
+        expert_id="test_expert_id",
+        predecessors=[],
+        successors=[],
+    )
 
     with pytest.raises(Exception) as exc_info:
-        job_graph = leader.execute(AgentMessage(job=job))
-        job_service: JobService = JobService.instance
+        job_graph = leader.execute(AgentMessage(job_id=job.id))
         job_service.replace_subgraph(new_subgraph=job_graph)
 
     assert "Failed to decompose the subjobs by json format" in str(exc_info.value)

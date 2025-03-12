@@ -1,4 +1,3 @@
-import time
 from typing import Any
 
 from app.core.common.system_env import SystemEnv
@@ -32,7 +31,7 @@ class MonoModelReasoner(Reasoner):
 
         self._model_name = model_name
         self._model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.PLATFORM_TYPE
+            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
     async def infer(self, task: Task) -> str:
@@ -61,7 +60,8 @@ class MonoModelReasoner(Reasoner):
                 "<action>\nEmpty\n</action>\n"
                 "<feedback>\nNo feadback\n</feedback>\n"
             ),
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            job_id=task.job.id,
+            step=1,
         )
 
         # init the memory

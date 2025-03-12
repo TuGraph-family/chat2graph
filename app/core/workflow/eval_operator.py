@@ -52,7 +52,8 @@ class EvalOperator(Operator):
                 "status": WorkflowStatus[str(result_dict["status"])],
                 "evaluation": result_dict["evaluation"],
                 "lesson": result_dict["lesson"],
-            }
+            },
+            job_id=job.id,
         )
 
     def _build_task(

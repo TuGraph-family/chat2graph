@@ -72,7 +72,7 @@ def main():
     job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
 
     # decompose the job
-    job_graph = leader.execute(AgentMessage(job=job))
+    job_graph = leader.execute(AgentMessage(job_id=job.id))
 
     print("=== Decomposed Subtasks ===")
     for subjob_id in nx.topological_sort(job_graph.get_graph()):

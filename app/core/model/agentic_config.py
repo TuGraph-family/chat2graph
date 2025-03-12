@@ -72,12 +72,12 @@ class AppConfig:
 class PluginConfig:
     """Plugin configuration data class"""
 
-    platform: Optional[str] = None
+    model_platform: Optional[str] = None
 
     def get_platform_type(self) -> Optional[PlatformType]:
         """Get the platform type enum value"""
-        if self.platform:
-            return PlatformType(self.platform)
+        if self.model_platform:
+            return PlatformType(self.model_platform)
         return None
 
 
@@ -115,7 +115,7 @@ class AgenticConfig:
 
         # plugin configuration
         plugin_dict = config_dict.get("plugin", {})
-        plugin_config = PluginConfig(platform=plugin_dict.get("platform"))
+        plugin_config = PluginConfig(model_platform=plugin_dict.get("model_platform"))
 
         # reasoner configuration
         reasoner_dict = config_dict.get("reasoner", {})
@@ -239,8 +239,8 @@ class AgenticConfig:
         }
 
         # plugin exportation
-        if self.plugin.platform:
-            result["plugin"] = {"platform": self.plugin.platform}
+        if self.plugin.model_platform:
+            result["plugin"] = {"platform": self.plugin.model_platform}
 
         # reasoner exportation
         if self.reasoner.type:

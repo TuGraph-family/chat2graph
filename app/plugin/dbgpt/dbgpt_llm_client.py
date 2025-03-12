@@ -1,4 +1,3 @@
-import time
 from typing import List, Optional
 
 from dbgpt.core import (  # type: ignore
@@ -140,9 +139,10 @@ class DbgptLlmClient(ModelService):
 
         response = ModelMessage(
             payload=model_response.text,
+            job_id=messages[-1].get_job_id(),
+            step=messages[-1].get_step() + 1,
             source_type=source_type,
             function_calls=func_call_results,
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
         return response

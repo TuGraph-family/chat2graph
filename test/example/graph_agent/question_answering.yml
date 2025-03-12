@@ -4,10 +4,10 @@ app:
   version: "0.0.1"
 
 plugin:
-  platform: "dbgpt"
+  model_platform: "DBGPT"
 
 reasoner:
-  type: "dual"
+  type: "DUAL"
 
 tools:
   - &knowledge_base_retriever_tool
