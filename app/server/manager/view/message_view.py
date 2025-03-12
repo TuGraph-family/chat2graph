@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, TypeVar
 
-from app.core.model.message import AgentMessage, Message, TextMessage
+from app.core.model.message import AgentMessage, Message, TextMessage, WorkflowMessage
 
 T = TypeVar("T", bound=Message)
 
@@ -18,7 +18,9 @@ class MessageView:
         if isinstance(message, AgentMessage):
             return {
                 "id": message.get_id(),
-                "agent_result": message.get_workflow_result_message().get_payload(),
+                "agent_result": WorkflowMessage.serialize_payload(
+                    message.get_workflow_result_message().get_payload()
+                ),
                 "lesson": message.get_lesson(),
                 "timestamp": message.get_timestamp(),
             }
