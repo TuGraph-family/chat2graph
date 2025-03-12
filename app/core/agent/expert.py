@@ -79,7 +79,6 @@ class Expert(Agent):
             agent_message = AgentMessage(
                 job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
             )
-            message_service.save_message(message=agent_message)
             return agent_message
         if workflow_message.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # (4) WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
@@ -94,6 +93,5 @@ class Expert(Agent):
             agent_message = AgentMessage(
                 job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
             )
-            message_service.save_message(message=agent_message)
             return agent_message
         raise Exception("The workflow status is not defined.")
