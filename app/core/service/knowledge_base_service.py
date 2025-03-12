@@ -1,17 +1,35 @@
-from typing import List
+import time
+from typing import Any, Dict, List
+import os
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao
-from app.core.model.knowledge_base import Knowledge
+from app.core.dal.dao import KnowledgeBaseDAO
+from app.core.dal.database import DB
+from app.core.model.knowledge_base import KnowledgeBase
+from app.core.knowledge.knowledge import Knowledge
+from app.server.common.util import ServiceException
+from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
+from dbgpt.core import Chunk
 
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+GLOBAL_KNOWLEDGE_PATH = ROOT_PATH + "/app/core/knowledge/global_knowledge"
 
 class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
 
     def __init__(self):
-        self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
+        self._global_knowledge_base = VectorKnowledgeBase("global_knowledge_base")
+        self._dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
 
-    def create_knowledge_base(self, name: str, knowledge_type: str, session_id: str) -> Knowledge:
+    async def load_global_knowledge(self, global_knowledge_path):
+        for root, dirs, files in os.walk(global_knowledge_path):
+            for file in files:
+                print(root+file)
+                await self._global_knowledge_base.load_document(root+"/"+file)
+
+    def create_knowledge_base(
+        self, name: str, knowledge_type: str, session_id: str
+    ) -> KnowledgeBase:
         """Create a new knowledge base.
 
         Args:
@@ -83,3 +101,22 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
             for result in results
         ]
+    
+    async def get_knowledge(self, query, session_id) -> Any:
+        """Get knowledge by ID."""
+        global_chunks = await self._global_knowledge_base.retrieve(query)
+        # local_chunk = await VectorKnowledgeBase(knowledge_base_id).retrieve(query)
+        local_chunks = [Chunk(content="")]
+        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return Knowledge(global_chunks, local_chunks, timestamp)
+    
+    async def load_knowledge(self, knowledge_base_id, file_path):
+        """Load new knowledge entry."""
+        await VectorKnowledgeBase(knowledge_base_id).load_document(file_path)
+
+    def delete_knowledge(self, knowledge_base_id, file_name):
+        """Delete knowledge entry."""
+        VectorKnowledgeBase(knowledge_base_id).delete_document(chunk_ids)
+    
+    def __delete__(self):
+        self._global_knowledge_base.clear()
