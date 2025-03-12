@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 
 @dataclass
-class KnowledgeBase:
-    """KnowledgeBase class"""
+class Knowledge:
+    """Knowledge class"""
 
     id: str
     name: str

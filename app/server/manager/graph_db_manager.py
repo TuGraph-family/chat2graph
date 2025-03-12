@@ -86,7 +86,7 @@ class GraphDBManager:
         self,
         id: str,
         ip: Optional[str] = None,
-        port: Optional[str] = None,
+        port: Optional[int] = None,
         user: Optional[str] = None,
         pwd: Optional[str] = None,
         desc: Optional[str] = None,
@@ -98,7 +98,7 @@ class GraphDBManager:
         Args:
             id (str): ID of the GraphDB
             ip (Optional[str]): New IP address for the GraphDB
-            port (Optional[str]): New port for the GraphDB
+            port (Optional[int]): New port for the GraphDB
             user (Optional[str]): New username for the GraphDB
             pwd (Optional[str]): New password for the GraphDB
             desc (Optional[str]): New description for the GraphDB

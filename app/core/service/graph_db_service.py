@@ -70,7 +70,7 @@ class GraphDbService(metaclass=Singleton):
         self,
         id: str,
         ip: Optional[str] = None,
-        port: Optional[str] = None,
+        port: Optional[int] = None,
         user: Optional[str] = None,
         pwd: Optional[str] = None,
         desc: Optional[str] = None,
@@ -82,7 +82,7 @@ class GraphDbService(metaclass=Singleton):
         Args:
             id (str): ID of the GraphDB
             ip (Optional[str]): New IP of the GraphDB
-            port (Optional[str]): New port of the GraphDB
+            port (Optional[int]): New port of the GraphDB
             user (Optional[str]): New user of the GraphDB
             pwd (Optional[str]): New password of the GraphDB
             desc (Optional[str]): New description of the GraphDB
