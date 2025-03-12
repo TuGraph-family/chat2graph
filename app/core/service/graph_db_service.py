@@ -35,7 +35,7 @@ class GraphDbService(metaclass=Singleton):
         return GraphDB(
             ip=str(result.ip),
             id=str(result.id),
-            port=str(result.port),
+            port=int(result.port),
             user=str(result.user),
             pwd=str(result.pwd),
             desc=str(result.desc),
@@ -51,7 +51,7 @@ class GraphDbService(metaclass=Singleton):
         return GraphDB(
             id=str(result.id),
             ip=str(result.ip),
-            port=str(result.port),
+            port=int(result.port),
             user=str(result.user),
             pwd=str(result.pwd),
             desc=str(result.desc),
@@ -115,7 +115,7 @@ class GraphDbService(metaclass=Singleton):
             return GraphDB(
                 id=str(updated_graph_db.id),
                 ip=str(updated_graph_db.ip),
-                port=str(updated_graph_db.port),
+                port=int(updated_graph_db.port),
                 user=str(updated_graph_db.user),
                 pwd=str(updated_graph_db.pwd),
                 desc=str(updated_graph_db.desc),
@@ -125,7 +125,7 @@ class GraphDbService(metaclass=Singleton):
         return GraphDB(
             id=str(graph_db.id),
             ip=str(graph_db.ip),
-            port=str(graph_db.port),
+            port=int(graph_db.port),
             user=str(graph_db.user),
             pwd=str(graph_db.pwd),
             desc=str(graph_db.desc),
@@ -141,7 +141,7 @@ class GraphDbService(metaclass=Singleton):
             GraphDB(
                 ip=str(result.ip),
                 id=str(result.id),
-                port=str(result.port),
+                port=int(result.port),
                 user=str(result.user),
                 pwd=str(result.pwd),
                 desc=str(result.desc),
