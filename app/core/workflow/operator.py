@@ -8,6 +8,7 @@ from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator_config import OperatorConfig
+from app.core.service.knowledge_base_service import KnowledgeBaseService
 
 
 class Operator:
@@ -48,16 +49,16 @@ class Operator:
             workflow_messages=workflow_messages,
             tools=rec_tools,
             actions=rec_actions,
-            knowledge=self.get_knowledge(),
+            knowledge=self.get_knowledge(query=job.context, session_id=job.session_id),
             insights=self.get_env_insights(),
             lesson=lesson,
         )
         return task
 
-    def get_knowledge(self) -> str:
+    def get_knowledge(self, query, session_id: str) -> str:
         """Get the knowledge from the knowledge base."""
-        # TODO: get the knowledge from the knowledge base
-        return "Do not have provieded any knowledge yet."
+        knowledge = KnowledgeBaseService.get_knowledge(query, session_id)
+        return knowledge
 
     def get_env_insights(self) -> Optional[List[Insight]]:
         """Get the environment information."""
