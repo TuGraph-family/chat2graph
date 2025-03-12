@@ -239,8 +239,8 @@ class AgenticConfig:
         }
 
         # plugin exportation
-        if self.plugin.platform:
-            result["plugin"] = {"platform": self.plugin.platform}
+        if self.plugin.model_platform:
+            result["plugin"] = {"platform": self.plugin.model_platform}
 
         # reasoner exportation
         if self.reasoner.type:
