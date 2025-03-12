@@ -12,6 +12,24 @@ import {
   getMessageById,
 } from '@/services/chat2graph/MessageController';
 
+import {
+  createGraphdbs,
+  getGraphdbs,
+  getGraphdbById,
+  deleteGraphdbs,
+  updateGraphdbs,
+} from '@/services/chat2graph/GraphdbContraoller';
+
+import {
+  createKnowledgebase,
+  getKnowledgebases,
+  deleteKnowledgebases,
+  getKnowledgebasesById,
+  uploadFile,
+  editKnowledgebase,
+  deleteFile,
+} from '@/services/chat2graph/KnowledgebasesContraoller';
+
 class SessionsService {
   // 请求会话列表
   public getSessions = getSessions;
@@ -30,6 +48,33 @@ class SessionsService {
   public getMessagesBySessionId = getMessagesBySessionId;
   // 根据 messageid 获取查询结果
   public getMessageById = getMessageById;
+
+  // 创建图数据库
+  public createGraphdbs = createGraphdbs;
+  // 获取所有图数据库
+  public getGraphdbs = getGraphdbs;
+  // 根据 id 获取图数据库详情
+  public getGraphdbById = getGraphdbById;
+  // 删除图数据库
+  public deleteGraphdbs = deleteGraphdbs;
+  // 更新图数据库
+  public updateGraphdbs = updateGraphdbs;
+
+
+  // 创建知识库
+  public createKnowledgebase = createKnowledgebase;
+  // 获取所有知识库
+  public getKnowledgebases = getKnowledgebases;
+  // 根据 id 获取知识库详情
+  public getKnowledgebaseById = getKnowledgebasesById;
+  // 删除知识库
+  public deleteKnowledgebase = deleteKnowledgebases;
+  // 上传文件
+  public uploadFile = uploadFile;
+  // 编辑知识库
+  public editKnowledgebase = editKnowledgebase;
+  // 删除文件
+  public deleteFile = deleteFile;
 }
 
 export default new SessionsService();

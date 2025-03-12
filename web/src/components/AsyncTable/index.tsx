@@ -1,80 +1,45 @@
 import { Button, Input, Space, Table, TableProps } from 'antd'
 import styles from './index.less'
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
-import { useImmer } from 'use-immer'
 import { debounce } from 'lodash'
-import { useEffect } from 'react'
+import useIntlConfig from '@/hooks/useIntlConfig'
+import { useSearchPagination } from '@/hooks/useSearchPagination'
 
 
 
 interface AsyncTableProps extends TableProps<any> {
-    service: (params: any) => Promise<any>,
+    dataSource: any[],
     loading: boolean,
     columns: any[],
     extra: any[],
 }
 
+
+
 const AsyncTable: React.FC<AsyncTableProps> = ({
-    service,
+    dataSource,
     loading,
     columns,
     extra,
     ...otherProps
 }) => {
-    const [state, setState] = useImmer<{
-        search: string
-        open: boolean
-        editId: number | null
-        pagination: {
-            current: number
-            pageSize: number
-        }
-        dataSource: any[]
-        total: number,
-        searchKey: string | null
-    }>({
-        search: '',
-        open: false,
-        editId: null,
-        pagination: {
-            current: 1,
-            pageSize: 10,
-        },
-        dataSource: [],
-        total: 0,
-        searchKey: null
-    })
-    const { search, pagination, dataSource, total, searchKey } = state;
-    const getGraphDatabase = async (params: any) => {
-        const res = await service(params)
-        setState((draft) => {
-            draft.dataSource = res.data
-            draft.total = res.total
-        })
-    }
+    const { formatMessage } = useIntlConfig()
+    const {
+        paginatedData,
+        total,
+        pageSize,
+        currentPage,
+        setSearchText,
+        setCurrentPage,
+        setPageSize
+    } = useSearchPagination({
+        data: dataSource || [],
+        searchKey: extra?.find((item: any) => item.key === 'search')?.searchKey || '',
+        defaultPageSize: 10
+    });
 
-
-    useEffect(() => {
-
-        const params: any = {
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-        }
-
-        if (searchKey) {
-            params[searchKey] = search
-        }
-
-
-        getGraphDatabase(params)
-    }, [pagination.current, pagination.pageSize, search])
-
-
-    const onSearch = debounce((value: string, key = null) => {
-        setState((draft) => {
-            draft.search = value
-            draft.searchKey = key
-        })
+    const onSearch = debounce((value: string) => {
+        setSearchText(value)
     }, 500)
 
     const renderExtra = () => {
@@ -86,10 +51,10 @@ const AsyncTable: React.FC<AsyncTableProps> = ({
                 {
                     extra?.map((item: any) => {
                         switch (item.key) {
-                            case 'search': return <Input placeholder={item.placeholder} prefix={<SearchOutlined />} onChange={(e) => {
-                                onSearch(e.target.value, item.searchKey)
+                            case 'search': return <Input placeholder='Search' prefix={<SearchOutlined />} onChange={(e) => {
+                                onSearch(e.target.value)
                             }} />
-                            case 'add': return <Button type="primary" onClick={item.onClick}><PlusOutlined />新增</Button>
+                            case 'add': return <Button type="primary" onClick={item.onClick}><PlusOutlined />{formatMessage('actions.new')}</Button>
                         }
                         return item
                     })
@@ -104,19 +69,15 @@ const AsyncTable: React.FC<AsyncTableProps> = ({
             <Table
                 loading={loading}
                 columns={columns}
-                dataSource={dataSource}
+                dataSource={paginatedData}
                 onChange={(pagination) => {
-                    setState((draft) => {
-                        draft.pagination = {
-                            current: pagination.current || 1,
-                            pageSize: pagination.pageSize || 10,
-                        }
-                    })
+                    setCurrentPage(pagination.current || 1)
+                    setPageSize(pagination.pageSize || 10)
                 }}
                 pagination={{
                     total: total,
-                    current: pagination.current,
-                    pageSize: pagination.pageSize,
+                    current: currentPage,
+                    pageSize,
                 }}
                 {...otherProps}
             />

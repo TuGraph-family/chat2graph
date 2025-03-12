@@ -13,7 +13,7 @@ export default defineConfig({
   // },
   proxy: {
     '/api': {
-      'target': 'http://127.0.0.1:5000',
+      'target': 'http://gengsheng.alipay.net:5000',
       'changeOrigin': true,
       // 'pathRewrite': { '^/api' : '' },
     }
@@ -29,11 +29,42 @@ export default defineConfig({
       component: './Home',
     },
     {
+      path: '/manager',
+      redirect: '/manager/knowledgebase',
+    },
+    {
       name: '管理',
       path: '/manager/*',
       component: './Manager',
     },
+
+    // {
+    //   path: '/',
+    //   component: '@/layouts/index',
+    //   routes: [
+    //     {
+    //       path: '/',
+    //       redirect: '/home',
+    //     },
+    //     {
+    //       name: '首页',
+    //       path: '/home',
+    //       component: './Home',
+    //     },
+    //     {
+    //       name: '管理',
+    //       path: '/manager/*',
+    //       component: './Manager',
+    //     },
+    //   ],
+    // },
+
   ],
   npmClient: 'tnpm',
+  locale: {
+    antd: true,
+    default: 'zh-CN',
+    baseSeparator: '-',
+  },
 });
 

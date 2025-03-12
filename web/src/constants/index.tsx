@@ -11,23 +11,23 @@ export enum FRAMEWORK {
 
 export const FRAMEWORK_CONFIG = [{
   key: FRAMEWORK.MODEL,
-  text: '建模框架',
+  textId: 'home.model',
 }, {
   key: FRAMEWORK.EXPORT_DATA,
-  text: '导数框架',
+  textId: 'home.exportData',
 }, {
   key: FRAMEWORK.QUERY,
-  text: '查询框架',
+  textId: 'home.query',
 }];
 
 export const MOCK_placeholderPromptsItems = [
   {
     key: '1',
-    label: '图是什么？',
+    labelId: 'home.placeholderPromptsItems1',
   },
   {
     key: '2',
-    label: '怎么用 ISOGQL 查询一个点？',
+    labelId: 'home.placeholderPromptsItems2',
   },
 ];
 

@@ -31,6 +31,36 @@ declare namespace API {
     status?: string;
   }
 
+  interface FileVO {
+    name?: string;
+    size?: number;
+    type?: string;
+    status?: string;
+    time_stamp?: number;
+    file_id?: string;
+  }
+
+
+  interface KnowledgebaseVO {
+    id?: string;
+    name?: string;
+    knowledge_type?: "graph" | "vector";
+    session_id?: string;
+    file_count?: number;
+    files?: Array<FileVO>;
+  }
+
+  interface GraphdbVO {
+    desc?: string;
+    id?: string;
+    ip?: string;
+    is_default_db?: boolean;
+    name?: string;
+    port?: string;
+    pwd?: string;
+    user?: string;
+  }
+
   interface Result_Message_ {
     success?: boolean;
     message?: string;
@@ -41,6 +71,32 @@ declare namespace API {
     success?: boolean;
     message?: string;
     data?: Array<MessageVO>;
+  }
+
+  interface Result_Knowledgebases_ {
+    success?: boolean;
+    message?: string;
+    data?: Array<KnowledgebaseVO>;
+  }
+
+  interface Result_Knowledgebase_ {
+    success?: boolean;
+    message?: string;
+    data?: KnowledgebaseVO;
+  }
+
+
+
+  interface Result_Graphdbs_ {
+    success?: boolean;
+    message?: string;
+    data?: Array<GraphdbVO>;
+  }
+
+  interface Result_Graphdb_ {
+    success?: boolean;
+    message?: string;
+    data?: GraphdbVO;
   }
 
 }

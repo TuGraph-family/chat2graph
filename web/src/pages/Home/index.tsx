@@ -1,6 +1,6 @@
 import styles from './index.less';
-import { Badge, Button, GetProp, Modal, Tooltip, Flex, Spin, message } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, UploadOutlined, MessageOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, FloatButton } from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled } from '@ant-design/icons';
 import {
   Attachments,
   Bubble,
@@ -18,16 +18,17 @@ import Placeholder from '@/components/Placeholder';
 import SenderHeader from '@/components/SenderHeader';
 import { useEffect } from 'react';
 import { useSessionEntity } from '@/domains/entities';
-
+import useIntlConfig from '@/hooks/useIntlConfig';
+import Language from '@/components/Language';
 const HomePage: React.FC = () => {
-  
+
   const [state, setState] = useImmer<{
     selectedFramework?: FRAMEWORK;
     conversationsItems: ConversationsProps['items'];
     headerOpen: boolean;
     activeKey: string;
     collapse: boolean;
-    placeholderPromptsItems: GetProp<typeof Prompts, 'items'>;
+    placeholderPromptsItems: { labelId: string, key: string }[];
     content: string;
     attachedFiles: GetProp<typeof Attachments, 'items'>;
   }>({
@@ -43,6 +44,8 @@ const HomePage: React.FC = () => {
 
   const { conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
 
+  const { formatMessage } = useIntlConfig();
+
   const {
     sessionEntity,
     getSessionList,
@@ -54,7 +57,6 @@ const HomePage: React.FC = () => {
     runGetMessageIdByChat,
     runGetMessagesBySessionId,
     runGetMessagesById,
-    loadingGetMessagesById,
   } = useSessionEntity();
   const { sessions } = sessionEntity;
 
@@ -74,32 +76,32 @@ const HomePage: React.FC = () => {
   const menuConfig: ConversationsProps['menu'] = (conversation) => ({
     items: [
       {
-        label: '重命名',
+        label: formatMessage('home.rename'),
         key: 'rename',
         icon: <EditOutlined />,
       },
       {
-        label: '删除',
+        label: formatMessage('home.delete'),
         key: 'delete',
         icon: <DeleteOutlined />,
         danger: true,
       },
     ],
     onClick: (menuInfo) => {
-      const {key: menuKey} = menuInfo || {};
+      const { key: menuKey } = menuInfo || {};
       if (menuKey === 'delete') {
         Modal.warning({
-          title: '删除对话',
-          content: '删除后无法恢复，是否继续删除？',
-          okText: '确认',
-          cancelText: '取消',
+          title: formatMessage('home.deleteConversation'),
+          content: formatMessage('home.deleteConversationConfirm'),
+          okText: formatMessage('home.confirm'),
+          cancelText: formatMessage('home.cancel'),
           onOk: () => {
             runDeleteSession({
               session_id: conversation.key,
             }).then((res: API.Result_Session_) => {
               if (res?.success) {
                 getSessionList();
-                message.success('删除成功');
+                message.success(formatMessage('home.deleteConversationSuccess'));
               }
             })
           }
@@ -112,7 +114,7 @@ const HomePage: React.FC = () => {
           if (item.key !== conversation.key) {
             return item;
           }
-    
+
           return {
             ...item,
             label: <NameEditor
@@ -125,6 +127,48 @@ const HomePage: React.FC = () => {
           };
         });
       });
+    },
+  });
+
+  let timer: any = null;
+
+
+  const getMessage = (message_id: string, onSuccess: (message: API.MessageVO) => void) => {
+    timer = setTimeout(() => {
+      runGetMessagesById({
+        message_id,
+      }).then(res => {
+        const { status } = res?.data || {};
+
+        if (status === 'running') {
+          getMessage(message_id, onSuccess);
+          return;
+        }
+
+        clearTimeout(timer);
+        onSuccess(res?.data || {});
+      });
+    }, 500);
+  }
+
+  const [agent] = useXAgent<API.MessageVO>({
+    request: async ({ message: msg }, { onSuccess, onUpdate }) => {
+      const { message = '', session_id = '' } = msg || {};
+      runGetMessageIdByChat({
+        message,
+        session_id,
+      }).then((res: API.Result_Message_) => {
+        const { id: message_id = '' } = res?.data || {};
+        getMessage(message_id, onSuccess);
+        onUpdate(res?.data || {})
+      });
+    },
+  });
+
+  const { onRequest, parsedMessages, setMessages } = useXChat({
+    agent,
+    parser: (agentMessages) => {
+      return agentMessages;
     },
   });
 
@@ -151,62 +195,29 @@ const HomePage: React.FC = () => {
 
   };
 
-  let timer: any = null;
-  const getMessage = (message_id: string, onSuccess: (message: API.MessageVO) => void) => {
-    timer = setTimeout(() => {
-      runGetMessagesById({
-        message_id,
-      }).then(res => {
-        const { status } = res?.data || {};
-
-        if (status === 'running') {
-          getMessage(message_id, onSuccess);
-          return;
-        }
-
-        clearTimeout(timer);
-        onSuccess(res?.data || {});
-      });
-    }, 500);
-  }
-
-  const [agent] = useXAgent<API.MessageVO>({
-    request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { message = '', session_id = '' } = msg || {}; 
-      runGetMessageIdByChat({
-        message,
-        session_id,
-      }).then((res: API.Result_Message_) => {
-        const { id: message_id = '' } = res?.data || {};
-        getMessage(message_id, onSuccess);
-        onUpdate(res?.data || {})
-      });
-    },
-  });
-
-  const { onRequest, parsedMessages, setMessages } = useXChat({
-    agent,
-    parser: (agentMessages) => {
-      return agentMessages;
-    },
-  });
-
   const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
     // @ts-ignore
-    const { id, message, role, status } = item;
+    const { id, message, status } = item;
     return {
       key: id,
       loading: status === 'loading',
       role: message?.role === 'system' ? 'ai' : 'local',
-      content: message?.message || '暂未搜索到',
+      content: message?.message || formatMessage('home.noResult'),
       avatar: message?.role === 'system' ? {
         icon: 'GU'
       } : undefined,
+    }
+  });
+
+  // 更新输入内容
+  const updateContent = (newContent: string = '') => {
+    setState((draft) => {
+      draft.content = newContent;
+    })
   }
-});
 
   const onSubmit = (nextContent: string) => {
-    if (!nextContent) return; 
+    if (!nextContent) return;
 
     // 新建对话
     if (!items.length) {
@@ -247,12 +258,7 @@ const HomePage: React.FC = () => {
     })
   }
 
-  // 更新输入内容
-  const updateContent = (newContent: string = '') => {
-    setState((draft) => {
-      draft.content = newContent;
-    })
-  }
+
 
   useEffect(() => {
     setState((draft) => {
@@ -270,13 +276,22 @@ const HomePage: React.FC = () => {
     getSessionList();
   }, []);
 
+  const onTranslate = (items: { labelId: string, key: string }[]): GetProp<typeof Prompts, 'items'> => {
+    return items.map(item => {
+      return {
+        ...item,
+        label: formatMessage(item.labelId),
+      }
+    })
+  }
   return (
     <div className={styles.wrapper}>
       <div className={`${styles.sider} ${collapse ? styles['sider-collapsed'] : ''}`}>
         <div className={styles.title}>
           <span className={styles['title-text']}>TuGraph</span>
+          <Language />
           <Tooltip
-            title={collapse ? '打开边栏' : '收起边栏'}
+            title={collapse ? formatMessage('home.collapse') : formatMessage('home.expand')}
           >
             <Button
               type='text'
@@ -291,7 +306,7 @@ const HomePage: React.FC = () => {
           </Tooltip>
         </div>
 
-        <Tooltip title={collapse ? '开启新对话' : ''}>
+        <Tooltip title={collapse ? formatMessage('home.openNewConversation') : ''}>
           <Button
             onClick={onAddConversation}
             type={collapse ? 'text' : 'primary'}
@@ -300,7 +315,7 @@ const HomePage: React.FC = () => {
             block
             ghost={collapse ? false : true}
           >
-            {collapse ? '' : '新对话'}
+            {collapse ? '' : formatMessage('home.newConversation')}
           </Button>
         </Tooltip>
 
@@ -313,15 +328,15 @@ const HomePage: React.FC = () => {
             menu={menuConfig}
           />
         </Spin>
-        <p className={styles.tips}>仅展示最近 10 条对话</p>
+        <p className={styles.tips}>{formatMessage('home.tips')}</p>
       </div>
 
       <div className={styles.chat}>
         {/* 消息列表 */}
         <Bubble.List
           items={items.length > 0 ? items : [{
-            content: <Placeholder 
-              placeholderPromptsItems={placeholderPromptsItems}
+            content: <Placeholder
+              placeholderPromptsItems={onTranslate(placeholderPromptsItems)}
               onPromptsItemClick={onPromptsItemClick}
             />,
             variant: 'borderless',
@@ -342,7 +357,7 @@ const HomePage: React.FC = () => {
                 })
               }}
             >
-              {item.text}
+              {formatMessage(item.textId)}
             </Button>)}
           </Flex>
 
@@ -354,10 +369,10 @@ const HomePage: React.FC = () => {
               attachedFiles={attachedFiles}
               handleFileChange={handleFileChange}
               onOpenChange={(open: boolean) => {
-              setState((draft) => {
-                draft.headerOpen = open;
-              });
-            }}/>}
+                setState((draft) => {
+                  draft.headerOpen = open;
+                });
+              }} />}
             onSubmit={onSubmit}
             onChange={updateContent}
             // 上传文件先关闭入口
@@ -378,6 +393,15 @@ const HomePage: React.FC = () => {
             // }
             loading={agent.isRequesting()}
             className={styles.sender}
+          />
+          <FloatButton
+            tooltip={<div>{formatMessage('home.manager')}</div>}
+            shape="circle"
+            type="primary"
+            icon={<LayoutFilled />}
+            onClick={() => {
+              window.open('/manager', '_blank')
+            }}
           />
         </footer>
       </div>
