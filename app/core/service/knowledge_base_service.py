@@ -2,7 +2,7 @@ from typing import List
 
 from app.core.common.singleton import Singleton
 from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao
-from app.core.model.knowledge_base import KnowledgeBase
+from app.core.model.knowledge_base import Knowledge
 
 
 class KnowledgeBaseService(metaclass=Singleton):
@@ -26,7 +26,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         result = self._knowledge_base_dao.create(
             name=name, knowledge_type=knowledge_type, session_id=session_id
         )
-        return KnowledgeBase(
+        return Knowledge(
             id=str(result.id),
             name=str(result.name),
             knowledge_type=str(result.knowledge_type),
@@ -45,7 +45,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         result = self._knowledge_base_dao.get_by_id(id=id)
         if not result:
             raise ValueError(f"Knowledge base with ID {id} not found")
-        return KnowledgeBase(
+        return Knowledge(
             id=str(result.id),
             name=str(result.name),
             knowledge_type=str(result.knowledge_type),
@@ -75,7 +75,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
         results = self._knowledge_base_dao.get_all()
         return [
-            KnowledgeBase(
+            Knowledge(
                 id=str(result.id),
                 name=str(result.name),
                 knowledge_type=str(result.knowledge_type),
