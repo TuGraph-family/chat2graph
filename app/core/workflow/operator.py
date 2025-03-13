@@ -49,15 +49,16 @@ class Operator:
             workflow_messages=workflow_messages,
             tools=rec_tools,
             actions=rec_actions,
-            knowledge=self.get_knowledge(query=job.context, session_id=job.session_id),
+            knowledge=self.get_knowledge(job),
             insights=self.get_env_insights(),
             lesson=lesson,
         )
         return task
 
-    def get_knowledge(self, query, session_id: str) -> str:
+    def get_knowledge(self, job: Job) -> str:
         """Get the knowledge from the knowledge base."""
-        knowledge = KnowledgeBaseService.get_knowledge(query, session_id)
+        query = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
+        knowledge = run_async_function(KnowledgeBaseService.instance.get_knowledge, query, job.session_id)
         return knowledge
 
     def get_env_insights(self) -> Optional[List[Insight]]:

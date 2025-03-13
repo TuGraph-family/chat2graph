@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-
+import os
 from app.core.model.job import SubJob
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
@@ -11,6 +11,9 @@ from app.core.toolkit.action import Action
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
+from app.core.service.knowledge_base_service import KnowledgeBaseService
+
+knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
 
 @pytest.fixture
