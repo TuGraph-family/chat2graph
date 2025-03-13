@@ -106,7 +106,6 @@ async def test_execute_basic_functionality(operator: Operator, mock_reasoner: As
 
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_get_tools_from_actions(operator: Operator):
     """Test tool retrieval from actions."""
     toolkit_service: ToolkitService = ToolkitService.instance
