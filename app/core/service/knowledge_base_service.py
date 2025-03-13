@@ -29,8 +29,8 @@ class KnowledgeBaseService(metaclass=Singleton):
     async def load_global_knowledge(self, global_knowledge_path):
         for root, dirs, files in os.walk(global_knowledge_path):
             for file in files:
-                print(root+file)
-                await self._global_knowledge_base.load_document(root+"/"+file)
+                run_async_function(self._global_knowledge_base.load_document, root+"/"+file)
+        self._dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
