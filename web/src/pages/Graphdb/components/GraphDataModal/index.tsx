@@ -9,13 +9,15 @@ interface IGraphDataModalProps {
     editId: string | null
     onFinish: () => void
     formatMessage: (key: string) => string
+    is_default_db?: boolean
 }
 const GraphDataModal: React.FC<IGraphDataModalProps> = ({
     open,
     onClose,
     editId,
     onFinish,
-    formatMessage
+    formatMessage,
+    is_default_db = false
 }) => {
     const [form] = Form.useForm()
     const { getDatabaseDetail, databaseEntity, loadingGetGraphdbById, runCreateGraphdbs, loadingCreateGraphdbs, runUpdateGraphdbs, loadingUpdateGraphdbs } = useDatabaseEntity();
@@ -52,7 +54,7 @@ const GraphDataModal: React.FC<IGraphDataModalProps> = ({
             } else {
                 res = await runCreateGraphdbs({
                     ...values,
-                    is_default_db: false
+                    is_default_db
                 })
             }
 

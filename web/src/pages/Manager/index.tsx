@@ -27,11 +27,20 @@ const Manage = () => {
         { key: '/manager/graphdb', icon: <FolderOutlined />, label: formatMessage('database.title') },
     ]
 
-    const componentMap: Record<string, JSX.Element> = {
-        '/manager/knowledgebase': <Knowledgebase />,
-        '/manager/graphdb': <Graphdb />,
-        '/manager/knowledgebase/detail': <KnowledgebaseDetail />
-    }
+    const managerRoutes: { path: string, component: JSX.Element }[] = [
+        {
+            path: '/manager/knowledgebase',
+            component: <Knowledgebase />
+        },
+        {
+            path: '/manager/graphdb',
+            component: <Graphdb />
+        },
+        {
+            path: '/manager/knowledgebase/detail',
+            component: <KnowledgebaseDetail />
+        }
+    ]
 
 
 
@@ -63,7 +72,7 @@ const Manage = () => {
                 </Sider>
                 <Layout style={{ padding: '24px' }}>
                     <Content>
-                        {componentMap[path]}
+                        {managerRoutes.find(route => route.path === path)?.component}
                     </Content>
                 </Layout>
             </Layout>

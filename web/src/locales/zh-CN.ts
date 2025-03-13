@@ -45,7 +45,9 @@ export default {
             status: '可用状态',
             updateTime: '更新时间',
             operation: '操作',
+            defaultTag: '默认',
         },
+
         deleteConfirm: '请确定是否删除图数据库{name}？',
         modal: {
             title1: '新建图数据库',

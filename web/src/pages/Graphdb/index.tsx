@@ -18,7 +18,7 @@ const Graphdb: React.FC = () => {
         editId: null,
     })
     const { open, editId, } = state
-    const { getDatabaseList, loadingGetGraphdbs, databaseEntity, runDeleteGraphdbs, loadingDeleteGraphdbs } = useDatabaseEntity();
+    const { getDatabaseList, loadingGetGraphdbs, databaseEntity, runDeleteGraphdbs, loadingDeleteGraphdbs, runUpdateGraphdbs, loadingUpdateGraphdbs } = useDatabaseEntity();
     const { formatMessage } = useIntlConfig();
 
     const onRefresh = () => {
@@ -44,9 +44,18 @@ const Graphdb: React.FC = () => {
         }
     }
 
-    const setDefaultGraphDatabase = async (id: string) => {
-        // TODO: 待实现
-        console.log(id)
+    const setDefaultGraphDatabase = async (record: Record<string, any>) => {
+        const { id, ...rest } = record
+        const res = await runUpdateGraphdbs({ session_id: id }, {
+            ...rest,
+            is_default_db: true
+        })
+        if (res?.success) {
+            onRefresh()
+            message.success(res?.message)
+        } else {
+            message.error(res?.message)
+        }
     }
 
     useEffect(() => {
@@ -62,7 +71,7 @@ const Graphdb: React.FC = () => {
                 return <div className={styles['graph-database-name']}>
                     {text}
                     {record.is_default_db && <Tag style={{ marginLeft: 10 }} bordered={false} color="processing">
-                        默认
+                        {formatMessage('database.columns.defaultTag')}
                     </Tag>}
                 </div>
             }
@@ -96,9 +105,9 @@ const Graphdb: React.FC = () => {
                         title={formatMessage('database.deleteConfirm', { name: record.name })}
                         onConfirm={() => onDeleteGraphDatabase(record.id)}
                     >
-                        <Button type="link" disabled={record.isDefault}>{formatMessage('actions.delete')}</Button>
+                        <Button type="link" disabled={record.is_default_db}>{formatMessage('actions.delete')}</Button>
                     </Popconfirm>
-                    <Button type="link" disabled={record.isDefault} onClick={() => setDefaultGraphDatabase(record.id)}>{formatMessage('actions.setDefault')}</Button>
+                    <Button type="link" disabled={record.is_default_db} onClick={() => setDefaultGraphDatabase(record)}>{formatMessage('actions.setDefault')}</Button>
                 </div>
             }
         },
@@ -108,7 +117,7 @@ const Graphdb: React.FC = () => {
         <h1>{formatMessage('database.title')}</h1>
         <AsyncTable
             dataSource={databaseEntity?.databaseList}
-            loading={loadingGetGraphdbs || loadingDeleteGraphdbs}
+            loading={loadingGetGraphdbs || loadingDeleteGraphdbs || loadingUpdateGraphdbs}
             columns={columns}
             extra={[
                 { key: 'search', searchKey: 'name' },
@@ -122,6 +131,7 @@ const Graphdb: React.FC = () => {
             onClose={() => setState((draft) => { draft.open = false; draft.editId = null })}
             onFinish={onRefresh}
             formatMessage={formatMessage}
+            is_default_db={!databaseEntity?.databaseList?.length}
         />
     </div>
 }

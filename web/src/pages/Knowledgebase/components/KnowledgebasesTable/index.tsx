@@ -6,7 +6,7 @@ import { history } from "umi";
 import { historyPushLinkAt } from "@/utils/link";
 import { useSearchPagination } from "@/hooks/useSearchPagination";
 import { useKnowledgebaseEntity } from "@/domains/entities/knowledgebase-manager";
-import { useState } from "react";
+import { useImmer } from "use-immer";
 
 interface KnowledgebasesTableProps {
     formatMessage: (id: string, params?: any) => string
@@ -22,8 +22,12 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
     onRefresh
 }) => {
     const { runDeleteKnowledgebase, runEditKnowledgebase } = useKnowledgebaseEntity()
-    const [knowledgebasesId, setKnowledgebasesId] = useState('')
-    const [dropdownOpen, setDropdownOpen] = useState<string>('')
+    const [state, setState] = useImmer({
+        dropdownOpen: '',
+        knowledgebasesId: '',
+        isDeleting: false,
+    })
+    const { dropdownOpen, knowledgebasesId, isDeleting } = state
     const [form] = Form.useForm()
     const {
         paginatedData,
@@ -60,12 +64,16 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
             name: values?.name,
             description: values?.description
         })
-        setKnowledgebasesId(id)
+        setState((draft) => {
+            draft.knowledgebasesId = id
+        })
     }
 
 
     const onCancel = () => {
-        setKnowledgebasesId('')
+        setState((draft) => {
+            draft.knowledgebasesId = ''
+        })
         form.resetFields()
     }
     const onSaveKnowledgebase = () => {
@@ -105,20 +113,32 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
                                                     name: item?.name,
                                                     description: item?.description
                                                 }, item?.id)
-                                                setDropdownOpen('')
+                                                setState((draft) => {
+                                                    draft.dropdownOpen = ''
+                                                })
                                             }
                                         },
                                         {
                                             label: <Popconfirm
                                                 placement="right"
                                                 title={formatMessage('knowledgebase.home.remove')}
-                                                description={formatMessage('knowledgebase.home.removeConfirm')}
+                                                description={<div style={{ width: 200 }}>{formatMessage('knowledgebase.home.removeConfirm')}</div>}
                                                 onConfirm={() => {
                                                     onDeleteKnowledgebase(item?.id)
-                                                    setDropdownOpen('')
+                                                    setState((draft) => {
+                                                        draft.dropdownOpen = ''
+                                                    })
                                                 }}
-                                                onCancel={() => setDropdownOpen('')}
+                                                onCancel={() => setState((draft) => {
+                                                    draft.dropdownOpen = ''
+                                                })}
+                                                onOpenChange={(open) => {
+                                                    setState((draft) => {
+                                                        draft.isDeleting = open
+                                                    })
+                                                }}
                                                 icon={<DeleteOutlined />}
+
                                             >
                                                 {formatMessage('knowledgebase.home.remove')}
                                             </Popconfirm>,
@@ -126,14 +146,18 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
                                             key: 'delete',
                                             onClick: (e: any) => {
                                                 e?.domEvent.stopPropagation()
-                                                setDropdownOpen(item.id)
+                                                setState((draft) => {
+                                                    draft.dropdownOpen = item.id
+                                                })
                                             }
                                         }
                                     ]
                                 }}
                                 onOpenChange={(open, info) => {
-                                    if (info.source === 'trigger') {
-                                        setDropdownOpen(open ? item.id : '')
+                                    if (info.source === 'trigger' && !isDeleting) {
+                                        setState((draft) => {
+                                            draft.dropdownOpen = open ? item.id : ''
+                                        })
                                     }
                                 }}
                             >

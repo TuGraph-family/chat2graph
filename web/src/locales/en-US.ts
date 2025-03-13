@@ -45,6 +45,7 @@ export default {
             status: 'Available Status',
             updateTime: 'Update Time',
             operation: 'Operation',
+            defaultTag: 'Default',
         },
         deleteConfirm: 'Are you sure you want to delete the graph database {name}?',
         modal: {
