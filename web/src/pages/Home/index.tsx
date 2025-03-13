@@ -20,6 +20,8 @@ import { useEffect } from 'react';
 import { useSessionEntity } from '@/domains/entities';
 import useIntlConfig from '@/hooks/useIntlConfig';
 import Language from '@/components/Language';
+import logoSrc from '@/assets/logo.png';
+
 const HomePage: React.FC = () => {
 
   const [state, setState] = useImmer<{
@@ -288,22 +290,30 @@ const HomePage: React.FC = () => {
     <div className={styles.wrapper}>
       <div className={`${styles.sider} ${collapse ? styles['sider-collapsed'] : ''}`}>
         <div className={styles.title}>
-          <span className={styles['title-text']}>TuGraph</span>
-          <Language />
-          <Tooltip
-            title={collapse ? formatMessage('home.collapse') : formatMessage('home.expand')}
-          >
-            <Button
-              type='text'
-              icon={collapse ? <RightCircleOutlined /> : <LeftCircleOutlined />}
-              className={styles['sider-collapsed-icon']}
-              onClick={() => {
-                setState((draft) => {
-                  draft.collapse = !draft.collapse;
-                })
-              }}
-            />
-          </Tooltip>
+          <span className={styles['title-text']}>
+            <img src={logoSrc} className={styles['title-logo']}/>
+            {
+              !collapse && <span>TuGraph</span>
+            }
+          </span>
+
+          {
+            !collapse && <>
+              <Language />
+              <Tooltip title='收起边栏'>
+                <Button
+                  type='text'
+                  icon={<LeftCircleOutlined />}
+                  className={styles['sider-collapsed-icon']}
+                  onClick={() => {
+                    setState((draft) => {
+                      draft.collapse = !draft.collapse;
+                    })
+                  }}
+                />
+              </Tooltip>
+            </>
+          }
         </div>
 
         <Tooltip title={collapse ? formatMessage('home.openNewConversation') : ''}>
@@ -312,8 +322,9 @@ const HomePage: React.FC = () => {
             type={collapse ? 'text' : 'primary'}
             className={styles['create-conversation']}
             icon={<PlusOutlined />}
+            size='large'
             block
-            ghost={collapse ? false : true}
+            ghost={collapse ? true : false}
           >
             {collapse ? '' : formatMessage('home.newConversation')}
           </Button>
@@ -329,6 +340,22 @@ const HomePage: React.FC = () => {
           />
         </Spin>
         <p className={styles.tips}>{formatMessage('home.tips')}</p>
+        {
+          collapse ? <Tooltip
+            title='打开边栏'
+          >
+            <Button
+              type='text'
+              icon={<RightCircleOutlined />}
+              className={styles['sider-collapsed-icon']}
+              onClick={() => {
+                setState((draft) => {
+                  draft.collapse = !draft.collapse;
+                })
+              }}
+            />
+          </Tooltip> : null
+        }
       </div>
 
       <div className={styles.chat}>
