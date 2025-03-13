@@ -20,7 +20,7 @@ async def test_vector_knowledge_base():
     print(chunks)
     print("---------------------")
 
-    chunk_ids = await VectorKnowledgeBase("test_vector_knowledge_base").load_document("/Users/songlinlyu/Documents/Code/chat2graph/app/core/knowledge/global_knowledge/awel.md")
+    chunk_ids = await VectorKnowledgeBase("test_vector_knowledge_base").load_document(GLOBAL_KNOWLEDGE_PATH)
     chunks = await VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
     print(chunks)
     print("---------------------")
