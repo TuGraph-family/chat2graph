@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 import os
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao import KnowledgeBaseDAO
+from app.core.dal.dao import KnowledgeBaseDAO, FileDAO, FileToKBDAO
 from app.core.dal.database import DB
 from app.core.model.knowledge_base import KnowledgeBase
 from app.core.knowledge.knowledge import Knowledge
@@ -11,19 +11,19 @@ from app.server.common.util import ServiceException
 from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
 from dbgpt.core import Chunk
 from app.core.common.async_func import run_async_function
-
-ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-GLOBAL_KNOWLEDGE_PATH = ROOT_PATH + "/app/core/knowledge/global_knowledge"
+from app.core.common.system_env import SystemEnv
 
 class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
 
     def __init__(self):
         self._global_knowledge_base = VectorKnowledgeBase("global_knowledge_base")
-        for root, dirs, files in os.walk(GLOBAL_KNOWLEDGE_PATH):
+        for root, dirs, files in os.walk(SystemEnv.APP_ROOT+"/global_knowledge"):
             for file in files:
                 run_async_function(self._global_knowledge_base.load_document, root+"/"+file)
-        self._dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
+        self._knowledge_base_dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
+        self._file_dao: FileDAO = FileDAO(DB())
+        self._knowledge_base_dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str

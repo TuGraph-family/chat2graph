@@ -24,10 +24,7 @@ from dbgpt.rag.assembler import EmbeddingAssembler
 from dbgpt.rag.retriever import RetrieverStrategy
 from dbgpt.model.proxy.llms.tongyi import TongyiLLMClient
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient
-
-ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-MODEL_PATH = ROOT_PATH + "/app/core/knowledge"
-PILOT_PATH = ROOT_PATH + "/pilot"
+from app.core.common.system_env import SystemEnv
 
 llm_client = OpenAILLMClient()
 model_name = "gpt-4o-mini"
@@ -38,10 +35,10 @@ class VectorKnowledgeBase(KnowledgeBase):
 
     def __init__(self, name):
         config = ChromaVectorConfig(
-            persist_path=PILOT_PATH,
+            persist_path=SystemEnv.APP_ROOT+"/knowledge_base",
             name=name,
             embedding_fn=DefaultEmbeddingFactory(
-                default_model_name=os.path.join(MODEL_PATH, "text2vec-large-chinese"),
+                default_model_name=os.path.join(SystemEnv.APP_ROOT+"/models", SystemEnv.EMBEDDING_MODEL),
             ).create(),
         )
         self._vector_base = ChromaStore(config)
