@@ -12,26 +12,20 @@ from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 
-ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GLOBAL_KNOWLEDGE_PATH = ROOT_PATH + "/app/core/knowledge/global_knowledge"
-
 async def test_vector_knowledge_base():
     chunks = await VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
-    print(chunks)
-    print("---------------------")
+    assert len(chunks) == 0
 
-    chunk_ids = await VectorKnowledgeBase("test_vector_knowledge_base").load_document(GLOBAL_KNOWLEDGE_PATH)
+    chunk_ids = await VectorKnowledgeBase("test_vector_knowledge_base").load_document(SystemEnv.APP_ROOT+"/global_knowledge/awel.md")
     chunks = await VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
-    print(chunks)
-    print("---------------------")
+    assert len(chunks) != 0
 
     VectorKnowledgeBase("test_vector_knowledge_base").delete_document(chunk_ids)
     chunks = await VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
-    print(chunks)
+    assert len(chunks) == 0
 
 async def test_knowledge_base_service():
-    print(GLOBAL_KNOWLEDGE_PATH)
     knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
-    await KnowledgeBaseService.instance.load_global_knowledge(GLOBAL_KNOWLEDGE_PATH)
     knowledge = await KnowledgeBaseService.instance.get_knowledge(query="what is awel talk about",session_id="test_knowledge_base_service")
-    print(knowledge.get_payload())
+    assert "[Knowledges From Gloabal Knowledge Base]" in knowledge.get_payload()
+    assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
