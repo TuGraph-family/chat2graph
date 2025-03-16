@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from app.core.common.singleton import Singleton
 from app.core.dal.dao.message_dao import MessageDao
 from app.core.dal.do.message_do import TextMessageDo
-from app.core.model.job import Job
+from app.core.model.job import Job, SubJob
 from app.core.model.message import AgentMessage, Message, MessageType, TextMessage
 
 
@@ -16,13 +16,122 @@ class MessageService(metaclass=Singleton):
     def save_message(self, message: Message) -> Message:
         """Save a new message."""
         # create the message
-        self._message_dao.save_message_do(message=message)
+        self._message_dao.save_message(message=message)
         return message
 
-    def get_agent_messages_by_job_id(self, job: Job) -> List[AgentMessage]:
+    def get_message(self, id: str, type: MessageType) -> Message:
+        """Get a message by ID."""
+        # fetch the message
+        result = self._message_dao.get_by_id(id=id)
+        if not result or str(result.type) != type.value:
+            raise ValueError(f"Message with ID {id} not found or type mismatch")
+        if type == MessageType.TEXT_MESSAGE:
+            return TextMessage(
+                id=str(result.id),
+                session_id=str(result.session_id),
+                job_id=str(result.job_id),
+                role=str(result.role),
+                payload=str(result.payload),
+                timestamp=int(result.timestamp),
+            )
+        if type == MessageType.AGENT_MESSAGE:
+            return AgentMessage(
+                id=str(result.id),
+                job_id=str(result.job_id),
+                payload=str(result.payload),
+                workflow_messages=[
+                    self._message_dao.get_workflow_message(wf_id)
+                    for wf_id in list(result.related_message_ids or [])
+                ],
+                timestamp=int(result.timestamp),
+            )
+        if type == MessageType.WORKFLOW_MESSAGE:
+            return self._message_dao.get_workflow_message(id=str(result.id))
+        # TODO: handle other message types
+
+        raise ValueError(f"Unsupported message type: {type}")
+
+    def get_message_by_job_id(self, job_id: str, type: MessageType) -> List[Message]:
+        """Get all messages by job ID."""
+        # fetch messages by job ID
+        results = self._message_dao.filter_by(job_id=job_id)
+        if not results:
+            raise ValueError(f"No messages found for job ID {job_id}")
+        if type == MessageType.TEXT_MESSAGE:
+            return [
+                TextMessage(
+                    id=str(result.id),
+                    session_id=str(result.session_id),
+                    job_id=str(result.job_id),
+                    role=str(result.role),
+                    payload=str(result.payload),
+                    timestamp=int(result.timestamp),
+                )
+                for result in results
+                if str(result.type) == MessageType.TEXT_MESSAGE.value
+            ]
+        if type == MessageType.AGENT_MESSAGE:
+            return [
+                AgentMessage(
+                    id=str(result.id),
+                    job_id=str(result.job_id),
+                    payload=str(result.payload),
+                    workflow_messages=[
+                        self._message_dao.get_workflow_message(wf_id)
+                        for wf_id in list(result.related_message_ids or [])
+                    ],
+                    timestamp=int(result.timestamp),
+                )
+                for result in results
+                if str(result.type) == MessageType.AGENT_MESSAGE.value
+            ]
+        # TODO: handle other message types
+
+        raise ValueError(f"Unsupported message type: {type}")
+
+    def get_by_type(self, type: MessageType) -> List[Message]:
+        """Get all messages by type."""
+        # fetch messages by type
+        results = self._message_dao.get_by_type(type=type)
+        if type == MessageType.TEXT_MESSAGE:
+            return [
+                TextMessage(
+                    id=str(result.id),
+                    session_id=str(result.session_id),
+                    job_id=str(result.job_id),
+                    role=str(result.role),
+                    payload=str(result.payload),
+                    timestamp=int(result.timestamp),
+                )
+                for result in results
+            ]
+        if type == MessageType.AGENT_MESSAGE:
+            return [
+                AgentMessage(
+                    id=str(result.id),
+                    job_id=str(result.job_id),
+                    payload=str(result.payload),
+                    workflow_messages=[
+                        self._message_dao.get_workflow_message(wf_id)
+                        for wf_id in list(result.related_message_ids or [])
+                    ],
+                    timestamp=int(result.timestamp),
+                )
+                for result in results
+            ]
+        if type == MessageType.WORKFLOW_MESSAGE:
+            return [self._message_dao.get_workflow_message(id=str(result.id)) for result in results]
+        # TODO: handle other message types
+
+        raise ValueError(f"Unsupported message type: {type}")
+
+    def get_agent_message_by_job(self, job: SubJob) -> AgentMessage:
         """Get agent messages by job ID."""
-        # fetch agent messages
-        return self._message_dao.get_agent_messages_by_job(job=job)
+        return self._message_dao.get_agent_message_by_job(job=job)
+
+    def get_system_role_text_message_by_job(self, job: Job) -> TextMessage:
+        """Get system text messages by job ID."""
+        return self._message_dao.get_system_role_text_message_by_job(job=job)
 
     def get_text_message(self, id: str) -> TextMessage:
         """Get a message by ID."""
@@ -37,7 +146,6 @@ class MessageService(metaclass=Singleton):
             role=str(result.role),
             payload=str(result.payload),
             timestamp=int(result.timestamp),
-            others=str(result.others),
         )
 
     def delete_text_message(self, id: str) -> None:
@@ -94,7 +202,6 @@ class MessageService(metaclass=Singleton):
                 role=str(updated_message.role),
                 payload=str(updated_message.payload),
                 timestamp=int(updated_message.timestamp),
-                others=str(updated_message.others),
             )
 
         return TextMessage(
@@ -104,7 +211,6 @@ class MessageService(metaclass=Singleton):
             role=str(existing_message.role),
             payload=str(existing_message.payload),
             timestamp=int(existing_message.timestamp),
-            others=str(existing_message.others),
         )
 
     def get_all_text_messages(self) -> List[TextMessage]:
@@ -119,7 +225,6 @@ class MessageService(metaclass=Singleton):
                 role=str(result.role),
                 payload=str(result.payload),
                 timestamp=int(result.timestamp),
-                others=str(result.others),
             )
             for result in results
         ]
@@ -143,7 +248,6 @@ class MessageService(metaclass=Singleton):
                 role=str(result.role),
                 payload=str(result.payload),
                 timestamp=int(result.timestamp),
-                others=str(result.others),
             )
             for result in results
         ]

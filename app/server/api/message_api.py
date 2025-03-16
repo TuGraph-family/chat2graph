@@ -34,23 +34,8 @@ def get_text_message(message_id):
     """Get message details by ID."""
     manager = MessageManager()
     try:
-        message_details, message = manager.get_text_message(id=message_id)
+        message_details, message = manager.query_text_message(id=message_id)
         return make_response(True, data=message_details, message=message)
-    except ApiException as e:
-        return make_response(False, message=str(e))
-
-
-@messages_bp.route("/filter", methods=["POST"])
-def filter_messages_by_session():
-    """Filter messages by session ID."""
-    manager = MessageManager()
-    data = request.json
-    try:
-        session_id = data.get("session_id")
-        assert isinstance(session_id, str), "Session ID should be a string"
-
-        filtered_messages, message = manager.filter_text_messages_by_session(session_id=session_id)
-        return make_response(True, data=filtered_messages, message=message)
     except ApiException as e:
         return make_response(False, message=str(e))
 

@@ -16,6 +16,8 @@ class MessageType(Enum):
     AGENT_MESSAGE = "AGENT_MESSAGE"
     CHAT_MESSAGE = "CHAT_MESSAGE"
     TEXT_MESSAGE = "TEXT_MESSAGE"
+    FILE_MESSAGE = "FILE_MESSAGE"
+    HYBRID_MESSAGE = "HYBRID_MESSAGE"
 
 
 class Message(ABC):
@@ -165,14 +167,22 @@ class AgentMessage(Message):
     def __init__(
         self,
         job_id: str,
+        payload: Optional[str] = None,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
     ):
         super().__init__(job_id=job_id, timestamp=timestamp, id=id)
+        self._payload: Optional[str] = payload
         self._workflow_messages: List[WorkflowMessage] = workflow_messages or []
         self._lesson: Optional[str] = lesson
+
+    def get_payload(self) -> str:
+        """Get the content of the message."""
+        if not self._payload:
+            raise ValueError("The agent message has no payload.")
+        return self._payload
 
     def get_workflow_messages(self) -> List[WorkflowMessage]:
         """Get the workflow messages of the execution results of the previous jobs."""
@@ -214,8 +224,6 @@ class ChatMessage(Message):
         _timestamp int: Timestamp of the message (defaults to current UTC time)
         _payload (Any): The content of the message
         _session_id (Optional[str]): ID of the associated session
-        _others (Optional[str]): Additional information
-        _assigned_expert_name (Optional[str]): Name of the assigned expert
     """
 
     def __init__(
@@ -225,14 +233,10 @@ class ChatMessage(Message):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
-        others: Optional[str] = None,
-        assigned_expert_name: Optional[str] = None,
     ):
         super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         self._payload: Any = payload
         self._session_id: Optional[str] = session_id
-        self._others: Optional[str] = others
-        self._assigned_expert_name: Optional[str] = assigned_expert_name
 
     def get_payload(self) -> Any:
         """Get the content of the message."""
@@ -250,18 +254,6 @@ class ChatMessage(Message):
         """Get the session ID."""
         return self._session_id
 
-    def get_others(self) -> Optional[str]:
-        """Get the additional information."""
-        return self._others
-
-    def get_assigned_expert_name(self) -> Optional[str]:
-        """Get the assigned expert name."""
-        return self._assigned_expert_name
-
-    def set_assigned_expert_name(self, assigned_expert_name: str):
-        """Set the assigned expert name."""
-        self._assigned_expert_name = assigned_expert_name
-
     def copy(self) -> "ChatMessage":
         """Copy the message."""
         return ChatMessage(
@@ -270,7 +262,6 @@ class ChatMessage(Message):
             timestamp=self._timestamp,
             id=self._id,
             session_id=self._session_id,
-            others=self._others,
         )
 
 
@@ -285,7 +276,6 @@ class TextMessage(ChatMessage):
         id: Optional[str] = None,
         session_id: Optional[str] = None,
         role: Optional[str] = None,
-        others: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
     ):
         super().__init__(
@@ -294,10 +284,9 @@ class TextMessage(ChatMessage):
             timestamp=timestamp,
             id=id,
             session_id=session_id,
-            others=others,
-            assigned_expert_name=assigned_expert_name,
         )
-        self._role: Optional[str] = role
+        self._role: Optional[str] = role  # "system", or "user" # TODO: refactor to enum
+        self._assigned_expert_name: Optional[str] = assigned_expert_name
 
     def get_payload(self) -> str:
         """Get the string content of the message."""
@@ -307,9 +296,13 @@ class TextMessage(ChatMessage):
         """Get the role."""
         return self._role
 
-    def get_role(self) -> Optional[str]:
-        """Get the role."""
-        return self._role
+    def get_assigned_expert_name(self) -> Optional[str]:
+        """Get the assigned expert name."""
+        return self._assigned_expert_name
+
+    def set_assigned_expert_name(self, assigned_expert_name: str):
+        """Set the assigned expert name."""
+        self._assigned_expert_name = assigned_expert_name
 
     def copy(self) -> "TextMessage":
         """Copy the message."""
@@ -321,5 +314,57 @@ class TextMessage(ChatMessage):
             session_id=self._session_id,
             role=self._role,
             assigned_expert_name=self._assigned_expert_name,
-            others=self._others,
         )
+
+
+class FileMessage(ChatMessage):
+    """File message"""
+
+    def __init__(
+        self,
+        payload: Any,
+        session_id: str,
+        timestamp: Optional[int] = None,
+        id: Optional[str] = None,
+    ):
+        super().__init__(
+            payload=payload,
+            job_id="unused_job_id",
+            timestamp=timestamp,
+            id=id,
+            session_id=session_id,
+        )
+
+    def get_payload(self) -> Any:
+        """Get the content of the message."""
+        # TODO: Implement the file message payload handling
+        raise NotImplementedError("File message payload handling is not implemented yet.")
+
+
+class HybridMessage(ChatMessage):
+    """Hybrid message"""
+
+    def __init__(
+        self,
+        job_id: Optional[str] = None,
+        timestamp: Optional[int] = None,
+        id: Optional[str] = None,
+        session_id: Optional[str] = None,
+        supplementary_messages: Optional[List[ChatMessage]] = None,
+    ):
+        super().__init__(
+            payload=None,
+            job_id=job_id or "unused_job_id",
+            timestamp=timestamp,
+            id=id,
+            session_id=session_id,
+        )
+        self._supplementary_messages: List[ChatMessage] = supplementary_messages or []
+
+    def get_payload(self) -> None:
+        """Get the payload of the message."""
+        raise ValueError("Hybrid message does not have a payload.")
+
+    def get_supplementary_messages(self) -> List[ChatMessage]:
+        """Get the supplementary messages."""
+        return self._supplementary_messages

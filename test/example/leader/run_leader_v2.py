@@ -232,19 +232,19 @@ paper content:
 
     # execute job graph
     print("\n=== Starting Paper Analysis ===")
-    leader.execute_job_graph(job_graph=job_service.get_job_graph("test_original_job_id"))
+    leader.execute_job_graph(original_job_id="test_original_job_id")
     job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
 
     for tail_vertex in tail_vertices:
-        job = job_graph.get_job(tail_vertex)
-        job_result = job_graph.get_job_result(tail_vertex)
+        job = job_service.get_subjob(tail_vertex)
+        job_result = job_service.query_job_result(tail_vertex)
         if not job_result:
             print(f"Job {tail_vertex} is not completed yet.")
             continue
         print(f"\nTask {job.id}:")
         print(f"Status: {job_result.status}")
-        print(f"Output: {job_result.result.get_payload()}")
+        print(f"Output: {job_result.message.get_payload()}")
         print("-" * 50)
 
 

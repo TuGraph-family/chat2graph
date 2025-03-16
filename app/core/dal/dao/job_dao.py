@@ -1,8 +1,11 @@
+from typing import Optional, cast
+
 from sqlalchemy.orm import Session as SqlAlchemySession
 
 from app.core.dal.dao.dao import Dao
 from app.core.dal.do.job_do import JobDo
-from app.core.model.job import Job, SubJob
+from app.core.model.job import Job, JobType, SubJob
+from app.core.model.job_result import JobResult
 
 
 class JobDao(Dao[JobDo]):
@@ -15,14 +18,19 @@ class JobDao(Dao[JobDo]):
         """Create a new job model."""
         if isinstance(job, SubJob):
             return self.create(
+                category=JobType.SUB_JOB.value,
                 id=job.id,
                 goal=job.goal,
                 context=job.context,
                 session_id=job.session_id,
+                original_job_id=job.original_job_id,
+                expert_id=job.expert_id,
                 output_schema=job.output_schema,
                 life_cycle=job.life_cycle,
+                is_legacy=job.is_legacy,
             )
         return self.create(
+            category=JobType.JOB.value,
             id=job.id,
             goal=job.goal,
             context=job.context,
@@ -38,8 +46,11 @@ class JobDao(Dao[JobDo]):
                 goal=job.goal,
                 context=job.context,
                 session_id=job.session_id,
+                original_job_id=job.original_job_id,
+                expert_id=job.expert_id,
                 output_schema=job.output_schema,
                 life_cycle=job.life_cycle,
+                is_legacy=job.is_legacy,
             )
         return self.update(
             id=job.id,
@@ -47,6 +58,16 @@ class JobDao(Dao[JobDo]):
             context=job.context,
             session_id=job.session_id,
             assigned_expert_name=job.assigned_expert_name,
+            dag=job.dag,
+        )
+
+    def update_job_result(self, job_result: JobResult) -> JobDo:
+        """Update a job model with the job result."""
+        return self.update(
+            id=job_result.job_id,
+            status=job_result.status.value,
+            duration=job_result.duration,
+            tokens=job_result.tokens,
         )
 
     def get_job_by_id(self, id: str) -> Job:
@@ -54,21 +75,25 @@ class JobDao(Dao[JobDo]):
         result = self.get_by_id(id=id)
         if not result:
             raise ValueError(f"Job with ID {id} not found")
-        if result.assigned_expert_name:
+        if result.category == JobType.JOB.value:
             return Job(
-                goal=str(result.goal),
-                context=str(result.context),
-                id=str(result.id),
-                session_id=str(result.session_id),
-                assigned_expert_name=str(result.assigned_expert_name),
+                id=cast(str, result.id),
+                goal=cast(str, result.goal),
+                context=cast(str, result.context),
+                session_id=cast(str, result.session_id),
+                assigned_expert_name=cast(Optional[str], result.assigned_expert_name),
+                dag=cast(Optional[str], result.dag),
             )
         return SubJob(
-            goal=str(result.goal),
-            context=str(result.context),
-            id=str(result.id),
-            session_id=str(result.session_id),
-            output_schema=str(result.output_schema),
-            life_cycle=int(result.life_cycle),
+            id=cast(str, result.id),
+            goal=cast(str, result.goal),
+            context=cast(str, result.context),
+            session_id=cast(str, result.session_id),
+            original_job_id=cast(str, result.original_job_id),
+            expert_id=cast(str, result.expert_id),
+            output_schema=cast(str, result.output_schema),
+            life_cycle=cast(int, result.life_cycle),
+            is_legacy=cast(bool, result.is_legacy),
         )
 
     def remove_job(self, id: str) -> None:

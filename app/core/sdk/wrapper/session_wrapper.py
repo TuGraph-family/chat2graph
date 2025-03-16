@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from app.core.common.async_func import run_in_thread
 from app.core.model.job import Job
-from app.core.model.message import ChatMessage, TextMessage
+from app.core.model.message import TextMessage
 from app.core.model.session import Session
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.service.job_service import JobService
@@ -17,7 +17,7 @@ class SessionWrapper:
         session_service: SessionService = SessionService.instance
         self._session: Session = session or session_service.get_session()
 
-    def submit(self, message: ChatMessage) -> JobWrapper:
+    def submit(self, message: TextMessage) -> JobWrapper:
         """Submit the job."""
         message_service: MessageService = MessageService.instance
         session_id: Optional[str] = message.get_session_id()

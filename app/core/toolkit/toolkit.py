@@ -21,8 +21,8 @@ class Toolkit(Graph):
         _scores (Dict[Tuple[str, str], float]): The scores of the edges in the graph.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, graph: Optional[nx.DiGraph] = None) -> None:
+        super().__init__(graph=graph)
         self._actions: Dict[str, Action] = {}  # vertex_id -> Action
         self._tools: Dict[str, Tool] = {}  # vertex_id -> Tool
         self._scores: Dict[Tuple[str, str], float] = {}  # (u, v) -> score

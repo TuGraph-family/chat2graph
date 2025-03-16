@@ -7,7 +7,7 @@ from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.builtin_leader_state import BuiltinLeaderState
 from app.core.agent.leader import Leader
 from app.core.common.singleton import AbcSingleton
-from app.core.model.job import Job
+from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, WorkflowMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
@@ -153,8 +153,6 @@ Final Delivery:
 """
     mock_reasoner.infer.return_value = mock_response
 
-    job = Job(session_id="test_session_id", goal="extract entities from text")
-
     expert_profile_1 = AgentConfig(
         profile=Profile(
             name="Expert 1",
@@ -183,23 +181,36 @@ Final Delivery:
     leader.state.create_expert(expert_profile_2)
     leader.state.create_expert(expert_profile_3)
 
-    # configure the initial job graph
-    initial_job_graph: JobGraph = JobGraph()
-    initial_job_graph.add_vertex(id=job.id, job=job)
+    # create the main job and the existing subjob
+    job = Job(goal="The tested main job")
     job_service: JobService = JobService.instance
-    job_service.set_job_graph(job_id=job.id, job_graph=initial_job_graph)
+    job_service.save_job(job)
+    sub_job = SubJob(
+        goal="extract entities from text",
+        original_job_id=job.id,
+        expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
+    )
+    job_service.save_job(sub_job)
+
+    # configure the initial job graph
+    job_service.add_job(
+        original_job_id=job.id,
+        job=sub_job,
+        expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
+        predecessors=[],
+        successors=[],
+    )
+    initial_job_graph: JobGraph = job_service.get_job_graph(job.id)
 
     job_graph = leader.execute(AgentMessage(job_id=job.id))
-    print(f"job_graph: {job_graph.vertices}")
     job_service.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
 
     assert isinstance(job_graph, JobGraph)
-    assert all(isinstance(vertex_data["job"], Job) for _, vertex_data in job_graph.vertices_data())
 
     assert len(job_service.get_job_graph(job.id).vertices()) == 3
     assert len(job_service.get_job_graph(job.id).edges()) == 3  # 3 dependencies
 
-    assert len(job_service.get_job_graph(job.id)._legacy_jobs.keys()) == 1
+    assert job_service.get_subjob(sub_job.id).is_legacy
 
 
 @pytest.mark.asyncio
@@ -212,18 +223,24 @@ Analyzing the task...
 """
     mock_reasoner.infer.return_value = mock_response
 
-    job = Job(session_id="test_session_id", goal="")
     job_service: JobService = JobService.instance
+
+    original_job = Job(goal="")
+    job_service.save_job(original_job)
+    subjob = SubJob(goal="", original_job_id=original_job.id, expert_id=leader._id)
+    job_service.save_job(subjob)
+
     job_service.add_job(
-        original_job_id="test_original_job_id",
-        job=job,
-        expert_id="test_expert_id",
+        original_job_id=original_job.id,
+        job=subjob,
+        expert_id=leader._id,  # it is not a good idea to use the private attribute,
+        # but it is ok for now
         predecessors=[],
         successors=[],
     )
 
     with pytest.raises(Exception) as exc_info:
-        job_graph = leader.execute(AgentMessage(job_id=job.id))
+        job_graph = leader.execute(AgentMessage(job_id=subjob.id))
         job_service.replace_subgraph(new_subgraph=job_graph)
 
     assert "Failed to decompose the subjobs by json format" in str(exc_info.value)
