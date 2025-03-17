@@ -47,7 +47,8 @@ class SessionWrapper:
         job_wrapper = JobWrapper(job)
 
         # update the text message with the job ID
-        message_service.update_text_message(id=message.get_id(), job_id=job_wrapper.id)
+        message.set_job_id(job_wrapper.id)
+        message_service.save_message(message=message)
 
         # update the latest job id in the session
         session_service: SessionService = SessionService.instance

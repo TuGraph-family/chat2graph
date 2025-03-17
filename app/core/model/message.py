@@ -40,6 +40,10 @@ class Message(ABC):
         """Get the job ID."""
         return self._job_id
 
+    def set_job_id(self, job_id: str):
+        """Set the job ID."""
+        self._job_id = job_id
+
     @abstractmethod
     def copy(self) -> "Message":
         """Copy the message."""

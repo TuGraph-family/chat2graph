@@ -8,7 +8,7 @@ from app.server.common.util import ApiException, make_response
 from app.server.manager.job_manager import JobManager
 from app.server.manager.message_manager import MessageManager
 from app.server.manager.session_manager import SessionManager
-from app.server.manager.view.session_view import SessionView
+from app.server.manager.view.message_view import MessageView
 
 sessions_bp = Blueprint("sessions", __name__)
 
@@ -109,7 +109,7 @@ def chat(session_id):
             raise ApiException("Data is required")
         data["session_id"] = session_id
 
-        text_message: TextMessage = SessionView.deserialize_message(
+        text_message: TextMessage = MessageView.deserialize_message(
             message=data, message_type=MessageType.TEXT_MESSAGE
         )
         response_data, message = manager.chat(text_message)
