@@ -89,13 +89,13 @@ export async function deleteSession(
 /**
  * 通过 id 获取 job ids
 */
-export async function getJobIdsById(
+export async function getJobIdById(
   params: {
     session_id?: string;
   },
   options?: { [key: string]: any },
 ) {
-  return request<API.Result_JobIds_>(`/api/sessions/${params.session_id}/job_ids`, {
+  return request<API.Result_JobIds_>(`/api/sessions/${params.session_id}/job_id`, {
     method: 'GET',
     ...(options || {}),
   });
@@ -119,7 +119,29 @@ export async function getJobIdsBySessionId(
     headers: {
       'Content-Type': 'application/json',
     },
-    data: body,
+    data: {
+      ...body,
+      message_type: 'TEXT',
+    },
+    ...(options || {}),
+  });
+}
+
+
+/**
+ * 通过 sessionid 获取 message views
+*/
+export async function getMessagesBySessionId(
+  params: {
+    session_id?: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.Result_Messages_>(`/api/sessions/${params.session_id}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     ...(options || {}),
   });
 }

@@ -59,9 +59,10 @@ const HomePage: React.FC = () => {
     runUpdateSession,
     runDeleteSession,
     runGetSessionById,
-    runGetJobsById,
+    runGetJobById,
     runGetJobResults,
     runGetJobIdsBySessionId,
+    runGetMessagesBySessionId,
   } = useSessionEntity();
   const { sessions } = sessionEntity;
 
@@ -203,16 +204,12 @@ const HomePage: React.FC = () => {
   };
 
 
-  const getHistoryMessage = async (job_id: string) => {
-    const { data } = await runGetJobResults({
-      job_id,
-    })
+  const getHistoryMessage = (data: API.JobVO) => {
 
     const { answer, qustion } = data || {};
-
-    const a = [
+    const viewItem = [
       {
-        id: qustion?.message?.id + job_id,
+        id: qustion?.message?.id,
         message: qustion?.message,
       },
       {
@@ -220,7 +217,7 @@ const HomePage: React.FC = () => {
       }
     ]
 
-    return a
+    return viewItem
   }
 
   const onConversationClick: GetProp<typeof Conversations, 'onActiveChange'> = (key: string) => {
@@ -234,20 +231,10 @@ const HomePage: React.FC = () => {
       }
     });
 
-    runGetJobsById({
+    runGetMessagesBySessionId({
       session_id: key,
-    }).then((res: any) => {
-      const c = res?.data?.ids?.map((item: string) => {
-        return getHistoryMessage(item);
-      })
-      Promise.all(c).then((res) => {
-
-        setMessages(res?.flat())
-        setState((draft) => {
-          draft.defaultMessages = res?.flat()
-        })
-      })
-
+    }).then((res: API.Result_Messages_) => {
+      res?.data?.map(item => getHistoryMessage(item))?.flat()
 
     })
 

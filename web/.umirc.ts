@@ -13,7 +13,7 @@ export default defineConfig({
   // },
   proxy: {
     '/api': {
-      'target': 'http://localhost:8000',
+      'target': 'http://gengsheng.alipay.net:5000',
       'changeOrigin': true,
       // 'pathRewrite': { '^/api' : '' },
     }

@@ -84,7 +84,7 @@ declare namespace API {
     success?: boolean;
     message?: string;
     data?: {
-      ids?: Array<string>;
+      id?: string;
     };
   }
 
@@ -97,7 +97,6 @@ declare namespace API {
   interface ChatVO {
     id?: string,
     job_id?: string,
-    message?: string,
     message_type?: string,
     others?: any,
     role?: string,
@@ -106,6 +105,7 @@ declare namespace API {
     timestamp?: string,
     payload?: string,
     status?: string,
+    thinking?: any
   }
 
   interface Result_Chat_ {
@@ -132,9 +132,6 @@ declare namespace API {
   }
 
 
-
-
-
   interface JobVO {
     answer: AnwerVO & {
       thinking?: Array<AnwerVO>;
@@ -146,6 +143,12 @@ declare namespace API {
     success?: boolean;
     message?: string;
     data?: JobVO;
+  }
+
+  interface Result_Messages_ {
+    success?: boolean;
+    message?: string;
+    data?: Array<JobVO>;
   }
 
 }

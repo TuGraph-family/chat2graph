@@ -63,9 +63,9 @@ export const useSessionEntity = () => {
 
 
   const {
-    run: runGetJobsById,
-    loading: loadingGetJobsById,
-  } = useRequest(services.getJobIdsById, {
+    run: runGetJobById,
+    loading: loadingGetJobById,
+  } = useRequest(services.getJobIdById, {
     manual: true,
   });
 
@@ -75,6 +75,14 @@ export const useSessionEntity = () => {
   } = useRequest(services.getJobResults, {
     manual: true,
   });
+
+
+  const {
+    run: runGetMessagesBySessionId,
+    loading: loadingGetMessagesBySessionId
+  } = useRequest(services.getMessagesBySessionId, {
+    manual: true
+  })
 
   const getSessionList = () => {
     runGetSessions({
@@ -100,9 +108,10 @@ export const useSessionEntity = () => {
     loadingUpdateSession,
     runGetJobIdsBySessionId,
     loadingGetJobIdsBySessionId,
-    runGetJobsById,
-    loadingGetJobsById,
+    runGetJobById,
+    loadingGetJobById,
     runGetJobResults,
     loadingGetJobResults,
+    runGetMessagesBySessionId,
   };
 };

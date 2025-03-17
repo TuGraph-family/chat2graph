@@ -4,8 +4,9 @@ import {
   getSessionById,
   updateSession,
   deleteSession,
-  getJobIdsById,
+  getJobIdById,
   getJobIdsBySessionId,
+  getMessagesBySessionId,
 } from '@/services/chat2graph/SessionsController';
 
 import {
@@ -39,9 +40,11 @@ class SessionsService {
   // 删除会话
   public deleteSession = deleteSession;
   // 通过 id 获取 job ids
-  public getJobIdsById = getJobIdsById;
+  public getJobIdById = getJobIdById;
   // 通过 sessionid 获取 jobId
   public getJobIdsBySessionId = getJobIdsBySessionId;
+  // 通过 sessionId 获取 message view
+  public getMessagesBySessionId = getMessagesBySessionId;
 
 
 
