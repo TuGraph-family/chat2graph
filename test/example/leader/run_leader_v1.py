@@ -2,15 +2,22 @@ from typing import List, Optional
 
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import WorkflowMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
+from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+
+DaoFactory().initialize(DbSession())
+ServiceFactory().initialize()
 
 
 class BaseTestOperator(Operator):
@@ -130,7 +137,9 @@ def main():
     """Main function for testing leader execute functionality."""
     # initialize components
     reasoner = DualModelReasoner()
-    agent_config = AgentConfig(profile="test", reasoner=reasoner, workflow=DbgptWorkflow())
+    agent_config = AgentConfig(
+        profile=Profile(name="Academic_reviewer"), reasoner=reasoner, workflow=DbgptWorkflow()
+    )
     leader = Leader(agent_config=agent_config)
 
     # create jobs with more complex descriptions
@@ -144,6 +153,7 @@ def main():
     #                 ↓
     #              Task4 (Sum)
 
+    job = Job(id="test_original_job_id", session_id="test_session_id", goal="Test Job")
     job_1 = SubJob(
         id="job_1",
         session_id="test_session_id",
@@ -212,7 +222,8 @@ def main():
             ),
         )
 
-    job_service: JobService = JobService()
+    job_service: JobService = JobService.instance
+    job_service.save_job(job=job)
     # Create job graph structure
     job_service.add_job(
         original_job_id="test_original_job_id",
@@ -261,6 +272,7 @@ def main():
     job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
 
+    message_service: MessageService = MessageService.instance
     print("\n=== Execution Results ===")
     for tail_vertex in tail_vertices:
         job = job_service.get_subjob(tail_vertex)
@@ -270,7 +282,7 @@ def main():
             continue
         print(f"\nTask {job.id}:")
         print(f"Status: {job_result.status}")
-        print(f"Output: {job_result.message.get_payload()}")
+        print(f"Output: {message_service.get_agent_message_by_job(job=job).get_payload()}")
         print("-" * 50)
 
 

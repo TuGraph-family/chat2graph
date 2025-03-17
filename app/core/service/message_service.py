@@ -129,9 +129,9 @@ class MessageService(metaclass=Singleton):
         """Get agent messages by job ID."""
         return self._message_dao.get_agent_message_by_job(job=job)
 
-    def get_system_role_text_message_by_job(self, job: Job) -> TextMessage:
+    def get_text_message_by_job_and_role(self, job: Job, role: str) -> TextMessage:
         """Get system text messages by job ID."""
-        return self._message_dao.get_system_role_text_message_by_job(job=job)
+        return self._message_dao.get_text_message_by_job_and_role(job=job, role=role)
 
     def get_text_message(self, id: str) -> TextMessage:
         """Get a message by ID."""
@@ -162,7 +162,6 @@ class MessageService(metaclass=Singleton):
         job_id: Optional[str] = None,
         role: Optional[str] = None,
         payload: Optional[str] = None,
-        others: Optional[str] = None,
     ) -> TextMessage:
         """Update a message by ID.
 
@@ -171,7 +170,6 @@ class MessageService(metaclass=Singleton):
             job_id (Optional[str]): Updated job ID
             role (Optional[str]): Updated role
             payload (Optional[str]): Updated content of the message
-            others (Optional[str]): Updated additional information
 
         Returns:
             TextMessage: Updated TextMessage object
@@ -189,8 +187,6 @@ class MessageService(metaclass=Singleton):
             update_fields["role"] = role
         if payload is not None and payload != str(existing_message.payload):
             update_fields["payload"] = payload
-        if others is not None and others != str(existing_message.others):
-            update_fields["others"] = others
 
         # update only if there are changes
         if update_fields:

@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, TypeVar
 
+from app.core.common.type import ChatMessageType
 from app.core.model.message import AgentMessage, Message, TextMessage
 
 T = TypeVar("T", bound=Message)
@@ -18,19 +19,21 @@ class MessageView:
         if isinstance(message, AgentMessage):
             return {
                 "id": message.get_id(),
-                "agent_result": message.get_payload(),
-                "lesson": message.get_lesson(),
+                "job_id": message.get_job_id(),
                 "timestamp": message.get_timestamp(),
+                "payload": message.get_payload() or "",
+                "lesson": message.get_lesson(),
             }
 
         if isinstance(message, TextMessage):
             return {
                 "id": message.get_id(),
-                "session_id": message.get_session_id(),
                 "job_id": message.get_job_id(),
-                "role": message.get_role(),
-                "message": message.get_payload(),
                 "timestamp": message.get_timestamp(),
+                "payload": message.get_payload(),
+                "message_type": ChatMessageType.TEXT.value,
+                "role": message.get_role(),
+                "session_id": message.get_session_id(),
                 "assigned_expert_name": message.get_assigned_expert_name(),
             }
         raise ValueError(f"Unsupported message type: {type(message)}")

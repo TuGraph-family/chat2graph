@@ -18,7 +18,7 @@ class SessionView:
                 id=message.get("id", None),
                 session_id=message["session_id"],
                 job_id=message.get("job_id", None),
-                role=message.get("role", "user"),
+                role=message.get("role", "USER"),
                 payload=message["message"],
                 timestamp=message.get("timestamp"),
                 assigned_expert_name=message.get("assigned_expert_name", None),

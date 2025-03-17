@@ -27,9 +27,10 @@ class Expert(Agent):
 
         # TODO: convert to a state machine (?)
 
-        job_id = agent_message.get_job_id()
         job_service: JobService = JobService.instance
+        job_id = agent_message.get_job_id()
         job: Job = job_service.get_subjob(job_id=job_id)
+
         workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
 
         try:
@@ -65,7 +66,7 @@ class Expert(Agent):
             # color: bright green
             print(f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m")
 
-            agent_message = AgentMessage(
+            expert_message = AgentMessage(
                 job_id=job.id,
                 workflow_messages=[workflow_message],
                 payload=workflow_message.scratchpad,
@@ -76,9 +77,9 @@ class Expert(Agent):
                 duration=0,  # TODO: calculate the duration
                 tokens=0,  # TODO: calculate the tokens
             )
-            message_service.save_message(message=agent_message)
+            message_service.save_message(message=expert_message)
             job_service.update_job_result(job_result=job_result)
-            return agent_message
+            return expert_message
         if workflow_message.status == WorkflowStatus.EXECUTION_ERROR:
             # (2) WorkflowStatus.EXECUTION_ERROR
 
@@ -115,13 +116,13 @@ class Expert(Agent):
             lesson = "The output data is not valid"
 
             # return the agent message to the leader, and let the leader handle the error
-            agent_message = AgentMessage(
+            expert_message = AgentMessage(
                 job_id=job.id,
                 workflow_messages=[workflow_message],
                 lesson=lesson,
                 payload=workflow_message.scratchpad,
             )
-            return agent_message
+            return expert_message
         if workflow_message.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # (4) WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
             # color: orange
@@ -132,11 +133,11 @@ class Expert(Agent):
             # return the job to the leader, and let the leader decompose the job
             # workflow experience -> agent lesson
             lesson = "The job is too complicated to be executed by the expert"
-            agent_message = AgentMessage(
+            expert_message = AgentMessage(
                 job_id=job.id,
                 workflow_messages=[workflow_message],
                 lesson=lesson,
                 payload=workflow_message.scratchpad,
             )
-            return agent_message
+            return expert_message
         raise Exception("The workflow status is not defined.")

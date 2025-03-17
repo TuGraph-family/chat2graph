@@ -36,6 +36,23 @@ class JobService(metaclass=Singleton):
         """Get a job from the job registry."""
         return self._job_dao.get_job_by_id(original_job_id)
 
+    def get_original_jobs_by_session_id(self, session_id: str) -> List[Job]:
+        """Get all original jobs by session id."""
+        results = self._job_dao.filter_by(session_id=session_id, category=JobType.JOB.value)
+        jobs: List[Job] = []
+        for result in results:
+            jobs.append(
+                Job(
+                    id=str(result.id),
+                    session_id=str(result.session_id),
+                    goal=str(result.goal),
+                    context=str(result.context),
+                    assigned_expert_name=cast(Optional[str], result.assigned_expert_name),
+                    dag=cast(Optional[str], result.dag),
+                )
+            )
+        return jobs
+
     def get_subjob_ids(self, original_job_id: str) -> List[str]:
         """Get all subjob ids."""
         # return self.get_job_graph(original_job_id).vertices()  # it is too wasteful
@@ -58,7 +75,7 @@ class JobService(metaclass=Singleton):
         """Get a Job from the job registry."""
         return cast(SubJob, self._job_dao.get_job_by_id(job_id))
 
-    def _get_job_result(self, job_id: str) -> JobResult:
+    def get_job_result(self, job_id: str) -> JobResult:
         """return the job result by job id."""
         job_do: Optional[JobDo] = self._job_dao.get_by_id(id=job_id)
         if not job_do:
@@ -79,7 +96,7 @@ class JobService(metaclass=Singleton):
         message_service: MessageService = MessageService.instance
 
         # check if the original job already has gotten the job result
-        job_result: JobResult = self._get_job_result(job_id)
+        job_result: JobResult = self.get_job_result(job_id)
         if job_result.has_result():
             return job_result
 
@@ -92,7 +109,7 @@ class JobService(metaclass=Singleton):
         # collect and combine the content of the job results from the tail vertices
         mutli_agent_payload = ""
         for tail_vertex in tail_vertices:
-            subjob_result: JobResult = self._get_job_result(tail_vertex)
+            subjob_result: JobResult = self.get_job_result(tail_vertex)
             if not subjob_result.has_result():
                 # not all the subjobs have been finished, so return the job result itself
                 self.update_job_result(job_result=job_result)
@@ -111,7 +128,10 @@ class JobService(metaclass=Singleton):
             assert len(agent_messages) == 1, (
                 f"One subjob is assigned to one agent, but {len(agent_messages)} messages found."
             )
-            mutli_agent_payload += agent_messages[0].get_payload() + "\n"
+            assert agent_messages[0].get_payload() is not None, (
+                "The agent message payload is empty."
+            )
+            mutli_agent_payload += cast(str, agent_messages[0].get_payload()) + "\n"
 
         # save the multi-agent result to the database
         multi_agent_message = AgentMessage(

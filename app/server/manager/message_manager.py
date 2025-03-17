@@ -34,7 +34,7 @@ class MessageManager:
         system_chat_message = TextMessage(
             session_id=text_message.get_session_id(),
             job_id=job_wrapper.id,
-            role="system",
+            role="SYSTEM",
             payload="",  # TODO: to be handled
         )
         self._message_service.save_message(message=system_chat_message)
@@ -87,23 +87,23 @@ class MessageManager:
         # check the job status
         if job_result.status == JobStatus.FAILED:
             print(f"Job failed for job_id: {job_id}")
-            return {"status": job_result.status.value.lower()}, "Job failed"
+            return {"status": job_result.status.value}, "Job failed"
 
         if job_result.status in [JobStatus.CREATED, JobStatus.RUNNING]:
             print(f"Job still in progress for job_id: {job_id}")
-            return {"status": job_result.status.value.lower()}, "Job still in progress"
+            return {"status": job_result.status.value}, "Job still in progress"
 
         # update the message with the job result
         # new_message = self._message_service.update_text_message(
         #     id=id, payload=job_result.message.get_payload()
         # )
-        new_message = self._message_service.get_system_role_text_message_by_job(
-            job=self._job_service.get_orignal_job(job_id)
+        new_message = self._message_service.get_text_message_by_job_and_role(
+            job=self._job_service.get_orignal_job(job_id), role="SYSTEM"
         )
 
         # use MessageView to serialize the message
         data = self._message_view.serialize_message(new_message)
         # Add job status to the response
-        data["status"] = job_result.status.value.lower()
+        data["status"] = job_result.status.value
 
         return data, "Message fetched successfully"

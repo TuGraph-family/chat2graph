@@ -134,14 +134,14 @@ class MessageDao(Dao[MessageDo]):
             timestamp=int(result.timestamp),
         )
 
-    def get_system_role_text_message_by_job(self, job: Job) -> TextMessage:
+    def get_text_message_by_job_and_role(self, job: Job, role: str) -> TextMessage:
         """Get system text messages by job ID."""
         results: List[TextMessageDo] = (
             self.session.query(self._model)
             .filter(
                 self._model.type == MessageType.TEXT_MESSAGE.value,
                 self._model.job_id == job.id,
-                self._model.role == "system",
+                self._model.role == role,
             )
             .all()
         )

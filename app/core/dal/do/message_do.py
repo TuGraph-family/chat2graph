@@ -46,7 +46,6 @@ class MessageDo(Do):  # type: ignore
     # chat/text message fields
     role = Column(String(36), nullable=True)
     assigned_expert_name = Column(String(36), nullable=True)
-    others = Column(Text, nullable=True)
 
     __mapper_args__ = {
         "polymorphic_on": type,

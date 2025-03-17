@@ -1,16 +1,20 @@
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
-from app.core.model.job import SubJob
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
+from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.prompt.operator import EVAL_OPERATION_INSTRUCTION_PROMPT, EVAL_OPERATION_OUTPUT_PROMPT
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
+DaoFactory.initialize(DbSession())
 ServiceFactory.initialize()
 
 
@@ -19,7 +23,7 @@ def main():
     # initialize components
     reasoner = DualModelReasoner()
     agent_config = AgentConfig(
-        profile="academic_reviewer", reasoner=reasoner, workflow=DbgptWorkflow()
+        profile=Profile(name="Academic_reviewer"), reasoner=reasoner, workflow=DbgptWorkflow()
     )
     leader = Leader(agent_config=agent_config)
 
@@ -59,6 +63,11 @@ paper content:
     """  # noqa: E501
 
     # create jobs for paper analysis
+    job = Job(
+        id="main_job_id",
+        session_id="paper_analysis_session",
+        goal="Analyze an academic paper on Mixture-of-Experts (MoE) architectures in large language models (LLMs) to evaluate its methodology, results, and technical soundness, and generate a comprehensive summary of its key contributions and implications.",  # noqa: E501
+    )
     job_1 = SubJob(
         id="extract_key_info",
         session_id="paper_analysis_session",
@@ -189,7 +198,8 @@ paper content:
     #          ↘                                       ↗
     #            job_3 (Results)
 
-    job_service: JobService = JobService()
+    job_service: JobService = JobService.instance
+    job_service.save_job(job=job)
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
@@ -231,6 +241,7 @@ paper content:
     )
 
     # execute job graph
+    message_service: MessageService = MessageService.instance
     print("\n=== Starting Paper Analysis ===")
     leader.execute_job_graph(original_job_id="test_original_job_id")
     job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
@@ -244,7 +255,7 @@ paper content:
             continue
         print(f"\nTask {job.id}:")
         print(f"Status: {job_result.status}")
-        print(f"Output: {job_result.message.get_payload()}")
+        print(f"Output: {message_service.get_agent_message_by_job(job=job).get_payload()}")
         print("-" * 50)
 
 

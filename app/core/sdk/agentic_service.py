@@ -82,7 +82,7 @@ class AgenticService(metaclass=Singleton):
 
     def tune_toolkit(self, id: str, *args, **kwargs) -> Any:
         """Train the toolkit."""
-        self._toolkit_service.tune(id=id, *args, **kwargs)
+        self._toolkit_service.tune(id, *args, **kwargs)
 
     def tune_workflow(self, expert: Expert, *args, **kwargs) -> Any:
         """Train the workflow."""

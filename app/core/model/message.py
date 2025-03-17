@@ -178,10 +178,8 @@ class AgentMessage(Message):
         self._workflow_messages: List[WorkflowMessage] = workflow_messages or []
         self._lesson: Optional[str] = lesson
 
-    def get_payload(self) -> str:
+    def get_payload(self) -> Optional[str]:
         """Get the content of the message."""
-        if not self._payload:
-            raise ValueError("The agent message has no payload.")
         return self._payload
 
     def get_workflow_messages(self) -> List[WorkflowMessage]:
@@ -285,7 +283,7 @@ class TextMessage(ChatMessage):
             id=id,
             session_id=session_id,
         )
-        self._role: Optional[str] = role  # "system", or "user" # TODO: refactor to enum
+        self._role: Optional[str] = role  # "SYSTEM", or "USER" # TODO: refactor to enum
         self._assigned_expert_name: Optional[str] = assigned_expert_name
 
     def get_payload(self) -> str:
