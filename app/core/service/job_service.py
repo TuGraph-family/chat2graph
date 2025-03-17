@@ -21,11 +21,7 @@ class JobService(metaclass=Singleton):
 
     def save_job(self, job: Job) -> Job:
         """Save a new job."""
-        if not self._job_dao.get_by_id(job.id):
-            self._job_dao.save_job(job=job)
-            return job
-
-        self._job_dao.update_job(job=job)
+        self._job_dao.save_job(job=job)
         return job
 
     def get_original_job_ids(self) -> List[str]:
@@ -87,9 +83,9 @@ class JobService(metaclass=Singleton):
             tokens=int(job_do.tokens),
         )
 
-    def update_job_result(self, job_result: JobResult) -> None:
+    def save_job_result(self, job_result: JobResult) -> None:
         """Update the job result."""
-        self._job_dao.update_job_result(job_result=job_result)
+        self._job_dao.save_job_result(job_result=job_result)
 
     def query_job_result(self, job_id: str) -> JobResult:
         """Query the result of the multi-agent system by original job id."""
@@ -112,7 +108,7 @@ class JobService(metaclass=Singleton):
             subjob_result: JobResult = self.get_job_result(tail_vertex)
             if not subjob_result.has_result():
                 # not all the subjobs have been finished, so return the job result itself
-                self.update_job_result(job_result=job_result)
+                self.save_job_result(job_result=job_result)
                 return job_result
             if job_result.status == JobStatus.CREATED:
                 # if at least one subjob is finished, and the original job is created,
@@ -143,7 +139,7 @@ class JobService(metaclass=Singleton):
 
         # save the original job result
         job_result.status = JobStatus.FINISHED
-        self.update_job_result(job_result=job_result)
+        self.save_job_result(job_result=job_result)
         return job_result
 
     def get_job_graph(self, job_id: str) -> JobGraph:
@@ -312,7 +308,7 @@ class JobService(metaclass=Singleton):
         for vertex in old_subgraph_vertices:
             job = self.get_subjob(vertex)
             job.is_legacy = True
-            self._job_dao.update_job(job=job)
+            self._job_dao.save_job(job=job)
 
         # add the new subgraph without connecting it to the rest of the graph
         job_graph.update(new_subgraph)
