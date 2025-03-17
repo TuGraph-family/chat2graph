@@ -78,7 +78,7 @@ class Expert(Agent):
                 tokens=0,  # TODO: calculate the tokens
             )
             message_service.save_message(message=expert_message)
-            job_service.update_job_result(job_result=job_result)
+            job_service.save_job_result(job_result=job_result)
             return expert_message
         if workflow_message.status == WorkflowStatus.EXECUTION_ERROR:
             # (2) WorkflowStatus.EXECUTION_ERROR
@@ -101,7 +101,7 @@ class Expert(Agent):
                     tokens=0,  # TODO: calculate the tokens
                 )
                 message_service.save_message(message=agent_message)
-                job_service.update_job_result(job_result=job_result)
+                job_service.save_job_result(job_result=job_result)
                 raise Exception("The job cannot be executed successfully after retrying.")
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:

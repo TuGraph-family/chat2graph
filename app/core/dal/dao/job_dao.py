@@ -16,29 +16,33 @@ class JobDao(Dao[JobDo]):
 
     def save_job(self, job: Job) -> JobDo:
         """Create a new job model."""
-        if isinstance(job, SubJob):
+        try:
+            self.get_job_by_id(id=job.id)
+            return self._update_job(job=job)
+        except ValueError:
+            if isinstance(job, SubJob):
+                return self.create(
+                    category=JobType.SUB_JOB.value,
+                    id=job.id,
+                    goal=job.goal,
+                    context=job.context,
+                    session_id=job.session_id,
+                    original_job_id=job.original_job_id,
+                    expert_id=job.expert_id,
+                    output_schema=job.output_schema,
+                    life_cycle=job.life_cycle,
+                    is_legacy=job.is_legacy,
+                )
             return self.create(
-                category=JobType.SUB_JOB.value,
+                category=JobType.JOB.value,
                 id=job.id,
                 goal=job.goal,
                 context=job.context,
                 session_id=job.session_id,
-                original_job_id=job.original_job_id,
-                expert_id=job.expert_id,
-                output_schema=job.output_schema,
-                life_cycle=job.life_cycle,
-                is_legacy=job.is_legacy,
+                assigned_expert_name=job.assigned_expert_name,
             )
-        return self.create(
-            category=JobType.JOB.value,
-            id=job.id,
-            goal=job.goal,
-            context=job.context,
-            session_id=job.session_id,
-            assigned_expert_name=job.assigned_expert_name,
-        )
 
-    def update_job(self, job: Job) -> JobDo:
+    def _update_job(self, job: Job) -> JobDo:
         """Update a job model."""
         if isinstance(job, SubJob):
             return self.update(
@@ -61,7 +65,7 @@ class JobDao(Dao[JobDo]):
             dag=job.dag,
         )
 
-    def update_job_result(self, job_result: JobResult) -> JobDo:
+    def save_job_result(self, job_result: JobResult) -> JobDo:
         """Update a job model with the job result."""
         return self.update(
             id=job_result.job_id,
@@ -95,7 +99,3 @@ class JobDao(Dao[JobDo]):
             life_cycle=cast(int, result.life_cycle),
             is_legacy=cast(bool, result.is_legacy),
         )
-
-    def remove_job(self, id: str) -> None:
-        """Remove a job by ID."""
-        self.delete(id=id)

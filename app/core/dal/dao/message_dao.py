@@ -103,15 +103,8 @@ class MessageDao(Dao[MessageDo]):
             timestamp=int(result.timestamp),
         )
 
-    def get_workflow_message_payload(self, workflow_message_id: str) -> Optional[Dict[str, Any]]:
-        """get message payload"""
-        message = self.get_by_id(workflow_message_id)
-        if message and message.payload:
-            return WorkflowMessage.deserialize_payload(str(message.payload))
-        raise ValueError(f"Workflow message {workflow_message_id} not found")
-
     def get_agent_message_by_job(self, job: SubJob) -> AgentMessage:
-        """Get agent messages by job ID."""
+        """Get agent messages by job."""
         results: List[AgentMessageDo] = (
             self.session.query(self._model)
             .filter(
@@ -135,7 +128,7 @@ class MessageDao(Dao[MessageDo]):
         )
 
     def get_text_message_by_job_and_role(self, job: Job, role: str) -> TextMessage:
-        """Get system text messages by job ID."""
+        """Get system text messages by job and role."""
         results: List[TextMessageDo] = (
             self.session.query(self._model)
             .filter(
@@ -158,28 +151,3 @@ class MessageDao(Dao[MessageDo]):
             timestamp=int(result.timestamp),
             assigned_expert_name=cast(Optional[str], result.assigned_expert_name),
         )
-
-    def get_agent_related_message_ids(self, id: str) -> List[str]:
-        """get linked workflow ids"""
-        message = self.get_by_id(id)
-        if message and message.related_message_ids:
-            return cast(List[str], message.related_message_ids)
-        return []
-
-    def get_agent_workflow_messages(self, id: str) -> List[WorkflowMessageDo]:
-        """get all workflow messages linked to this agent message"""
-        workflow_ids = self.get_agent_related_message_ids(id)
-        if workflow_ids:
-            return (
-                self.session.query(WorkflowMessageDo)
-                .filter(WorkflowMessageDo.id.in_(workflow_ids))
-                .all()
-            )
-        return []
-
-    def get_agent_workflow_result_message(self, id: str) -> Optional[WorkflowMessageDo]:
-        """get the workflow result message (assumes only one exists)"""
-        workflow_messages = self.get_agent_workflow_messages(id)
-        if len(workflow_messages) != 1:
-            raise ValueError("The agent message received no or multiple workflow result messages.")
-        return workflow_messages[0] if workflow_messages else None

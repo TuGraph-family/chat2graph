@@ -19,13 +19,13 @@ class SessionView:
                 session_id=message["session_id"],
                 job_id=message.get("job_id", None),
                 role=message.get("role", "USER"),
-                payload=message["message"],
+                payload=message["payload"],
                 timestamp=message.get("timestamp"),
                 assigned_expert_name=message.get("assigned_expert_name", None),
             )
         if message_type == MessageType.FILE_MESSAGE:
             return FileMessage(
-                payload=message["payload"],  # TODO: need to convert the payload
+                payload=message["payload"],
                 session_id=message["session_id"],
                 id=message.get("id", None),
                 timestamp=message.get("timestamp"),
