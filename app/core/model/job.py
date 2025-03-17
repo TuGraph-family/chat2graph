@@ -41,7 +41,7 @@ class SubJob(Job):
 
     Attributes:
         ...
-        parent_job_id (str): The id of the parent job.
+        original_job_id (str): The id of the parent/orignal job.
         expert_id (str): The id of the expert attached to the sub job.
         output_schema (str): The output schema of the sub job.
         life_cycle (int): The life cycle of the sub job.
