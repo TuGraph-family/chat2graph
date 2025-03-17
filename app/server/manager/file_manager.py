@@ -6,11 +6,11 @@ from app.core.service.session_service import SessionService
 from app.server.common.util import ServiceException
 from werkzeug.datastructures import FileStorage
 
-class KnowledgeBaseManager:
-    """Knowledge Base Manager class to handle business logic"""
+class FileManager:
+    """File Manager class to handle business logic"""
 
     def __init__(self):
-        self._file_service: FileService = FileService.instance
+        self._file_service: FileService = FileService()
 
     def upload_file(
         self, file: FileStorage

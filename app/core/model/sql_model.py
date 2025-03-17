@@ -41,7 +41,7 @@ class Message(Base):
     timestamp = Column(DateTime, default=utc_now, nullable=False)
     others = Column(Text, nullable=True)
 
-    files = relationship("File", backref="message", cascade="all, delete-orphan")
+    # files = relationship("File", backref="message", cascade="all, delete-orphan")
 
 
 class KnowledgeBase(Base):
@@ -58,7 +58,7 @@ class KnowledgeBase(Base):
     description = Column(Text)
     timestamp = Column(DateTime, default=utc_now, nullable=False)
 
-    files = relationship("File", secondary="kb_to_file", backref="knowledge_bases")
+    # files = relationship("File", secondary="file_to_kb", backref="knowledge_bases")
 
 
 class File(Base):
@@ -72,11 +72,12 @@ class File(Base):
 
 
 class FileToKB(Base):
-    """Knowledge Base to File association model."""
+    """File to knowledge base association model."""
 
-    __tablename__ = "kb_to_file"
+    __tablename__ = "file_to_kb"
 
-    file_id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    file_id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"))
     file_name = Column(Text, ForeignKey("file.name"))
     kb_id = Column(String(36), ForeignKey("knowledge_base.id", ondelete="CASCADE"))
     chunk_ids = Column(Text)

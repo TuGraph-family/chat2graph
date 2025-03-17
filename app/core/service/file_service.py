@@ -19,12 +19,12 @@ class FileService(metaclass=Singleton):
     """File Service"""
 
     def __init__(self):
-        self._file_dao: FileDAO = FileDAO(DB())
+        self._dao: FileDAO = FileDAO(DB())
         self._upload_folder = SystemEnv.APP_ROOT + "/uploads"
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
     
-    def calculate_md5(file):
+    def calculate_md5(self, file):
         file_hash = hashlib.md5()
         while chunk := file.read(8192):
             file_hash.update(chunk)
@@ -67,9 +67,10 @@ class FileService(metaclass=Singleton):
         # delete the file
         file = self._dao.get_by_id(id=id)
         path = file.path
-        results = self._dao.filter_by(file_path=path)
-        if len(results == 1):
+        self._dao.delete(id=id)
+        results = self._dao.filter_by(path=path)
+        if len(results)==0:
             for file_name in os.listdir(path):
                 file_path = os.path.join(path, file_name)
                 os.remove(file_path)
-        os.rmdir(path)
+            os.rmdir(path)
