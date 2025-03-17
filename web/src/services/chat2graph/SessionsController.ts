@@ -1,9 +1,17 @@
 import { request } from '@umijs/max';
 
 /** 此处后端没有提供注释 GET /api/sessions */
-export async function getSessions () {
+export async function getSessions(
+  params: {
+    page?: number;
+    size?: number;
+  },
+  options?: { [key: string]: any },
+) {
   return request<API.Result_Sessions_>('/api/sessions', {
     method: 'GET',
+    params: params,
+    ...(options || {}),
   });
 }
 
@@ -74,6 +82,44 @@ export async function deleteSession(
 ) {
   return request<API.Result_Session_>(`/api/sessions/${params.session_id}`, {
     method: 'DELETE',
+    ...(options || {}),
+  });
+}
+
+/**
+ * 通过 id 获取 job ids
+*/
+export async function getJobIdsById(
+  params: {
+    session_id?: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.Result_JobIds_>(`/api/sessions/${params.session_id}/job_ids`, {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
+
+/**
+ * 通过 sessionid 获取 jobId
+*/
+export async function getJobIdsBySessionId(
+  params: {
+    session_id?: string;
+  },
+  body: {
+    payload?: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.Result_Chat_>(`/api/sessions/${params.session_id}/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   });
 }

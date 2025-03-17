@@ -4,13 +4,9 @@ import {
   getSessionById,
   updateSession,
   deleteSession,
-} from '@/services/chat2graph/SessionsContraoller';
-
-import {
-  getMessageIdByChat,
-  getMessagesBySessionId,
-  getMessageById,
-} from '@/services/chat2graph/MessageController';
+  getJobIdsById,
+  getJobIdsBySessionId,
+} from '@/services/chat2graph/SessionsController';
 
 import {
   createGraphdbs,
@@ -18,7 +14,7 @@ import {
   getGraphdbById,
   deleteGraphdbs,
   updateGraphdbs,
-} from '@/services/chat2graph/GraphdbContraoller';
+} from '@/services/chat2graph/GraphdbController';
 
 import {
   createKnowledgebase,
@@ -28,7 +24,8 @@ import {
   uploadFile,
   editKnowledgebase,
   deleteFile,
-} from '@/services/chat2graph/KnowledgebasesContraoller';
+} from '@/services/chat2graph/KnowledgebasesController';
+import { getJobResults } from '@/services/chat2graph/JobsController';
 
 class SessionsService {
   // 请求会话列表
@@ -41,13 +38,17 @@ class SessionsService {
   public updateSession = updateSession;
   // 删除会话
   public deleteSession = deleteSession;
+  // 通过 id 获取 job ids
+  public getJobIdsById = getJobIdsById;
+  // 通过 sessionid 获取 jobId
+  public getJobIdsBySessionId = getJobIdsBySessionId;
 
-  // 聊天过程根据输入返回输出
-  public getMessageIdByChat = getMessageIdByChat;
-  // 根据 sessionid 获取聊天所有上下文
-  public getMessagesBySessionId = getMessagesBySessionId;
-  // 根据 messageid 获取查询结果
-  public getMessageById = getMessageById;
+
+
+  // job results
+  public getJobResults = getJobResults;
+
+
 
   // 创建图数据库
   public createGraphdbs = createGraphdbs;

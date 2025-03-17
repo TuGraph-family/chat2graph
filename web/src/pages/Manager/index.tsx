@@ -1,7 +1,6 @@
 import { Layout, Menu } from 'antd';
 import styles from './index.less';
 import { MenuProps } from 'antd/lib';
-import { FolderOutlined, PieChartOutlined } from '@ant-design/icons';
 import Knowledgebase from '@/pages/Knowledgebase';
 import { history, useLocation } from 'umi';
 import KnowledgebaseDetail from '@/pages/KnowledgebaseDetail';
@@ -9,7 +8,8 @@ import useIntlConfig from '@/hooks/useIntlConfig';
 import { historyPushLinkAt } from '@/utils/link';
 import Graphdb from '@/pages/Graphdb';
 import Language from '@/components/Language';
-
+import knowledgebase from '@/assets/knowledgebase.svg';
+import database from '@/assets/database.svg';
 const { Sider, Content } = Layout
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -23,8 +23,8 @@ const Manage = () => {
 
 
     const items: MenuItem[] = [
-        { key: '/manager/knowledgebase', icon: <PieChartOutlined />, label: formatMessage('knowledgebase.home.title') },
-        { key: '/manager/graphdb', icon: <FolderOutlined />, label: formatMessage('database.title') },
+        { key: '/manager/knowledgebase', icon: <img className={styles['manager-menu-icon']} src={knowledgebase} alt="knowledgebase" />, label: formatMessage('knowledgebase.home.title') },
+        { key: '/manager/graphdb', icon: <img className={styles['manager-menu-icon']} src={database} alt="database" />, label: formatMessage('database.title') },
     ]
 
     const managerRoutes: { path: string, component: JSX.Element }[] = [

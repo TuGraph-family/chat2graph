@@ -1,6 +1,5 @@
 import { Bubble } from "@ant-design/x";
 import { GetProp } from "antd";
-
 export const DEFAULT_NAME = 'Umi Max';
 
 export enum FRAMEWORK {
@@ -31,15 +30,16 @@ export const MOCK_placeholderPromptsItems = [
   },
 ];
 
+
+
 export const ROLES: GetProp<typeof Bubble.List, 'roles'> = {
   ai: {
     placement: 'start',
     typing: true,
-    messageRender: (text) => <pre>{text}</pre>,
+    variant: 'borderless',
   },
   local: {
     placement: 'end',
     variant: 'shadow',
-    messageRender: (text) => <pre>{text}</pre>,
   },
 };

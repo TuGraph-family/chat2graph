@@ -1,3 +1,4 @@
+
 declare namespace API {
   interface SessionVO {
     timestamp?: string;
@@ -19,17 +20,7 @@ declare namespace API {
   }
 
 
-  interface MessageVO {
-    id?: string;
-    job_id?: string | null;
-    message?: string;
-    message_type?: string;
-    others?: null;
-    role?: 'user' | 'system';
-    session_id?: string;
-    timestamp?: stromg;
-    status?: string;
-  }
+
 
   interface FileVO {
     name?: string;
@@ -61,17 +52,7 @@ declare namespace API {
     user?: string;
   }
 
-  interface Result_Message_ {
-    success?: boolean;
-    message?: string;
-    data?: MessageVO;
-  }
 
-  interface Result_Messages_ {
-    success?: boolean;
-    message?: string;
-    data?: Array<MessageVO>;
-  }
 
   interface Result_Knowledgebases_ {
     success?: boolean;
@@ -97,6 +78,74 @@ declare namespace API {
     success?: boolean;
     message?: string;
     data?: GraphdbVO;
+  }
+
+  interface Result_JobIds_ {
+    success?: boolean;
+    message?: string;
+    data?: {
+      ids?: Array<string>;
+    };
+  }
+
+  interface MessageVO {
+    id?: string;
+    message: ChatVO;
+    status?: string;
+  }
+
+  interface ChatVO {
+    id?: string,
+    job_id?: string,
+    message?: string,
+    message_type?: string,
+    others?: any,
+    role?: string,
+    session_id?: string,
+    assigned_expert_name?: string | null,
+    timestamp?: string,
+    payload?: string,
+    status?: string,
+  }
+
+  interface Result_Chat_ {
+    success?: boolean;
+    message?: string;
+    data?: ChatVO;
+  }
+
+  interface QustionVO {
+    message?: ChatVO;
+  }
+
+
+  interface MetricsVO {
+    job_id: string,
+    status: 'CREATED' | 'RUNNING' | 'FINISHED' | 'FAILED' | 'STOPPED',
+    duration: number,
+    tokens: number
+  }
+
+  interface AnwerVO {
+    message?: ChatVO;
+    metrics?: MetricsVO;
+  }
+
+
+
+
+
+  interface JobVO {
+    answer: AnwerVO & {
+      thinking?: Array<AnwerVO>;
+    };
+    qustion: QustionVO;
+  }
+
+  interface Result_Job_ {
+    success?: boolean;
+    message?: string;
+    data?: JobVO;
   }
 
 }

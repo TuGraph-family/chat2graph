@@ -32,7 +32,7 @@
       background: transparent !important;
 
       &:hover {
-        background: rgba(0,0,0,0.04) !important;
+        background: rgba(0, 0, 0, 0.04) !important;
       }
     }
 
@@ -63,6 +63,12 @@
   .title-text {
     display: flex;
     gap: 2px;
+    align-items: center;
+  }
+
+  .title-right {
+    display: flex;
+    gap: 10px;
     align-items: center;
   }
 
@@ -138,9 +144,9 @@
 
       .ant-prompts-item {
         flex: none !important;
-        width: 394px;
+        width: 370px;
       }
-  
+
       .ant-prompts .ant-prompts-item .ant-prompts-content {
         align-items: center;
       }
@@ -163,6 +169,7 @@
   .footer {
     width: 800px;
     margin: 32px auto;
+
     :global {
       .ant-sender {
         margin-top: 16px;

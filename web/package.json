@@ -30,5 +30,6 @@
     "prettier-plugin-packagejson": "^2.4.3",
     "typescript": "^5.0.3"
   },
-  "repository": "https://github.com/TuGraph-family/chat2graph.git"
+  "repository": "https://github.com/TuGraph-family/chat2graph.git",
+  "__npminstall_done": false
 }

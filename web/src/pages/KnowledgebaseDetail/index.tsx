@@ -9,6 +9,7 @@ import useIntlConfig from "@/hooks/useIntlConfig"
 import { historyPushLinkAt } from "@/utils/link"
 import { useEffect } from "react"
 import dayjs from "dayjs"
+import detailIcon from '@/assets/detail.svg';
 const KnowledgebaseDetail = () => {
     const [state, setState] = useImmer<{
         open: boolean
@@ -108,7 +109,7 @@ const KnowledgebaseDetail = () => {
         />
         <div className={styles['knowledgebases-detail-container']}>
             <div className={styles['knowledgebases-detail-header']}>
-                <img className={styles['knowledgebases-detail-header-img']} src="https://mdn.alipayobjects.com/huamei_aw9spf/afts/img/A*GEZpQKlz_IUAAAAAAAAAAAAAeiKXAQ/original" alt="" />
+                <img className={styles['knowledgebases-detail-header-img']} src={detailIcon} alt="" />
                 <div className={styles['knowledgebases-detail-header-info']}>
                     <h2>{name}</h2>
                     {/* TODO: 暂无用户体系 */}

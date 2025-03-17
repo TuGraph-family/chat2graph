@@ -26,6 +26,7 @@ const Language: React.FC = () => {
         color: '#999',
         marginLeft: 10,
         cursor: 'pointer',
+        fontWeight: 600,
     }} onClick={onChangeLang}>
         {locale === 'en-US' ? 'EN' : '中'}
     </div>

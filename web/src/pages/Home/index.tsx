@@ -21,6 +21,7 @@ import { useSessionEntity } from '@/domains/entities';
 import useIntlConfig from '@/hooks/useIntlConfig';
 import Language from '@/components/Language';
 import logoSrc from '@/assets/logo.png';
+import BubbleContent from '@/components/BubbleContent';
 
 const HomePage: React.FC = () => {
 
@@ -33,6 +34,7 @@ const HomePage: React.FC = () => {
     placeholderPromptsItems: { labelId: string, key: string }[];
     content: string;
     attachedFiles: GetProp<typeof Attachments, 'items'>;
+    defaultMessages: any[];
   }>({
     conversationsItems: [],
     headerOpen: false,
@@ -41,10 +43,11 @@ const HomePage: React.FC = () => {
     placeholderPromptsItems: MOCK_placeholderPromptsItems,
     content: '',
     attachedFiles: [],
+    defaultMessages: [],
   });
 
 
-  const { conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
+  const { defaultMessages, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
 
   const { formatMessage } = useIntlConfig();
 
@@ -56,9 +59,9 @@ const HomePage: React.FC = () => {
     runUpdateSession,
     runDeleteSession,
     runGetSessionById,
-    runGetMessageIdByChat,
-    runGetMessagesBySessionId,
-    runGetMessagesById,
+    runGetJobsById,
+    runGetJobResults,
+    runGetJobIdsBySessionId,
   } = useSessionEntity();
   const { sessions } = sessionEntity;
 
@@ -135,48 +138,90 @@ const HomePage: React.FC = () => {
   let timer: any = null;
 
 
-  const getMessage = (message_id: string, onSuccess: (message: API.MessageVO) => void) => {
-    timer = setTimeout(() => {
-      runGetMessagesById({
-        message_id,
-      }).then(res => {
-        const { status } = res?.data || {};
+  const transformMessage = (answer: any) => {
+    if (!answer) return null;
+    const { message, thinking } = answer || {};
 
-        if (status === 'running') {
-          getMessage(message_id, onSuccess);
+    const thinkingList = thinking?.map((item: any) => {
+      const { message: thinkMsg, metrics } = item
+
+      return {
+        payload: thinkMsg?.payload,
+        message_type: thinkMsg?.message_type,
+        status: metrics?.status,
+      }
+    })
+    return {
+      payload: message?.payload,
+      session_id: message?.session_id,
+      job_id: message?.job_id,
+      role: message?.role,
+      thinking: thinkingList,
+    }
+  }
+
+
+  const getMessage = (job_id: string, onSuccess: (message: any) => void) => {
+    timer = setTimeout(() => {
+      runGetJobResults({
+        job_id,
+      }).then(res => {
+        const { status } = res?.data?.answer?.metrics || {};
+
+        if (status === 'RUNNING') {
+          getMessage(job_id, onSuccess);
           return;
         }
-
         clearTimeout(timer);
-        onSuccess(res?.data || {});
+        onSuccess(transformMessage(res?.data?.answer));
       });
     }, 500);
   }
 
-  const [agent] = useXAgent<API.MessageVO>({
+  const [agent] = useXAgent<API.ChatVO>({
     request: async ({ message: msg }, { onSuccess, onUpdate }) => {
       const { message = '', session_id = '' } = msg || {};
-      runGetMessageIdByChat({
-        message,
+      runGetJobIdsBySessionId({
         session_id,
-      }).then((res: API.Result_Message_) => {
-        const { id: message_id = '' } = res?.data || {};
-        getMessage(message_id, onSuccess);
+      }, { payload: message }).then((res: API.Result_Chat_) => {
+        const { job_id = '' } = res?.data || {};
+        getMessage(job_id, onSuccess);
         onUpdate(res?.data || {})
       });
     },
   });
-
   const { onRequest, parsedMessages, setMessages } = useXChat({
     agent,
     parser: (agentMessages) => {
       return agentMessages;
     },
+    defaultMessages: defaultMessages,
   });
 
   const onAddConversation = () => {
     setMessages([]);
   };
+
+
+  const getHistoryMessage = async (job_id: string) => {
+    const { data } = await runGetJobResults({
+      job_id,
+    })
+
+    const { answer, qustion } = data || {};
+
+    const a = [
+      {
+        id: qustion?.message?.id + job_id,
+        message: qustion?.message,
+      },
+      {
+        message: transformMessage(answer)
+      }
+    ]
+
+    return a
+  }
 
   const onConversationClick: GetProp<typeof Conversations, 'onActiveChange'> = (key: string) => {
     runGetSessionById({
@@ -189,27 +234,42 @@ const HomePage: React.FC = () => {
       }
     });
 
-    runGetMessagesBySessionId({
+    runGetJobsById({
       session_id: key,
     }).then((res: any) => {
-      setMessages(res?.data || []);
+      const c = res?.data?.ids?.map((item: string) => {
+        return getHistoryMessage(item);
+      })
+      Promise.all(c).then((res) => {
+
+        setMessages(res?.flat())
+        setState((draft) => {
+          draft.defaultMessages = res?.flat()
+        })
+      })
+
+
     })
 
   };
 
   const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
     // @ts-ignore
-    const { id, message, status } = item;
+    const { message, id, status, } = item;
+
     return {
       key: id,
-      loading: status === 'loading',
-      role: message?.role === 'system' ? 'ai' : 'local',
-      content: message?.message || formatMessage('home.noResult'),
-      avatar: message?.role === 'system' ? {
+      loading: status === 'RUNNING',
+      role: message?.role === 'SYSTEM' ? 'ai' : 'local',
+      content: message?.payload || formatMessage('home.noResult'),
+      avatar: message?.role === 'SYSTEM' ? {
         icon: 'GU'
       } : undefined,
+      messageRender: (text) => message?.role === 'SYSTEM' ? <BubbleContent message={message} content={text} /> : <pre>{text}</pre>
     }
   });
+
+
 
   // 更新输入内容
   const updateContent = (newContent: string = '') => {
@@ -291,16 +351,15 @@ const HomePage: React.FC = () => {
       <div className={`${styles.sider} ${collapse ? styles['sider-collapsed'] : ''}`}>
         <div className={styles.title}>
           <span className={styles['title-text']}>
-            <img src={logoSrc} className={styles['title-logo']}/>
+            <img src={logoSrc} className={styles['title-logo']} />
             {
               !collapse && <span>TuGraph</span>
             }
           </span>
-
           {
-            !collapse && <>
+            !collapse && <div className={styles['title-right']}>
               <Language />
-              <Tooltip title='收起边栏'>
+              <Tooltip title={formatMessage('home.expand')}>
                 <Button
                   type='text'
                   icon={<LeftCircleOutlined />}
@@ -312,7 +371,7 @@ const HomePage: React.FC = () => {
                   }}
                 />
               </Tooltip>
-            </>
+            </div>
           }
         </div>
 
@@ -342,7 +401,7 @@ const HomePage: React.FC = () => {
         <p className={styles.tips}>{formatMessage('home.tips')}</p>
         {
           collapse ? <Tooltip
-            title='打开边栏'
+            title={formatMessage('home.collapse')}
           >
             <Button
               type='text'
