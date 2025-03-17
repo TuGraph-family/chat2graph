@@ -10,7 +10,7 @@ from app.core.dal.do.message_do import (
     TextMessageDo,
     WorkflowMessageDo,
 )
-from app.core.model.job import Job
+from app.core.model.job import Job, SubJob
 from app.core.model.message import (
     AgentMessage,
     Message,
@@ -27,18 +27,14 @@ class MessageDao(Dao[MessageDo]):
     def __init__(self, session: SqlAlchemySession):
         super().__init__(MessageDo, session)
 
-    def save_message_do(self, message: Message) -> MessageDo:
+    def save_message(self, message: Message) -> MessageDo:
         """Create a new message."""
-        try:
-            message_model = self.__save_message_do(message)
-            self.session.add(message_model)
-            self.session.commit()
-            return message_model
-        except Exception as e:
-            self.session.rollback()
-            raise e
+        message_do = self.__save_message(message)
+        message_dict = {c.name: getattr(message_do, c.name) for c in message_do.__table__.columns}
+        self.create(**message_dict)
+        return message_do
 
-    def __save_message_do(self, message: Message) -> MessageDo:
+    def __save_message(self, message: Message) -> MessageDo:
         """Create a message model instance."""
 
         if isinstance(message, WorkflowMessage):
@@ -55,6 +51,7 @@ class MessageDao(Dao[MessageDo]):
             return AgentMessageDo(
                 type=MessageType.AGENT_MESSAGE.value,
                 job_id=message.get_job_id(),
+                payload=message.get_payload(),
                 lesson=message.get_lesson(),
                 related_message_ids=related_message_ids,
                 timestamp=message.get_timestamp(),
@@ -85,7 +82,6 @@ class MessageDao(Dao[MessageDo]):
                 job_id=message.get_job_id(),
                 role=message.get_role(),
                 assigned_expert_name=message.get_assigned_expert_name(),
-                others=message.get_others(),
             )
         raise ValueError(f"Unsupported message type: {type(message)}")
 
@@ -114,9 +110,8 @@ class MessageDao(Dao[MessageDo]):
             return WorkflowMessage.deserialize_payload(str(message.payload))
         raise ValueError(f"Workflow message {workflow_message_id} not found")
 
-    def get_agent_messages_by_job(self, job: Job) -> List[AgentMessage]:
+    def get_agent_message_by_job(self, job: SubJob) -> AgentMessage:
         """Get agent messages by job ID."""
-        # fetch agent messages
         results: List[AgentMessageDo] = (
             self.session.query(self._model)
             .filter(
@@ -126,23 +121,43 @@ class MessageDao(Dao[MessageDo]):
             .all()
         )
 
-        if len(results) > 1:
-            print(f"[Warning] The job {id} is executed multiple times.")
+        assert len(results) == 1, f"Job {job.id} has multiple or not agent messages."
 
-        agent_messages: List[AgentMessage] = [
-            AgentMessage(
-                id=str(result.id),
-                job_id=job.id,
-                workflow_messages=[
-                    self.get_workflow_message(wf_id)
-                    for wf_id in list(result.related_message_ids or [])
-                ],
-                timestamp=int(result.timestamp),
+        result = results[0]
+        return AgentMessage(
+            id=str(result.id),
+            job_id=job.id,
+            payload=str(result.payload),
+            workflow_messages=[
+                self.get_workflow_message(wf_id) for wf_id in list(result.related_message_ids or [])
+            ],
+            timestamp=int(result.timestamp),
+        )
+
+    def get_system_role_text_message_by_job(self, job: Job) -> TextMessage:
+        """Get system text messages by job ID."""
+        results: List[TextMessageDo] = (
+            self.session.query(self._model)
+            .filter(
+                self._model.type == MessageType.TEXT_MESSAGE.value,
+                self._model.job_id == job.id,
+                self._model.role == "system",
             )
-            for result in results
-        ]
+            .all()
+        )
 
-        return agent_messages
+        assert len(results) == 1, f"Job {job.id} has multiple or not text messages by system."
+
+        result = results[0]
+        return TextMessage(
+            id=cast(str, result.id),
+            session_id=cast(Optional[str], result.session_id),
+            job_id=cast(str, job.id),
+            role=cast(str, result.role),
+            payload=cast(str, result.payload),
+            timestamp=int(result.timestamp),
+            assigned_expert_name=cast(Optional[str], result.assigned_expert_name),
+        )
 
     def get_agent_related_message_ids(self, id: str) -> List[str]:
         """get linked workflow ids"""

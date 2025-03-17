@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, TypeVar
 
-from app.core.model.message import AgentMessage, Message, TextMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, Message, TextMessage
 
 T = TypeVar("T", bound=Message)
 
@@ -18,9 +18,7 @@ class MessageView:
         if isinstance(message, AgentMessage):
             return {
                 "id": message.get_id(),
-                "agent_result": WorkflowMessage.serialize_payload(
-                    message.get_workflow_result_message().get_payload()
-                ),
+                "agent_result": message.get_payload(),
                 "lesson": message.get_lesson(),
                 "timestamp": message.get_timestamp(),
             }
@@ -34,7 +32,6 @@ class MessageView:
                 "message": message.get_payload(),
                 "timestamp": message.get_timestamp(),
                 "assigned_expert_name": message.get_assigned_expert_name(),
-                "others": message.get_others(),
             }
         raise ValueError(f"Unsupported message type: {type(message)}")
 

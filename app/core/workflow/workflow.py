@@ -27,6 +27,11 @@ class Workflow(ABC):
         self._operator_graph: nx.DiGraph = nx.DiGraph()
         self._evaluator: Optional[EvalOperator] = None
 
+    @property
+    def evaluator(self) -> Optional[EvalOperator]:
+        """Get the evaluator operator."""
+        return self._evaluator
+
     def execute(
         self,
         job: Job,

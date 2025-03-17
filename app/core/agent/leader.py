@@ -1,6 +1,5 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 import time
-import traceback
 from typing import Dict, List, Optional, Set
 
 import networkx as nx  # type: ignore
@@ -9,12 +8,11 @@ from app.core.agent.agent import Agent, AgentConfig
 from app.core.agent.builtin_leader_state import BuiltinLeaderState
 from app.core.agent.expert import Expert
 from app.core.agent.leader_state import LeaderState
-from app.core.common.type import JobStatus, WorkflowStatus
+from app.core.common.type import WorkflowStatus
 from app.core.common.util import parse_json
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
-from app.core.model.job_result import JobResult
-from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, WorkflowMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_PROMPT
 from app.core.service.job_service import JobService
 
@@ -56,16 +54,16 @@ class Leader(Agent):
         if assigned_expert_name:
             expert = self.state.get_expert_by_name(assigned_expert_name)
             job_graph: JobGraph = JobGraph()
-            job_graph.add_vertex(
-                job.id,
-                job=SubJob(
-                    id=job.id,
-                    session_id=job.session_id,
-                    goal=job.goal,
-                    context=job.goal + "\n" + job.context,
-                ),
+            job_graph.add_vertex(job.id)
+            subjob = SubJob(
+                id=job.id,
+                original_job_id=job.id,
+                session_id=job.session_id,
+                goal=job.goal,
+                context=job.goal + "\n" + job.context,
                 expert_id=expert.get_id(),
             )
+            self._job_service.save_job(job=subjob)
             return job_graph
 
         # else, the job is not assigned to an expert, then decompose the job
@@ -79,7 +77,7 @@ class Leader(Agent):
         )
 
         job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(task=job.goal, role_list=role_list)
-        decompsed_job = SubJob(
+        decompsed_job = Job(
             session_id=job.session_id,
             goal=job.goal,
             context=job.context + f"\n\n{job_decomp_prompt}",
@@ -105,6 +103,7 @@ class Leader(Agent):
         for job_id, subjob_dict in job_dict.items():
             subjob = SubJob(
                 id=job_id,
+                original_job_id=job_id,
                 session_id=job.session_id,
                 goal=subjob_dict.get("goal", ""),
                 context=(
@@ -112,15 +111,13 @@ class Leader(Agent):
                     + "\n"
                     + subjob_dict.get("completion_criteria", "")
                 ),
-            )
-            # add the subjob to the job graph
-            job_graph.add_vertex(
-                job_id,
-                job=subjob,
                 expert_id=self.state.get_expert_by_name(
                     subjob_dict.get("assigned_expert", "")
                 ).get_id(),
             )
+            self._job_service.save_job(job=subjob)
+            # add the subjob to the job graph
+            job_graph.add_vertex(job_id)
 
             # add edges for dependencies
             for dep_id in subjob_dict.get("dependencies", []):
@@ -161,7 +158,7 @@ class Leader(Agent):
         job_graph: JobGraph = self._job_service.get_job_graph(original_job_id)
         pending_job_ids: Set[str] = set(job_graph.vertices())
         running_jobs: Dict[str, Future] = {}  # job_id -> Concurrent Future
-        expert_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (expert result)
+        expert_results: Dict[str, WorkflowMessage] = {}  # job_id -> Workflow msg (expert result)
         job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)
 
         with ThreadPoolExecutor() as executor:
@@ -176,7 +173,7 @@ class Leader(Agent):
                     )
                     if all_predecessors_completed:
                         # form the agent message to the agent
-                        job: Job = job_graph.get_job(job_id)
+                        job: Job = self._job_service.get_subjob(job_id)
                         pred_messages: List[WorkflowMessage] = [
                             expert_results[pred_id] for pred_id in job_graph.predecessors(job_id)
                         ]
@@ -187,7 +184,9 @@ class Leader(Agent):
 
                 # execute ready jobs
                 for job_id in ready_job_ids:
-                    expert = self.state.get_expert_by_id(job_graph.get_expert_id(job_id))
+                    expert_id = self._job_service.get_subjob(job_id).expert_id
+                    assert expert_id, "The subjob is not assigned to an expert."
+                    expert = self.state.get_expert_by_id(expert_id=expert_id)
                     # submit the job to the executor
                     running_jobs[job_id] = executor.submit(
                         self._execute_job, expert, job_inputs[job_id]
@@ -229,9 +228,9 @@ class Leader(Agent):
                                     if pred_id in expert_results:
                                         del expert_results[pred_id]
                                         # update the result in the job service
-                                        self._job_service.get_job_graph(
-                                            original_job_id
-                                        ).remmove_job_result(id=pred_id)
+                                        self._job_service.remove_job(
+                                            original_job_id=original_job_id, job_id=pred_id
+                                        )
 
                                     # update the lesson in the agent message
                                     input_agent_message = job_inputs[pred_id]
@@ -244,38 +243,32 @@ class Leader(Agent):
                                 agent_result.get_workflow_result_message()
                             )
                             # update the result in the job service
-                            self._job_service.get_job_graph(original_job_id).set_job_result(
-                                completed_job_id,
-                                JobResult(
-                                    job_id=completed_job_id,
-                                    status=JobStatus.FINISHED,
-                                    result=TextMessage(
-                                        payload=agent_result.get_workflow_result_message().scratchpad,
-                                        job_id=completed_job_id,
-                                    ),
-                                ),
-                            )
+                            # self._job_service.update_job_result(
+                            #     JobResult(
+                            #         job_id=completed_job_id,
+                            #         status=JobStatus.FINISHED,
+                            #         message=TextMessage(
+                            #             payload=agent_result.get_payload(),
+                            #             job_id=completed_job_id,
+                            #         ),
+                            #     ),
+                            # )
                     except Exception as e:
-                        expert_results[completed_job_id] = WorkflowMessage(
-                            payload={
-                                "status": WorkflowStatus.EXECUTION_ERROR,
-                                "scratchpad": str(e) + "\n" + traceback.format_exc(),
-                                "evaluation": "Some evaluation",
-                            },
-                            job_id=completed_job_id,
-                        )
-                        # update the result in the job service
-                        self._job_service.get_job_graph(original_job_id).set_job_result(
-                            completed_job_id,
-                            JobResult(
-                                job_id=completed_job_id,
-                                status=JobStatus.FAILED,
-                                result=TextMessage(
-                                    payload=str(e) + "\n" + traceback.format_exc(),
-                                    job_id=completed_job_id,
-                                ),
-                            ),
-                        )
+                        raise ValueError(
+                            f"Failed to execute the job {completed_job_id}: {str(e)}"
+                        ) from e
+                        # expert_results[completed_job_id] = WorkflowMessage(
+                        #     payload={
+                        #         "status": WorkflowStatus.EXECUTION_ERROR,
+                        #         "scratchpad": str(e) + "\n" + traceback.format_exc(),
+                        #         "evaluation": "Some evaluation",
+                        #     },
+                        #     job_id=completed_job_id,
+                        # )
+                        # # update the result in the job service
+                        # self._job_service.update_job_result(
+                        #     JobResult(job_id=completed_job_id, status=JobStatus.FAILED)
+                        # )
 
                     # remove from running jobs
                     del running_jobs[completed_job_id]
