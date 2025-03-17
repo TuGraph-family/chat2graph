@@ -138,10 +138,7 @@ export async function getMessagesBySessionId(
   options?: { [key: string]: any },
 ) {
   return request<API.Result_Messages_>(`/api/sessions/${params.session_id}/messages`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    method: 'GET',
     ...(options || {}),
   });
 }

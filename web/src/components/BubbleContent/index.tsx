@@ -6,14 +6,16 @@ import { useMemo, useState, useEffect } from "react";
 
 
 interface BubbleContentProps {
+    status: string,
     content: string;
-    message: API.AnwerVO;
+    message: API.ChatVO;
 }
 
 
 
 
-const BubbleContent: React.FC<BubbleContentProps> = ({ content, message }) => {
+const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message }) => {
+
     const [lines, setLines] = useState<string[]>([]);
     const getStatusIcon = (status: ThoughtChainItem['status']) => {
         switch (status) {
@@ -42,8 +44,6 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ content, message }) => {
         });
     }
 
-
-
     async function readStream() {
         // 🌟 Read the stream
         for await (const chunk of XStream({
@@ -54,7 +54,6 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ content, message }) => {
                 },
             }),
         })) {
-            console.log(chunk, 'lkm');
             setLines((pre) => [...pre, chunk]);
         }
     }
@@ -62,9 +61,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ content, message }) => {
         readStream()
     }, [])
 
-    useEffect(() => {
-        console.log(lines, 'lkm');
-    }, [lines])
+
 
 
 
@@ -88,7 +85,8 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ content, message }) => {
                 icon: getStatusIcon(message?.thinking ? 'success' : 'pending'),
             }
         ]
-        if (content) {
+
+        if (status !== 'loading') {
             steps.push({
                 title: "回答",
                 status: 'success' as const,

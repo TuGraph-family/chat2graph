@@ -114,7 +114,7 @@ declare namespace API {
     data?: ChatVO;
   }
 
-  interface QustionVO {
+  interface QuestionVO {
     message?: ChatVO;
   }
 
@@ -136,7 +136,7 @@ declare namespace API {
     answer: AnwerVO & {
       thinking?: Array<AnwerVO>;
     };
-    qustion: QustionVO;
+    question: QuestionVO;
   }
 
   interface Result_Job_ {

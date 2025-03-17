@@ -34,7 +34,7 @@ const HomePage: React.FC = () => {
     placeholderPromptsItems: { labelId: string, key: string }[];
     content: string;
     attachedFiles: GetProp<typeof Attachments, 'items'>;
-    defaultMessages: any[];
+    isInit: boolean;
   }>({
     conversationsItems: [],
     headerOpen: false,
@@ -43,11 +43,11 @@ const HomePage: React.FC = () => {
     placeholderPromptsItems: MOCK_placeholderPromptsItems,
     content: '',
     attachedFiles: [],
-    defaultMessages: [],
+    isInit: false
   });
 
 
-  const { defaultMessages, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
+  const { isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
 
   const { formatMessage } = useIntlConfig();
 
@@ -181,10 +181,10 @@ const HomePage: React.FC = () => {
 
   const [agent] = useXAgent<API.ChatVO>({
     request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { message = '', session_id = '' } = msg || {};
+      const { payload = '', session_id = '' } = msg || {};
       runGetJobIdsBySessionId({
         session_id,
-      }, { payload: message }).then((res: API.Result_Chat_) => {
+      }, { payload }).then((res: API.Result_Chat_) => {
         const { job_id = '' } = res?.data || {};
         getMessage(job_id, onSuccess);
         onUpdate(res?.data || {})
@@ -195,8 +195,7 @@ const HomePage: React.FC = () => {
     agent,
     parser: (agentMessages) => {
       return agentMessages;
-    },
-    defaultMessages: defaultMessages,
+    }
   });
 
   const onAddConversation = () => {
@@ -206,14 +205,17 @@ const HomePage: React.FC = () => {
 
   const getHistoryMessage = (data: API.JobVO) => {
 
-    const { answer, qustion } = data || {};
+    const { answer, question } = data || {};
     const viewItem = [
       {
-        id: qustion?.message?.id,
-        message: qustion?.message,
+        id: question?.message?.id,
+        message: question?.message,
+        status: 'success',
       },
       {
-        message: transformMessage(answer)
+        id: answer?.message?.id,
+        message: transformMessage(answer),
+        status: 'success',
       }
     ]
 
@@ -234,7 +236,13 @@ const HomePage: React.FC = () => {
     runGetMessagesBySessionId({
       session_id: key,
     }).then((res: API.Result_Messages_) => {
-      res?.data?.map(item => getHistoryMessage(item))?.flat()
+
+      if (res?.data?.length) {
+        setState((draft) => {
+          draft.isInit = true;
+        });
+        setMessages(res?.data?.map(item => getHistoryMessage(item))?.flat() || [])
+      }
 
     })
 
@@ -243,16 +251,18 @@ const HomePage: React.FC = () => {
   const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
     // @ts-ignore
     const { message, id, status, } = item;
-
     return {
       key: id,
-      loading: status === 'RUNNING',
+      loading: status === 'loading',
       role: message?.role === 'SYSTEM' ? 'ai' : 'local',
       content: message?.payload || formatMessage('home.noResult'),
       avatar: message?.role === 'SYSTEM' ? {
         icon: 'GU'
       } : undefined,
-      messageRender: (text) => message?.role === 'SYSTEM' ? <BubbleContent message={message} content={text} /> : <pre>{text}</pre>
+      typing: message?.role === 'SYSTEM' && !isInit,
+      messageRender: (text) => {
+        return message?.role === 'SYSTEM' ? <BubbleContent status={status} message={message} content={text} /> : <pre>{text}</pre>
+      }
     }
   });
 
@@ -267,6 +277,9 @@ const HomePage: React.FC = () => {
 
   const onSubmit = (nextContent: string) => {
     if (!nextContent) return;
+    setState((draft) => {
+      draft.isInit = false;
+    });
 
     // 新建对话
     if (!items.length) {
@@ -279,7 +292,7 @@ const HomePage: React.FC = () => {
             draft.activeKey = res?.data?.id || '';
           });
           onRequest({
-            message: nextContent,
+            payload: nextContent,
             session_id: res?.data?.id
           });
           updateContent('');
@@ -290,7 +303,7 @@ const HomePage: React.FC = () => {
 
     // 已有对话更新
     onRequest({
-      message: nextContent,
+      payload: nextContent,
       session_id: state.activeKey,
     });
     updateContent('');

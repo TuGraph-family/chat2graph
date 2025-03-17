@@ -35,7 +35,6 @@ export const MOCK_placeholderPromptsItems = [
 export const ROLES: GetProp<typeof Bubble.List, 'roles'> = {
   ai: {
     placement: 'start',
-    typing: true,
     variant: 'borderless',
   },
   local: {

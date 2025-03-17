@@ -8,10 +8,7 @@ export async function getJobResults(
     options?: { [key: string]: any },
 ) {
     return request<API.Result_Job_>(`/api/jobs/${params.job_id}/message`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        method: 'GET',
         ...(options || {}),
     },);
 }
