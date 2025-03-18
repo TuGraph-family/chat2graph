@@ -56,6 +56,8 @@ class KnowledgeBase(Base):
     description = Column(Text)
     timestamp = Column(DateTime, default=utc_now, nullable=False)
 
+    file_to_kb = relationship("FileToKB", backref="knowledge_base", cascade="all, delete-orphan")
+
 
 class File(Base):
     """File to store file details."""

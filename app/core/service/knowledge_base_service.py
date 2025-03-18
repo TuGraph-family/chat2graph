@@ -75,7 +75,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete the knowledge base
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
-            raise ValueError(f"Knowledge base with ID {id} not found")
+            raise ServiceException(f"Knowledge base with ID {id} not found")
         self._knowledge_base_dao.delete(id=id)
 
     def update_knowledge_base(self) -> Knowledge:
