@@ -77,13 +77,7 @@ class Graph:
         """Convert the graph to JSON format."""
         graph_dict = {
             "vertices": [{"id": node} for node in self._graph.nodes()],
-            "edges": [
-                {
-                    "source": u,
-                    "target": v,
-                }
-                for u, v in self._graph.edges()
-            ],
+            "edges": [{"source": u, "target": v} for u, v in self._graph.edges()],
         }
         return json.dumps(graph_dict, indent=4)
 

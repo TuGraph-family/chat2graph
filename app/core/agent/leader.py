@@ -157,7 +157,7 @@ class Leader(Agent):
         job_graph: JobGraph = self._job_service.get_job_graph(original_job_id)
         pending_job_ids: Set[str] = set(job_graph.vertices())
         running_jobs: Dict[str, Future] = {}  # job_id -> Concurrent Future
-        expert_results: Dict[str, WorkflowMessage] = {}  # job_id -> Workflow msg (expert result)
+        expert_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (expert result)
         job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)
 
         with ThreadPoolExecutor() as executor:

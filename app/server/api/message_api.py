@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from app.core.model.message import MessageType, TextMessage
 from app.server.common.util import ApiException, make_response
 from app.server.manager.message_manager import MessageManager
-from app.server.manager.view.session_view import SessionView
+from app.server.manager.view.message_view import MessageView
 
 messages_bp = Blueprint("messages", __name__)
 
@@ -20,7 +20,7 @@ def chat():
         if not data:
             raise ApiException("Data is required")
 
-        text_message: TextMessage = SessionView.deserialize_message(
+        text_message: TextMessage = MessageView.deserialize_message(
             message=data, message_type=MessageType.TEXT_MESSAGE
         )
         response_data, message = manager.chat(text_message)

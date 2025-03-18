@@ -40,6 +40,10 @@ class Message(ABC):
         """Get the job ID."""
         return self._job_id
 
+    def set_job_id(self, job_id: str):
+        """Set the job ID."""
+        self._job_id = job_id
+
     @abstractmethod
     def copy(self) -> "Message":
         """Copy the message."""
@@ -297,6 +301,10 @@ class TextMessage(ChatMessage):
     def get_assigned_expert_name(self) -> Optional[str]:
         """Get the assigned expert name."""
         return self._assigned_expert_name
+
+    def set_payload(self, payload: str):
+        """Set the content of the message."""
+        self._payload = payload
 
     def set_assigned_expert_name(self, assigned_expert_name: str):
         """Set the assigned expert name."""
