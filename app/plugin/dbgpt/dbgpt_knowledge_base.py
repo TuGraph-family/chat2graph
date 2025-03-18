@@ -25,6 +25,7 @@ from dbgpt.rag.retriever import RetrieverStrategy
 from dbgpt.model.proxy.llms.tongyi import TongyiLLMClient
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient
 from app.core.common.system_env import SystemEnv
+from app.core.common.async_func import run_async_function
 
 llm_client = OpenAILLMClient()
 model_name = "gpt-4o-mini"
@@ -48,7 +49,7 @@ class VectorKnowledgeBase(KnowledgeBase):
         )
         self._chunk_id_dict = {}
 
-    async def load_document(self, file_path):
+    def load_document(self, file_path) -> str:
         knowledge = KnowledgeFactory.from_file_path(file_path)
         chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE")
         assembler = EmbeddingAssembler.load_from_knowledge(
@@ -56,25 +57,25 @@ class VectorKnowledgeBase(KnowledgeBase):
             chunk_parameters=chunk_parameters,
             index_store=self._vector_base
         )
-        chunk_ids = await assembler.apersist()
-        self._chunk_id_dict[file_path] = chunk_ids
-        return chunk_ids
+        chunk_ids = run_async_function(assembler.apersist)
+        self._chunk_id_dict[file_path] = ",".join(chunk_ids)
+        return ",".join(chunk_ids)
     
     def delete_document(self, chunk_ids):
-        self._vector_base.delete_by_ids(",".join(chunk_ids))
+        self._vector_base.delete_by_ids(chunk_ids)
     
-    async def update_document(self, file_path, chunk_ids):
+    def update_document(self, file_path, chunk_ids):
         self.delete_document(chunk_ids)
-        return await self.load_document(file_path)
+        return run_async_function(self.load_document, file_path=file_path)
 
-    async def retrieve(self, query):
-        chunks = await self._retriever.aretrieve_with_scores(query, 0.3)
+    def retrieve(self, query):
+        chunks = run_async_function(self._retriever.aretrieve_with_scores(), query=query, score_threshold=0.3)
         return chunks
     
     def clear(self):
-        file_path_list = list(self._chunk_id_dict.keys())
+        file_path_list = list(self._chunk_id_dict.keys)
         for file_path in file_path_list:
-            self.delete_document(file_path)
+            self.delete_document(self._chunk_id_dict[file_path])
 
 # class GraphKnowledgeBase(KnowledgeBase):
 #     """Knowledge base for storing graphs."""

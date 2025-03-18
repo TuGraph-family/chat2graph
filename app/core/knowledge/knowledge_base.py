@@ -9,7 +9,7 @@ class KnowledgeBase(ABC):
         """Init knowledge base."""
 
     @abstractmethod
-    async def load_document(self, file_path) -> List[str]:
+    def load_document(self, file_path) -> List[str]:
         """Load document."""
 
     @abstractmethod
@@ -17,13 +17,13 @@ class KnowledgeBase(ABC):
         """Delete document."""
 
     @abstractmethod
-    async def update_document(self, file_path, chunk_ids) -> List[str]:
+    def update_document(self, file_path, chunk_ids) -> List[str]:
         """Update document."""
     
     @abstractmethod
-    async def retrieve(self, query):
+    def retrieve(self, query):
         """retrieve knowledge from knowledge base."""
     
     @abstractmethod
-    async def clear(self):
+    def clear(self):
         """clear all knowledge in knowledge base."""
