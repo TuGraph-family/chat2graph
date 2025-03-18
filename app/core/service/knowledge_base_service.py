@@ -106,8 +106,10 @@ class KnowledgeBaseService(metaclass=Singleton):
         # get local knowledge
         kbs = self._knowledge_base_dao.filter_by(session_id=session_id)
         if len(kbs) == 1:
-            knowledge_base_id = kbs[0].id
-            local_chunks = await VectorKnowledgeBase(knowledge_base_id).retrieve(query)
+            kb = kbs[0]
+            knowledge_base_id = kb.id
+            if kb.knowledge_type == "vector":
+                local_chunks = await VectorKnowledgeBase(knowledge_base_id).retrieve(query)
         else:
             local_chunks = [Chunk(content="")]
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -120,13 +122,17 @@ class KnowledgeBaseService(metaclass=Singleton):
         folder_path = file.path
         file_name = file.name
         file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
+        # get kb with kb_id
+        kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # add file_to_kb
         if self._file_to_kb_dao.get_by_id(id=file_id) == None:
             self._file_to_kb_dao.create(id=file_id, name=file_name, kb_id=knowledge_base_id, status="pending", config=config)
+        # load config
+        config = json.loads(config)
         # load file to knowledge base
         try:
-            config = json.loads(config)
-            chunk_ids = VectorKnowledgeBase(knowledge_base_id).load_document(file_path, config)
+            if kb.knowledge_type == "vector":
+                chunk_ids = VectorKnowledgeBase(knowledge_base_id).load_document(file_path, config)
         except Exception as e:
             self._file_to_kb_dao.update(id=file_id, status="fail")
         else:
@@ -141,8 +147,11 @@ class KnowledgeBaseService(metaclass=Singleton):
         file_to_kb = self._file_to_kb_dao.get_by_id(id=file_id)
         chunk_ids = file_to_kb.chunk_ids
         knowledge_base_id = file_to_kb.kb_id
+        # get kb with kb_id
+        kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # delete related chunks from knowledge base
-        VectorKnowledgeBase(knowledge_base_id).delete_document(chunk_ids)
+        if kb.knowledge_type == "vector":
+            VectorKnowledgeBase(knowledge_base_id).delete_document(chunk_ids)
         # delete virtual file from db
         self._file_dao.delete(id=file_id)
         # delete physical file if all references are deleted
