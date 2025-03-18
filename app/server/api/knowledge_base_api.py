@@ -76,12 +76,12 @@ def load_knowledge_with_file_id(knowledge_base_id, file_id):
     except BaseException as e:
         return make_response(False, message=str(e))
 
-@knowledgebases_bp.route("/files/<string:file_id>", methods=["DELETE"])
-def delete_knowledge_with_file_id(file_id):
+@knowledgebases_bp.route("/<string:knowledge_base_id>/files/<string:file_id>", methods=["DELETE"])
+def delete_knowledge_with_file_id(knowledge_base_id, file_id):
     """Load knowledge with file ID."""
     manager = KnowledgeBaseManager()
     try:
-        result, message = manager.delete_knowledge(file_id=file_id)
+        result, message = manager.delete_knowledge(kb_id=knowledge_base_id, file_id=file_id)
         return make_response(True, data=result, message=message)
     except BaseException as e:
         return make_response(False, message=str(e))
