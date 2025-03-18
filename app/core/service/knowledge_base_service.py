@@ -1,6 +1,7 @@
 import time
 from typing import Any, Dict, List
 import os
+import json
 
 from app.core.common.singleton import Singleton
 from app.core.dal.dao import KnowledgeBaseDAO, FileDAO, FileToKBDAO
@@ -124,7 +125,8 @@ class KnowledgeBaseService(metaclass=Singleton):
             self._file_to_kb_dao.create(id=file_id, name=file_name, kb_id=knowledge_base_id, status="pending", config=config)
         # load file to knowledge base
         try:
-            chunk_ids = VectorKnowledgeBase(knowledge_base_id).load_document(file_path)
+            config = json.loads(config)
+            chunk_ids = VectorKnowledgeBase(knowledge_base_id).load_document(file_path, config)
         except Exception as e:
             self._file_to_kb_dao.update(id=file_id, status="fail")
         else:

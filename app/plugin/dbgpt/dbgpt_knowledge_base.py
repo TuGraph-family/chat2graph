@@ -1,4 +1,5 @@
 import os
+from typing import Any, Dict, List, Optional
 
 from app.core.knowledge.knowledge_base import KnowledgeBase
 
@@ -26,10 +27,10 @@ from dbgpt.model.proxy.llms.tongyi import TongyiLLMClient
 from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient
 from app.core.common.system_env import SystemEnv
 from app.core.common.async_func import run_async_function
+from app.core.common.type import PlatformType
+from app.core.reasoner.model_service_factory import ModelServiceFactory
 
-llm_client = OpenAILLMClient()
-model_name = "gpt-4o-mini"
-
+model_service = ModelServiceFactory.create(platform_type=PlatformType.DBGPT)
 
 class VectorKnowledgeBase(KnowledgeBase):
     """Knowledge base for storing vectors."""
@@ -49,9 +50,12 @@ class VectorKnowledgeBase(KnowledgeBase):
         )
         self._chunk_id_dict = {}
 
-    def load_document(self, file_path) -> str:
+    def load_document(self, file_path, config = None) -> str:
         knowledge = KnowledgeFactory.from_file_path(file_path)
-        chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE")
+        if config:
+            chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE", chunk_size=int(config["chunk_size"]))
+        else:
+            chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE")
         assembler = EmbeddingAssembler.load_from_knowledge(
             knowledge=knowledge,
             chunk_parameters=chunk_parameters,
