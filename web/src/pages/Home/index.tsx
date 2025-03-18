@@ -257,7 +257,7 @@ const HomePage: React.FC = () => {
       role: message?.role === 'SYSTEM' ? 'ai' : 'local',
       content: message?.payload || formatMessage('home.noResult'),
       avatar: message?.role === 'SYSTEM' ? {
-        icon: 'GU'
+        icon: <img src={logoSrc} />
       } : undefined,
       typing: message?.role === 'SYSTEM' && !isInit,
       messageRender: (text) => {
