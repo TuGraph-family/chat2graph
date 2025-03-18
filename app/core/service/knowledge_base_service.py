@@ -90,11 +90,13 @@ class KnowledgeBaseService(metaclass=Singleton):
 
         results = self._knowledge_base_dao.get_all()
         return [
-            Knowledge(
-                id=str(result.id),
-                name=str(result.name),
-                knowledge_type=str(result.knowledge_type),
-                session_id=str(result.session_id),
+            KnowledgeBase(
+                id=result.id,
+                name=result.name,
+                knowledge_type=result.knowledge_type,
+                session_id=result.session_id,
+                files=self._file_to_kb_dao.filter_by(kb_id=result.id),
+                description=result.description
             )
             for result in results
         ]

@@ -98,6 +98,8 @@ class KnowledgeBaseManager:
                     "name": kb.name,
                     "knowledge_type": kb.knowledge_type,
                     "session_id": kb.session_id,
+                    "file_count": len(kb.files),
+                    "description": kb.description
                 }
                 for kb in knowledge_bases
             ]
