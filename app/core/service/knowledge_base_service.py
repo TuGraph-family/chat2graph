@@ -61,12 +61,14 @@ class KnowledgeBaseService(metaclass=Singleton):
         # fetch the knowledge base
         result = self._knowledge_base_dao.get_by_id(id=id)
         if not result:
-            raise ValueError(f"Knowledge base with ID {id} not found")
-        return Knowledge(
-            id=str(result.id),
-            name=str(result.name),
-            knowledge_type=str(result.knowledge_type),
-            session_id=str(result.session_id),
+            raise ServiceException(f"Knowledge base with ID {id} not found")
+        return KnowledgeBase(
+            id=result.id,
+            name=result.name,
+            knowledge_type=result.knowledge_type,
+            session_id=result.session_id,
+            files=self._file_to_kb_dao.filter_by(kb_id=result.id),
+            description=result.description
         )
 
     def delete_knowledge_base(self, id: str):

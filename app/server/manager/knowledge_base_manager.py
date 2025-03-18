@@ -61,14 +61,27 @@ class KnowledgeBaseManager:
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing knowledge base details and success message
         """
-        knowledge_base = self._knowledge_base_service.get_knowledge_base(id=id)
-        data = {
-            "id": knowledge_base.id,
-            "name": knowledge_base.name,
-            "knowledge_type": knowledge_base.knowledge_type,
-            "session_id": knowledge_base.session_id,
-        }
-        return data, "Knowledge base fetched successfully"
+        try:
+            knowledge_base = self._knowledge_base_service.get_knowledge_base(id=id)
+            data = {
+                "id": knowledge_base.id,
+                "name": knowledge_base.name,
+                "knowledge_type": knowledge_base.knowledge_type,
+                "session_id": knowledge_base.session_id,
+                "files": [
+                    {
+                        "name": file.name,
+                        "type": file.type,
+                        "size": file.size,
+                        "status": file.status,
+                        "time_stamp": file.timestamp,
+                        "file_id": file.id
+                    } for file in knowledge_base.files
+                ]
+            }
+            return data, "Knowledge base fetched successfully"
+        except Exception as e:
+            raise ServiceException(f"Failed to fetch knowledge base: {str(e)}") from e
 
     def delete_knowledge_base(self, id: str) -> Tuple[Dict[str, Any], str]:
         """Delete a knowledge base by ID.
