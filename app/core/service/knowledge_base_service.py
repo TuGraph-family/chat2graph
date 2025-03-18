@@ -32,7 +32,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 run_async_function(self._global_knowledge_base.load_document, root+"/"+file)
         self._knowledge_base_dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
         self._file_dao: FileDAO = FileDAO(DB())
-        self._knowledge_base_dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
+        self._file_to_kb_dao: FileToKBDAO = FileToKBDAO(DB())
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
