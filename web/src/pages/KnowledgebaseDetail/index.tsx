@@ -31,13 +31,15 @@ const KnowledgebaseDetail = () => {
     }
 
     const onDeleteFile = (fileId: string) => {
-        runDeleteFile({
-            file_id: fileId
-        }).then(() => {
-            if (id) {
+        if (id) {
+            runDeleteFile({
+                knowledgebases_id: id,
+                file_id: fileId
+            }).then(() => {
                 getKnowledgebaseDetail(id)
-            }
-        })
+            })
+        }
+
     }
 
 
@@ -138,7 +140,10 @@ const KnowledgebaseDetail = () => {
                 getKnowledgebaseDetail(id)
             }
             setState((draft) => { draft.open = false })
-        }} formatMessage={formatMessage} />
+        }} formatMessage={formatMessage}
+            id={id}
+
+        />
     </div>
 }
 

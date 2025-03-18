@@ -97,7 +97,7 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
                         history.push(historyPushLinkAt('/manager/knowledgebase/detail', { id: item?.id }))
                     }}>
                         <div className={styles['knowledgebases-table-card-header']}>
-                            <h2>{item?.name}</h2>
+                            <div className={styles['knowledgebases-table-card-header-title']}>{item?.name}</div>
                             <Dropdown
                                 trigger={['hover']}
                                 open={dropdownOpen === item.id}
@@ -178,7 +178,7 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
 
     return <div className={styles['knowledgebases-table']}>
         <div className={styles['knowledgebases-table-header']}>
-            <h2>{formatMessage('knowledgebase.home.subTitle2')}</h2>
+            <div className={styles['knowledgebases-table-header-title']}>{formatMessage('knowledgebase.home.subTitle2')}</div>
             <Input className={styles['knowledgebases-table-header-input']} placeholder="Search" prefix={<SearchOutlined />} onChange={(e) => handleSearch(e.target.value)} />
         </div>
         <Spin spinning={loading} >

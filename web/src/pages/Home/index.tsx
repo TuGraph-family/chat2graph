@@ -169,7 +169,7 @@ const HomePage: React.FC = () => {
       }).then(res => {
         const { status } = res?.data?.answer?.metrics || {};
 
-        if (status === 'RUNNING') {
+        if (['RUNNING', 'CREATED'].includes(status)) {
           getMessage(job_id, onSuccess);
           return;
         }

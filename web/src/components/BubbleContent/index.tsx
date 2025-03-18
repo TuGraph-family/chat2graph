@@ -70,7 +70,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         const steps: ThoughtChainItem[] = [
             {
                 title: "策划",
-                description: '基于XX框架生成回答',
+                description: '基于通用框架生成回答',
                 status: 'success' as ThoughtChainItem['status'],
                 icon: getStatusIcon('success'),
             },
@@ -79,7 +79,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
                 status: (message?.thinking ? 'success' : 'pending') as ThoughtChainItem['status'],
                 description: <ol>
                     {lines.map((line, index) => (
-                        <li key={index}>{line}</li>
+                        <li key={index}><pre style={{ background: '#fff' }}>{line}</pre></li>
                     ))}
                 </ol>,
                 icon: getStatusIcon(message?.thinking ? 'success' : 'pending'),
@@ -110,7 +110,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
             <ThoughtChain items={items} />
         </Card>
         {
-            content && <pre>{content}</pre>
+            content && <pre style={{ marginTop: 16 }}>{content}</pre>
         }
     </div>
 }

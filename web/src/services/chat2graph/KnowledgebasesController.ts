@@ -71,14 +71,37 @@ export async function deleteKnowledgebases(
 export async function uploadFile(
     body?: {
         file?: Blob;
+    },
+    options?: { [key: string]: any },
+) {
+    return request<API.Result_Upload_>(`/api/files`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+        data: body,
+        ...(options || {}),
+    });
+}
+
+
+/**
+ * 知识库加载文件
+ */
+export async function setKnowledgebasesConfig(
+    params?: {
+        knowledgebases_id?: string,
+        file_id?: string;
+    },
+    body?: {
         config?: string;
     },
     options?: { [key: string]: any },
 ) {
-    return request<API.Result_Knowledgebase_>(`/api/files/upload`, {
+    return request<API.Result_Upload_>(`/api/knowledgebases/${params?.knowledgebases_id}/file/${params?.file_id}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
         },
         data: body,
         ...(options || {}),
@@ -115,11 +138,12 @@ export async function editKnowledgebase(
  */
 export async function deleteFile(
     params?: {
+        knowledgebases_id?: string,
         file_id?: string;
     },
     options?: { [key: string]: any },
 ) {
-    return request<API.Result_Knowledgebase_>(`/api/files/delete/${params?.file_id}`, {
+    return request<API.Result_Knowledgebase_>(`/api/knowledgebases/${params?.knowledgebases_id}/files/${params?.file_id}`, {
         method: 'DELETE',
         ...(options || {}),
     });

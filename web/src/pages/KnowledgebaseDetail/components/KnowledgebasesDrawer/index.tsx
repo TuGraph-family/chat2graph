@@ -9,15 +9,20 @@ interface KnowledgebasesDrawerProps {
     open: boolean
     onClose: (isRefresh?: boolean) => void
     formatMessage: (id: string, params?: any) => string
+    id?: string
 }
-const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClose, formatMessage }) => {
+const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClose, formatMessage, id }) => {
     const [form] = Form.useForm()
-    const [state, setState] = useImmer({
+    const [state, setState] = useImmer<{
+        current: number,
+        file_id: string
+    }>({
         current: 0,
+        file_id: "",
     })
-    const { current } = state
+    const { current, file_id } = state
 
-    const { runUploadFile } = useKnowledgebaseEntity()
+    const { runUploadFile, runSetKnowledgebasesConfig } = useKnowledgebaseEntity()
 
     const onNext = () => {
         form.validateFields(['file']).then(() => {
@@ -29,32 +34,48 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
 
     const onSubmit = () => {
         form.validateFields().then(async (values) => {
-            const { originFileObj, type } = values?.file.file
-            const fileBlob = new Blob([originFileObj], { type })
-
-            const res = await runUploadFile({
-                ...values,
-                file: fileBlob
+            const res = await runSetKnowledgebasesConfig({
+                knowledgebases_id: id,
+                file_id
+            }, {
+                config: values?.config
             })
-            if (res) {
-                message.success(res?.message)
+
+            if (res?.success) {
+                form.resetFields()
                 onClose(true)
             }
+
+
         })
+    }
+
+
+    const beforeUpload = async (file) => {
+        const { originFileObj, type, size } = file
+        const fileBlob = new Blob([originFileObj], { type })
+        if (size > 20 * 1024 * 1024) {
+            message.error(formatMessage('knowledgebase.detail.upload.errorSize'))
+            return false
+        }
+        const res = await runUploadFile({
+            file: fileBlob
+        })
+
+        setState((draft) => {
+            draft.file_id = res?.data?.file_id || ''
+        })
+
+        return res?.data?.file_id
     }
 
     const props: UploadProps = {
         name: 'file',
         accept: '.pdf,.txt,.doc,.docx',
         maxCount: 1,
-        beforeUpload(file) {
-            if (file.size > 20 * 1024 * 1024) {
-                message.error(formatMessage('knowledgebase.detail.upload.errorSize'))
-                return false
-            }
-            return true
-        },
-    };
+        beforeUpload,
+    }
+
 
     return <Drawer title={formatMessage('knowledgebase.detail.addFile')} open={open} onClose={() => onClose()} width={700} footer={<Space>
         <Button onClick={() => onClose()}>{formatMessage('actions.cancel')}</Button>

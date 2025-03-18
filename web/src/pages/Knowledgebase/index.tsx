@@ -44,11 +44,11 @@ const Knowledgebase = () => {
         }
     ]
     return <div>
-        <h1>{formatMessage('knowledgebase.home.title')}</h1>
+        <div className={styles['title']}>{formatMessage('knowledgebase.home.title')}</div>
         <div className={styles['knowledge-base-total']}>
             <div className={styles['knowledge-base-total-header']}>
-                <div>
-                    <h2>{formatMessage('knowledgebase.home.subTitle1')}</h2>
+                <div className={styles['knowledge-base-total-header-title']}>
+                    {formatMessage('knowledgebase.home.subTitle1')}
                 </div>
                 <Dropdown menu={{ items }}>
                     <EllipsisOutlined style={{ fontSize: 20 }} />

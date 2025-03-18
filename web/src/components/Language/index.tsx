@@ -1,4 +1,5 @@
 import { getLocale, useSearchParams } from 'umi';
+import styles from './index.less'
 
 
 const Language: React.FC = () => {
@@ -21,12 +22,8 @@ const Language: React.FC = () => {
 
         setSearchParams(newParams);
     }
-    return <div style={{
-        fontSize: 12,
-        color: '#999',
-        marginLeft: 10,
-        cursor: 'pointer',
-        fontWeight: 600,
+    return <div className={styles.language} style={{
+
     }} onClick={onChangeLang}>
         {locale === 'en-US' ? 'EN' : '中'}
     </div>

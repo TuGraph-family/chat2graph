@@ -42,6 +42,11 @@ export const useKnowledgebaseEntity = () => {
         manual: true,
     });
 
+    // 加载知识库
+    const { run: runSetKnowledgebasesConfig, loading: loadingSetKnowledgebasesConfig } = useRequest(services.setKnowledgebasesConfig, {
+        manual: true
+    })
+
 
     const getKnowledgebaseList = () => {
         runGetKnowledgebases().then((res) => {
@@ -76,5 +81,7 @@ export const useKnowledgebaseEntity = () => {
         loadingGetKnowledgebases,
         runDeleteKnowledgebase,
         loadingDeleteKnowledgebase,
+        runSetKnowledgebasesConfig,
+        loadingSetKnowledgebasesConfig,
     }
 }

@@ -25,6 +25,7 @@ import {
   uploadFile,
   editKnowledgebase,
   deleteFile,
+  setKnowledgebasesConfig,
 } from '@/services/chat2graph/KnowledgebasesController';
 import { getJobResults } from '@/services/chat2graph/JobsController';
 
@@ -79,6 +80,8 @@ class SessionsService {
   public editKnowledgebase = editKnowledgebase;
   // 删除文件
   public deleteFile = deleteFile;
+  // 知识库加载
+  public setKnowledgebasesConfig = setKnowledgebasesConfig;
 }
 
 export default new SessionsService();

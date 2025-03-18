@@ -114,7 +114,7 @@ const Graphdb: React.FC = () => {
     ]
 
     return <div className={styles['graph-database']}>
-        <h1>{formatMessage('database.title')}</h1>
+        <div className={styles['graph-database-title']}>{formatMessage('database.title')}</div>
         <AsyncTable
             dataSource={databaseEntity?.databaseList}
             loading={loadingGetGraphdbs || loadingDeleteGraphdbs || loadingUpdateGraphdbs}

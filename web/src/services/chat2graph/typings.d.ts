@@ -66,6 +66,14 @@ declare namespace API {
     data?: KnowledgebaseVO;
   }
 
+  interface Result_Upload_ {
+    success?: boolean;
+    message?: string;
+    data?: {
+      file_id?: string;
+    };
+  }
+
 
 
   interface Result_Graphdbs_ {
