@@ -82,6 +82,8 @@ class FileToKB(Base):
     chunk_ids = Column(Text)
     status = Column(String(36))
     config = Column(Text)
+    type = Column(Text)
+    size = Column(Text)
     timestamp = Column(DateTime, default=utc_now, nullable=False)
 
 

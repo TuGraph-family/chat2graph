@@ -46,6 +46,8 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=result.name,
             knowledge_type=result.knowledge_type,
             session_id=result.session_id,
+            files=[],
+            description=""
         )
 
     def get_knowledge_base(self, id: str) -> Knowledge:
@@ -128,7 +130,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # add file_to_kb
         if self._file_to_kb_dao.get_by_id(id=file_id) == None:
-            self._file_to_kb_dao.create(id=file_id, name=file_name, kb_id=knowledge_base_id, status="pending", config=config)
+            self._file_to_kb_dao.create(id=file_id, name=file_name, kb_id=knowledge_base_id, status="pending", config=config, size=os.path.getsize(file_path), type="local")
         # load config
         config = json.loads(config)
         # load file to knowledge base
