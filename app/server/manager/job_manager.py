@@ -22,6 +22,9 @@ class JobManager:
         original_job = self._job_service.get_orignal_job(job_id)
         subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
 
+        # get original job result
+        orignial_job_result = self._job_service.query_job_result(job_id)
+
         # get the user question message
         question_message = self._message_service.get_text_message_by_job_and_role(
             original_job, "USER"
@@ -31,9 +34,6 @@ class JobManager:
         answer_message = self._message_service.get_text_message_by_job_and_role(
             original_job, "SYSTEM"
         )
-
-        # get original job result
-        orignial_job_result = self._job_service.query_job_result(job_id)
 
         # get thinking chain messages
         thinking_messages: List[AgentMessage] = []

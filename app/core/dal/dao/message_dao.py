@@ -31,7 +31,11 @@ class MessageDao(Dao[MessageDo]):
         """Create a new message."""
         message_do = self.__save_message(message)
         message_dict = {c.name: getattr(message_do, c.name) for c in message_do.__table__.columns}
-        self.create(**message_dict)
+        try:
+            self.create(**message_dict)
+        except Exception:
+            message_dict.pop("id", None)
+            self.update(message_do.id, **message_dict)
         return message_do
 
     def __save_message(self, message: Message) -> MessageDo:

@@ -41,22 +41,14 @@ class Expert(Agent):
                 lesson=agent_message.get_lesson(),
             )
         except Exception as e:
-            if self._workflow.evaluator:
-                workflow_message = WorkflowMessage(
-                    payload={
-                        "scratchpad": str(e) + "\n" + traceback.format_exc(),
-                        "status": WorkflowStatus.EXECUTION_ERROR,
-                        "evaluation": "There occurs some errors during the execution: " + str(e),
-                        "lesson": "",  # TODO: add the lesson learned
-                    },
-                )
-            else:
-                workflow_message = WorkflowMessage(
-                    payload={
-                        "scratchpad": str(e) + "\n" + traceback.format_exc(),
-                        "status": WorkflowStatus.EXECUTION_ERROR,
-                    },
-                )
+            workflow_message = WorkflowMessage(
+                payload={
+                    "scratchpad": str(e) + "\n" + traceback.format_exc(),
+                    "status": WorkflowStatus.EXECUTION_ERROR,
+                    "evaluation": "There occurs some errors during the execution: " + str(e),
+                    "lesson": "",  # TODO: add the lesson learned
+                },
+            )
 
         # save the workflow message in the database
         message_service.save_message(message=workflow_message)

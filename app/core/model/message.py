@@ -302,6 +302,10 @@ class TextMessage(ChatMessage):
         """Get the assigned expert name."""
         return self._assigned_expert_name
 
+    def set_payload(self, payload: str):
+        """Set the content of the message."""
+        self._payload = payload
+
     def set_assigned_expert_name(self, assigned_expert_name: str):
         """Set the assigned expert name."""
         self._assigned_expert_name = assigned_expert_name

@@ -9,7 +9,7 @@ from app.core.dal.do.job_do import JobDo
 from app.core.model.job import Job, JobType, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
-from app.core.model.message import AgentMessage, MessageType
+from app.core.model.message import AgentMessage, MessageType, TextMessage
 from app.core.service.message_service import MessageService
 
 
@@ -130,11 +130,20 @@ class JobService(metaclass=Singleton):
             mutli_agent_payload += cast(str, agent_messages[0].get_payload()) + "\n"
 
         # save the multi-agent result to the database
-        multi_agent_message = AgentMessage(
-            job_id=job_id,
-            workflow_messages=[],
-            payload=mutli_agent_payload,
-        )
+        original_job: Job = self.get_orignal_job(job_id)
+        try:
+            multi_agent_message = message_service.get_text_message_by_job_and_role(
+                original_job, "SYSTEM"
+            )
+            multi_agent_message.set_payload(mutli_agent_payload)
+        except ValueError:
+            multi_agent_message = TextMessage(
+                payload=mutli_agent_payload,
+                job_id=job_id,
+                session_id=original_job.session_id,
+                assigned_expert_name=original_job.assigned_expert_name,
+                role="SYSTEM",
+            )
         message_service.save_message(message=multi_agent_message)
 
         # save the original job result
