@@ -22,17 +22,20 @@ class SessionManager:
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing session details and success message
         """
-        session: Session = self._session_service.create_session(name=name)
-        knowledgebase: Knowledge = self._knowledgebase_service.create_knowledge_base(
-            name=name, knowledge_type="private", session_id=session.id
-        )
-        data = {
-            "id": session.id,
-            "knowledgebase_id": knowledgebase.id,
-            "name": session.name,
-            "timestamp": session.timestamp,
-        }
-        return data, "Session created successfully"
+        try:
+            session = self._session_service.create_session(name=name)
+            knowledgebase = self._knowledgebase_service.create_knowledge_base(
+                name=name, knowledge_type="vector", session_id=session.id
+            )
+            data = {
+                "id": session.id,
+                "knowledgebase_id": knowledgebase.id,
+                "name": session.name,
+                "created_at": session.created_at.isoformat() if session.created_at else None,
+            }
+            return data, "Session created successfully"
+        except Exception as e:
+            raise ServiceException(f"Failed to create session: {str(e)}") from e
 
     def get_session(self, session_id: str) -> Tuple[Dict[str, Any], str]:
         """Get session details by ID.
