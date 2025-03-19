@@ -35,7 +35,7 @@ class MessageDao(Dao[MessageDo]):
             self.create(**message_dict)
         except Exception:
             message_dict.pop("id", None)
-            self.update(message_do.id, **message_dict)
+            self.update(str(message_do.id), **message_dict)
         return message_do
 
     def __save_message(self, message: Message) -> MessageDo:

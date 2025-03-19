@@ -328,23 +328,23 @@ class FileMessage(ChatMessage):
 
     def __init__(
         self,
-        payload: Any,
+        file_id: str,
         session_id: str,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
     ):
         super().__init__(
-            payload=payload,
+            payload=None,
             job_id="unused_job_id",
             timestamp=timestamp,
             id=id,
             session_id=session_id,
         )
+        self._file_id: str = file_id
 
-    def get_payload(self) -> Any:
+    def get_payload(self) -> None:
         """Get the content of the message."""
-        # TODO: Implement the file message payload handling
-        raise NotImplementedError("File message payload handling is not implemented yet.")
+        raise ValueError("File message does not have a payload.")
 
 
 class HybridMessage(ChatMessage):
@@ -356,7 +356,7 @@ class HybridMessage(ChatMessage):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
-        supplementary_messages: Optional[List[ChatMessage]] = None,
+        attached_messages: Optional[List[ChatMessage]] = None,
     ):
         super().__init__(
             payload=None,
@@ -365,12 +365,12 @@ class HybridMessage(ChatMessage):
             id=id,
             session_id=session_id,
         )
-        self._supplementary_messages: List[ChatMessage] = supplementary_messages or []
+        self._attached_messages: List[ChatMessage] = attached_messages or []
 
     def get_payload(self) -> None:
         """Get the payload of the message."""
         raise ValueError("Hybrid message does not have a payload.")
 
-    def get_supplementary_messages(self) -> List[ChatMessage]:
+    def get_attached_messages(self) -> List[ChatMessage]:
         """Get the supplementary messages."""
-        return self._supplementary_messages
+        return self._attached_messages

@@ -29,7 +29,7 @@ class Expert(Agent):
 
         job_service: JobService = JobService.instance
         job_id = agent_message.get_job_id()
-        job: Job = job_service.get_subjob(job_id=job_id)
+        job: Job = job_service.get_subjob(subjob_id=job_id)
 
         workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
 

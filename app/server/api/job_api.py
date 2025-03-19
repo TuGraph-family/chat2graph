@@ -14,7 +14,7 @@ def get_job_message_view(job_id):
     manager = JobManager()
     try:
         # get message view data for the job
-        message_view_data, message = manager.get_message_view(job_id=job_id)
+        message_view_data, message = manager.get_conversation_view(job_id=job_id)
 
         return make_response(True, data=message_view_data, message=message)
     except ApiException as e:

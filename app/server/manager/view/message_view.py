@@ -1,7 +1,10 @@
 from typing import Any, Dict, List, TypeVar, cast
 
+from attr import dataclass
+
 from app.core.common.type import ChatMessageType
 from app.core.dal.do.message_do import MessageType
+from app.core.model.job_result import JobResult
 from app.core.model.message import (
     AgentMessage,
     ChatMessage,
@@ -10,8 +13,31 @@ from app.core.model.message import (
     Message,
     TextMessage,
 )
+from app.server.manager.view.job_view import JobView
 
 T = TypeVar("T", bound=Message)
+
+
+@dataclass
+class ConversationView:
+    """A view class for managing conversation-related data.
+
+    The ConversationView class serves as a container for storing and managing conversation
+    elements including questions, answers, metrics, and intermediate thinking processes.
+
+    Attributes:
+        question (ChatMessage): The user's input/question message.
+        answer (ChatMessage): The system's response/answer message.
+        answer_metrics (JobResult): Performance metrics related to the answer generation.
+        thinking_messages (List[AgentMessage]): List of intermediate reasoning msg by the agent.
+        thinking_metrics (List[JobResult]): List of performance metrics for each thinking step.
+    """
+
+    question: ChatMessage
+    answer: ChatMessage
+    answer_metrics: JobResult
+    thinking_messages: List[AgentMessage]
+    thinking_metrics: List[JobResult]
 
 
 class MessageView:
@@ -52,6 +78,28 @@ class MessageView:
         return [MessageView.serialize_message(msg) for msg in messages]
 
     @staticmethod
+    def serialize_conversation_view(conversation_view: ConversationView) -> Dict[str, Any]:
+        """Serialize a conversation view to an API response dictionary."""
+        return {
+            "question": {"message": MessageView.serialize_message(conversation_view.question)},
+            "answer": {
+                "message": MessageView.serialize_message(conversation_view.answer),
+                "metrics": JobView.serialize_job_result(conversation_view.answer_metrics),
+                "thinking": [
+                    {
+                        "message": MessageView.serialize_message(thinking_message),
+                        "metrics": JobView.serialize_job_result(subjob_result),
+                    }
+                    for thinking_message, subjob_result in zip(
+                        conversation_view.thinking_messages,
+                        conversation_view.thinking_metrics,
+                        strict=True,
+                    )
+                ],
+            },
+        }
+
+    @staticmethod
     def deserialize_message(message: Dict[str, Any], message_type: MessageType) -> Message:
         """Convert a Message model to an API response dictionary."""
         if message_type == MessageType.TEXT_MESSAGE:
@@ -66,26 +114,26 @@ class MessageView:
             )
         if message_type == MessageType.FILE_MESSAGE:
             return FileMessage(
-                payload=message["payload"],
+                file_id=message["file_id"],
                 session_id=message["session_id"],
                 id=message.get("id", None),
                 timestamp=message.get("timestamp"),
             )
         if message_type == MessageType.HYBRID_MESSAGE:
-            supplementary_messages: List[ChatMessage] = []
+            attached_messages: List[ChatMessage] = []
             # TODO: support more modal messages as the supplementary messages
             file_messages: List[FileMessage] = [
                 cast(FileMessage, MessageView.deserialize_message(msg, MessageType.FILE_MESSAGE))
-                for msg in message["supplementary_messages"]
+                for msg in message["attached_messages"]
                 if msg["type"] == ChatMessageType.FILE and isinstance(msg, dict)
             ]
-            supplementary_messages.extend(file_messages)
+            attached_messages.extend(file_messages)
 
             return HybridMessage(
                 timestamp=message.get("timestamp"),
                 id=message.get("id", None),
                 job_id=message.get("job_id", None),
                 session_id=message.get("session_id", None),
-                supplementary_messages=supplementary_messages,
+                attached_messages=attached_messages,
             )
         raise ValueError(f"Unsupported message type: {message['message_type']}")

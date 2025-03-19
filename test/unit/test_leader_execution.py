@@ -195,14 +195,14 @@ def test_agent_job_graph():
     # original: 1 2 3 4 5 -> after +10: 11 12 13 14 15 -> sum: 65
     message_service: MessageService = MessageService.instance
     job4_result_message: AgentMessage = message_service.get_agent_message_by_job(
-        job=job_service.get_subjob(job_id=job4_result.job_id)
+        job=job_service.get_subjob(subjob_id=job4_result.job_id)
     )
     assert job4_result_message.get_payload() == "65"
 
     # verify job5 result (format of multiply by 2 and add 10 results)
     # job5_output = job5_result.message.get_payload()
     job5_result_message: AgentMessage = message_service.get_agent_message_by_job(
-        job=job_service.get_subjob(job_id=job5_result.job_id)
+        job=job_service.get_subjob(subjob_id=job5_result.job_id)
     )
     assert "2 4 6 8 10" in job5_result_message.get_payload()
     assert "11 12 13 14 15" in job5_result_message.get_payload()

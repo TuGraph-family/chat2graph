@@ -45,8 +45,9 @@ class SubJob(Job):
         expert_id (str): The id of the expert attached to the sub job.
         output_schema (str): The output schema of the sub job.
         life_cycle (int): The life cycle of the sub job.
-        is_legacy (bool): Whether the sub job is legacy, which means the sub job will not
-            be executed by the agent.
+        is_legacy (bool): Whether the sub job is legacy, which means the subjob is
+            decomposed into sub-subjobs by the leader and the subjob will not be
+            executed by the agent anymore.
     """
 
     original_job_id: Optional[str] = None  # it is required for the sub job

@@ -156,6 +156,7 @@ def main():
     job = Job(id="test_original_job_id", session_id="test_session_id", goal="Test Job")
     job_1 = SubJob(
         id="job_1",
+        original_job_id=job.id,
         session_id="test_session_id",
         goal="Generate numbers",
         context="1 2 3 4 5",
@@ -164,6 +165,7 @@ def main():
 
     job_2 = SubJob(
         id="job_2",
+        original_job_id=job.id,
         session_id="test_session_id",
         goal="Multiply numbers by 2",
         context="",
@@ -172,6 +174,7 @@ def main():
 
     job_3 = SubJob(
         id="job_3",
+        original_job_id=job.id,
         session_id="test_session_id",
         goal="Add 10 to numbers",
         context="",
@@ -180,6 +183,7 @@ def main():
 
     job_4 = SubJob(
         id="job_4",
+        original_job_id=job.id,
         session_id="test_session_id",
         goal="Sum the numbers",
         context="",
@@ -188,6 +192,7 @@ def main():
 
     job_5 = SubJob(
         id="job_5",
+        original_job_id=job.id,
         session_id="test_session_id",
         goal="Format final result",
         context="",
