@@ -8,6 +8,7 @@ from app.core.common.system_env import SystemEnv
 import hashlib
 from werkzeug.datastructures import FileStorage
 
+
 class FileService(metaclass=Singleton):
     """File Service"""
 
@@ -16,16 +17,14 @@ class FileService(metaclass=Singleton):
         self._upload_folder = SystemEnv.APP_ROOT + "/uploads"
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
-    
+
     def calculate_md5(self, file):
         file_hash = hashlib.md5()
         while chunk := file.read(8192):
             file_hash.update(chunk)
         return file_hash.hexdigest()
-    
-    def upload_file(
-        self, file: FileStorage
-    ) -> str:
+
+    def upload_file(self, file: FileStorage) -> str:
         """upload a new file.
 
         Args:
@@ -47,9 +46,7 @@ class FileService(metaclass=Singleton):
         result = self._dao.create(name=file.filename, path=md5_folder)
         return result.id
 
-    def delete_file(
-        self, id
-    ):
+    def delete_file(self, id):
         """Create a new knowledge base.
 
         Args:
@@ -62,7 +59,7 @@ class FileService(metaclass=Singleton):
         path = file.path
         self._dao.delete(id=id)
         results = self._dao.filter_by(path=path)
-        if len(results)==0:
+        if len(results) == 0:
             for file_name in os.listdir(path):
                 file_path = os.path.join(path, file_name)
                 os.remove(file_path)

@@ -5,20 +5,19 @@ from app.core.service.file_service import FileService
 from app.core.service.session_service import SessionService
 from werkzeug.datastructures import FileStorage
 
+
 class FileManager:
     """File Manager class to handle business logic"""
 
     def __init__(self):
         self._file_service: FileService = FileService.instance
 
-    def upload_file(
-        self, file: FileStorage
-    ) -> Tuple[Dict[str, Any], str]:
+    def upload_file(self, file: FileStorage) -> Tuple[Dict[str, Any], str]:
         """Upload a file.
 
         Args:
             file (FileStorage): file
-        
+
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing upload status and success message
         """
@@ -35,7 +34,7 @@ class FileManager:
 
         Args:
             id (str): ID of the file
-        
+
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing deletion status and success message
         """

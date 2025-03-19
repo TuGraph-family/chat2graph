@@ -70,15 +70,18 @@ class KnowledgeBaseManager:
                         "size": file.size,
                         "status": file.status,
                         "time_stamp": file.timestamp,
-                        "file_id": file.id
-                    } for file in knowledge_base.files
-                ]
+                        "file_id": file.id,
+                    }
+                    for file in knowledge_base.files
+                ],
             }
             return data, "Knowledge base fetched successfully"
         except Exception as e:
             raise ValueError(f"Failed to fetch knowledge base: {str(e)}") from e
-    
-    def edit_knowledge_base(self, id: str, name: str, description: str) -> Tuple[Dict[str, Any], str]:
+
+    def edit_knowledge_base(
+        self, id: str, name: str, description: str
+    ) -> Tuple[Dict[str, Any], str]:
         """Edit a knowledge base by ID.
 
         Args:
@@ -90,7 +93,9 @@ class KnowledgeBaseManager:
             Tuple[Dict[str, Any], str]: A tuple containing edit status and success message
         """
         try:
-            self._knowledge_base_service.edit_knowledge_base(id=id, name=name, description=description)
+            self._knowledge_base_service.edit_knowledge_base(
+                id=id, name=name, description=description
+            )
             return {}, f"Knowledge base with ID {id} edited successfully"
         except Exception as e:
             raise ValueError(f"Failed to edit knowledge base: {str(e)}") from e
@@ -124,14 +129,14 @@ class KnowledgeBaseManager:
                     "knowledge_type": kb.knowledge_type,
                     "session_id": kb.session_id,
                     "file_count": len(kb.files),
-                    "description": kb.description
+                    "description": kb.description,
                 }
                 for kb in knowledge_bases
             ]
             return knowledge_base_list, "Get all knowledge bases successfully"
         except Exception as e:
             raise ValueError(f"Failed to fetch all knowledge bases: {str(e)}") from e
-    
+
     def load_knowledge(self, kb_id: str, file_id: str, config: str) -> Tuple[Dict[str, Any], str]:
         """Load knowledge with file ID.
 
@@ -144,8 +149,13 @@ class KnowledgeBaseManager:
             Tuple[Dict[str, Any], str]: A tuple containing load status and success message
         """
         try:
-            self._knowledge_base_service.load_knowledge(knowledge_base_id=kb_id, file_id=file_id, config=config)
-            return {}, f"File with ID {file_id} loaded into knowledge base with ID {kb_id} successfully"
+            self._knowledge_base_service.load_knowledge(
+                knowledge_base_id=kb_id, file_id=file_id, config=config
+            )
+            return (
+                {},
+                f"File with ID {file_id} loaded into knowledge base with ID {kb_id} successfully",
+            )
         except Exception as e:
             raise ValueError(f"Failed to load knowledge: {str(e)}") from e
 
@@ -161,6 +171,9 @@ class KnowledgeBaseManager:
         """
         try:
             self._knowledge_base_service.delete_knowledge(file_id=file_id)
-            return {}, f"File with ID {file_id} deleted from knowledge base with ID {kb_id} successfully"
+            return (
+                {},
+                f"File with ID {file_id} deleted from knowledge base with ID {kb_id} successfully",
+            )
         except Exception as e:
             raise ValueError(f"Failed to delete knowledge: {str(e)}") from e

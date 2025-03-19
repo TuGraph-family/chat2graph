@@ -12,6 +12,7 @@ All related knowledges retrieved from the knowledge base are listed below.
 {local_knowledges}
 """
 
+
 class Knowledge(Message):
     """Knowledge"""
 
@@ -35,7 +36,9 @@ class Knowledge(Message):
             local_knowledges += f"chunk_name:{chunk.chunk_name}\n"
             local_knowledges += f"content:{chunk.content}\n"
             local_knowledges += "\n"
-        self._payload = KNOWLEDGE_PROMPT.format(global_knowledges=global_knowledges, local_knowledges=local_knowledges)
+        self._payload = KNOWLEDGE_PROMPT.format(
+            global_knowledges=global_knowledges, local_knowledges=local_knowledges
+        )
 
     def get_payload(self) -> str:
         """Get the content of the knowledge."""
@@ -52,8 +55,8 @@ class Knowledge(Message):
     def copy(self) -> Any:
         """Copy the knowledge."""
         return Knowledge(
-            global_chunk_list = self._global_chunk_list,
-            local_chunk_list = self._local_chunk_list,
+            global_chunk_list=self._global_chunk_list,
+            local_chunk_list=self._local_chunk_list,
             timestamp=self._timestamp,
             id=self._id,
         )

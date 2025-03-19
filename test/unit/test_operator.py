@@ -128,11 +128,14 @@ async def test_get_tools_from_actions(operator: Operator):
     actual_tool_ids = {tool.id for tool in tools}
     assert actual_tool_ids == expected_tool_ids
 
+
 @pytest.mark.asyncio
 async def test_get_knowledge(operator: Operator):
     """Test get knolwedge."""
-    with patch('app.core.service.knowledge_base_service.KnowledgeBaseService.get_knowledge') as mock_get_knowledge:
-        mock_get_knowledge.return_value=Knowledge([],[],"")
+    with patch(
+        "app.core.service.knowledge_base_service.KnowledgeBaseService.get_knowledge"
+    ) as mock_get_knowledge:
+        mock_get_knowledge.return_value = Knowledge([], [], "")
         job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
         knowledge = operator.get_knowledge(job)
         assert "[Knowledges From Gloabal Knowledge Base]" in knowledge.get_payload()

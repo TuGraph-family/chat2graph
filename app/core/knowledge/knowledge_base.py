@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List
 
+
 class KnowledgeBase(ABC):
     """Knowledge base for storing docs, vectors, graphs."""
 
@@ -19,15 +20,15 @@ class KnowledgeBase(ABC):
     @abstractmethod
     def update_document(self, file_path, chunk_ids) -> List[str]:
         """Update document."""
-    
+
     @abstractmethod
     def retrieve(self, query):
         """retrieve knowledge from knowledge base."""
-    
+
     @abstractmethod
     def clear(self):
         """clear all knowledge in knowledge base."""
-    
+
     @abstractmethod
     def delete(self):
         """delete the entire knowledge base persistance data."""

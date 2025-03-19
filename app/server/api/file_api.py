@@ -8,6 +8,7 @@ from app.server.manager.file_manager import FileManager
 
 files_bp = Blueprint("files", __name__)
 
+
 @files_bp.route("/", methods=["POST"])
 def upload_file():
     """
@@ -25,11 +26,7 @@ def upload_file():
 
     try:
         result, message = manager.upload_file(file=file)
-        return make_response(
-            True,
-            data=result,
-            message=message
-        )
+        return make_response(True, data=result, message=message)
     except Exception as e:
         raise ApiException(f"Failed to upload file: {str(e)}") from e
 
@@ -43,10 +40,6 @@ def delete_file(file_id):
     manager = FileManager()
     try:
         result, message = manager.delete_file(id=file_id)
-        return make_response(
-            True,
-            data=result,
-            message=message
-        )
+        return make_response(True, data=result, message=message)
     except Exception as e:
         raise ApiException(f"Failed to delete file: {str(e)}") from e

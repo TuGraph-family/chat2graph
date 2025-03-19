@@ -15,11 +15,14 @@ from app.core.dal.database import init_db
 
 init_db()
 
+
 async def test_vector_knowledge_base():
     chunks = VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
 
-    chunk_ids = VectorKnowledgeBase("test_vector_knowledge_base").load_document(SystemEnv.APP_ROOT+"/global_knowledge/awel.md")
+    chunk_ids = VectorKnowledgeBase("test_vector_knowledge_base").load_document(
+        SystemEnv.APP_ROOT + "/global_knowledge/awel.md"
+    )
     chunks = VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) != 0
 
@@ -27,8 +30,11 @@ async def test_vector_knowledge_base():
     chunks = VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
 
+
 async def test_knowledge_base_service():
     knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
-    knowledge = KnowledgeBaseService.instance.get_knowledge(query="what is awel talk about",session_id="test_knowledge_base_service")
+    knowledge = KnowledgeBaseService.instance.get_knowledge(
+        query="what is awel talk about", session_id="test_knowledge_base_service"
+    )
     assert "[Knowledges From Gloabal Knowledge Base]" in knowledge.get_payload()
     assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()

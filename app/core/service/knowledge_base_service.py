@@ -13,14 +13,15 @@ from dbgpt.core import Chunk
 from app.core.common.system_env import SystemEnv
 from app.core.service.file_service import FileService
 
+
 class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
 
     def __init__(self):
         self._global_knowledge_base = VectorKnowledgeBase("global_knowledge_base")
-        for root, dirs, files in os.walk(SystemEnv.APP_ROOT+"/global_knowledge"):
+        for root, dirs, files in os.walk(SystemEnv.APP_ROOT + "/global_knowledge"):
             for file in files:
-                self._global_knowledge_base.load_document(root+"/"+file)
+                self._global_knowledge_base.load_document(root + "/" + file)
         self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
         self._file_dao: FileDao = FileDao.instance
         self._file_to_kb_dao: FileToKBDao = FileToKBDao.instance
@@ -39,14 +40,16 @@ class KnowledgeBaseService(metaclass=Singleton):
             KnowledgeBase: Knowledge base object
         """
         # create the knowledge base
-        result = self._knowledge_base_dao.create(name=name, knowledge_type=knowledge_type, session_id=session_id)
+        result = self._knowledge_base_dao.create(
+            name=name, knowledge_type=knowledge_type, session_id=session_id
+        )
         return KnowledgeBase(
             id=result.id,
             name=result.name,
             knowledge_type=result.knowledge_type,
             session_id=result.session_id,
             files=[],
-            description=""
+            description="",
         )
 
     def get_knowledge_base(self, id: str) -> Knowledge:
@@ -67,9 +70,9 @@ class KnowledgeBaseService(metaclass=Singleton):
             knowledge_type=result.knowledge_type,
             session_id=result.session_id,
             files=self._file_to_kb_dao.filter_by(kb_id=result.id),
-            description=result.description
+            description=result.description,
         )
-    
+
     def edit_knowledge_base(self, id: str, name: str, description: str):
         """edit a knowledge base by ID.
         Args:
@@ -99,7 +102,6 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete knolwledge base folder
         VectorKnowledgeBase(id).delete()
 
-
     def update_knowledge_base(self) -> Knowledge:
         """Update a knowledge base by ID."""
         raise NotImplementedError("Method not implemented")
@@ -118,11 +120,11 @@ class KnowledgeBaseService(metaclass=Singleton):
                 knowledge_type=result.knowledge_type,
                 session_id=result.session_id,
                 files=self._file_to_kb_dao.filter_by(kb_id=result.id),
-                description=result.description
+                description=result.description,
             )
             for result in results
         ]
-    
+
     def get_knowledge(self, query, session_id) -> Any:
         """Get knowledge by ID."""
         # get global knowledge
@@ -136,9 +138,9 @@ class KnowledgeBaseService(metaclass=Singleton):
                 local_chunks = VectorKnowledgeBase(knowledge_base_id).retrieve(query)
         else:
             local_chunks = [Chunk(content="")]
-        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
         return Knowledge(global_chunks, local_chunks, timestamp)
-    
+
     def load_knowledge(self, knowledge_base_id, file_id, config):
         """Load new knowledge entry."""
         # get file with file id
@@ -150,7 +152,15 @@ class KnowledgeBaseService(metaclass=Singleton):
         kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # add file_to_kb
         if self._file_to_kb_dao.get_by_id(id=file_id) == None:
-            self._file_to_kb_dao.create(id=file_id, name=file_name, kb_id=knowledge_base_id, status="pending", config=config, size=os.path.getsize(file_path), type="local")
+            self._file_to_kb_dao.create(
+                id=file_id,
+                name=file_name,
+                kb_id=knowledge_base_id,
+                status="pending",
+                config=config,
+                size=os.path.getsize(file_path),
+                type="local",
+            )
         # load config
         config = json.loads(config)
         # load file to knowledge base
@@ -180,11 +190,11 @@ class KnowledgeBaseService(metaclass=Singleton):
         self._file_dao.delete(id=file_id)
         # delete physical file if all references are deleted
         results = self._file_dao.filter_by(path=path)
-        if len(results)==0:
+        if len(results) == 0:
             for file_name in os.listdir(path):
                 file_path = os.path.join(path, file_name)
                 os.remove(file_path)
         os.rmdir(path)
-    
+
     def __delete__(self):
         self._global_knowledge_base.clear()

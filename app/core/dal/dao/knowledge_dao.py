@@ -10,6 +10,7 @@ class KnowledgeBaseDao(Dao[KnowledgeBaseDo]):
     def __init__(self, session: SqlAlchemySession):
         super().__init__(KnowledgeBaseDo, session)
 
+
 class FileToKBDao(Dao[FileToKBDo]):
     """File to Knowledge Base Data Access Object"""
 

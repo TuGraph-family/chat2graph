@@ -25,8 +25,11 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "DATABASE_POOL_TIMEOUT": (int, 60),
     "DATABASE_POOL_RECYCLE": (int, 3600),
     "DATABASE_POOL_PRE_PING": (bool, True),
-    "APP_ROOT": (str, f"{os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))}/.chat2graph"),
-    "EMBEDDING_MODEL": (str, "text2vec-large-chinese")
+    "APP_ROOT": (
+        str,
+        f"{os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))}/.chat2graph",
+    ),
+    "EMBEDDING_MODEL": (str, "text2vec-large-chinese"),
 }
 
 # system environment variable value cache.
