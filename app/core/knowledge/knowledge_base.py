@@ -27,3 +27,7 @@ class KnowledgeBase(ABC):
     @abstractmethod
     def clear(self):
         """clear all knowledge in knowledge base."""
+    
+    @abstractmethod
+    def delete(self):
+        """delete the entire knowledge base persistance data."""

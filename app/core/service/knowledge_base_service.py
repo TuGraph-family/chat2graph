@@ -11,6 +11,7 @@ from app.core.knowledge.knowledge import Knowledge
 from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
 from dbgpt.core import Chunk
 from app.core.common.system_env import SystemEnv
+from app.core.service.file_service import FileService
 
 class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
@@ -89,7 +90,15 @@ class KnowledgeBaseService(metaclass=Singleton):
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
             raise ValueError(f"Knowledge base with ID {id} not found")
+        # delte all related file from db
+        files = self._file_to_kb_dao.filter_by(kb_id=id)
+        for file in files:
+            FileService.instance.delete_file(id=file.id)
+        # delete kb from db
         self._knowledge_base_dao.delete(id=id)
+        # delete knolwledge base folder
+        VectorKnowledgeBase(id).delete()
+
 
     def update_knowledge_base(self) -> Knowledge:
         """Update a knowledge base by ID."""

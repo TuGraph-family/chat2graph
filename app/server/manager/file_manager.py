@@ -9,7 +9,7 @@ class FileManager:
     """File Manager class to handle business logic"""
 
     def __init__(self):
-        self._file_service: FileService = FileService()
+        self._file_service: FileService = FileService.instance
 
     def upload_file(
         self, file: FileStorage

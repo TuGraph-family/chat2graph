@@ -80,6 +80,9 @@ class VectorKnowledgeBase(KnowledgeBase):
         file_path_list = list(self._chunk_id_dict.keys)
         for file_path in file_path_list:
             self.delete_document(self._chunk_id_dict[file_path])
+    
+    def delete(self):
+        self._vector_base._clean_persist_folder()
 
 # class GraphKnowledgeBase(KnowledgeBase):
 #     """Knowledge base for storing graphs."""
