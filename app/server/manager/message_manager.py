@@ -23,7 +23,7 @@ class MessageManager:
         """Create user message and system message return the response data."""
         # make the chat message to the mulit-agent system
         session_wrapper = self._agentic_service.session(session_id=text_message.get_session_id())
-        # TODO: refactor the chat message to a more generic message
+
         job_wrapper = session_wrapper.submit(message=text_message)
 
         # create system message
@@ -36,8 +36,8 @@ class MessageManager:
         self._message_service.save_message(message=system_chat_message)
 
         # use MessageView to serialize the message for API response
-        system_data = self._message_view.serialize_message(system_chat_message)
-        return system_data, "Message created successfully"
+        message_data = self._message_view.serialize_message(system_chat_message)
+        return message_data, "Message created successfully"
 
     def get_agent_messages_by_job(self, original_job_id: str) -> Tuple[List[Dict[str, Any]], str]:
         """Get agent messages by job.
