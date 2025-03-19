@@ -310,7 +310,7 @@ class Leader(Agent):
             # raise NotImplementedError("Decompose the job into subjobs is not implemented.")
 
             # reduce the life cycle of the subjob
-            subjob: SubJob = self._job_service.get_subjob(job_id=agent_message.get_job_id())
+            subjob: SubJob = self._job_service.get_subjob(subjob_id=agent_message.get_job_id())
             subjob.life_cycle -= 1
             subjob.is_legacy = True
             self._job_service.save_job(job=subjob)
