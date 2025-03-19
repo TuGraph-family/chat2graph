@@ -1,12 +1,10 @@
 from typing import Any, Dict, List, Tuple, cast
 
-from app.core.common.type import JobStatus
 from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, MessageType
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
-from app.server.manager.view.job_view import JobView
-from app.server.manager.view.message_view import MessageView
+from app.server.manager.view.message_view import ConversationView, MessageView
 
 
 class JobManager:
@@ -16,7 +14,7 @@ class JobManager:
         self._job_service: JobService = JobService.instance
         self._message_service: MessageService = MessageService.instance
 
-    def get_message_view(self, job_id: str) -> Tuple[Dict[str, Any], str]:
+    def get_conversation_view(self, job_id: str) -> Tuple[Dict[str, Any], str]:
         """Get message view (including thinking chain) for a specific job."""
         # get job details
         original_job = self._job_service.get_orignal_job(job_id)
@@ -34,53 +32,50 @@ class JobManager:
         answer_message = self._message_service.get_text_message_by_job_and_role(
             original_job, "SYSTEM"
         )
-
         # get thinking chain messages
-        thinking_messages: List[AgentMessage] = []
-        subjob_results: List[JobResult] = []
-        for subjob_id in subjob_ids:
-            subjob_result = self._job_service.get_job_result(job_id=subjob_id)
-            subjob_results.append(subjob_result)
+        message_result_pairs: List[Tuple[AgentMessage, JobResult]] = []  # to sort by timestamp
 
-            if subjob_result.status == JobStatus.FINISHED:
+        for subjob_id in subjob_ids:
+            # get the information, whose job is not legacy
+            subjob = self._job_service.get_subjob(subjob_id=subjob_id)
+            if not subjob.is_legacy:
+                # get the subjob result
+                subjob_result = self._job_service.get_job_result(job_id=subjob_id)
+
+                # get the agent message
                 agent_messages = cast(
                     List[AgentMessage],
                     self._message_service.get_message_by_job_id(
                         job_id=subjob_id, type=MessageType.AGENT_MESSAGE
                     ),
                 )
-                assert len(agent_messages) == 1, (
-                    f"Subjob {subjob_id} has multiple or no agent messages."
-                )
-                thinking_messages.append(agent_messages[0])
-            else:
-                # handle unfinished subjobs, and the agent message is saved in the db
-                thinking_message = AgentMessage(
-                    id=subjob_id,
-                    job_id=subjob_id,
-                    payload="",
-                    workflow_messages=[],
-                    timestamp=0,
-                )
-                thinking_messages.append(thinking_message)
-
-        # format response according to the requirements
-        # TODO: rerange the view by the timestamp
-        message_view_data = {
-            "question": {"message": MessageView.serialize_message(question_message)},
-            "answer": {
-                "message": MessageView.serialize_message(answer_message),
-                "metrics": JobView.serialize_job_result(orignial_job_result),
-                "thinking": [
-                    {
-                        "message": MessageView.serialize_message(thinking_message),
-                        "metrics": JobView.serialize_job_result(subjob_result),
-                    }
-                    for thinking_message, subjob_result in zip(
-                        thinking_messages, subjob_results, strict=True
+                if len(agent_messages) == 1:
+                    thinking_message = agent_messages[0]
+                elif len(agent_messages) == 0:
+                    # handle the unexecuted subjob
+                    thinking_message = AgentMessage(
+                        job_id=subjob_id, payload="The subjob is not executed"
                     )
-                ],
-            },
-        }
+                else:
+                    raise ValueError(
+                        f"Multiple agent messages found for job ID {subjob_id}: {agent_messages}"
+                    )
+                # store the pair of message and result
+                message_result_pairs.append((thinking_message, subjob_result))
 
-        return message_view_data, "Message view retrieved successfully"
+        # sort pairs by message timestamp
+        message_result_pairs.sort(key=lambda pair: cast(int, pair[0].get_timestamp()))
+
+        # separate the sorted pairs back into individual lists
+        thinking_messages: List[AgentMessage] = [pair[0] for pair in message_result_pairs]
+        subjob_results: List[JobResult] = [pair[1] for pair in message_result_pairs]
+
+        return MessageView.serialize_conversation_view(
+            ConversationView(
+                question=question_message,
+                answer=answer_message,
+                answer_metrics=orignial_job_result,
+                thinking_messages=thinking_messages,
+                thinking_metrics=subjob_results,
+            )
+        ), "Message view retrieved successfully"

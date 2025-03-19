@@ -67,9 +67,9 @@ class JobService(metaclass=Singleton):
             subjobs.extend(self.get_subjobs(original_id))
         return subjobs
 
-    def get_subjob(self, job_id: str) -> SubJob:
+    def get_subjob(self, subjob_id: str) -> SubJob:
         """Get a Job from the job registry."""
-        return cast(SubJob, self._job_dao.get_job_by_id(job_id))
+        return cast(SubJob, self._job_dao.get_job_by_id(subjob_id))
 
     def get_job_result(self, job_id: str) -> JobResult:
         """return the job result by job id."""

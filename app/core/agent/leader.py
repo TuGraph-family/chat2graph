@@ -49,7 +49,7 @@ class Leader(Agent):
         try:
             job: Job = self._job_service.get_orignal_job(original_job_id=job_id)
         except ValueError:
-            job = self._job_service.get_subjob(job_id=job_id)
+            job = self._job_service.get_subjob(subjob_id=job_id)
             life_cycle = job.life_cycle
 
         # check if the job is already assigned to an expert

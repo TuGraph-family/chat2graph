@@ -30,7 +30,8 @@ class Expert(Agent):
 
         # local variables
         job_id = agent_message.get_job_id()
-        job: SubJob = job_service.get_subjob(job_id=job_id)
+        job: SubJob = job_service.get_subjob(subjob_id=job_id)
+
         workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
 
         # update the job status to running

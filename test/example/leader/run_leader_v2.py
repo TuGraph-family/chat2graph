@@ -70,6 +70,7 @@ paper content:
     )
     job_1 = SubJob(
         id="extract_key_info",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Identify and extract the core information from the paper, including research problem, proposed solution, and key findings. Ensure to preserve key supporting details and specific examples related to these core elements.",  # noqa: E501
         context=paper_content,
@@ -78,6 +79,7 @@ paper content:
 
     job_2 = SubJob(
         id="analyze_methodology",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Analyze the paper's methodology to understand its research approach, considering aspects like research design, data sources, and analytical techniques.",  # noqa: E501
         context=paper_content,
@@ -86,6 +88,7 @@ paper content:
 
     job_3 = SubJob(
         id="analyze_results",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Analyze the paper's results and discuss their implications, focusing on key findings, statistical evidence, and practical significance.",  # noqa: E501
         context=paper_content,
@@ -94,6 +97,7 @@ paper content:
 
     job_4 = SubJob(
         id="technical_review",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Evaluate the technical soundness of the paper's methodology and analysis, assessing methodological rigor, validity of analysis, and potential limitations.",  # noqa: E501
         context=paper_content,
@@ -102,6 +106,7 @@ paper content:
 
     job_5 = SubJob(
         id="generate_summary",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Synthesize a detailed comprehensive summary based on the methodology and results analyses, highlighting the paper's main contributions and significance. Incorporate key supporting details and specific findings from the analyses to provide a rich and informative summary.",  # noqa: E501
         context=paper_content,

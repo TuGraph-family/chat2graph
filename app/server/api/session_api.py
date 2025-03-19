@@ -134,7 +134,7 @@ def get_job_message_view(session_id):
 
         # get message view data for the job
         for job_id in job_ids:
-            message_view_data, _ = job_manager.get_message_view(job_id=job_id)
+            message_view_data, _ = job_manager.get_conversation_view(job_id=job_id)
             message_view_datas.append(message_view_data)
 
         return make_response(

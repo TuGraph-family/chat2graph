@@ -19,13 +19,14 @@ class MessageService(metaclass=Singleton):
         self._message_dao.save_message(message=message)
         return message
 
-    def get_message(self, id: str, type: MessageType) -> Message:
+    def get_message(self, id: str) -> Message:
         """Get a message by ID."""
         # fetch the message
         result = self._message_dao.get_by_id(id=id)
-        if not result or str(result.type) != type.value:
-            raise ValueError(f"Message with ID {id} not found or type mismatch")
-        if type == MessageType.TEXT_MESSAGE:
+        if not result:
+            raise ValueError(f"Message with ID {id} not found")
+        message_type: MessageType = MessageType(str(result.type))
+        if message_type == MessageType.TEXT_MESSAGE:
             return TextMessage(
                 id=str(result.id),
                 session_id=str(result.session_id),
@@ -34,7 +35,7 @@ class MessageService(metaclass=Singleton):
                 payload=str(result.payload),
                 timestamp=int(result.timestamp),
             )
-        if type == MessageType.AGENT_MESSAGE:
+        if message_type == MessageType.AGENT_MESSAGE:
             return AgentMessage(
                 id=str(result.id),
                 job_id=str(result.job_id),
@@ -45,11 +46,11 @@ class MessageService(metaclass=Singleton):
                 ],
                 timestamp=int(result.timestamp),
             )
-        if type == MessageType.WORKFLOW_MESSAGE:
+        if message_type == MessageType.WORKFLOW_MESSAGE:
             return self._message_dao.get_workflow_message(id=str(result.id))
         # TODO: handle other message types
 
-        raise ValueError(f"Unsupported message type: {type}")
+        raise ValueError(f"Unsupported message type: {message_type}")
 
     def get_message_by_job_id(self, job_id: str, type: MessageType) -> List[Message]:
         """Get all messages by job ID."""
