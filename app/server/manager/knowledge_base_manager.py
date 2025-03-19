@@ -17,13 +17,8 @@ class KnowledgeBaseManager:
     """Knowledge Base Manager class to handle business logic"""
 
     def __init__(self):
-<<<<<<< HEAD
         self._knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
         self._session_service: SessionService = SessionService.instance
-=======
-        self._knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
-        self._session_service: KnowledgeBaseService = SessionService()
->>>>>>> b9d0ea9 (load and delete knowledge)
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
