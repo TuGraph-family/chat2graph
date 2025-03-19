@@ -13,6 +13,9 @@ from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.knowledge.knowledge import Knowledge
+from app.core.dal.database import init_db
+
+init_db()
 
 knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
@@ -128,22 +131,12 @@ async def test_get_tools_from_actions(operator: Operator):
 @pytest.mark.asyncio
 async def test_get_knowledge(operator: Operator):
     """Test get knolwedge."""
-    config = {'get_knowledge.return_value': Knowledge([],[],"")}
-    patcher = patch('app.core.service.knowledge_base_service.KnowledgeBaseService', autospec=True, **config)
-    # patcher.return_value.get_knowledge.return_value = Knowledge([],[],"")
-    MockKnowledgeBaseService = patcher.start()
-    print(MockKnowledgeBaseService.return_value.__class__)
-    # patcher.instance.return_value = MockKnowledgeBaseService()
-    # MockKnowledgeBaseService.get_knowledge.return_value = Knowledge([],[],"")
-    # MockKnowledgeBaseService()
-    # assert isinstance(instance, KnowledgeBaseService)
-    
-    job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
-    # knowledge = operator.get_knowledge(job)
-    knowledge = await MockKnowledgeBaseService().get_knowledge("hh", "hh")
-    print(knowledge.get_payload())
-
-    patcher.stop()
+    with patch('app.core.service.knowledge_base_service.KnowledgeBaseService.get_knowledge') as mock_get_knowledge:
+        mock_get_knowledge.return_value=Knowledge([],[],"")
+        job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
+        knowledge = operator.get_knowledge(job)
+        assert "[Knowledges From Gloabal Knowledge Base]" in knowledge.get_payload()
+        assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
 
 
 @pytest.mark.asyncio
