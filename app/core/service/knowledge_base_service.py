@@ -18,8 +18,9 @@ class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
 
     def __init__(self):
+        self._global_knowledge_path = SystemEnv.APP_ROOT + "/global_knowledge"
         self._global_knowledge_base = VectorKnowledgeBase("global_knowledge_base")
-        for root, dirs, files in os.walk(SystemEnv.APP_ROOT + "/global_knowledge"):
+        for root, dirs, files in os.walk(self._global_knowledge_path):
             for file in files:
                 self._global_knowledge_base.load_document(root + "/" + file)
         self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
@@ -106,14 +107,24 @@ class KnowledgeBaseService(metaclass=Singleton):
         """Update a knowledge base by ID."""
         raise NotImplementedError("Method not implemented")
 
-    def get_all_knowledge_bases(self) -> List[Knowledge]:
+    def get_all_knowledge_bases(self) -> tuple[KnowledgeBase, List[KnowledgeBase]]:
         """Get all knowledge bases.
         Returns:
             List[KnowledgeBase]: List of knowledge bases
         """
 
+        # get local knowledge bases
         results = self._knowledge_base_dao.get_all()
-        return [
+        # get global knowledge base
+        global_kb = KnowledgeBase(
+            id="global_knowledge_base",
+            name="global_knowledge_base",
+            knowledge_type="vector",
+            session_id="",
+            files=os.listdir(self._global_knowledge_path),
+            description="",
+        )
+        return global_kb, [
             KnowledgeBase(
                 id=result.id,
                 name=result.name,

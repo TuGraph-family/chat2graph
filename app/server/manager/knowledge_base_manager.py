@@ -121,18 +121,24 @@ class KnowledgeBaseManager:
                 message
         """
         try:
-            knowledge_bases = self._knowledge_base_service.get_all_knowledge_bases()
-            knowledge_base_list = [
-                {
-                    "id": kb.id,
-                    "name": kb.name,
-                    "knowledge_type": kb.knowledge_type,
-                    "session_id": kb.session_id,
-                    "file_count": len(kb.files),
-                    "description": kb.description,
-                }
-                for kb in knowledge_bases
-            ]
+            global_knowledge_base, local_knowledge_bases = (
+                self._knowledge_base_service.get_all_knowledge_bases()
+            )
+            knowledge_base_list = {
+                "global_knowledge_base": {"file_count": len(global_knowledge_base.files)},
+                "local_knowledge_base": [
+                    {
+                        "id": kb.id,
+                        "name": kb.name,
+                        "knowledge_type": kb.knowledge_type,
+                        "session_id": kb.session_id,
+                        "file_count": len(kb.files),
+                        "description": kb.description,
+                    }
+                    for kb in local_knowledge_bases
+                ],
+            }
+
             return knowledge_base_list, "Get all knowledge bases successfully"
         except Exception as e:
             raise ValueError(f"Failed to fetch all knowledge bases: {str(e)}") from e
