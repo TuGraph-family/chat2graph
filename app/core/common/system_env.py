@@ -4,11 +4,12 @@ from typing import Any, Dict, Tuple, Type
 
 from dotenv import load_dotenv
 
-from app.core.common.type import PlatformType
+from app.core.common.type import ModelPlatformType, WorkflowPlatformType
 
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {
-    "MODEL_PLATFORM_TYPE": (PlatformType, PlatformType.DBGPT),
+    "WORKFLOW_PLATFORM_TYPE": (WorkflowPlatformType, WorkflowPlatformType.DBGPT),
+    "MODEL_PLATFORM_TYPE": (ModelPlatformType, ModelPlatformType.DBGPT),
     "PROXYLLM_BACKEND": (str, "gpt-4o-mini"),
     "PROXY_SERVER_URL": (str, None),
     "PROXY_API_KEY": (str, None),

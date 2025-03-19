@@ -38,49 +38,53 @@ Here are the LESSONS LEARNED:
 """  # noqa: E501
 
 FUNC_CALLING_PROMPT = """
-    // When you need to call the function(s), use the following format in the <Feedback>. Or else you can skip this part.
-    Notes:
-    1. The format must be valid JSON
-    2. Function name goes in the "name" field
-    3. All arguments go in the "args" object
-    4. Multiple function calls should be separated by newlines
-    5. For complex arguments:
-    - Use proper JSON data types (strings, numbers, booleans, arrays, objects)
-    - Ensure proper nesting of data structures
-    - Remember to escape special characters in strings
-    - Use <function_call>...</function_call> to wrap the function call (in the <Action> part). You can use it multiple times to call multiple functions.
-    - When using <function_call>...</function_call>, make sure to provide the "call_objective" field, and to generate the correct json format. Use empty dict if no arguments 'args: \{\}' are needed.
-    6. If functions called, the third party (neither you or me) will execute the functions and paste the results at the end of <Feedback> part, so that you and me are NOT permitted to generate the mock function results by ourselves.
+// When you need to call the function(s), use the following format in the <action>...</action>. Or else you can skip this part.
+Notes:
+1. The format must be valid JSON
+2. Function name goes in the "name" field
+3. All arguments go in the "args" object
+4. Multiple function calls should be separated by newlines. All callable functions are listed in the FUNCTION CALLING LIST (I informed you to abvoid this kind of hallucination).
+5. For complex arguments of the function:
+- Use standard JSON data types, including strings (using double quotes), numbers (no quotes), Boolean values (true/false), arrays ([]), and objects (\{\}). Pay special attention to the placement of commas between elements. Do not put a comma after the last element.
+- Ensure standard nesting of data structures, and not do use code comments in the JSON
+- Remember to escape special characters in strings
+- Use <function_call>...</function_call> to wrap the function call (in the <action>...</action> part). You can use it multiple times to call multiple functions.
+- When using <function_call>...</function_call>, make sure to provide the "call_objective" field, and to generate the correct json format. Use empty dict if no arguments 'args: \{\}' are needed.
+6. If functions called, the third party (neither you or me) will execute the functions and paste the results in <function_call_result>...</function_call_result>, (after <action> part), so that you and me are NOT permitted to generate the mock function results by ourselves.
 
-<function_call>
-{
-    "name": "some_function",
-    "call_objective": "waht is the objective of calling this function",
-    "args": {
-        "data_dict": {
-            "name": "test",
-            "value": 123
-        },
-        "nested_list": [
-            {"value": 1},
-            {"value": 2}
-        ],
-        "config": {
-            "enabled": true,
-            "debug": false
-        },
-        "special_str": "Hello, World! 你好，世界！"
+
+Function calling examples:
+<action>
+    <function_call>
+    {
+        "name": "some_function",
+        "call_objective": "waht is the objective of calling this function",
+        "args": {
+            "data_dict": {
+                "name": "test",
+                "value": 123
+            },
+            "nested_list": [
+                {"value": 1},
+                {"value": 2}
+            ],
+            "config": {
+                "enabled": true,
+                "debug": false
+            },
+            "special_str": "Hello, World! 你好，世界！"
+        }
     }
-}
-</function_call>
-<function_call>
-{
-    "name": "another_function_with_no_args",
-    "call_objective": "what is the objective of calling this function",
-    "args": {}
-}
-</function_call>
-<function_call>
-... // add more function calls if needed
-</function_call>
+    </function_call>
+    <function_call>
+    {
+        "name": "another_function_with_no_args",
+        "call_objective": "what is the objective of calling this function",
+        "args": {}
+    }
+    </function_call>
+    <function_call>
+    ... ...
+    </function_call>
+</action>
 """  # noqa: E501

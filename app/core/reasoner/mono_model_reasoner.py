@@ -31,7 +31,7 @@ class MonoModelReasoner(Reasoner):
 
         self._model_name = model_name
         self._model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
+            model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
     async def infer(self, task: Task) -> str:
@@ -56,9 +56,7 @@ class MonoModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.MODEL,
             payload=(
-                "<scratchpad>\nEmpty\n</scratchpad>\n"
-                "<action>\nEmpty\n</action>\n"
-                "<feedback>\nNo feadback\n</feedback>\n"
+                "<shallow_thinking>\nEmpty\n</shallow_thinking>\n<action>\nEmpty\n</action>\n"
             ),
             job_id=task.job.id,
             step=1,
@@ -147,14 +145,9 @@ class MonoModelReasoner(Reasoner):
             func_description = "No function calling in this round."
 
         if task.operator_config and task.operator_config.output_schema:
-            output_schema = "\n".join(
-                [
-                    "\t    " + schema
-                    for schema in (
-                        "[Follow the final delivery example:]\n"
-                        f"{task.operator_config.output_schema.strip()}"
-                    ).split("\n")
-                ]
+            output_schema = (
+                "[Follow the final delivery example:]\n"
+                + task.operator_config.output_schema.strip()
             )
         else:
             output_schema = ""

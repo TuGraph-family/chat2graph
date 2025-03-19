@@ -21,9 +21,6 @@ class MessageManager:
 
     def chat(self, text_message: TextMessage) -> Tuple[Dict[str, Any], str]:
         """Create user message and system message return the response data."""
-        # create user message
-        text_message.set_assigned_expert_name("Question Answering Expert")  # TODO: to be removed
-
         # make the chat message to the mulit-agent system
         session_wrapper = self._agentic_service.session(session_id=text_message.get_session_id())
         # TODO: refactor the chat message to a more generic message

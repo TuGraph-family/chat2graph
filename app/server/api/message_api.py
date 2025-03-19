@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from flask import Blueprint, request
 
 from app.core.model.message import MessageType, TextMessage
@@ -15,10 +17,17 @@ def chat():
     """
     # @Deprecated: This API will be removed
     manager = MessageManager()
-    data = request.json
+    data: Dict[str, Any] = request.json
     try:
         if not data:
             raise ApiException("Data is required")
+
+        # TODO: remove the mocked data
+        data["payload"] = (
+            "将给定的文本的所有的数据导入到图数据库中（总共至少导入 100 个三元组关系来满足知识图谱的数据丰富性）。"  # noqa: E501
+        )
+
+        data["assigned_expert_name"] = "Data Importation Expert"
 
         text_message: TextMessage = MessageView.deserialize_message(
             message=data, message_type=MessageType.TEXT_MESSAGE

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
-from app.core.common.type import PlatformType, ReasonerType
+from app.core.common.type import ReasonerType, WorkflowPlatformType
 from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
@@ -152,12 +152,12 @@ class AgenticService(metaclass=Singleton):
             .build()
         )
 
-        platform_type = None
-        if agentic_service_config.plugin.model_platform:
-            platform_type = PlatformType(agentic_service_config.plugin.model_platform)
+        workflow_platform_type: Optional[WorkflowPlatformType] = (
+            agentic_service_config.plugin.get_workflow_platform_type()
+        )
 
         mas.leader(name="Leader Test").workflow(
-            job_decomposition_operator, platform_type=platform_type
+            job_decomposition_operator, platform_type=workflow_platform_type
         ).build()
 
         # configure the experts
@@ -188,15 +188,15 @@ class AgenticService(metaclass=Singleton):
 
                 if len(operator_chain) > 1:
                     expert_wrapper = expert_wrapper.workflow(
-                        tuple(operator_chain), platform_type=platform_type
+                        tuple(operator_chain), platform_type=workflow_platform_type
                     )
                 elif len(operator_chain) == 1:
                     expert_wrapper = expert_wrapper.workflow(
-                        operator_chain[0], platform_type=platform_type
+                        operator_chain[0], platform_type=workflow_platform_type
                     )
                 else:
                     raise ValueError("Operator chain in the workflow cannot be empty.")
 
-            expert_wrapper.build()
+            expert_wrapper.evaluator().build()
 
         return mas

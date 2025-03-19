@@ -1,8 +1,15 @@
 from enum import Enum
 
 
-class PlatformType(Enum):
-    """Model type enum."""
+class ModelPlatformType(Enum):
+    """Model platform type enum."""
+
+    DBGPT = "DBGPT"
+    AISUITE = "AISUITE"
+
+
+class WorkflowPlatformType(Enum):
+    """Workflow platform type enum."""
 
     DBGPT = "DBGPT"
 

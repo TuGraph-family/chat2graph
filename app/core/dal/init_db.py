@@ -7,10 +7,13 @@ from app.core.dal.do.message_do import MessageDo
 from app.core.dal.do.session_do import SessionDo
 
 
-def init_db() -> None:
-    """Initialize database tables."""
+def drop_db() -> None:
+    """Drop database tables."""
     Do.metadata.drop_all(bind=engine)
 
+
+def init_db() -> None:
+    """Initialize database tables."""
     # create tables in order
     GraphDbDo.__table__.create(engine, checkfirst=True)
     FileDo.__table__.create(engine, checkfirst=True)

@@ -27,11 +27,21 @@ class Graph:
 
     def vertices(self) -> List[str]:
         """Get the vertices of the graph."""
-        return list(self._graph.nodes())
+        try:
+            return list(nx.topological_sort(self._graph))
+        except nx.NetworkXUnfeasible:
+            return list(self._graph.nodes())
 
     def edges(self) -> List[Tuple[str, str]]:
         """Get the edges of the graph."""
-        return list(self._graph.edges())
+        try:
+            sorted_nodes = list(nx.topological_sort(self._graph))
+            sorted_edges: List[Tuple[str, str]] = []
+            for node in sorted_nodes:
+                sorted_edges.extend([(node, target) for target in self._graph.successors(node)])
+            return sorted_edges
+        except nx.NetworkXUnfeasible:
+            return list(self._graph.edges())
 
     def predecessors(self, id: str) -> List[str]:
         """Get the predecessors of the vertex."""

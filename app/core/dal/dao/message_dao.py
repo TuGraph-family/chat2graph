@@ -35,7 +35,7 @@ class MessageDao(Dao[MessageDo]):
             self.create(**message_dict)
         except Exception:
             message_dict.pop("id", None)
-            self.update(message_do.id, **message_dict)
+            self.update(id=str(message_do.id), **message_dict)
         return message_do
 
     def __save_message(self, message: Message) -> MessageDo:
@@ -118,7 +118,7 @@ class MessageDao(Dao[MessageDo]):
             .all()
         )
 
-        assert len(results) == 1, f"Job {job.id} has multiple or not agent messages."
+        assert len(results) == 1, f"Job {job.id} has {len(results)} agent messages."
 
         result = results[0]
         return AgentMessage(
@@ -143,7 +143,7 @@ class MessageDao(Dao[MessageDo]):
             .all()
         )
 
-        assert len(results) == 1, f"Job {job.id} has multiple or not text messages by system."
+        assert len(results) == 1, f"Job {job.id} has {len(results)} text messages of system role."
 
         result = results[0]
         return TextMessage(

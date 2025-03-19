@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union
 
-from app.core.common.type import PlatformType
+from app.core.common.type import WorkflowPlatformType
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.workflow.operator import Operator
 from app.core.workflow.workflow import BuiltinWorkflow, Workflow
@@ -10,11 +10,11 @@ class WorkflowWrapper:
     """Facade of the workflow."""
 
     def __init__(
-        self, platform: Optional[PlatformType] = None, workflow: Optional[Workflow] = None
+        self, platform: Optional[WorkflowPlatformType] = None, workflow: Optional[Workflow] = None
     ):
         if platform is None:
             self._workflow: Workflow = workflow or BuiltinWorkflow()
-        elif platform == PlatformType.DBGPT:
+        elif platform == WorkflowPlatformType.DBGPT:
             # pylint: disable=import-outside-toplevel
             from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 

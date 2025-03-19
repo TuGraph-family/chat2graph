@@ -40,7 +40,7 @@ class EvalOperator(Operator):
             task.lesson = lesson or "" + (
                 "LLM output format (json format for example) specification is crucial for "
                 "reliable parsing. And do not forget ```json prefix and ``` suffix when "
-                "you generate the json block in <DELIVERABLE>...</DELIVERABLE>. Error info: "
+                "you generate the json block in <deliverable>...</deliverable>. Error info: "
                 + str(e)
             )
             result = run_async_function(reasoner.infer, task=task)
