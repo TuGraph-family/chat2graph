@@ -82,6 +82,23 @@ class KnowledgeBaseManager:
             return data, "Knowledge base fetched successfully"
         except Exception as e:
             raise ServiceException(f"Failed to fetch knowledge base: {str(e)}") from e
+    
+    def edit_knowledge_base(self, id: str, name: str, description: str) -> Tuple[Dict[str, Any], str]:
+        """Edit a knowledge base by ID.
+
+        Args:
+            kb_id (str): ID of the knowledge base
+            name (str): new name of the knowledge base
+            description (str): new description of the knowledge base
+
+        Returns:
+            Tuple[Dict[str, Any], str]: A tuple containing edit status and success message
+        """
+        try:
+            self._knowledge_base_service.edit_knowledge_base(id=id, name=name, description=description)
+            return {}, f"Knowledge base with ID {id} edited successfully"
+        except Exception as e:
+            raise ServiceException(f"Failed to edit knowledge base: {str(e)}") from e
 
     def delete_knowledge_base(self, id: str) -> Tuple[Dict[str, Any], str]:
         """Delete a knowledge base by ID.

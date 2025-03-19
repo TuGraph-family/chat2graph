@@ -70,6 +70,17 @@ class KnowledgeBaseService(metaclass=Singleton):
             files=self._file_to_kb_dao.filter_by(kb_id=result.id),
             description=result.description
         )
+    
+    def edit_knowledge_base(self, id: str, name: str, description: str):
+        """edit a knowledge base by ID.
+        Args:
+            id (str): ID of the knowledge base
+        """
+        # delete the knowledge base
+        knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
+        if not knowledge_base:
+            raise ServiceException(f"Knowledge base with ID {id} not found")
+        self._knowledge_base_dao.update(id=id, name=name, description=description)
 
     def delete_knowledge_base(self, id: str):
         """Delete a knowledge base by ID.

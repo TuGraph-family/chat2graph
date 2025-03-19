@@ -49,6 +49,27 @@ def get_knowledge_base_by_id(knowledge_base_id):
     except ApiException as e:
         return make_response(False, message=str(e))
 
+@knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["PUT"])
+def edit_knowledge_base_by_id(knowledge_base_id):
+    """Edit a knowledge base by ID."""
+    manager = KnowledgeBaseManager()
+    data = request.json
+    try:
+        required_fields = ["name", "description"]
+        if not data or not all(field in data for field in required_fields):
+            raise BaseException(
+                "Missing required fields. Required: name, description"
+            )
+
+        result, message = manager.edit_knowledge_base(
+            id=knowledge_base_id,
+            name=data.get("name"),
+            description=data.get("description")
+        )
+        return make_response(True, data=result, message=message)
+    except BaseException as e:
+        return make_response(False, message=str(e))
+
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["DELETE"])
 def delete_knowledge_base_by_id(knowledge_base_id):
@@ -69,7 +90,7 @@ def load_knowledge_with_file_id(knowledge_base_id, file_id):
         required_fields = ["config"]
         if not data or not all(field in data for field in required_fields):
             raise BaseException(
-                "Missing required fields. Required: name, knowledge_type, session_id"
+                "Missing required fields. Required: config"
             )
         result, message = manager.load_knowledge(kb_id=knowledge_base_id, file_id=file_id, config=data.get("config"))
         return make_response(True, data=result, message=message)
