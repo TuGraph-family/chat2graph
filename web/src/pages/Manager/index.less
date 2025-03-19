@@ -17,11 +17,12 @@
             .ant-menu-item-selected,
             .ant-menu-item-active {
                 border-radius: 40px;
+                background: transparent;
             }
 
             .ant-menu-item {
-                margin-bottom: 20px;
-                border-radius: 40px;
+                // margin-bottom: 20px;
+                // border-radius: 40px;
             }
 
             .ant-layout-sider-children {
@@ -32,6 +33,12 @@
                     flex: 1;
                     border-right: none;
                 }
+            }
+
+            .ant-menu-light:not(.ant-menu-horizontal) .ant-menu-item:not(.ant-menu-item-selected):hover,
+            .ant-menu-light>.ant-menu:not(.ant-menu-horizontal) .ant-menu-item:not(.ant-menu-item-selected):hover {
+                background-color: transparent;
+                color: #1677ff;
             }
 
 
@@ -47,7 +54,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 80px;
+                margin-bottom: 20px;
 
                 .manager-logo {
                     width: 100px;
