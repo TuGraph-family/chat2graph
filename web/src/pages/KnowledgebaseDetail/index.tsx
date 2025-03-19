@@ -18,7 +18,7 @@ const KnowledgebaseDetail = () => {
     })
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
-    const id = searchParams.get('id');
+    const id = searchParams.get('id') || "";
 
     const { open } = state
     const { getKnowledgebaseDetail, loadingGetKnowledgebaseById, knowledgebaseEntity, runDeleteFile, loadingDeleteFile } = useKnowledgebaseEntity();
@@ -31,22 +31,18 @@ const KnowledgebaseDetail = () => {
     }
 
     const onDeleteFile = (fileId: string) => {
-        if (id) {
-            runDeleteFile({
-                knowledgebases_id: id,
-                file_id: fileId
-            }).then(() => {
-                getKnowledgebaseDetail(id)
-            })
-        }
+        runDeleteFile({
+            knowledgebases_id: id,
+            file_id: fileId
+        }).then(() => {
+            getKnowledgebaseDetail(id)
+        })
 
     }
 
 
     useEffect(() => {
-        if (id) {
-            getKnowledgebaseDetail(id)
-        }
+        getKnowledgebaseDetail(id)
     }, [id])
 
 
@@ -142,7 +138,6 @@ const KnowledgebaseDetail = () => {
             setState((draft) => { draft.open = false })
         }} formatMessage={formatMessage}
             id={id}
-
         />
     </div>
 }

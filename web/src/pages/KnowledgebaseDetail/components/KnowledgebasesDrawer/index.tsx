@@ -2,6 +2,7 @@ import { useKnowledgebaseEntity } from "@/domains/entities/knowledgebase-manager
 import { InboxOutlined } from "@ant-design/icons"
 import { Button, Drawer, Form, Input, message, Space, Steps, Upload } from "antd"
 import { UploadProps } from "antd/lib"
+import { RcFile } from "antd/lib/upload";
 import { useImmer } from "use-immer"
 const { Dragger } = Upload;
 
@@ -51,7 +52,8 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
     }
 
 
-    const beforeUpload = async (file) => {
+    const beforeUpload = async (file: RcFile) => {
+        console.log(file)
         const { originFileObj, type, size } = file
         const fileBlob = new Blob([originFileObj], { type })
         if (size > 20 * 1024 * 1024) {
