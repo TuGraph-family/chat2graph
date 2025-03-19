@@ -2,7 +2,7 @@ import os
 from flask import Blueprint, request
 from werkzeug.utils import secure_filename
 
-from app.server.common.util import BaseException, make_response
+from app.server.common.util import ApiException, make_response
 from app.core.common.system_env import SystemEnv
 from app.server.manager.file_manager import FileManager
 
@@ -16,12 +16,12 @@ def upload_file():
 
     manager = FileManager()
     if "file" not in request.files:
-        raise BaseException("No file part in the request")
+        raise ApiException("No file part in the request")
 
     file = request.files["file"]
 
     if file.filename == "":
-        raise BaseException("No selected file")
+        raise ApiException("No selected file")
 
     try:
         result, message = manager.upload_file(file=file)
@@ -31,7 +31,7 @@ def upload_file():
             message=message
         )
     except Exception as e:
-        raise BaseException(f"Failed to upload file: {str(e)}") from e
+        raise ApiException(f"Failed to upload file: {str(e)}") from e
 
 
 @files_bp.route("/<string:file_id>", methods=["DELETE"])
@@ -49,4 +49,4 @@ def delete_file(file_id):
             message=message
         )
     except Exception as e:
-        raise BaseException(f"Failed to delete file: {str(e)}") from e
+        raise ApiException(f"Failed to delete file: {str(e)}") from e

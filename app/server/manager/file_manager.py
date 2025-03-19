@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Tuple
 
 from app.core.service.file_service import FileService
 from app.core.service.session_service import SessionService
-from app.server.common.util import ServiceException
 from werkzeug.datastructures import FileStorage
 
 class FileManager:
@@ -29,7 +28,7 @@ class FileManager:
             data = {"file_id": file_id}
             return data, "File uploaded successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to upload file: {str(e)}") from e
+            raise ValueError(f"Failed to upload file: {str(e)}") from e
 
     def delete_file(self, id: str) -> Tuple[Dict[str, Any], str]:
         """Dlete file by ID.
@@ -45,4 +44,4 @@ class FileManager:
             data = {}
             return data, "File deleted successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to delete file: {str(e)}") from e
+            raise ValueError(f"Failed to delete file: {str(e)}") from e

@@ -3,14 +3,7 @@ from typing import Any, Dict, List
 import os
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao import KnowledgeBaseDAO, FileDAO, FileToKBDAO
-from app.core.dal.database import DB
-from app.core.model.knowledge_base import KnowledgeBase
-from app.core.knowledge.knowledge import Knowledge
-from app.server.common.util import ServiceException
-from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
-from dbgpt.core import Chunk
-from app.core.common.async_func import run_async_function
+from app.core.dal.dao.file_dao import FileDao
 from app.core.common.system_env import SystemEnv
 import hashlib
 from werkzeug.datastructures import FileStorage
@@ -19,7 +12,7 @@ class FileService(metaclass=Singleton):
     """File Service"""
 
     def __init__(self):
-        self._dao: FileDAO = FileDAO(DB())
+        self._dao: FileDao = FileDao.instance
         self._upload_folder = SystemEnv.APP_ROOT + "/uploads"
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)

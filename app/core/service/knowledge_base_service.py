@@ -4,14 +4,12 @@ import os
 import json
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao import KnowledgeBaseDAO, FileDAO, FileToKBDAO
-from app.core.dal.database import DB
+from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileToKBDao
+from app.core.dal.dao.file_dao import FileDao
 from app.core.model.knowledge_base import KnowledgeBase
 from app.core.knowledge.knowledge import Knowledge
-from app.server.common.util import ServiceException
 from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
 from dbgpt.core import Chunk
-from app.core.common.async_func import run_async_function
 from app.core.common.system_env import SystemEnv
 
 class KnowledgeBaseService(metaclass=Singleton):
@@ -22,17 +20,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         for root, dirs, files in os.walk(SystemEnv.APP_ROOT+"/global_knowledge"):
             for file in files:
                 self._global_knowledge_base.load_document(root+"/"+file)
-        self._knowledge_base_dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
-        self._file_dao: FileDAO = FileDAO(DB())
-        self._file_to_kb_dao: FileToKBDAO = FileToKBDAO(DB())
-
-    async def load_global_knowledge(self, global_knowledge_path):
-        for root, dirs, files in os.walk(global_knowledge_path):
-            for file in files:
-                run_async_function(self._global_knowledge_base.load_document, root+"/"+file)
-        self._knowledge_base_dao: KnowledgeBaseDAO = KnowledgeBaseDAO(DB())
-        self._file_dao: FileDAO = FileDAO(DB())
-        self._file_to_kb_dao: FileToKBDAO = FileToKBDAO(DB())
+        self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
+        self._file_dao: FileDao = FileDao.instance
+        self._file_to_kb_dao: FileToKBDao = FileToKBDao.instance
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -69,7 +59,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # fetch the knowledge base
         result = self._knowledge_base_dao.get_by_id(id=id)
         if not result:
-            raise ServiceException(f"Knowledge base with ID {id} not found")
+            raise ValueError(f"Knowledge base with ID {id} not found")
         return KnowledgeBase(
             id=result.id,
             name=result.name,
@@ -87,7 +77,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete the knowledge base
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
-            raise ServiceException(f"Knowledge base with ID {id} not found")
+            raise ValueError(f"Knowledge base with ID {id} not found")
         self._knowledge_base_dao.update(id=id, name=name, description=description)
 
     def delete_knowledge_base(self, id: str):
@@ -98,7 +88,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete the knowledge base
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
-            raise ServiceException(f"Knowledge base with ID {id} not found")
+            raise ValueError(f"Knowledge base with ID {id} not found")
         self._knowledge_base_dao.delete(id=id)
 
     def update_knowledge_base(self) -> Knowledge:

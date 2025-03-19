@@ -3,7 +3,7 @@ from typing import List
 
 
 @dataclass
-class Knowledge:
+class KnowledgeBase:
     """Knowledge class"""
 
     id: str

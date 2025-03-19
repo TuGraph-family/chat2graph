@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.model.knowledge_base import Knowledge
-from app.core.model.session import Session
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
 
@@ -10,8 +8,8 @@ class SessionManager:
     """Session Manager class to handle business logic"""
 
     def __init__(self):
-        self._session_service: SessionService = SessionService()
-        self._knowledgebase_service: KnowledgeBaseService = KnowledgeBaseService()
+        self._session_service: SessionService = SessionService.instance
+        self._knowledgebase_service: KnowledgeBaseService = KnowledgeBaseService.instance
 
     def create_session(self, name: str) -> Tuple[Dict[str, Any], str]:
         """Create a new session and return the response data.
@@ -31,11 +29,11 @@ class SessionManager:
                 "id": session.id,
                 "knowledgebase_id": knowledgebase.id,
                 "name": session.name,
-                "created_at": session.created_at.isoformat() if session.created_at else None,
+                "timestamp": session.timestamp,
             }
             return data, "Session created successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to create session: {str(e)}") from e
+            raise ValueError(f"Failed to create session: {str(e)}") from e
 
     def get_session(self, session_id: str) -> Tuple[Dict[str, Any], str]:
         """Get session details by ID.

@@ -76,7 +76,7 @@ class KnowledgeBaseManager:
             }
             return data, "Knowledge base fetched successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to fetch knowledge base: {str(e)}") from e
+            raise ValueError(f"Failed to fetch knowledge base: {str(e)}") from e
     
     def edit_knowledge_base(self, id: str, name: str, description: str) -> Tuple[Dict[str, Any], str]:
         """Edit a knowledge base by ID.
@@ -93,7 +93,7 @@ class KnowledgeBaseManager:
             self._knowledge_base_service.edit_knowledge_base(id=id, name=name, description=description)
             return {}, f"Knowledge base with ID {id} edited successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to edit knowledge base: {str(e)}") from e
+            raise ValueError(f"Failed to edit knowledge base: {str(e)}") from e
 
     def delete_knowledge_base(self, id: str) -> Tuple[Dict[str, Any], str]:
         """Delete a knowledge base by ID.
@@ -130,7 +130,7 @@ class KnowledgeBaseManager:
             ]
             return knowledge_base_list, "Get all knowledge bases successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to fetch all knowledge bases: {str(e)}") from e
+            raise ValueError(f"Failed to fetch all knowledge bases: {str(e)}") from e
     
     def load_knowledge(self, kb_id: str, file_id: str, config: str) -> Tuple[Dict[str, Any], str]:
         """Load knowledge with file ID.
@@ -147,7 +147,7 @@ class KnowledgeBaseManager:
             self._knowledge_base_service.load_knowledge(knowledge_base_id=kb_id, file_id=file_id, config=config)
             return {}, f"File with ID {file_id} loaded into knowledge base with ID {kb_id} successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to load knowledge: {str(e)}") from e
+            raise ValueError(f"Failed to load knowledge: {str(e)}") from e
 
     def delete_knowledge(self, kb_id: str, file_id: str) -> Tuple[Dict[str, Any], str]:
         """Delete knowledge with file ID.
@@ -163,4 +163,4 @@ class KnowledgeBaseManager:
             self._knowledge_base_service.delete_knowledge(file_id=file_id)
             return {}, f"File with ID {file_id} deleted from knowledge base with ID {kb_id} successfully"
         except Exception as e:
-            raise ServiceException(f"Failed to delete knowledge: {str(e)}") from e
+            raise ValueError(f"Failed to delete knowledge: {str(e)}") from e

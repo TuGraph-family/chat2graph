@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, ForeignKey, String, Text, BigInteger, func
 from sqlalchemy.orm import relationship
 
 from app.core.dal.database import Do
@@ -15,16 +15,23 @@ class KnowledgeBaseDo(Do):  # type: ignore
     name = Column(String(36), nullable=False)
     knowledge_type = Column(String(36), nullable=False)
     session_id = Column(String(36), nullable=False)  # FK constraint
+    description = Column(Text)
+    timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
 
-    files = relationship("FileDo", secondary="kb_file_mapping", backref="knowledge_bases")
+    file_to_kb = relationship("FileToKBDo", backref="knowledge_base", cascade="all, delete-orphan")
 
 
-class KbFileMappingDo(Do):  # type: ignore
-    """Knowledge Base to File association model."""
+class FileToKBDo(Do):  # type: ignore
+    """File to knowledge base association model."""
 
-    __tablename__ = "kb_file_mapping"
+    __tablename__ = "file_to_kb"
 
-    kb_id = Column(
-        String(36), ForeignKey("knowledge_base.id", ondelete="CASCADE"), primary_key=True
-    )
-    file_id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"), primary_key=True)
+    name = Column(Text)
+    kb_id = Column(String(36), ForeignKey("knowledge_base.id", ondelete="CASCADE"))
+    chunk_ids = Column(Text)
+    status = Column(String(36))
+    config = Column(Text)
+    type = Column(Text)
+    size = Column(Text)
+    timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
