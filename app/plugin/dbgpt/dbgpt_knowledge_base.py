@@ -73,7 +73,7 @@ class VectorKnowledgeBase(KnowledgeBase):
         return run_async_function(self.load_document, file_path=file_path)
 
     def retrieve(self, query):
-        chunks = run_async_function(self._retriever.aretrieve_with_scores(), query=query, score_threshold=0.3)
+        chunks = run_async_function(self._retriever.aretrieve_with_scores, query=query, score_threshold=0.3)
         return chunks
     
     def clear(self):
