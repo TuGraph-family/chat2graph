@@ -13,15 +13,17 @@ interface KnowledgebasesTableProps {
   dataSource: any[]
   loading: boolean
   onRefresh: () => void
+  onDeleteKnowledgebase: (id: string) => Promise<any>
 }
 
 const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
   formatMessage,
   dataSource,
   loading,
-  onRefresh
+  onRefresh,
+  onDeleteKnowledgebase
 }) => {
-  const { runDeleteKnowledgebase, runEditKnowledgebase } = useKnowledgebaseEntity()
+  const { runEditKnowledgebase } = useKnowledgebaseEntity()
   const [state, setState] = useImmer({
     dropdownOpen: '',
     knowledgebasesId: '',
@@ -46,15 +48,7 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
   }, 500)
 
 
-  const onDeleteKnowledgebase = async (id: string) => {
-    const res = await runDeleteKnowledgebase({
-      knowledgebases_id: id
-    })
-    if (res) {
-      message.success(res?.message)
-      onRefresh()
-    }
-  }
+
 
   const onEditKnowledgebase = (values: {
     name: string,
@@ -83,6 +77,7 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
       }, values)
       if (res) {
         message.success(res?.message)
+        onRefresh()
         onCancel()
       }
     })
@@ -97,14 +92,14 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
             history.push(historyPushLinkAt('/manager/knowledgebase/detail', { id: item?.id }))
           }}>
             <div className={styles['knowledgebases-table-card-header']}>
-                <Typography.Paragraph
-                  ellipsis={{
-                    rows: 1,
-                    tooltip: item.name
-                  }}
-                  className={styles['knowledgebases-table-card-header-title']}>
-                  {item?.name}
-                </Typography.Paragraph>
+              <Typography.Paragraph
+                ellipsis={{
+                  rows: 1,
+                  tooltip: item.name
+                }}
+                className={styles['knowledgebases-table-card-header-title']}>
+                {item?.name}
+              </Typography.Paragraph>
               <Dropdown
                 trigger={['hover']}
                 open={dropdownOpen === item.id}

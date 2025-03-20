@@ -57,7 +57,12 @@ declare namespace API {
   interface Result_Knowledgebases_ {
     success?: boolean;
     message?: string;
-    data?: Array<KnowledgebaseVO>;
+    data?: {
+      global_knowledge_base?: {
+        file_count?: number;
+      },
+      local_knowledge_base?: Array<KnowledgebaseVO>;
+    };
   }
 
   interface Result_Knowledgebase_ {

@@ -23,7 +23,7 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
     })
     const { current, file_id } = state
 
-    const { runUploadFile, runSetKnowledgebasesConfig } = useKnowledgebaseEntity()
+    const { runUploadFile, runSetKnowledgebasesConfig, loadingSetKnowledgebasesConfig } = useKnowledgebaseEntity()
 
     const onNext = () => {
         form.validateFields(['file']).then(() => {
@@ -43,6 +43,10 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
             })
 
             if (res?.success) {
+                setState((draft) => {
+                    draft.current = 0
+                })
+                message.success(res?.message)
                 form.resetFields()
                 onClose(true)
             }
@@ -53,15 +57,16 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
 
 
     const beforeUpload = async (file: RcFile) => {
-        console.log(file)
-        const { originFileObj, type, size } = file
-        const fileBlob = new Blob([originFileObj], { type })
+        const { type, size, name } = file
+        const fileBlob = new Blob([file], { type })
+        console.log(fileBlob, file)
         if (size > 20 * 1024 * 1024) {
             message.error(formatMessage('knowledgebase.detail.upload.errorSize'))
             return false
         }
         const res = await runUploadFile({
-            file: fileBlob
+            file: fileBlob,
+            filename: name
         })
 
         setState((draft) => {
@@ -78,11 +83,28 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
         beforeUpload,
     }
 
+    const onCancel = () => {
+        setState((draft) => {
+            draft.current = 0
+        })
+        form.resetFields()
+        onClose()
+    }
 
-    return <Drawer title={formatMessage('knowledgebase.detail.addFile')} open={open} onClose={() => onClose()} width={700} footer={<Space>
-        <Button onClick={() => onClose()}>{formatMessage('actions.cancel')}</Button>
+    const validateJSON = (rule: any, value: string) => {
+        try {
+            JSON.parse(value);
+            return Promise.resolve();
+        } catch (e) {
+            return Promise.reject(formatMessage('knowledgebase.detail.jsonTip'));
+        }
+    };
+
+
+    return <Drawer title={formatMessage('knowledgebase.detail.addFile')} open={open} onClose={onCancel} width={700} footer={<Space>
+        <Button onClick={onCancel} >{formatMessage('actions.cancel')}</Button>
         {current === 0 && <Button type="primary" onClick={onNext}>{formatMessage('actions.next')}</Button>}
-        {current === 1 && <Button type="primary" onClick={onSubmit}>{formatMessage('actions.ok')}</Button>}
+        {current === 1 && <Button type="primary" onClick={onSubmit} loading={loadingSetKnowledgebasesConfig}>{formatMessage('actions.ok')}</Button>}
     </Space>}>
         <Steps
             type="navigation"
@@ -113,7 +135,7 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
                     </p>
                 </Dragger>
             </Form.Item>
-            <Form.Item name="config" rules={[{ required: true, message: formatMessage('knowledgebase.detail.configRequired') }]} hidden={current !== 1}>
+            <Form.Item name="config" rules={[{ required: true, message: formatMessage('knowledgebase.detail.configRequired') }, { validator: validateJSON }]} hidden={current !== 1}>
                 <Input.TextArea rows={10} placeholder={formatMessage('knowledgebase.detail.configRequired')} />
             </Form.Item>
         </Form >

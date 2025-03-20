@@ -184,7 +184,12 @@ const HomePage: React.FC = () => {
       const { payload = '', session_id = '' } = msg || {};
       runGetJobIdsBySessionId({
         session_id,
-      }, { payload }).then((res: API.Result_Chat_) => {
+      }, {
+        instruction_message: {
+          payload,
+          message_type: 'TEXT',
+        }, attached_messages: []
+      }).then((res: API.Result_Chat_) => {
         const { job_id = '' } = res?.data || {};
         getMessage(job_id, onSuccess);
         onUpdate(res?.data || {})

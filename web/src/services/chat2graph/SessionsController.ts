@@ -110,7 +110,16 @@ export async function getJobIdsBySessionId(
     session_id?: string;
   },
   body: {
-    payload?: string;
+    instruction_message?: {
+      payload?: string;
+      message_type?: string;
+      assigned_expert_name?: string;
+    },
+    attached_messages?: {
+      file_id?: string,
+      message_type: string,
+    }[];
+
   },
   options?: { [key: string]: any },
 ) {
@@ -119,10 +128,7 @@ export async function getJobIdsBySessionId(
     headers: {
       'Content-Type': 'application/json',
     },
-    data: {
-      ...body,
-      message_type: 'TEXT',
-    },
+    data: body,
     ...(options || {}),
   });
 }

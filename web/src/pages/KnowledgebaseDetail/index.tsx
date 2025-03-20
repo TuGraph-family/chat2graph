@@ -1,4 +1,4 @@
-import { Breadcrumb, Button, Popconfirm } from "antd"
+import { Breadcrumb, Button, Popconfirm, Spin, Tag } from "antd"
 import { Link, useLocation, } from "umi"
 import styles from './index.less'
 import AsyncTable from "@/components/AsyncTable"
@@ -10,6 +10,7 @@ import { historyPushLinkAt } from "@/utils/link"
 import { useEffect } from "react"
 import dayjs from "dayjs"
 import detailIcon from '@/assets/detail.svg';
+import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons"
 const KnowledgebaseDetail = () => {
     const [state, setState] = useImmer<{
         open: boolean
@@ -23,7 +24,7 @@ const KnowledgebaseDetail = () => {
     const { open } = state
     const { getKnowledgebaseDetail, loadingGetKnowledgebaseById, knowledgebaseEntity, runDeleteFile, loadingDeleteFile } = useKnowledgebaseEntity();
     const { formatMessage } = useIntlConfig();
-    const { files, name, } = knowledgebaseEntity.knowledgebaseDetail
+    const { files, name, time_stamp } = knowledgebaseEntity.knowledgebaseDetail
     const onOpenDrawer = () => {
         setState((draft) => {
             draft.open = true
@@ -62,32 +63,45 @@ const KnowledgebaseDetail = () => {
             title: formatMessage('knowledgebase.detail.label4'),
             dataIndex: 'size',
             key: 'size',
+            render: (size: string) => size + 'KB'
         },
         {
             title: formatMessage('knowledgebase.detail.label5'),
             dataIndex: 'status',
             key: 'status',
+            render: (status: string) => {
+                switch (status) {
+                    case 'success':
+                        return <Tag icon={<CheckCircleOutlined />} color="success">{formatMessage('knowledgebase.detail.success')}</Tag>
+                    case 'fail':
+                        return <Tag icon={<CloseCircleOutlined />} color="error">{formatMessage('knowledgebase.detail.fail')}</Tag>
+                    case 'pending':
+                        return <Tag icon={<SyncOutlined spin />} color="processing">{formatMessage('knowledgebase.detail.pending')}</Tag>
+                    default:
+                        return null
+                }
+            }
         },
         {
             title: formatMessage('knowledgebase.detail.label6'),
             dataIndex: 'time_stamp',
             key: 'updateTime',
             render: (text: string, record: any) => {
-                return <span>{dayjs(record.time_stamp).format('YYYY-MM-DD HH:mm:ss')}</span>
+                return <span>{dayjs(record.time_stamp * 1000).format('YYYY-MM-DD HH:mm:ss')}</span>
             }
         },
         {
             title: formatMessage('knowledgebase.detail.label7'),
-            dataIndex: 'action',
-            key: 'action',
-            render: (text: string, record: any) => {
+            dataIndex: 'file_id',
+            key: 'file_id',
+            render: (file_id: string, record: any) => {
                 return <>
                     {/* <Button type="link" onClick={() => { }} >{formatMessage('actions.edit')}</Button> */}
                     <Popconfirm
                         title={formatMessage('knowledgebase.detail.removeFile')}
-                        onConfirm={() => { onDeleteFile(record.id) }}
+                        onConfirm={() => { onDeleteFile(file_id) }}
                     >
-                        <Button type="link" disabled={record.isDefault}>{formatMessage('actions.delete')}</Button>
+                        <Button type="link">{formatMessage('actions.delete')}</Button>
                     </Popconfirm></>
             }
         },
@@ -105,40 +119,42 @@ const KnowledgebaseDetail = () => {
                 }
             ]}
         />
-        <div className={styles['knowledgebases-detail-container']}>
-            <div className={styles['knowledgebases-detail-header']}>
-                <img className={styles['knowledgebases-detail-header-img']} src={detailIcon} alt="" />
-                <div className={styles['knowledgebases-detail-header-info']}>
-                    <h2>{name}</h2>
-                    {/* TODO: 暂无用户体系 */}
-                    {/* <p>{formatMessage('knowledgebase.detail.label1')}：{ }</p> */}
-                    <p>{formatMessage('knowledgebase.detail.label6')}：{ }</p>
+        <Spin spinning={loadingGetKnowledgebaseById}>
+            <div className={styles['knowledgebases-detail-container']}>
+                <div className={styles['knowledgebases-detail-header']}>
+                    <img className={styles['knowledgebases-detail-header-img']} src={detailIcon} alt="" />
+                    <div className={styles['knowledgebases-detail-header-info']}>
+                        <h2>{name}</h2>
+                        {/* TODO: 暂无用户体系 */}
+                        {/* <p>{formatMessage('knowledgebase.detail.label1')}：{ }</p> */}
+                        <p>{formatMessage('knowledgebase.detail.label6')}：{time_stamp ? dayjs(time_stamp * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}</p>
+                    </div>
+                </div>
+                <div className={styles['knowledgebases-detail-content']}>
+                    <h2>{knowledgebaseEntity?.knowledgebaseDetail?.files?.length || 0}</h2>
+                    <p>{formatMessage('knowledgebase.docs')}</p>
                 </div>
             </div>
-            <div className={styles['knowledgebases-detail-content']}>
-                <h2>{knowledgebaseEntity?.knowledgebaseDetail?.files?.length || 0}</h2>
-                <p>{formatMessage('knowledgebase.docs')}</p>
-            </div>
-        </div>
 
-        <AsyncTable
-            dataSource={files || []}
-            loading={loadingGetKnowledgebaseById || loadingDeleteFile}
-            columns={columns}
-            extra={[
-                { key: 'search', searchKey: 'name' },
-                { key: 'add', onClick: onOpenDrawer }
-            ]}
-        />
+            <AsyncTable
+                dataSource={files || []}
+                loading={loadingGetKnowledgebaseById || loadingDeleteFile}
+                columns={columns}
+                extra={[
+                    { key: 'search', searchKey: 'name' },
+                    { key: 'add', onClick: onOpenDrawer }
+                ]}
+            />
 
-        <KnowledgebasesDrawer open={open} onClose={(isRefresh) => {
-            if (isRefresh && id) {
-                getKnowledgebaseDetail(id)
-            }
-            setState((draft) => { draft.open = false })
-        }} formatMessage={formatMessage}
-            id={id}
-        />
+            <KnowledgebasesDrawer open={open} onClose={(isRefresh) => {
+                if (isRefresh && id) {
+                    getKnowledgebaseDetail(id)
+                }
+                setState((draft) => { draft.open = false })
+            }} formatMessage={formatMessage}
+                id={id}
+            />
+        </Spin>
     </div>
 }
 

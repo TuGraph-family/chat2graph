@@ -6,9 +6,11 @@ export const useKnowledgebaseEntity = () => {
     const [knowledgebaseEntity, updateKnowledgebaseEntity] = useImmer<{
         knowledgebase: any[],
         knowledgebaseDetail: any,
+        global_knowledge_base: number
     }>({
         knowledgebase: [],
         knowledgebaseDetail: {},
+        global_knowledge_base: 0
     });
 
     // 上传文件
@@ -51,7 +53,10 @@ export const useKnowledgebaseEntity = () => {
     const getKnowledgebaseList = () => {
         runGetKnowledgebases().then((res) => {
             updateKnowledgebaseEntity((draft) => {
-                draft.knowledgebase = res?.data || [];
+
+                const { global_knowledge_base, local_knowledge_base = [] } = res?.data || {}
+                draft.knowledgebase = local_knowledge_base;
+                draft.global_knowledge_base = global_knowledge_base?.file_count || 0;
             });
         });
     }

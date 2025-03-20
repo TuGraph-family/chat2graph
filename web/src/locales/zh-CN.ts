@@ -5,6 +5,7 @@ export default {
             title: '知识库管理',
             subTitle1: '全局知识库',
             subTitle2: '用户知识库',
+            subTitle3: '人工智能常识',
             remove: '清空知识库',
             removeConfirm: '将会清空知识库的全部内容，影响对应会话的输出，请确定是否清空？',
             edit: '编辑知识库',
@@ -32,7 +33,12 @@ export default {
                 errorSize: "文件大小不能超过20MB",
             },
             configRequired: "请配置数据处理参数",
-            removeFile: "文档删除后会影响对应会话的输出，请确定是否删除？"
+            removeFile: "文档删除后会影响对应会话的输出，请确定是否删除？",
+            success: '添加成功',
+            fail: '添加失败',
+            pending: '添加中',
+            jsonTip: '请输入有效的 JSON 格式',
+
         },
         docs: '文档数',
     },
