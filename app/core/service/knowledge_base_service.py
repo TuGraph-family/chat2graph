@@ -137,12 +137,12 @@ class KnowledgeBaseService(metaclass=Singleton):
             for result in results
         ]
 
-    def get_knowledge(self, query, session_id) -> Any:
+    def get_knowledge(self, query, job) -> Any:
         """Get knowledge by ID."""
         # get global knowledge
         global_chunks = self._global_knowledge_base.retrieve(query)
         # get local knowledge
-        kbs = self._knowledge_base_dao.filter_by(session_id=session_id)
+        kbs = self._knowledge_base_dao.filter_by(session_id=job.session_id)
         if len(kbs) == 1:
             kb = kbs[0]
             knowledge_base_id = kb.id
@@ -151,7 +151,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         else:
             local_chunks = [Chunk(content="")]
         timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-        return Knowledge(global_chunks, local_chunks, timestamp)
+        return Knowledge(global_chunks, local_chunks, job.id, timestamp)
 
     def load_knowledge(self, knowledge_base_id, file_id, config):
         """Load new knowledge entry."""

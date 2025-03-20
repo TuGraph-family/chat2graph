@@ -3,28 +3,13 @@ from typing import Any, Dict, List, Optional
 
 from app.core.knowledge.knowledge_base import KnowledgeBase
 
-from dbgpt.configs.model_config import MODEL_PATH, PILOT_PATH, ROOT_PATH
-from dbgpt.rag.index.base import IndexStoreBase, IndexStoreConfig
-from dbgpt.storage.vector_store.base import VectorStoreBase, VectorStoreConfig
 from dbgpt.rag.embedding import DefaultEmbeddingFactory
-from dbgpt.storage.vector_store.chroma_store import ChromaStore, ChromaVectorConfig
-from dbgpt.storage.knowledge_graph.base import KnowledgeGraphBase, KnowledgeGraphConfig
-from dbgpt.storage.knowledge_graph.knowledge_graph import (
-    BuiltinKnowledgeGraph,
-    BuiltinKnowledgeGraphConfig,
-)
-from dbgpt.storage.knowledge_graph.community_summary import (
-    CommunitySummaryKnowledgeGraph,
-    CommunitySummaryKnowledgeGraphConfig,
-)
-from dbgpt.storage.full_text.base import FullTextStoreBase
+from dbgpt_ext.storage.vector_store.chroma_store import ChromaStore, ChromaVectorConfig
+from dbgpt_ext.storage.knowledge_graph.community_summary import CommunitySummaryKnowledgeGraph
 from dbgpt.rag.retriever.embedding import EmbeddingRetriever
-from dbgpt.rag.knowledge import KnowledgeFactory
-from dbgpt.rag import ChunkParameters
-from dbgpt.rag.assembler import EmbeddingAssembler
-from dbgpt.rag.retriever import RetrieverStrategy
-from dbgpt.model.proxy.llms.tongyi import TongyiLLMClient
-from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient
+from dbgpt_ext.rag.knowledge.factory import KnowledgeFactory
+from dbgpt_ext.rag.chunk_manager import ChunkParameters
+from dbgpt_ext.rag.assembler import EmbeddingAssembler
 from app.core.common.system_env import SystemEnv
 from app.core.common.async_func import run_async_function
 from app.core.common.type import PlatformType
@@ -38,15 +23,14 @@ class VectorKnowledgeBase(KnowledgeBase):
 
     def __init__(self, name):
         config = ChromaVectorConfig(
-            persist_path=SystemEnv.APP_ROOT + "/knowledge_base",
-            name=name,
+            persist_path=SystemEnv.APP_ROOT + "/knowledge_base"
+        )
+        self._vector_base = ChromaStore(config, name=name,
             embedding_fn=DefaultEmbeddingFactory(
                 default_model_name=os.path.join(
                     SystemEnv.APP_ROOT + "/models", SystemEnv.EMBEDDING_MODEL
                 ),
-            ).create(),
-        )
-        self._vector_base = ChromaStore(config)
+            ).create())
         self._retriever = EmbeddingRetriever(
             top_k=3,
             index_store=self._vector_base,

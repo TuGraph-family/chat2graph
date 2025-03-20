@@ -20,10 +20,11 @@ class Knowledge(Message):
         self,
         global_chunks: List[Chunk],
         local_chunks: List[Chunk],
+        job_id: str,
         timestamp: str,
         id: Optional[str] = None,
     ):
-        super().__init__(timestamp=timestamp, id=id)
+        super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         global_knowledges = ""
         for chunk in global_chunks:
             global_knowledges += f"chunk_id:{chunk.chunk_id}\n"

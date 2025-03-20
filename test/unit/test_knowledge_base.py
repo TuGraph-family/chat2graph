@@ -11,9 +11,15 @@ from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
 from app.core.service.knowledge_base_service import KnowledgeBaseService
-from app.core.dal.database import init_db
+from app.core.dal.init_db import init_db
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
+from app.core.model.job import SubJob
 
 init_db()
+# initialize the dao
+DaoFactory.initialize(DbSession())
+knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
 
 async def test_vector_knowledge_base():
@@ -32,9 +38,11 @@ async def test_vector_knowledge_base():
 
 
 async def test_knowledge_base_service():
-    knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
+    job = SubJob(
+        id="test_job_id", session_id="test_session_id", goal="Test goal", context="Test context"
+    )
     knowledge = KnowledgeBaseService.instance.get_knowledge(
-        query="what is awel talk about", session_id="test_knowledge_base_service"
+        query="what is awel talk about", job=job
     )
     assert "[Knowledges From Gloabal Knowledge Base]" in knowledge.get_payload()
     assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
