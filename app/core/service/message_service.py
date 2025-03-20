@@ -24,7 +24,7 @@ class MessageService(metaclass=Singleton):
         # fetch messages by job ID
         results = self._message_dao.filter_by(job_id=job_id, type=message_type.value)
         if not results:
-            raise ValueError(f"No messages found for job ID {job_id}")
+            return []
         return [self._message_dao.parse_into_message(message_do=result) for result in results]
 
     def get_text_message_by_job_id_and_role(

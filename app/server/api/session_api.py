@@ -107,10 +107,14 @@ def chat(session_id):
     try:
         if not data:
             raise ApiException("Data is required")
-        data["session_id"] = session_id
-        if "attached_messages" in data:
-            for attached_message in data["attached_messages"]:
-                attached_message["session_id"] = session_id
+
+        # add session_id for all messages
+        data["instruction_message"]["session_id"] = session_id
+        for attached_message in data["attached_messages"]:
+            attached_message["session_id"] = session_id
+
+        # TODO: remove the mocked data
+        data["instruction_message"]["assigned_expert_name"] = "Question Answering Expert"
 
         chat_message: TextMessage = MessageViewTransformer.deserialize_message(
             message=data, message_type=MessageType.HYBRID_MESSAGE

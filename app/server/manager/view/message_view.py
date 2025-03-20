@@ -127,8 +127,10 @@ class MessageViewTransformer:
             instruction_message: ChatMessage
             text_messages: TextMessage = cast(
                 TextMessage,
-                MessageViewTransformer.deserialize_message(message, MessageType.TEXT_MESSAGE)
-                if message["message_type"] == ChatMessageType.TEXT.value
+                MessageViewTransformer.deserialize_message(
+                    message["instruction_message"], MessageType.TEXT_MESSAGE
+                )
+                if message["instruction_message"]["message_type"] == ChatMessageType.TEXT.value
                 else None,
             )
             instruction_message = text_messages

@@ -19,7 +19,6 @@ class JobManager:
         """Get message view (including thinking chain) for a specific job."""
         # get job details
         original_job = self._job_service.get_orignal_job(job_id)
-        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
 
         # get original job result
         orignial_job_result = self._job_service.query_job_result(job_id)
@@ -36,6 +35,7 @@ class JobManager:
         # get thinking chain messages
         message_result_pairs: List[Tuple[AgentMessage, JobResult]] = []  # to sort by timestamp
 
+        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
         for subjob_id in subjob_ids:
             # get the information, whose job is not legacy
             subjob = self._job_service.get_subjob(subjob_id=subjob_id)

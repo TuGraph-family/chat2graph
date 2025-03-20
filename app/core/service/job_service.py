@@ -1,3 +1,4 @@
+import time
 from typing import List, Optional, Set, cast
 
 import networkx as nx  # type: ignore
@@ -97,10 +98,14 @@ class JobService(metaclass=Singleton):
             return job_result
 
         # get the tail vertices of the job graph (DAG)
-        job_graph = self.get_job_graph(job_id)
-        tail_vertices: List[str] = [
-            vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
-        ]
+        tail_vertices: List[str] = []
+        while len(tail_vertices) == 0:
+            # wait for creating the subjob by leader
+            job_graph = self.get_job_graph(job_id)
+            tail_vertices = [
+                vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
+            ]
+            time.sleep(1)
 
         # collect and combine the content of the job results from the tail vertices
         mutli_agent_payload = ""
