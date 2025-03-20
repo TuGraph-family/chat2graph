@@ -152,7 +152,7 @@ class MessageViewTransformer:
                 timestamp=message.get("timestamp", None),
                 id=message.get("id", None),
                 job_id=message.get("job_id", None),
-                session_id=message.get("session_id", None),
+                session_id=instruction_message.get_session_id(),
                 attached_messages=attached_messages,
             )
         # TODO: support more modal messages as the attatched messages
