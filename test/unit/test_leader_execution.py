@@ -198,8 +198,8 @@ def test_agent_job_graph():
         AgentMessage,
         message_service.get_message_by_job_id(
             job_id=job_service.get_subjob(subjob_id=job4_result.job_id).id,
-            message_type=MessageType,
-        ),
+            message_type=MessageType.AGENT_MESSAGE,
+        )[0],
     )
 
     assert job4_result_message.get_payload() == "65"
@@ -210,7 +210,7 @@ def test_agent_job_graph():
         AgentMessage,
         message_service.get_message_by_job_id(
             job_id=job5_result.job_id, message_type=MessageType.AGENT_MESSAGE
-        ),
+        )[0],
     )
     assert "2 4 6 8 10" in job5_result_message.get_payload()
     assert "11 12 13 14 15" in job5_result_message.get_payload()
