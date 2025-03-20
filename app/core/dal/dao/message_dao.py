@@ -2,9 +2,12 @@ from typing import Any, Dict, List, Optional, cast
 
 from sqlalchemy.orm import Session as SqlAlchemySession
 
+from app.core.common.type import ChatMessageRole
 from app.core.dal.dao.dao import Dao
 from app.core.dal.do.message_do import (
     AgentMessageDo,
+    FileMessageDo,
+    HybridMessageDo,
     MessageDo,
     ModelMessageAO,
     TextMessageDo,
@@ -13,6 +16,8 @@ from app.core.dal.do.message_do import (
 from app.core.model.job import Job, SubJob
 from app.core.model.message import (
     AgentMessage,
+    FileMessage,
+    HybridMessage,
     Message,
     MessageType,
     ModelMessage,
@@ -45,8 +50,8 @@ class MessageDao(Dao[MessageDo]):
             return WorkflowMessageDo(
                 type=MessageType.WORKFLOW_MESSAGE.value,
                 payload=WorkflowMessage.serialize_payload(message.get_payload()),
-                job_id=message.get_id(),
                 id=message.get_id(),
+                job_id=message.get_id(),
                 timestamp=message.get_timestamp(),
             )
 
@@ -54,12 +59,12 @@ class MessageDao(Dao[MessageDo]):
             related_message_ids: List[str] = [wf.get_id() for wf in message.get_workflow_messages()]
             return AgentMessageDo(
                 type=MessageType.AGENT_MESSAGE.value,
-                job_id=message.get_job_id(),
                 payload=message.get_payload(),
                 lesson=message.get_lesson(),
                 related_message_ids=related_message_ids,
-                timestamp=message.get_timestamp(),
                 id=message.get_id(),
+                job_id=message.get_job_id(),
+                timestamp=message.get_timestamp(),
             )
 
         if isinstance(message, ModelMessage):
@@ -70,22 +75,40 @@ class MessageDao(Dao[MessageDo]):
             return ModelMessageAO(
                 type=MessageType.MODEL_MESSAGE.value,
                 payload=message.get_payload(),
-                timestamp=message.get_timestamp(),
                 id=message.get_id(),
                 job_id=message.get_job_id(),
+                timestamp=message.get_timestamp(),
                 step=message.get_step(),
             )
 
         if isinstance(message, TextMessage):
             return TextMessageDo(
                 type=MessageType.TEXT_MESSAGE.value,
-                id=message.get_id(),
                 payload=message.get_payload(),
                 timestamp=message.get_timestamp(),
+                role=message.get_role().value,
+                assigned_expert_name=message.get_assigned_expert_name(),
+                id=message.get_id(),
                 session_id=message.get_session_id(),
                 job_id=message.get_job_id(),
-                role=message.get_role(),
-                assigned_expert_name=message.get_assigned_expert_name(),
+            )
+        if isinstance(message, FileMessage):
+            return FileMessageDo(
+                type=MessageType.FILE_MESSAGE.value,
+                id=message.get_id(),
+                job_id=message.get_job_id(),
+                session_id=message.get_session_id(),
+                related_message_ids=[message.get_file_id()],
+                timestamp=message.get_timestamp(),
+            )
+        if isinstance(message, HybridMessage):
+            return HybridMessageDo(
+                type=MessageType.HYBRID_MESSAGE.value,
+                id=message.get_id(),
+                session_id=message.get_session_id(),
+                job_id=message.get_job_id(),
+                related_message_ids=[msg.get_id() for msg in message.get_attached_messages()],
+                timestamp=message.get_timestamp(),
             )
         raise ValueError(f"Unsupported message type: {type(message)}")
 
@@ -131,14 +154,14 @@ class MessageDao(Dao[MessageDo]):
             timestamp=int(result.timestamp),
         )
 
-    def get_text_message_by_job_and_role(self, job: Job, role: str) -> TextMessage:
+    def get_text_message_by_job_and_role(self, job: Job, role: ChatMessageRole) -> TextMessage:
         """Get system text messages by job and role."""
         results: List[TextMessageDo] = (
             self.session.query(self._model)
             .filter(
                 self._model.type == MessageType.TEXT_MESSAGE.value,
                 self._model.job_id == job.id,
-                self._model.role == role,
+                self._model.role == role.value,
             )
             .all()
         )
@@ -150,7 +173,7 @@ class MessageDao(Dao[MessageDo]):
             id=cast(str, result.id),
             session_id=cast(Optional[str], result.session_id),
             job_id=cast(str, job.id),
-            role=cast(str, result.role),
+            role=ChatMessageRole(str(result.role)),
             payload=cast(str, result.payload),
             timestamp=int(result.timestamp),
             assigned_expert_name=cast(Optional[str], result.assigned_expert_name),

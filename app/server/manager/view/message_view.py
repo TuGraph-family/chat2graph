@@ -2,7 +2,7 @@ from typing import Any, Dict, List, TypeVar, cast
 
 from attr import dataclass
 
-from app.core.common.type import ChatMessageType
+from app.core.common.type import ChatMessageRole, ChatMessageType
 from app.core.dal.do.message_do import MessageType
 from app.core.model.job_result import JobResult
 from app.core.model.message import (
@@ -66,7 +66,7 @@ class MessageView:
                 "timestamp": message.get_timestamp(),
                 "payload": message.get_payload(),
                 "message_type": ChatMessageType.TEXT.value,
-                "role": message.get_role(),
+                "role": message.get_role().value,
                 "session_id": message.get_session_id(),
                 "assigned_expert_name": message.get_assigned_expert_name(),
             }
@@ -107,7 +107,7 @@ class MessageView:
                 id=message.get("id", None),
                 session_id=message["session_id"],
                 job_id=message.get("job_id", None),
-                role=message.get("role", "USER"),
+                role=ChatMessageRole(message.get("role", ChatMessageRole.USER.value)),
                 payload=message["payload"],
                 timestamp=message.get("timestamp"),
                 assigned_expert_name=message.get("assigned_expert_name", None),
@@ -117,23 +117,35 @@ class MessageView:
                 file_id=message["file_id"],
                 session_id=message["session_id"],
                 id=message.get("id", None),
-                timestamp=message.get("timestamp"),
+                timestamp=message.get("timestamp", None),
             )
         if message_type == MessageType.HYBRID_MESSAGE:
+            # format the instruction message
+            instruction_message: ChatMessage
+            text_messages: TextMessage = cast(
+                TextMessage,
+                MessageView.deserialize_message(message, MessageType.TEXT_MESSAGE)
+                if message["message_type"] == ChatMessageType.TEXT.value
+                else None,
+            )
+            instruction_message = text_messages
+
+            # format the attached messages
             attached_messages: List[ChatMessage] = []
-            # TODO: support more modal messages as the supplementary messages
             file_messages: List[FileMessage] = [
                 cast(FileMessage, MessageView.deserialize_message(msg, MessageType.FILE_MESSAGE))
                 for msg in message["attached_messages"]
-                if msg["type"] == ChatMessageType.FILE and isinstance(msg, dict)
+                if msg["message_type"] == ChatMessageType.FILE.value
             ]
             attached_messages.extend(file_messages)
 
             return HybridMessage(
-                timestamp=message.get("timestamp"),
+                instruction_message=instruction_message,
+                timestamp=message.get("timestamp", None),
                 id=message.get("id", None),
                 job_id=message.get("job_id", None),
                 session_id=message.get("session_id", None),
                 attached_messages=attached_messages,
             )
+        # TODO: support more modal messages as the attatched messages
         raise ValueError(f"Unsupported message type: {message['message_type']}")

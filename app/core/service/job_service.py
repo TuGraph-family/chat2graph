@@ -3,7 +3,7 @@ from typing import List, Optional, Set, cast
 import networkx as nx  # type: ignore
 
 from app.core.common.singleton import Singleton
-from app.core.common.type import JobStatus
+from app.core.common.type import ChatMessageRole, JobStatus
 from app.core.dal.dao.job_dao import JobDao
 from app.core.dal.do.job_do import JobDo
 from app.core.model.job import Job, JobType, SubJob
@@ -133,7 +133,7 @@ class JobService(metaclass=Singleton):
         original_job: Job = self.get_orignal_job(job_id)
         try:
             multi_agent_message = message_service.get_text_message_by_job_and_role(
-                original_job, "SYSTEM"
+                original_job, ChatMessageRole.SYSTEM
             )
             multi_agent_message.set_payload(mutli_agent_payload)
         except ValueError:
@@ -142,7 +142,7 @@ class JobService(metaclass=Singleton):
                 job_id=job_id,
                 session_id=original_job.session_id,
                 assigned_expert_name=original_job.assigned_expert_name,
-                role="SYSTEM",
+                role=ChatMessageRole.SYSTEM,
             )
         message_service.save_message(message=multi_agent_message)
 

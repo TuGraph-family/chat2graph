@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Tuple, cast
 
+from app.core.common.type import ChatMessageRole
 from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, MessageType
 from app.core.service.job_service import JobService
@@ -25,12 +26,12 @@ class JobManager:
 
         # get the user question message
         question_message = self._message_service.get_text_message_by_job_and_role(
-            original_job, "USER"
+            original_job, ChatMessageRole.USER
         )
 
         # get the AI answer message
         answer_message = self._message_service.get_text_message_by_job_and_role(
-            original_job, "SYSTEM"
+            original_job, ChatMessageRole.SYSTEM
         )
         # get thinking chain messages
         message_result_pairs: List[Tuple[AgentMessage, JobResult]] = []  # to sort by timestamp
