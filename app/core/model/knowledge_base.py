@@ -12,3 +12,4 @@ class KnowledgeBase:
     session_id: str
     files: List[str]
     description: str
+    timestamp: int

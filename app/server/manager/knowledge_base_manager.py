@@ -63,6 +63,7 @@ class KnowledgeBaseManager:
                 "name": knowledge_base.name,
                 "knowledge_type": knowledge_base.knowledge_type,
                 "session_id": knowledge_base.session_id,
+                "time_stamp": knowledge_base.timestamp,
                 "files": [
                     {
                         "name": file.name,
@@ -134,6 +135,7 @@ class KnowledgeBaseManager:
                         "session_id": kb.session_id,
                         "file_count": len(kb.files),
                         "description": kb.description,
+                        "time_stamp": kb.timestamp
                     }
                     for kb in local_knowledge_bases
                 ],

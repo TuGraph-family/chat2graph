@@ -12,6 +12,7 @@ from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
 from dbgpt.core import Chunk
 from app.core.common.system_env import SystemEnv
 from app.core.service.file_service import FileService
+from sqlalchemy import func
 
 
 class KnowledgeBaseService(metaclass=Singleton):
@@ -51,6 +52,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id=result.session_id,
             files=[],
             description="",
+            timestamp=result.timestamp
         )
 
     def get_knowledge_base(self, id: str) -> Knowledge:
@@ -72,6 +74,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id=result.session_id,
             files=self._file_to_kb_dao.filter_by(kb_id=result.id),
             description=result.description,
+            timestamp=result.timestamp
         )
 
     def edit_knowledge_base(self, id: str, name: str, description: str):
@@ -83,7 +86,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
             raise ValueError(f"Knowledge base with ID {id} not found")
-        self._knowledge_base_dao.update(id=id, name=name, description=description)
+        self._knowledge_base_dao.update(id=id, name=name, description=description, timestamp=func.strftime("%s", "now"))
 
     def delete_knowledge_base(self, id: str):
         """Delete a knowledge base by ID.
@@ -103,10 +106,6 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete knolwledge base folder
         VectorKnowledgeBase(id).delete()
 
-    def update_knowledge_base(self) -> Knowledge:
-        """Update a knowledge base by ID."""
-        raise NotImplementedError("Method not implemented")
-
     def get_all_knowledge_bases(self) -> tuple[KnowledgeBase, List[KnowledgeBase]]:
         """Get all knowledge bases.
         Returns:
@@ -123,6 +122,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id="",
             files=os.listdir(self._global_knowledge_path),
             description="",
+            timestamp=0
         )
         return global_kb, [
             KnowledgeBase(
@@ -132,6 +132,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 session_id=result.session_id,
                 files=self._file_to_kb_dao.filter_by(kb_id=result.id),
                 description=result.description,
+                timestamp=result.timestamp
             )
             for result in results
         ]
@@ -172,6 +173,9 @@ class KnowledgeBaseService(metaclass=Singleton):
                 size=os.path.getsize(file_path),
                 type="local",
             )
+        # update knowledge base timestamp
+        timestamp = self._file_to_kb_dao.get_by_id(id=file_id).timestamp
+        self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
         # load config
         config = json.loads(config)
         # load file to knowledge base
@@ -185,9 +189,6 @@ class KnowledgeBaseService(metaclass=Singleton):
 
     def delete_knowledge(self, file_id):
         """Delete knowledge entry."""
-        # get file with file id
-        file = self._file_dao.get_by_id(id=file_id)
-        path = file.path
         # get chunk_ids and kb_id with file_id
         file_to_kb = self._file_to_kb_dao.get_by_id(id=file_id)
         chunk_ids = file_to_kb.chunk_ids
@@ -197,15 +198,10 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete related chunks from knowledge base
         if kb.knowledge_type == "vector":
             VectorKnowledgeBase(knowledge_base_id).delete_document(chunk_ids)
-        # delete virtual file from db
-        self._file_dao.delete(id=file_id)
-        # delete physical file if all references are deleted
-        results = self._file_dao.filter_by(path=path)
-        if len(results) == 0:
-            for file_name in os.listdir(path):
-                file_path = os.path.join(path, file_name)
-                os.remove(file_path)
-        os.rmdir(path)
-
+        # delete related virtual file
+        FileService.instance.delete_file(id=file_id)
+        # update knowledge base timestamp
+        self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=func.strftime("%s", "now"))
+        
     def __delete__(self):
         self._global_knowledge_base.clear()
