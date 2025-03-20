@@ -118,7 +118,7 @@ class JobService(metaclass=Singleton):
             agent_messages: List[AgentMessage] = cast(
                 List[AgentMessage],
                 message_service.get_message_by_job_id(
-                    job_id=subjob_result.job_id, type=MessageType.AGENT_MESSAGE
+                    job_id=subjob_result.job_id, message_type=MessageType.AGENT_MESSAGE
                 ),
             )
             assert len(agent_messages) == 1, (
@@ -132,8 +132,8 @@ class JobService(metaclass=Singleton):
         # save the multi-agent result to the database
         original_job: Job = self.get_orignal_job(job_id)
         try:
-            multi_agent_message = message_service.get_text_message_by_job_and_role(
-                original_job, ChatMessageRole.SYSTEM
+            multi_agent_message = message_service.get_text_message_by_job_id_and_role(
+                job_id, ChatMessageRole.SYSTEM
             )
             multi_agent_message.set_payload(mutli_agent_payload)
         except ValueError:

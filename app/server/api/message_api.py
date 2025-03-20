@@ -1,10 +1,9 @@
-from cohere import ChatMessage
 from flask import Blueprint, request
 
-from app.core.model.message import MessageType
+from app.core.model.message import ChatMessage, MessageType
 from app.server.common.util import ApiException, make_response
 from app.server.manager.message_manager import MessageManager
-from app.server.manager.view.message_view import MessageView
+from app.server.manager.view.message_view import MessageViewTransformer
 
 messages_bp = Blueprint("messages", __name__)
 
@@ -39,7 +38,7 @@ def chat():
             ],
             "assigned_expert_name": "Question Answering Expert",
         }
-        chat_message: ChatMessage = MessageView.deserialize_message(
+        chat_message: ChatMessage = MessageViewTransformer.deserialize_message(
             message=data, message_type=MessageType.HYBRID_MESSAGE
         )
         response_data, message = manager.chat(chat_message)

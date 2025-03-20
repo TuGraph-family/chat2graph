@@ -19,7 +19,7 @@ T = TypeVar("T", bound=Message)
 
 
 @dataclass
-class ConversationView:
+class MessageView:
     """A view class for managing conversation-related data.
 
     The ConversationView class serves as a container for storing and managing conversation
@@ -40,8 +40,9 @@ class ConversationView:
     thinking_metrics: List[JobResult]
 
 
-class MessageView:
-    """Message view responsible for transforming internal message models to API response formats.
+class MessageViewTransformer:
+    """Message view transformer responsible for transforming internal message models to API response
+        formats.
 
     This class ensures that internal field names (like chat_message_type) are
     properly converted to API field names (like message_type) for consistent API responses.
@@ -75,19 +76,21 @@ class MessageView:
     @staticmethod
     def serialize_messages(messages: List[T]) -> List[Dict[str, Any]]:
         """Serialize a list of text messages to a list of API response dictionaries"""
-        return [MessageView.serialize_message(msg) for msg in messages]
+        return [MessageViewTransformer.serialize_message(msg) for msg in messages]
 
     @staticmethod
-    def serialize_conversation_view(conversation_view: ConversationView) -> Dict[str, Any]:
+    def serialize_conversation_view(conversation_view: MessageView) -> Dict[str, Any]:
         """Serialize a conversation view to an API response dictionary."""
         return {
-            "question": {"message": MessageView.serialize_message(conversation_view.question)},
+            "question": {
+                "message": MessageViewTransformer.serialize_message(conversation_view.question)
+            },
             "answer": {
-                "message": MessageView.serialize_message(conversation_view.answer),
+                "message": MessageViewTransformer.serialize_message(conversation_view.answer),
                 "metrics": JobView.serialize_job_result(conversation_view.answer_metrics),
                 "thinking": [
                     {
-                        "message": MessageView.serialize_message(thinking_message),
+                        "message": MessageViewTransformer.serialize_message(thinking_message),
                         "metrics": JobView.serialize_job_result(subjob_result),
                     }
                     for thinking_message, subjob_result in zip(
@@ -124,7 +127,7 @@ class MessageView:
             instruction_message: ChatMessage
             text_messages: TextMessage = cast(
                 TextMessage,
-                MessageView.deserialize_message(message, MessageType.TEXT_MESSAGE)
+                MessageViewTransformer.deserialize_message(message, MessageType.TEXT_MESSAGE)
                 if message["message_type"] == ChatMessageType.TEXT.value
                 else None,
             )
@@ -133,7 +136,10 @@ class MessageView:
             # format the attached messages
             attached_messages: List[ChatMessage] = []
             file_messages: List[FileMessage] = [
-                cast(FileMessage, MessageView.deserialize_message(msg, MessageType.FILE_MESSAGE))
+                cast(
+                    FileMessage,
+                    MessageViewTransformer.deserialize_message(msg, MessageType.FILE_MESSAGE),
+                )
                 for msg in message["attached_messages"]
                 if msg["message_type"] == ChatMessageType.FILE.value
             ]

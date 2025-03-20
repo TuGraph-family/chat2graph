@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
@@ -6,7 +6,7 @@ from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
-from app.core.model.message import WorkflowMessage
+from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.job_service import JobService
@@ -287,7 +287,17 @@ def main():
             continue
         print(f"\nTask {job.id}:")
         print(f"Status: {job_result.status}")
-        print(f"Output: {message_service.get_agent_message_by_job(job=job).get_payload()}")
+        print(
+            "Output: "
+            + {
+                cast(
+                    AgentMessage,
+                    message_service.get_message_by_job_id(
+                        job_id=job.id, message_type=MessageType.AGENT_MESSAGE
+                    )[0],
+                ).get_payload()
+            }
+        )
         print("-" * 50)
 
 
