@@ -10,7 +10,8 @@ import { historyPushLinkAt } from "@/utils/link"
 import { useEffect } from "react"
 import dayjs from "dayjs"
 import detailIcon from '@/assets/detail.svg';
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons"
+import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, } from "@ant-design/icons"
+import { FileTextOutlined } from "@ant-design/icons"
 const KnowledgebaseDetail = () => {
     const [state, setState] = useImmer<{
         open: boolean
@@ -31,15 +32,25 @@ const KnowledgebaseDetail = () => {
         })
     }
 
+
     const onDeleteFile = (fileId: string) => {
-        runDeleteFile({
-            knowledgebases_id: id,
-            file_id: fileId
-        }).then(() => {
-            getKnowledgebaseDetail(id)
-        })
+        if (id) {
+            runDeleteFile({
+                knowledgebases_id: id,
+                file_id: fileId
+            }).then(() => {
+                getKnowledgebaseDetail(id)
+            })
+        }
 
     }
+
+
+    useEffect(() => {
+        if (id) {
+            getKnowledgebaseDetail(id)
+        }
+    }, [id])
 
 
     useEffect(() => {
@@ -122,12 +133,16 @@ const KnowledgebaseDetail = () => {
         <Spin spinning={loadingGetKnowledgebaseById}>
             <div className={styles['knowledgebases-detail-container']}>
                 <div className={styles['knowledgebases-detail-header']}>
-                    <img className={styles['knowledgebases-detail-header-img']} src={detailIcon} alt="" />
+                    <div className={styles['knowledgebases-detail-header-icon']}>
+                        <FileTextOutlined />
+                    </div>
+
+                    {/* <img className={styles['knowledgebases-detail-header-img']} src={detailIcon} alt="" /> */}
                     <div className={styles['knowledgebases-detail-header-info']}>
-                        <h2>{name}</h2>
+                        <div className={styles['knowledgebases-detail-header-title']}>{name}</div>
                         {/* TODO: 暂无用户体系 */}
-                        {/* <p>{formatMessage('knowledgebase.detail.label1')}：{ }</p> */}
-                        <p>{formatMessage('knowledgebase.detail.label6')}：{time_stamp ? dayjs(time_stamp * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}</p>
+                        <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label1')}：{ }</p>
+                        <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label6')}：{ }</p>
                     </div>
                 </div>
                 <div className={styles['knowledgebases-detail-content']}>
@@ -155,7 +170,11 @@ const KnowledgebaseDetail = () => {
                 id={id}
             />
         </Spin>
+
     </div>
+
+
 }
+
 
 export default KnowledgebaseDetail

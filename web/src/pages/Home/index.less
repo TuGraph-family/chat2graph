@@ -147,6 +147,18 @@
         align-items: center;
       }
 
+      .ant-bubble-end .ant-bubble-content {
+        background: aliceblue;
+        border-radius: 16px 16px 0 16px;
+        box-shadow: unset;
+      }
+
+      .ant-bubble-start .ant-bubble-content {
+        border-radius: 16px;
+        border: 1px solid #f0f0f0;
+        overflow: hidden;
+      }
+
       .ant-bubble-content.ant-bubble-content-filled {
         text-align: left;
       }
@@ -156,9 +168,42 @@
         white-space: pre-wrap;
       }
 
+      .ant-bubble-start .ant-bubble-content pre {
+        padding: 12px;
+        background: #fff;
+        border: unset;
+        border-radius: 8px;
+        margin-top: 8px;
+      }
+
       .ant-bubble-avatar .ant-avatar.ant-avatar-circle.ant-avatar-icon {
         background: rgba(5, 145, 255, 0.1);
         border: 3px solid rgba(5, 145, 255, 0.4);
+      }
+
+      .ant-card-body {
+        padding: 20px;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle .ant-thought-chain-item .ant-thought-chain-item-header .ant-thought-chain-item-icon {
+        height: 16px;
+        width: 16px;
+        font-size: 10px;
+        margin-top: 6px;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle>.ant-thought-chain-item .ant-thought-chain-item-header::before {
+        top: 12px;
+        bottom: -20px;
+        left: 7px;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle {
+        gap: 0;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle .ant-thought-chain-item .ant-thought-chain-item-header {
+        margin-bottom: 0;
       }
     }
   }
