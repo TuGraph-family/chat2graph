@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.core.common.type import MessageSourceType, WorkflowStatus
+from app.core.common.type import ChatMessageRole, MessageSourceType, WorkflowStatus
 from app.core.toolkit.tool import FunctionCallResult
 
 
@@ -277,8 +277,8 @@ class TextMessage(ChatMessage):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
-        role: Optional[str] = None,
         assigned_expert_name: Optional[str] = None,
+        role: Optional[ChatMessageRole] = None,
     ):
         super().__init__(
             payload=payload,
@@ -287,14 +287,14 @@ class TextMessage(ChatMessage):
             id=id,
             session_id=session_id,
         )
-        self._role: Optional[str] = role  # "SYSTEM", or "USER" # TODO: refactor to enum
+        self._role: ChatMessageRole = role or ChatMessageRole.USER
         self._assigned_expert_name: Optional[str] = assigned_expert_name
 
     def get_payload(self) -> str:
         """Get the string content of the message."""
         return self._payload
 
-    def get_role(self) -> Optional[str]:
+    def get_role(self) -> ChatMessageRole:
         """Get the role."""
         return self._role
 
@@ -346,12 +346,17 @@ class FileMessage(ChatMessage):
         """Get the content of the message."""
         raise ValueError("File message does not have a payload.")
 
+    def get_file_id(self) -> str:
+        """Get the file ID."""
+        return self._file_id
+
 
 class HybridMessage(ChatMessage):
     """Hybrid message"""
 
     def __init__(
         self,
+        instruction_message: ChatMessage,
         job_id: Optional[str] = None,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
@@ -365,11 +370,16 @@ class HybridMessage(ChatMessage):
             id=id,
             session_id=session_id,
         )
+        self._instruction_message: ChatMessage = instruction_message
         self._attached_messages: List[ChatMessage] = attached_messages or []
 
     def get_payload(self) -> None:
         """Get the payload of the message."""
         raise ValueError("Hybrid message does not have a payload.")
+
+    def get_instruction_message(self) -> ChatMessage:
+        """Get the instruction message."""
+        return self._instruction_message
 
     def get_attached_messages(self) -> List[ChatMessage]:
         """Get the supplementary messages."""

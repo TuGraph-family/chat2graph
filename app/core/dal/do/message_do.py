@@ -90,3 +90,19 @@ class TextMessageDo(ChatMessageDo):
     __mapper_args__ = {
         "polymorphic_identity": MessageType.TEXT_MESSAGE.value,  # type: ignore
     }
+
+
+class FileMessageDo(ChatMessageDo):
+    """file message"""
+
+    __mapper_args__ = {
+        "polymorphic_identity": MessageType.FILE_MESSAGE.value,  # type: ignore
+    }
+
+
+class HybridMessageDo(ChatMessageDo):
+    """Hybrid message"""
+
+    __mapper_args__ = {
+        "polymorphic_identity": MessageType.HYBRID_MESSAGE.value,  # type: ignore
+    }

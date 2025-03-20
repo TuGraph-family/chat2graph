@@ -29,6 +29,13 @@ class MessageSourceType(Enum):
     MODEL = "MODEL"
 
 
+class ChatMessageRole(Enum):
+    """Chat message role enum."""
+
+    USER = "USER"
+    SYSTEM = "SYSTEM"
+
+
 class ChatMessageType(Enum):
     """Chat message type enum."""
 

@@ -108,9 +108,12 @@ def chat(session_id):
         if not data:
             raise ApiException("Data is required")
         data["session_id"] = session_id
+        if "attached_messages" in data:
+            for attached_message in data["attached_messages"]:
+                attached_message["session_id"] = session_id
 
         text_message: TextMessage = MessageView.deserialize_message(
-            message=data, message_type=MessageType.TEXT_MESSAGE
+            message=data, message_type=MessageType.HYBRID_MESSAGE
         )
         response_data, message = manager.chat(text_message)
         return make_response(True, data=response_data, message=message)

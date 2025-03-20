@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from app.core.common.singleton import Singleton
+from app.core.common.type import ChatMessageRole
 from app.core.dal.dao.message_dao import MessageDao
 from app.core.dal.do.message_do import TextMessageDo
 from app.core.model.job import Job, SubJob
@@ -31,7 +32,7 @@ class MessageService(metaclass=Singleton):
                 id=str(result.id),
                 session_id=str(result.session_id),
                 job_id=str(result.job_id),
-                role=str(result.role),
+                role=ChatMessageRole(str(result.role)),
                 payload=str(result.payload),
                 timestamp=int(result.timestamp),
             )
@@ -64,7 +65,7 @@ class MessageService(metaclass=Singleton):
                     id=str(result.id),
                     session_id=str(result.session_id),
                     job_id=str(result.job_id),
-                    role=str(result.role),
+                    role=ChatMessageRole(str(result.role)),
                     payload=str(result.payload),
                     timestamp=int(result.timestamp),
                 )
@@ -100,7 +101,7 @@ class MessageService(metaclass=Singleton):
                     id=str(result.id),
                     session_id=str(result.session_id),
                     job_id=str(result.job_id),
-                    role=str(result.role),
+                    role=ChatMessageRole(str(result.role)),
                     payload=str(result.payload),
                     timestamp=int(result.timestamp),
                 )
@@ -130,7 +131,7 @@ class MessageService(metaclass=Singleton):
         """Get agent messages by job ID."""
         return self._message_dao.get_agent_message_by_job(job=job)
 
-    def get_text_message_by_job_and_role(self, job: Job, role: str) -> TextMessage:
+    def get_text_message_by_job_and_role(self, job: Job, role: ChatMessageRole) -> TextMessage:
         """Get system text messages by job ID."""
         return self._message_dao.get_text_message_by_job_and_role(job=job, role=role)
 
@@ -144,7 +145,7 @@ class MessageService(metaclass=Singleton):
             id=str(result.id),
             session_id=str(result.session_id),
             job_id=str(result.job_id),
-            role=str(result.role),
+            role=ChatMessageRole(str(result.role)),
             payload=str(result.payload),
             timestamp=int(result.timestamp),
         )
@@ -196,7 +197,7 @@ class MessageService(metaclass=Singleton):
                 id=str(updated_message.id),
                 session_id=str(updated_message.session_id),
                 job_id=str(updated_message.job_id),
-                role=str(updated_message.role),
+                role=ChatMessageRole(str(updated_message.role)),
                 payload=str(updated_message.payload),
                 timestamp=int(updated_message.timestamp),
             )
@@ -205,7 +206,7 @@ class MessageService(metaclass=Singleton):
             id=str(existing_message.id),
             session_id=str(existing_message.session_id),
             job_id=str(existing_message.job_id),
-            role=str(existing_message.role),
+            role=ChatMessageRole(str(existing_message.role)),
             payload=str(existing_message.payload),
             timestamp=int(existing_message.timestamp),
         )
@@ -219,7 +220,7 @@ class MessageService(metaclass=Singleton):
                 id=str(result.id),
                 session_id=str(result.session_id),
                 job_id=str(result.job_id),
-                role=str(result.role),
+                role=ChatMessageRole(str(result.role)),
                 payload=str(result.payload),
                 timestamp=int(result.timestamp),
             )
@@ -242,7 +243,7 @@ class MessageService(metaclass=Singleton):
                 id=str(result.id),
                 session_id=str(result.session_id),
                 job_id=str(result.job_id),
-                role=str(result.role),
+                role=ChatMessageRole(str(result.role)),
                 payload=str(result.payload),
                 timestamp=int(result.timestamp),
             )
