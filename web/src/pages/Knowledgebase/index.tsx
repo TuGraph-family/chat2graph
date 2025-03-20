@@ -55,7 +55,7 @@ const Knowledgebase = () => {
 
       <div className={styles['knowledge-base-total-content']}>
         <Typography.Paragraph className={styles['knowledge-base-total-content-name']} ellipsis={{rows: 2, tooltip: ''}}>
-        人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识人工智能常识
+          人工智能常识
         </Typography.Paragraph>
         {/* <div className={styles['knowledge-base-total-content-info']}>
           <h2>{knowledgebaseTotal}</h2>
