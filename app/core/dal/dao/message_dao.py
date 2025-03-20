@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, cast
+from typing import List, cast
 
 from sqlalchemy.orm import Session as SqlAlchemySession
 
@@ -13,7 +13,6 @@ from app.core.dal.do.message_do import (
     TextMessageDo,
     WorkflowMessageDo,
 )
-from app.core.model.job import Job, SubJob
 from app.core.model.message import (
     AgentMessage,
     FileMessage,
@@ -34,7 +33,7 @@ class MessageDao(Dao[MessageDo]):
 
     def save_message(self, message: Message) -> MessageDo:
         """Create a new message."""
-        message_do = self.__save_message(message)
+        message_do = self.parse_into_message_do(message)
         message_dict = {c.name: getattr(message_do, c.name) for c in message_do.__table__.columns}
         try:
             self.create(**message_dict)
@@ -43,7 +42,29 @@ class MessageDao(Dao[MessageDo]):
             self.update(id=str(message_do.id), **message_dict)
         return message_do
 
-    def __save_message(self, message: Message) -> MessageDo:
+    def get_message(self, id: str) -> Message:
+        """Get a message by ID."""
+        # fetch the message
+        result = self.get_by_id(id=id)
+        if not result:
+            raise ValueError(f"Message with ID {id} not found")
+        return self.parse_into_message(message_do=result)
+
+    def get_text_message_by_job_id_and_role(
+        self, job_id: str, role: ChatMessageRole
+    ) -> List[TextMessageDo]:
+        """Get text message by job and role."""
+        return (
+            self.session.query(self._model)
+            .filter(
+                self._model.type == MessageType.TEXT_MESSAGE.value,
+                self._model.job_id == job_id,
+                self._model.role == role.value,
+            )
+            .all()
+        )
+
+    def parse_into_message_do(self, message: Message) -> MessageDo:
         """Create a message model instance."""
 
         if isinstance(message, WorkflowMessage):
@@ -69,8 +90,8 @@ class MessageDao(Dao[MessageDo]):
 
         if isinstance(message, ModelMessage):
             # TODO: to refine the fields for model message
-            # source_type: MessageSourceType = MessageSourceType.MODEL, # TODO
-            # function_calls: Optional[List[FunctionCallResult]] = None,# TODO
+            # source_type: MessageSourceType = MessageSourceType.MODEL,
+            # function_calls: Optional[List[FunctionCallResult]] = None,
 
             return ModelMessageAO(
                 type=MessageType.MODEL_MESSAGE.value,
@@ -112,69 +133,39 @@ class MessageDao(Dao[MessageDo]):
             )
         raise ValueError(f"Unsupported message type: {type(message)}")
 
-    def get_by_type(self, type: MessageType) -> List[MessageDo]:
-        """get messages by type"""
-        return self.session.query(self._model).filter(self._model.type == type.value).all()
+    def parse_into_message(self, message_do: MessageDo) -> Message:
+        """Create a message model instance."""
+        message_type = MessageType(str(message_do.type))
 
-    def get_workflow_message(self, id: str) -> WorkflowMessage:
-        """Get a message by ID."""
-        # fetch the message
-        result = self.get_by_id(id=id)
-        if not result:
-            raise ValueError(f"Workflow message with ID {id} not found")
-        payload: Dict[str, Any] = WorkflowMessage.deserialize_payload(str(result.payload))
-        return WorkflowMessage(
-            id=str(result.id),
-            payload=payload,
-            job_id=str(result.job_id),
-            timestamp=int(result.timestamp),
-        )
-
-    def get_agent_message_by_job(self, job: SubJob) -> AgentMessage:
-        """Get agent messages by job."""
-        results: List[AgentMessageDo] = (
-            self.session.query(self._model)
-            .filter(
-                self._model.type == MessageType.AGENT_MESSAGE.value,
-                self._model.job_id == job.id,
+        if message_type == MessageType.WORKFLOW_MESSAGE:
+            return WorkflowMessage(
+                id=str(message_do.id),
+                payload=WorkflowMessage.deserialize_payload(str(message_do.payload)),
+                job_id=str(message_do.job_id),
+                timestamp=int(message_do.timestamp),
             )
-            .all()
-        )
-
-        assert len(results) == 1, f"Job {job.id} has {len(results)} agent messages."
-
-        result = results[0]
-        return AgentMessage(
-            id=str(result.id),
-            job_id=job.id,
-            payload=str(result.payload),
-            workflow_messages=[
-                self.get_workflow_message(wf_id) for wf_id in list(result.related_message_ids or [])
-            ],
-            timestamp=int(result.timestamp),
-        )
-
-    def get_text_message_by_job_and_role(self, job: Job, role: ChatMessageRole) -> TextMessage:
-        """Get system text messages by job and role."""
-        results: List[TextMessageDo] = (
-            self.session.query(self._model)
-            .filter(
-                self._model.type == MessageType.TEXT_MESSAGE.value,
-                self._model.job_id == job.id,
-                self._model.role == role.value,
+        if message_type == MessageType.AGENT_MESSAGE:
+            return AgentMessage(
+                id=str(message_do.id),
+                job_id=str(message_do.job_id),
+                payload=str(message_do.payload),
+                workflow_messages=cast(
+                    List[WorkflowMessage],
+                    [self.get_message(wf_id) for wf_id in list(message_do.related_message_ids)]
+                    or [],
+                ),
+                timestamp=int(message_do.timestamp),
             )
-            .all()
-        )
+        if message_type == MessageType.TEXT_MESSAGE:
+            return TextMessage(
+                id=str(message_do.id),
+                session_id=str(message_do.session_id),
+                job_id=str(message_do.job_id),
+                role=ChatMessageRole(str(message_do.role)),
+                payload=str(message_do.payload),
+                timestamp=int(message_do.timestamp),
+                assigned_expert_name=str(message_do.assigned_expert_name),
+            )
 
-        assert len(results) == 1, f"Job {job.id} has {len(results)} text messages of system role."
-
-        result = results[0]
-        return TextMessage(
-            id=cast(str, result.id),
-            session_id=cast(Optional[str], result.session_id),
-            job_id=cast(str, job.id),
-            role=ChatMessageRole(str(result.role)),
-            payload=cast(str, result.payload),
-            timestamp=int(result.timestamp),
-            assigned_expert_name=cast(Optional[str], result.assigned_expert_name),
-        )
+        # TODO: support more message types
+        raise ValueError(f"Unsupported message type: {message_type}")

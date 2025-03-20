@@ -5,7 +5,7 @@ from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, MessageType
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
-from app.server.manager.view.message_view import ConversationView, MessageView
+from app.server.manager.view.message_view import MessageView, MessageViewTransformer
 
 
 class JobManager:
@@ -19,23 +19,23 @@ class JobManager:
         """Get message view (including thinking chain) for a specific job."""
         # get job details
         original_job = self._job_service.get_orignal_job(job_id)
-        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
 
         # get original job result
         orignial_job_result = self._job_service.query_job_result(job_id)
 
         # get the user question message
-        question_message = self._message_service.get_text_message_by_job_and_role(
-            original_job, ChatMessageRole.USER
+        question_message = self._message_service.get_text_message_by_job_id_and_role(
+            job_id, ChatMessageRole.USER
         )
 
         # get the AI answer message
-        answer_message = self._message_service.get_text_message_by_job_and_role(
-            original_job, ChatMessageRole.SYSTEM
+        answer_message = self._message_service.get_text_message_by_job_id_and_role(
+            job_id, ChatMessageRole.SYSTEM
         )
         # get thinking chain messages
         message_result_pairs: List[Tuple[AgentMessage, JobResult]] = []  # to sort by timestamp
 
+        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
         for subjob_id in subjob_ids:
             # get the information, whose job is not legacy
             subjob = self._job_service.get_subjob(subjob_id=subjob_id)
@@ -47,7 +47,7 @@ class JobManager:
                 agent_messages = cast(
                     List[AgentMessage],
                     self._message_service.get_message_by_job_id(
-                        job_id=subjob_id, type=MessageType.AGENT_MESSAGE
+                        job_id=subjob_id, message_type=MessageType.AGENT_MESSAGE
                     ),
                 )
                 if len(agent_messages) == 1:
@@ -71,8 +71,8 @@ class JobManager:
         thinking_messages: List[AgentMessage] = [pair[0] for pair in message_result_pairs]
         subjob_results: List[JobResult] = [pair[1] for pair in message_result_pairs]
 
-        return MessageView.serialize_conversation_view(
-            ConversationView(
+        return MessageViewTransformer.serialize_conversation_view(
+            MessageView(
                 question=question_message,
                 answer=answer_message,
                 answer_metrics=orignial_job_result,

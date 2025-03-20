@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 from app.core.common.type import ChatMessageRole
 from app.core.model.message import ChatMessage, TextMessage
@@ -6,7 +6,7 @@ from app.core.sdk.agentic_service import AgenticService
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
-from app.server.manager.view.message_view import MessageView
+from app.server.manager.view.message_view import MessageViewTransformer
 
 
 class MessageManager:
@@ -17,7 +17,7 @@ class MessageManager:
         self._message_service: MessageService = MessageService.instance
         self._job_service: JobService = JobService.instance
         self._agent_service: AgentService = AgentService.instance
-        self._message_view: MessageView = MessageView()
+        self._message_view: MessageViewTransformer = MessageViewTransformer()
 
     def chat(self, chat_message: ChatMessage) -> Tuple[Dict[str, Any], str]:
         """Create user message and system message return the response data."""
@@ -37,27 +37,5 @@ class MessageManager:
         self._message_service.save_message(message=system_chat_message)
 
         # use MessageView to serialize the message for API response
-        message_data = self._message_view.serialize_message(system_chat_message)
-        return message_data, "Message created successfully"
-
-    def get_agent_messages_by_job(self, original_job_id: str) -> Tuple[List[Dict[str, Any]], str]:
-        """Get agent messages by job.
-
-        Args:
-            job (Job): The job instance
-
-        Returns:
-            Tuple[List[Dict[str, Any]], str]: A tuple containing a list of agent message details and
-                success message
-        """
-        jobs = self._job_service.get_subjobs(original_job_id=original_job_id)
-        data: List[Dict[str, Any]] = []
-
-        for job in jobs:
-            # get the agent messages
-            agent_message = self._message_service.get_agent_message_by_job(job=job)
-
-            # prepare the data using MessageView
-            data.append(self._message_view.serialize_message(message=agent_message))
-
-        return data, "Agent messages fetched successfully"
+        system_data = self._message_view.serialize_message(system_chat_message)
+        return system_data, "Message created successfully"

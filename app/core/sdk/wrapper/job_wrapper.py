@@ -57,7 +57,7 @@ class JobWrapper:
                 result_messages: List[ChatMessage] = cast(
                     List[ChatMessage],
                     message_service.get_message_by_job_id(
-                        job_id=self._job.id, type=MessageType.TEXT_MESSAGE
+                        job_id=self._job.id, message_type=MessageType.TEXT_MESSAGE
                     ),
                 )
                 assert len(result_messages) == 1, (

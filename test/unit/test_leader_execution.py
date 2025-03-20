@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
@@ -7,7 +7,7 @@ from app.core.dal.init_db import drop_db, init_db
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
-from app.core.model.message import AgentMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.job_service import JobService
@@ -195,15 +195,23 @@ def test_agent_job_graph():
     # verify job4 result (sum of numbers after adding 10)
     # original: 1 2 3 4 5 -> after +10: 11 12 13 14 15 -> sum: 65
     message_service: MessageService = MessageService.instance
-    job4_result_message: AgentMessage = message_service.get_agent_message_by_job(
-        job=job_service.get_subjob(subjob_id=job4_result.job_id)
+    job4_result_message: AgentMessage = cast(
+        AgentMessage,
+        message_service.get_message_by_job_id(
+            job_id=job_service.get_subjob(subjob_id=job4_result.job_id).id,
+            message_type=MessageType.AGENT_MESSAGE,
+        )[0],
     )
+
     assert job4_result_message.get_payload() == "65"
 
     # verify job5 result (format of multiply by 2 and add 10 results)
     # job5_output = job5_result.message.get_payload()
-    job5_result_message: AgentMessage = message_service.get_agent_message_by_job(
-        job=job_service.get_subjob(subjob_id=job5_result.job_id)
+    job5_result_message: AgentMessage = cast(
+        AgentMessage,
+        message_service.get_message_by_job_id(
+            job_id=job5_result.job_id, message_type=MessageType.AGENT_MESSAGE
+        )[0],
     )
     assert "2 4 6 8 10" in job5_result_message.get_payload()
     assert "11 12 13 14 15" in job5_result_message.get_payload()
