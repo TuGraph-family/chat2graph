@@ -52,7 +52,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id=result.session_id,
             files=[],
             description="",
-            timestamp=result.timestamp
+            timestamp=result.timestamp,
         )
 
     def get_knowledge_base(self, id: str) -> Knowledge:
@@ -74,7 +74,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id=result.session_id,
             files=self._file_to_kb_dao.filter_by(kb_id=result.id),
             description=result.description,
-            timestamp=result.timestamp
+            timestamp=result.timestamp,
         )
 
     def edit_knowledge_base(self, id: str, name: str, description: str):
@@ -86,7 +86,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
             raise ValueError(f"Knowledge base with ID {id} not found")
-        self._knowledge_base_dao.update(id=id, name=name, description=description, timestamp=func.strftime("%s", "now"))
+        self._knowledge_base_dao.update(
+            id=id, name=name, description=description, timestamp=func.strftime("%s", "now")
+        )
 
     def delete_knowledge_base(self, id: str):
         """Delete a knowledge base by ID.
@@ -122,7 +124,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id="",
             files=os.listdir(self._global_knowledge_path),
             description="",
-            timestamp=0
+            timestamp=0,
         )
         return global_kb, [
             KnowledgeBase(
@@ -132,7 +134,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 session_id=result.session_id,
                 files=self._file_to_kb_dao.filter_by(kb_id=result.id),
                 description=result.description,
-                timestamp=result.timestamp
+                timestamp=result.timestamp,
             )
             for result in results
         ]
@@ -202,6 +204,6 @@ class KnowledgeBaseService(metaclass=Singleton):
         FileService.instance.delete_file(id=file_id)
         # update knowledge base timestamp
         self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=func.strftime("%s", "now"))
-        
+
     def __delete__(self):
         self._global_knowledge_base.clear()

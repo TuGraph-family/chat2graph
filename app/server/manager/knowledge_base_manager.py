@@ -135,7 +135,7 @@ class KnowledgeBaseManager:
                         "session_id": kb.session_id,
                         "file_count": len(kb.files),
                         "description": kb.description,
-                        "time_stamp": kb.timestamp
+                        "time_stamp": kb.timestamp,
                     }
                     for kb in local_knowledge_bases
                 ],
