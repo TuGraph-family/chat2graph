@@ -136,13 +136,11 @@ const KnowledgebaseDetail = () => {
                     <div className={styles['knowledgebases-detail-header-icon']}>
                         <FileTextOutlined />
                     </div>
-
-                    {/* <img className={styles['knowledgebases-detail-header-img']} src={detailIcon} alt="" /> */}
                     <div className={styles['knowledgebases-detail-header-info']}>
                         <div className={styles['knowledgebases-detail-header-title']}>{name}</div>
                         {/* TODO: 暂无用户体系 */}
-                        <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label1')}：{ }</p>
-                        <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label6')}：{ }</p>
+                        {/* <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label1')}：{ }</p> */}
+                        <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label6')}：{time_stamp ? dayjs(time_stamp * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}</p>
                     </div>
                 </div>
                 <div className={styles['knowledgebases-detail-content']}>
