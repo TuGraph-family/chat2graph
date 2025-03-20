@@ -3,7 +3,7 @@
   overflow: scroll;
 
   &-container {
-    margin: 20px 0;
+    margin: 16px 0;
     display: flex;
     justify-content: space-between;
     align-items: stretch;
@@ -39,12 +39,6 @@
     }
 
     &-info {
-    //   height: 100px;
-    //   display: flex;
-    //   flex-direction: column;
-    //   justify-content: space-between;
-      // margin-left: 20px;
-
       p {
         margin-bottom: 0;
       }
@@ -67,7 +61,12 @@
 
   :global {
     .ant-breadcrumb {
-        line-height: 32px;
+      line-height: 32px;
+      padding: 0 4px;
+    }
+
+    .ant-breadcrumb a {
+      height: auto;
     }
   }
 }
