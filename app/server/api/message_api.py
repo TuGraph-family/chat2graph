@@ -23,7 +23,8 @@ def chat():
             raise ApiException("Data is required")
         # TODO: remove the mocked data
         data = {
-            "payload": "请写一个图数据库 Cypher 语句",
+            "payload": "首先，我需要对给定的文本中的关系进行*复杂*的图建模。这个建模能够覆盖掉文本以及一些文本细节（5 个以上 vertices labels，和同等量级的 edge labels。"
+            "然后将给定的文本的所有的数据导入到图数据库中（总共至少导入 100 个三元组关系来满足知识图谱的数据丰富性）。",
             "message_type": "TEXT",
             "session_id": None,
             "attached_messages": [
@@ -38,7 +39,8 @@ def chat():
                     "session_id": None,
                 },
             ],
-            "assigned_expert_name": "Question Answering Expert",
+            # "assigned_expert_name": "Question Answering Expert",
+            "assigned_expert_name": None,
         }
         chat_message: ChatMessage = MessageView.deserialize_message(
             message=data, message_type=MessageType.HYBRID_MESSAGE
