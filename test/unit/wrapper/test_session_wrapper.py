@@ -1,9 +1,8 @@
-from app.core.dal.init_db import drop_db, init_db
+from app.core.dal.init_db import init_db
 from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
 
 AgenticService()
-drop_db()
 init_db()
 
 

@@ -3,7 +3,7 @@ from typing import List, Optional, cast
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
 from app.core.common.type import JobStatus
-from app.core.dal.init_db import drop_db, init_db
+from app.core.dal.init_db import init_db
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
@@ -18,7 +18,6 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
 AgenticService()
 job_service: JobService = JobService.instance
-drop_db()
 init_db()
 
 

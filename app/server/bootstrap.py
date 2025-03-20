@@ -11,7 +11,6 @@ from app.server.common.util import ApiException, make_error_response
 
 def create_app():
     """Create the Flask app."""
-    # drop_db()
     AgenticService.load()
 
     static_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")

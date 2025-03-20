@@ -80,6 +80,7 @@ We share a common interest in collaborating to successfully complete the task by
 {task}
 
 ===== FUNCTION CALLING LIST =====
+Here are the functions you can call to help you complete the task. The third party will execute the functions and paste the results in <function_call_result>...</function_call_result> in the next conversation turn.
 {functions}
 
 ===== ANSWER TEMPLATE =====
