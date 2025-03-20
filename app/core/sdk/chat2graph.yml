@@ -161,8 +161,8 @@ actions:
     name: "query_execution"
     desc: "根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，在对应图上执行查询语句得到结果"
     tools:
-      - *vertex_querier_tool
       - *schema_getter_tool
+      - *vertex_querier_tool
 
   # graph analysis actions
   - &content_understanding_action_3
@@ -390,12 +390,11 @@ operators:
       3. 避免错误
       - 请不要将查询的内容转换为查询语句，也不要执行查询语句，这不是你的任务
     output_schema: |
-      {
-          "analysis": "内容中查询要求",
-          "object_vertex_type": "单点查询点的种类",
-          "query_condition":"查询的条件"
-          "supplement": "需要补充的缺少的或无法匹配的信息"
-      }
+      ## Query Analysis
+      - Query Intent: [Describe the content's query requirements here]
+      - Vertex Type: [Specify the type of vertex being queried]
+      - Query Condition: [Describe the query conditions]
+      - Supplemental Information: [Include any missing information or details that don't match the schema]
     actions:
       - *query_intention_identification_action
       - *vertex_type_validation_action
@@ -416,10 +415,9 @@ operators:
       2. 查询结果交付
       - 在最后，根据查询意图，交付查询的结果。
     output_schema: |
-      {
-          "query": "需要的图查询指令",
-          "query_result": "查询语言在对应图上的查询结果"
-      }
+      ## Query Results
+      - Query Command: [The graph query instruction used]
+      - Query Result: [The result of executing the query on the corresponding graph]
     actions:
       - *grammar_study_action
       - *query_execution_action
