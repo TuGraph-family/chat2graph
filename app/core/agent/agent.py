@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Optional
-from uuid import uuid4
 
 from app.core.model.message import AgentMessage
 from app.core.reasoner.reasoner import Reasoner
@@ -52,7 +51,9 @@ class Agent(ABC):
         agent_config: AgentConfig,
         id: Optional[str] = None,
     ):
-        self._id = id or str(uuid4())
+        # since the expert instance is not persisted, we mock the id with the agent name
+        # TODO: persist the agent instance (leader and experts) in the database
+        self._id: str = id or agent_config.profile.name + "_id"
         self._profile: Profile = agent_config.profile
         self._workflow: Workflow = agent_config.workflow
         self._reasoner: Reasoner = agent_config.reasoner

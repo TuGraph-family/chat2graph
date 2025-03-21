@@ -1,9 +1,11 @@
+import traceback
 from typing import List
 
 from app.core.agent.agent import Agent
 from app.core.common.system_env import SystemEnv
-from app.core.common.type import WorkflowStatus
+from app.core.common.type import JobStatus, WorkflowStatus
 from app.core.model.job import Job
+from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, WorkflowMessage
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
@@ -25,17 +27,28 @@ class Expert(Agent):
 
         # TODO: convert to a state machine (?)
 
-        job_id = agent_message.get_job_id()
         job_service: JobService = JobService.instance
-        job: Job = job_service.get_subjob(job_id=job_id)
+        job_id = agent_message.get_job_id()
+        job: Job = job_service.get_subjob(subjob_id=job_id)
+
         workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
 
-        workflow_message: WorkflowMessage = self._workflow.execute(
-            job=job,
-            reasoner=self._reasoner,
-            workflow_messages=workflow_messages,
-            lesson=agent_message.get_lesson(),
-        )
+        try:
+            workflow_message: WorkflowMessage = self._workflow.execute(
+                job=job,
+                reasoner=self._reasoner,
+                workflow_messages=workflow_messages,
+                lesson=agent_message.get_lesson(),
+            )
+        except Exception as e:
+            workflow_message = WorkflowMessage(
+                payload={
+                    "scratchpad": str(e) + "\n" + traceback.format_exc(),
+                    "status": WorkflowStatus.EXECUTION_ERROR,
+                    "evaluation": "There occurs some errors during the execution: " + str(e),
+                    "lesson": "",  # TODO: add the lesson learned
+                },
+            )
 
         # save the workflow message in the database
         message_service.save_message(message=workflow_message)
@@ -45,9 +58,20 @@ class Expert(Agent):
             # color: bright green
             print(f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m")
 
-            agent_message = AgentMessage(job_id=job.id, workflow_messages=[workflow_message])
-            message_service.save_message(message=agent_message)
-            return agent_message
+            expert_message = AgentMessage(
+                job_id=job.id,
+                workflow_messages=[workflow_message],
+                payload=workflow_message.scratchpad,
+            )
+            job_result = JobResult(
+                job_id=job.id,
+                status=JobStatus.FINISHED,
+                duration=0,  # TODO: calculate the duration
+                tokens=0,  # TODO: calculate the tokens
+            )
+            message_service.save_message(message=expert_message)
+            job_service.save_job_result(job_result=job_result)
+            return expert_message
         if workflow_message.status == WorkflowStatus.EXECUTION_ERROR:
             # (2) WorkflowStatus.EXECUTION_ERROR
 
@@ -62,6 +86,14 @@ class Expert(Agent):
             # retry the job, until the max_retry_count or the job is executed successfully
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
             if retry_count >= max_retry_count:
+                job_result = JobResult(
+                    job_id=job.id,
+                    status=JobStatus.FAILED,
+                    duration=0,  # TODO: calculate the duration
+                    tokens=0,  # TODO: calculate the tokens
+                )
+                message_service.save_message(message=agent_message)
+                job_service.save_job_result(job_result=job_result)
                 raise Exception("The job cannot be executed successfully after retrying.")
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
@@ -76,10 +108,13 @@ class Expert(Agent):
             lesson = "The output data is not valid"
 
             # return the agent message to the leader, and let the leader handle the error
-            agent_message = AgentMessage(
-                job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
+            expert_message = AgentMessage(
+                job_id=job.id,
+                workflow_messages=[workflow_message],
+                lesson=lesson,
+                payload=workflow_message.scratchpad,
             )
-            return agent_message
+            return expert_message
         if workflow_message.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # (4) WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
             # color: orange
@@ -90,8 +125,11 @@ class Expert(Agent):
             # return the job to the leader, and let the leader decompose the job
             # workflow experience -> agent lesson
             lesson = "The job is too complicated to be executed by the expert"
-            agent_message = AgentMessage(
-                job_id=job.id, workflow_messages=[workflow_message], lesson=lesson
+            expert_message = AgentMessage(
+                job_id=job.id,
+                workflow_messages=[workflow_message],
+                lesson=lesson,
+                payload=workflow_message.scratchpad,
             )
-            return agent_message
+            return expert_message
         raise Exception("The workflow status is not defined.")

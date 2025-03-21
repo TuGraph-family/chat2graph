@@ -1,10 +1,12 @@
 import time
+from typing import List, cast
 
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
-from app.core.model.message import ChatMessage
+from app.core.model.message import ChatMessage, MessageType
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 
 
 class JobWrapper:
@@ -51,4 +53,14 @@ class JobWrapper:
 
             # check if the job is finished
             if job_result.has_result():
-                return job_result.result
+                message_service: MessageService = MessageService.instance
+                result_messages: List[ChatMessage] = cast(
+                    List[ChatMessage],
+                    message_service.get_message_by_job_id(
+                        job_id=self._job.id, message_type=MessageType.TEXT_MESSAGE
+                    ),
+                )
+                assert len(result_messages) == 1, (
+                    "The result of the multi agent's job should be unique."
+                )
+                return result_messages[0]
