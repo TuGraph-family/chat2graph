@@ -82,7 +82,7 @@ class GraphKnowledgeBase(KnowledgeBase):
         config = TuGraphStoreConfig(
             username="admin",
             password="73@TuGraph",
-            host="127.0.0.1",
+            host="47.76.118.68",
             port="7687",
         )
         self._graph_base = CommunitySummaryKnowledgeGraph(
