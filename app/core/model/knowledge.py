@@ -13,7 +13,7 @@ All related knowledges retrieved from the knowledge base are listed below.
 """
 
 
-class Knowledge(Message):
+class Knowledge():
     """Knowledge"""
 
     def __init__(
