@@ -15,8 +15,7 @@ from app.core.common.system_env import SystemEnv
 from app.core.common.async_func import run_async_function
 from app.core.common.type import PlatformType
 from app.core.reasoner.model_service_factory import ModelServiceFactory
-
-model_service = ModelServiceFactory.create(platform_type=PlatformType.DBGPT)
+from dbgpt.rag.retriever import RetrieverStrategy
 
 
 class VectorKnowledgeBase(KnowledgeBase):
@@ -83,28 +82,18 @@ class GraphKnowledgeBase(KnowledgeBase):
         config = TuGraphStoreConfig(
             username="admin",
             password="73@TuGraph",
-            host="47.76.118.68",
+            host="127.0.0.1",
             port="7687",
-        )
-        config = TuGraphStoreConfig(
-            name=name,
-            embedding_fn=DefaultEmbeddingFactory(
-                default_model_name=os.path.join(MODEL_PATH, "text2vec-large-chinese"),
-            ).create(),
-            llm_client=llm_client,
-            model_name=model_name,
-            document_graph_enabled=True,
-            triplet_graph_enabled=True,
-            enable_summary="True",
         )
         self._graph_base = CommunitySummaryKnowledgeGraph(
             config=config,
             name=name,
             embedding_fn=DefaultEmbeddingFactory(
-                default_model_name=os.path.join(MODEL_PATH, "text2vec-large-chinese"),
+                default_model_name=os.path.join(
+                    SystemEnv.APP_ROOT + "/models", SystemEnv.EMBEDDING_MODEL
+                ),
             ).create(),
-            llm_client=llm_client,
-            model_name=model_name,
+            llm_client=ModelServiceFactory.create(platform_type=PlatformType.DBGPT)._llm_client,
             document_graph_enabled=True,
             triplet_graph_enabled=True,
             enable_summary="True",
@@ -114,33 +103,41 @@ class GraphKnowledgeBase(KnowledgeBase):
         )
         self._chunk_id_dict = {}
 
-    def load_document(self, file_path):
-        absolute_file_path = os.path.join(ROOT_PATH, file_path)
-        knowledge = KnowledgeFactory.from_file_path(absolute_file_path)
-        chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_MARKDOWN_HEADER")
+    def load_document(self, file_path, config=None):
+        knowledge = KnowledgeFactory.from_file_path(file_path)
+        if config:
+            chunk_parameters = ChunkParameters(
+                chunk_strategy="CHUNK_BY_SIZE", chunk_size=int(config["chunk_size"])
+            )
+        else:
+            chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE")
         assembler = EmbeddingAssembler.load_from_knowledge(
             knowledge=knowledge,
             chunk_parameters=chunk_parameters,
             index_store=self._graph_base,
             retrieve_strategy=RetrieverStrategy.GRAPH,
         )
-        self._chunk_id_dict[file_path] = await assembler.apersist()
+        chunk_ids = run_async_function(assembler.apersist)
+        self._chunk_id_dict[file_path] = ",".join(chunk_ids)
+        return ",".join(chunk_ids)
+    
+    def delete_document(self, chunk_ids):
+        self._graph_base.delete_by_ids(chunk_ids)
 
-    def delete_document(self, file_path):
-        self._graph_base.delete_by_ids(",".join(self._chunk_id_dict[file_path]))
-        self._chunk_id_dict.pop(file_path)
-
-    def update_document(self, file_path):
-        self.delete_document(file_path)
-        await self.load_document(file_path)
-
+    def update_document(self, file_path, chunk_ids):
+        self.delete_document(chunk_ids)
+        return run_async_function(self.load_document, file_path=file_path)
+    
     def retrieve(self, query):
-        # chunks = await self._retriever.aretrieve_with_scores(query, 0.3)
-        chunks = await self._graph_base.asimilar_search_with_scores(query, 3, 0.3)
-        # chunks = await self._retriever.aretrieve_with_scores(query, 0.3)
+        chunks = run_async_function(
+            self._graph_base.asimilar_search_with_scores, query=query, score_threshold=0.3
+        )
         return chunks
-
-    def __del__(self):
-        file_path_list = list(self._chunk_id_dict.keys())
+    
+    def clear(self):
+        file_path_list = list(self._chunk_id_dict.keys)
         for file_path in file_path_list:
-            self.delete_document(file_path)
+            self.delete_document(self._chunk_id_dict[file_path])
+
+    def delete(self):
+        self._graph_base._clean_persist_folder()
