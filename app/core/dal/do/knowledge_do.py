@@ -18,13 +18,13 @@ class KnowledgeBaseDo(Do):  # type: ignore
     description = Column(Text)
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
 
-    file_to_kb = relationship("FileToKBDo", backref="knowledge_base", cascade="all, delete-orphan")
+    file_kb_mapping = relationship("FileKbMappingDo", backref="knowledge_base", cascade="all, delete-orphan")
 
 
-class FileToKBDo(Do):  # type: ignore
+class FileKbMappingDo(Do):  # type: ignore
     """File to knowledge base association model."""
 
-    __tablename__ = "file_to_kb"
+    __tablename__ = "file_kb_mapping"
 
     id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"), primary_key=True)
     name = Column(Text)

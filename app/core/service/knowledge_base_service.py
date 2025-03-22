@@ -4,7 +4,7 @@ import os
 import json
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileToKBDao
+from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileKbMappingDao
 from app.core.dal.dao.file_dao import FileDao
 from app.core.model.knowledge_base import KnowledgeBase
 from app.core.model.knowledge import Knowledge
@@ -26,7 +26,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 self._global_knowledge_base.load_document(root + "/" + file)
         self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
         self._file_dao: FileDao = FileDao.instance
-        self._file_to_kb_dao: FileToKBDao = FileToKBDao.instance
+        self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -72,7 +72,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=result.name,
             knowledge_type=result.knowledge_type,
             session_id=result.session_id,
-            files=self._file_to_kb_dao.filter_by(kb_id=result.id),
+            files=self._file_kb_mapping_dao.filter_by(kb_id=result.id),
             description=result.description,
             timestamp=result.timestamp,
         )
@@ -100,7 +100,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         if not knowledge_base:
             raise ValueError(f"Knowledge base with ID {id} not found")
         # delte all related file from db
-        files = self._file_to_kb_dao.filter_by(kb_id=id)
+        files = self._file_kb_mapping_dao.filter_by(kb_id=id)
         for file in files:
             FileService.instance.delete_file(id=file.id)
         # delete kb from db
@@ -132,7 +132,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 name=result.name,
                 knowledge_type=result.knowledge_type,
                 session_id=result.session_id,
-                files=self._file_to_kb_dao.filter_by(kb_id=result.id),
+                files=self._file_kb_mapping_dao.filter_by(kb_id=result.id),
                 description=result.description,
                 timestamp=result.timestamp,
             )
@@ -163,9 +163,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
         # get kb with kb_id
         kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
-        # add file_to_kb
-        if self._file_to_kb_dao.get_by_id(id=file_id) == None:
-            self._file_to_kb_dao.create(
+        # add file_kb_mapping
+        if self._file_kb_mapping_dao.get_by_id(id=file_id) == None:
+            self._file_kb_mapping_dao.create(
                 id=file_id,
                 name=file_name,
                 kb_id=knowledge_base_id,
@@ -175,7 +175,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 type="local",
             )
         # update knowledge base timestamp
-        timestamp = self._file_to_kb_dao.get_by_id(id=file_id).timestamp
+        timestamp = self._file_kb_mapping_dao.get_by_id(id=file_id).timestamp
         self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
         # load config
         config = json.loads(config)
@@ -184,16 +184,16 @@ class KnowledgeBaseService(metaclass=Singleton):
             if kb.knowledge_type == "vector":
                 chunk_ids = VectorKnowledgeBase(knowledge_base_id).load_document(file_path, config)
         except Exception as e:
-            self._file_to_kb_dao.update(id=file_id, status="fail")
+            self._file_kb_mapping_dao.update(id=file_id, status="fail")
         else:
-            self._file_to_kb_dao.update(id=file_id, status="success", chunk_ids=chunk_ids)
+            self._file_kb_mapping_dao.update(id=file_id, status="success", chunk_ids=chunk_ids)
 
     def delete_knowledge(self, file_id):
         """Delete knowledge entry."""
         # get chunk_ids and kb_id with file_id
-        file_to_kb = self._file_to_kb_dao.get_by_id(id=file_id)
-        chunk_ids = file_to_kb.chunk_ids
-        knowledge_base_id = file_to_kb.kb_id
+        file_kb_mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
+        chunk_ids = file_kb_mapping.chunk_ids
+        knowledge_base_id = file_kb_mapping.kb_id
         # get kb with kb_id
         kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # delete related chunks from knowledge base

@@ -15,4 +15,4 @@ class FileDo(Do):  # type: ignore
     name = Column(String(36), nullable=False)
     path = Column(String(256), nullable=False)
 
-    file_to_kb = relationship("FileToKBDo", backref="file", cascade="all, delete-orphan")
+    file_kb_mapping = relationship("FileKbMappingDo", backref="file", cascade="all, delete-orphan")
