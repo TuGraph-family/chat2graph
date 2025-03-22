@@ -29,7 +29,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # create global knowledge store
         if self._knowledge_base_dao.get_by_id(id=GLOBAL_KB_ID) == None:
             self._knowledge_base_dao.create(
-                id=GLOBAL_KB_ID, name="global_knowledge_store", knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE, session_id=""
+                id=GLOBAL_KB_ID, name="global_knowledge_store", knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.name.lower(), session_id=""
             )
         self._global_knowledge_store: KnowledgeStore = KnowledgeStoreFactory.get_or_create("global_knowledge_store")
 
