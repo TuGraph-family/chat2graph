@@ -18,17 +18,15 @@ class KnowledgeBaseDo(Do):  # type: ignore
     description = Column(Text)
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
 
-    file_kb_mapping = relationship("FileKbMappingDo", backref="knowledge_base", cascade="all, delete-orphan")
-
 
 class FileKbMappingDo(Do):  # type: ignore
     """File to knowledge base association model."""
 
     __tablename__ = "file_kb_mapping"
 
-    id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(String(36), primary_key=True) # FK constraint
     name = Column(Text)
-    kb_id = Column(String(36), ForeignKey("knowledge_base.id", ondelete="CASCADE"))
+    kb_id = Column(String(36)) # FK constraint
     chunk_ids = Column(Text)
     status = Column(String(36))
     config = Column(Text)

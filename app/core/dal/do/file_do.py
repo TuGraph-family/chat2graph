@@ -14,5 +14,3 @@ class FileDo(Do):  # type: ignore
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     name = Column(String(36), nullable=False)
     path = Column(String(256), nullable=False)
-
-    file_kb_mapping = relationship("FileKbMappingDo", backref="file", cascade="all, delete-orphan")
