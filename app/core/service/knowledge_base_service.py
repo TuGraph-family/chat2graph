@@ -186,6 +186,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 chunk_ids = VectorKnowledgeBase(knowledge_base_id).load_document(file_path, config)
         except Exception as e:
             self._file_kb_mapping_dao.update(id=file_id, status="fail")
+            raise e
         else:
             self._file_kb_mapping_dao.update(id=file_id, status="success", chunk_ids=chunk_ids)
 

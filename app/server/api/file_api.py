@@ -27,8 +27,8 @@ def upload_file():
     try:
         result, message = manager.upload_file(file=file)
         return make_response(True, data=result, message=message)
-    except Exception as e:
-        raise ApiException(f"Failed to upload file: {str(e)}") from e
+    except ApiException as e:
+        return make_response(False, message=str(e))
 
 
 @files_bp.route("/<string:file_id>", methods=["DELETE"])
@@ -41,5 +41,5 @@ def delete_file(file_id):
     try:
         result, message = manager.delete_file(id=file_id)
         return make_response(True, data=result, message=message)
-    except Exception as e:
-        raise ApiException(f"Failed to delete file: {str(e)}") from e
+    except ApiException as e:
+        return make_response(False, message=str(e))
