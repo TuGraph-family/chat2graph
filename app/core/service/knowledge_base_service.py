@@ -8,7 +8,7 @@ from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileKbMappingDao
 from app.core.dal.dao.file_dao import FileDao
 from app.core.model.knowledge_base import KnowledgeBase
 from app.core.model.knowledge import Knowledge
-from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
+from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeBase
 from dbgpt.core import Chunk
 from app.core.common.system_env import SystemEnv
 from app.core.service.file_service import FileService

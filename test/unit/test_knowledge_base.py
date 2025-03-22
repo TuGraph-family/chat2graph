@@ -9,7 +9,7 @@ from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
-from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase, GraphKnowledgeBase
+from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore, GraphKnowledgeStore
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.dal.init_db import init_db
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -23,27 +23,27 @@ knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
 
 async def test_vector_knowledge_base():
-    chunks = VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
+    chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
 
-    chunk_ids = VectorKnowledgeBase("test_vector_knowledge_base").load_document(
+    chunk_ids = VectorKnowledgeStore("test_vector_knowledge_base").load_document(
         SystemEnv.APP_ROOT + "/global_knowledge/awel.md"
     )
-    chunks = VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
+    chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) != 0
 
-    VectorKnowledgeBase("test_vector_knowledge_base").delete_document(chunk_ids)
-    chunks = VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
+    VectorKnowledgeStore("test_vector_knowledge_base").delete_document(chunk_ids)
+    chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
 
 async def test_graph_knowledge_base():
-    chunks = GraphKnowledgeBase("test_graph_knowledge_base").retrieve("what is awel talk about")
+    chunks = GraphKnowledgeStore("test_graph_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
 
-    GraphKnowledgeBase("test_graph_knowledge_base").load_document(
+    GraphKnowledgeStore("test_graph_knowledge_base").load_document(
         SystemEnv.APP_ROOT + "/global_knowledge/awel.md"
     )
-    chunks = GraphKnowledgeBase("test_graph_knowledge_base").retrieve("what is awel talk about")
+    chunks = GraphKnowledgeStore("test_graph_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) != 0
 
 async def test_knowledge_base_service():

@@ -3,12 +3,12 @@ from typing import Any, List
 from app.core.model.knowledge import KnowledgeChunk
 
 
-class KnowledgeBase(ABC):
-    """Knowledge base for storing docs, vectors, graphs."""
+class KnowledgeStore(ABC):
+    """Knowledge store for storing docs, vectors, graphs."""
 
     @abstractmethod
     def __init__(self, name):
-        """Init knowledge base."""
+        """Init knowledge store."""
 
     @abstractmethod
     def load_document(self, file_path) -> List[str]:
@@ -24,12 +24,12 @@ class KnowledgeBase(ABC):
 
     @abstractmethod
     def retrieve(self, query) -> KnowledgeChunk:
-        """retrieve knowledge from knowledge base."""
+        """retrieve knowledge from knowledge store."""
 
     @abstractmethod
     def clear(self):
-        """clear all knowledge in knowledge base."""
+        """clear all knowledge in knowledge store."""
 
     @abstractmethod
-    def delete(self):
-        """delete the entire knowledge base persistance data."""
+    def drop(self):
+        """drop the entire knowledge store persistance data."""

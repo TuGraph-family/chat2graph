@@ -1,7 +1,7 @@
 import os
 from typing import Any, Dict, List, Optional
 
-from app.core.knowledge.knowledge_base import KnowledgeBase
+from app.core.knowledge.knowledge_store import KnowledgeStore
 
 from dbgpt.rag.embedding import DefaultEmbeddingFactory
 from dbgpt_ext.storage.vector_store.chroma_store import ChromaStore, ChromaVectorConfig
@@ -19,7 +19,7 @@ from dbgpt.rag.retriever import RetrieverStrategy
 from app.core.model.knowledge import KnowledgeChunk
 
 
-class VectorKnowledgeBase(KnowledgeBase):
+class VectorKnowledgeStore(KnowledgeStore):
     """Knowledge base for storing vectors."""
 
     def __init__(self, name):
@@ -76,11 +76,11 @@ class VectorKnowledgeBase(KnowledgeBase):
         for file_path in file_path_list:
             self.delete_document(self._chunk_id_dict[file_path])
 
-    def delete(self):
+    def drop(self):
         self._vector_base._clean_persist_folder()
 
 
-class GraphKnowledgeBase(KnowledgeBase):
+class GraphKnowledgeStore(KnowledgeStore):
     """Knowledge base for storing graphs."""
 
     def __init__(self, name):
@@ -150,5 +150,5 @@ class GraphKnowledgeBase(KnowledgeBase):
         for file_path in file_path_list:
             self.delete_document(self._chunk_id_dict[file_path])
 
-    def delete(self):
+    def drop(self):
         self._graph_base.delete_vector_name("")
