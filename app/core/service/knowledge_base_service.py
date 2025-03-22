@@ -10,6 +10,7 @@ from app.core.model.knowledge import Knowledge
 from app.core.knowledge.knowledge_store import KnowledgeStore
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.service.file_service import FileService
+from app.core.model.job import Job
 from sqlalchemy import func
 
 GLOBAL_KB_ID = "global"
@@ -92,7 +93,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         else:
             raise ValueError(f"Cannot find knowledge base with ID {id}")
 
-    def edit_knowledge_base(self, id: str, name: str, description: str):
+    def edit_knowledge_base(self, id: str, name: str, description: str) -> None:
         """edit a knowledge base by ID.
         Args:
             id (str): ID of the knowledge base
@@ -105,7 +106,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             id=id, name=name, description=description, timestamp=func.strftime("%s", "now")
         )
 
-    def delete_knowledge_base(self, id: str):
+    def delete_knowledge_base(self, id: str) -> None:
         """Delete a knowledge base by ID.
         Args:
             id (str): ID of the knowledge base
@@ -182,7 +183,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
         return global_kb, local_kbs
 
-    def get_knowledge(self, query, job) -> Any:
+    def get_knowledge(self, query: str, job: Job) -> Knowledge:
         """Get knowledge by ID."""
         # get global knowledge
         global_chunks = self._global_knowledge_store.retrieve(query)
@@ -198,64 +199,74 @@ class KnowledgeBaseService(metaclass=Singleton):
             local_chunks = []
         return Knowledge(global_chunks, local_chunks)
 
-    def load_knowledge(self, knowledge_base_id, file_id, config):
+    def load_knowledge(self, knowledge_base_id: str, file_id: str, config: str) -> None:
         """Load new knowledge entry."""
         # get file with file id
         file = self._file_dao.get_by_id(id=file_id)
-        folder_path = file.path
-        file_name = file.name
-        file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
-        # add file_kb_mapping
-        if self._file_kb_mapping_dao.get_by_id(id=file_id) == None:
-            self._file_kb_mapping_dao.create(
-                id=file_id,
-                name=file_name,
-                kb_id=knowledge_base_id,
-                status="pending",
-                config=config,
-                size=os.path.getsize(file_path),
-                type="local",
-            )
-        # update knowledge base timestamp
-        if knowledge_base_id != GLOBAL_KB_ID:
-            timestamp = self._file_kb_mapping_dao.get_by_id(id=file_id).timestamp
-            self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
-        # load config
-        config = json.loads(config)
-        # load file to knowledge base
-        try:
-            if knowledge_base_id != GLOBAL_KB_ID:
-                chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(
-                    file_path, config
+        if file:
+            folder_path = file.path
+            file_name = file.name
+            file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
+            # add file_kb_mapping
+            if self._file_kb_mapping_dao.get_by_id(id=file_id) == None:
+                self._file_kb_mapping_dao.create(
+                    id=file_id,
+                    name=file_name,
+                    kb_id=knowledge_base_id,
+                    status="pending",
+                    config=config,
+                    size=os.path.getsize(file_path),
+                    type="local",
                 )
+            # update knowledge base timestamp
+            if knowledge_base_id != GLOBAL_KB_ID:
+                mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
+                if mapping:
+                    timestamp = mapping.timestamp
+                    self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
+            # load config
+            config = json.loads(config)
+            # load file to knowledge base
+            try:
+                if knowledge_base_id != GLOBAL_KB_ID:
+                    chunk_ids = KnowledgeStoreFactory.get_or_create(
+                        knowledge_base_id
+                    ).load_document(file_path, config)
+                else:
+                    chunk_ids = self._global_knowledge_store.load_document(file_path, config)
+            except Exception as e:
+                self._file_kb_mapping_dao.update(id=file_id, status="fail")
+                raise e
             else:
-                chunk_ids = self._global_knowledge_store.load_document(file_path, config)
-        except Exception as e:
-            self._file_kb_mapping_dao.update(id=file_id, status="fail")
-            raise e
+                self._file_kb_mapping_dao.update(id=file_id, status="success", chunk_ids=chunk_ids)
         else:
-            self._file_kb_mapping_dao.update(id=file_id, status="success", chunk_ids=chunk_ids)
+            raise ValueError(f"Cannot find file with ID {file_id}.")
 
-    def delete_knowledge(self, file_id):
+    def delete_knowledge(self, file_id: str) -> None:
         """Delete knowledge entry."""
         # get chunk_ids and kb_id with file_id
         file_kb_mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
-        chunk_ids = file_kb_mapping.chunk_ids
-        knowledge_base_id = file_kb_mapping.kb_id
-        # delete related chunks from knowledge base
-        if knowledge_base_id != GLOBAL_KB_ID:
-            KnowledgeStoreFactory.get_or_create(knowledge_base_id).delete_document(chunk_ids)
+        if file_kb_mapping:
+            chunk_ids = file_kb_mapping.chunk_ids
+            knowledge_base_id = file_kb_mapping.kb_id
+            # delete related chunks from knowledge base
+            if knowledge_base_id != GLOBAL_KB_ID:
+                KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).delete_document(
+                    str(chunk_ids)
+                )
+            else:
+                self._global_knowledge_store.delete_document(str(chunk_ids))
+            # delete related file_kb_mapping
+            self._file_kb_mapping_dao.delete(id=file_id)
+            # delete related virtual file
+            FileService.instance.delete_file(id=file_id)
+            # update knowledge base timestamp
+            if knowledge_base_id != GLOBAL_KB_ID:
+                self._knowledge_base_dao.update(
+                    id=str(knowledge_base_id), timestamp=func.strftime("%s", "now")
+                )
         else:
-            self._global_knowledge_store.delete_document(chunk_ids)
-        # delete related file_kb_mapping
-        self._file_kb_mapping_dao.delete(id=file_id)
-        # delete related virtual file
-        FileService.instance.delete_file(id=file_id)
-        # update knowledge base timestamp
-        if knowledge_base_id != GLOBAL_KB_ID:
-            self._knowledge_base_dao.update(
-                id=knowledge_base_id, timestamp=func.strftime("%s", "now")
-            )
+            raise ValueError(f"Cannot find knowledge with ID {file_id}.")
 
     def __delete__(self):
         self._global_knowledge_base.clear()

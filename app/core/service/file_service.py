@@ -18,7 +18,7 @@ class FileService(metaclass=Singleton):
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
 
-    def calculate_md5(self, file):
+    def calculate_md5(self, file: FileStorage) -> str:
         file_hash = hashlib.md5()
         while chunk := file.read(8192):
             file_hash.update(chunk)
@@ -48,7 +48,7 @@ class FileService(metaclass=Singleton):
         )
         return str(result.id)
 
-    def delete_file(self, id):
+    def delete_file(self, id: str) -> None:
         """Delete a file with ID.
 
         Args:
@@ -58,16 +58,19 @@ class FileService(metaclass=Singleton):
         """
         # delete the file
         file = self._file_dao.get_by_id(id=id)
-        path = file.path
-        self._file_dao.delete(id=id)
-        results = self._file_dao.filter_by(path=path)
-        if len(results) == 0:
-            for file_name in os.listdir(path):
-                file_path = os.path.join(path, file_name)
-                os.remove(file_path)
-            os.rmdir(path)
+        if file:
+            path = file.path
+            self._file_dao.delete(id=id)
+            results = self._file_dao.filter_by(path=path)
+            if len(results) == 0:
+                for file_name in os.listdir(path):
+                    file_path = os.path.join(path, file_name)
+                    os.remove(file_path)
+                os.rmdir(path)
+        else:
+            raise ValueError(f"Cannot find file with ID {id}.")
 
-    def get_file_payload(self, id) -> str:
+    def get_file_payload(self, id: str) -> str:
         file = self._file_dao.get_by_id(id=id)
         if file:
             path = file.path
@@ -76,4 +79,4 @@ class FileService(metaclass=Singleton):
             with open(file_path, "r") as f:
                 return f.read()
         else:
-            raise ValueError("Cannot find file with ID {id}.")
+            raise ValueError(f"Cannot find file with ID {id}.")

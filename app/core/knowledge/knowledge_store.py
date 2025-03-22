@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Optional, List
 from app.core.model.knowledge import KnowledgeChunk
 
 
@@ -7,28 +7,24 @@ class KnowledgeStore(ABC):
     """Knowledge store for storing docs, vectors, graphs."""
 
     @abstractmethod
-    def __init__(self, name):
+    def __init__(self, name: str):
         """Init knowledge store."""
 
     @abstractmethod
-    def load_document(self, file_path) -> str:
+    def load_document(self, file_path: str, config: Optional[str]) -> str:
         """Load document."""
 
     @abstractmethod
-    def delete_document(self, chunk_ids) -> None:
+    def delete_document(self, chunk_ids: str) -> None:
         """Delete document."""
 
     @abstractmethod
-    def update_document(self, file_path, chunk_ids) -> str:
+    def update_document(self, file_path: str, chunk_ids: str) -> str:
         """Update document."""
 
     @abstractmethod
-    def retrieve(self, query) -> List[KnowledgeChunk]:
+    def retrieve(self, query: str) -> List[KnowledgeChunk]:
         """retrieve knowledge from knowledge store."""
-
-    @abstractmethod
-    def clear(self) -> None:
-        """clear all knowledge in knowledge store."""
 
     @abstractmethod
     def drop(self) -> None:
