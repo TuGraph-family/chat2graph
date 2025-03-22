@@ -1,6 +1,6 @@
 import importlib
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
@@ -10,8 +10,7 @@ from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
-from app.core.model.job_result import JobResult
-from app.core.model.message import ChatMessage
+from app.core.model.message import ChatMessage, MessageType, TextMessage
 from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
@@ -20,6 +19,7 @@ from app.core.sdk.wrapper.session_wrapper import SessionWrapper
 from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 from app.core.service.reasoner_service import ReasonerService
 from app.core.service.service_factory import ServiceFactory
 from app.core.service.session_service import SessionService
@@ -39,6 +39,7 @@ class AgenticService(metaclass=Singleton):
 
         # initialize the services
         ServiceFactory.initialize()
+        self._message_service: MessageService = MessageService.instance
         self._session_service: SessionService = SessionService.instance
         self._agent_service: AgentService = AgentService.instance
         self._job_service: JobService = JobService.instance
@@ -49,7 +50,7 @@ class AgenticService(metaclass=Singleton):
         """Get the session, if not exists or session_id is None, create a new one."""
         return SessionWrapper(self._session_service.get_session(session_id=session_id))
 
-    def execute(self, message: ChatMessage) -> ChatMessage:
+    def execute(self, message: TextMessage) -> ChatMessage:
         """Execute the service synchronously."""
         job = Job(
             goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name()
@@ -61,8 +62,13 @@ class AgenticService(metaclass=Singleton):
         job_wrapper.execute()
 
         # get the result of the job
-        job_result: JobResult = job_wrapper.query_result()
-        return job_result.result
+        result_message: TextMessage = cast(
+            TextMessage,
+            self._message_service.get_message_by_job_id(
+                job_id=job_wrapper.job.id, message_type=MessageType.TEXT_MESSAGE
+            ),
+        )
+        return result_message
 
     def reasoner(self, reasoner_type: ReasonerType = ReasonerType.DUAL) -> "AgenticService":
         """Chain the reasoner."""
@@ -76,7 +82,7 @@ class AgenticService(metaclass=Singleton):
 
     def tune_toolkit(self, id: str, *args, **kwargs) -> Any:
         """Train the toolkit."""
-        self._toolkit_service.tune(id=id, *args, **kwargs)
+        self._toolkit_service.tune(id, *args, **kwargs)
 
     def tune_workflow(self, expert: Expert, *args, **kwargs) -> Any:
         """Train the workflow."""

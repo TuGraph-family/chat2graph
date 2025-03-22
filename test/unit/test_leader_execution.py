@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
@@ -7,10 +7,11 @@ from app.core.dal.init_db import init_db
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
-from app.core.model.message import WorkflowMessage
+from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
@@ -80,11 +81,13 @@ def test_agent_job_graph():
     """
     # init components
     reasoner = DualModelReasoner()
-    agent_config = AgentConfig(profile="test", reasoner=reasoner, workflow=DbgptWorkflow())
+    agent_config = AgentConfig(
+        profile=Profile(name="Leader"), reasoner=reasoner, workflow=DbgptWorkflow()
+    )
     leader = Leader(agent_config=agent_config)
 
     # create jobs
-    jobs = []
+    jobs: List[SubJob] = []
     initial_numbers = "1 2 3 4 5"
     for i, (id, goal) in enumerate(
         [
@@ -127,8 +130,10 @@ def test_agent_job_graph():
         )
 
     # build job graph
+    original_job: Job = Job(id="test_original_job_id", goal="Test Job Graph")
+    job_service.save_job(job=original_job)
     job_service.add_job(
-        original_job_id="test_original_job_id",
+        original_job_id=original_job.id,
         job=jobs[0],
         expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
         predecessors=[],
@@ -136,7 +141,7 @@ def test_agent_job_graph():
     )
 
     job_service.add_job(
-        original_job_id="test_original_job_id",
+        original_job_id=original_job.id,
         job=jobs[1],
         expert_id=leader.state.get_expert_by_name("Expert 2").get_id(),
         predecessors=[jobs[0]],
@@ -144,7 +149,7 @@ def test_agent_job_graph():
     )
 
     job_service.add_job(
-        original_job_id="test_original_job_id",
+        original_job_id=original_job.id,
         job=jobs[2],
         expert_id=leader.state.get_expert_by_name("Expert 3").get_id(),
         predecessors=[jobs[0]],
@@ -152,7 +157,7 @@ def test_agent_job_graph():
     )
 
     job_service.add_job(
-        original_job_id="test_original_job_id",
+        original_job_id=original_job.id,
         job=jobs[3],
         expert_id=leader.state.get_expert_by_name("Expert 4").get_id(),
         predecessors=[jobs[2]],
@@ -160,7 +165,7 @@ def test_agent_job_graph():
     )
 
     job_service.add_job(
-        original_job_id="test_original_job_id",
+        original_job_id=original_job.id,
         job=jobs[4],
         expert_id=leader.state.get_expert_by_name("Expert 5").get_id(),
         predecessors=[jobs[1], jobs[2]],
@@ -168,14 +173,12 @@ def test_agent_job_graph():
     )
 
     # execute job graph
-    leader.execute_job_graph(original_job_id="test_original_job_id")
-    job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
+    leader.execute_job_graph(original_job_id=original_job.id)
+    job_graph: JobGraph = job_service.get_job_graph(job_id=original_job.id)
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
     terminal_job_results: List[JobResult] = [
-        job_graph.get_job_result(vertex) for vertex in tail_vertices
+        job_service.query_job_result(vertex) for vertex in tail_vertices
     ]
-    job_ids = job_graph._job_results.keys()
-    results = [msg.result._payload for msg in job_graph._job_results.values()]
 
     # verify we only get messages from terminal vertices (job4 and job5)
     assert len(tail_vertices) == 2, "Should receive 2 messages from terminal vertices"
@@ -190,10 +193,25 @@ def test_agent_job_graph():
 
     # verify job4 result (sum of numbers after adding 10)
     # original: 1 2 3 4 5 -> after +10: 11 12 13 14 15 -> sum: 65
-    assert job4_result.result.get_payload() == "65"
+    message_service: MessageService = MessageService.instance
+    job4_result_message: AgentMessage = cast(
+        AgentMessage,
+        message_service.get_message_by_job_id(
+            job_id=job_service.get_subjob(subjob_id=job4_result.job_id).id,
+            message_type=MessageType.AGENT_MESSAGE,
+        )[0],
+    )
+
+    assert job4_result_message.get_payload() == "65"
 
     # verify job5 result (format of multiply by 2 and add 10 results)
-    job5_output = job5_result.result.get_payload()
-    assert "2 4 6 8 10" in job5_output
-    assert "11 12 13 14 15" in job5_output
-    assert job5_output.startswith("Final Result")
+    # job5_output = job5_result.message.get_payload()
+    job5_result_message: AgentMessage = cast(
+        AgentMessage,
+        message_service.get_message_by_job_id(
+            job_id=job5_result.job_id, message_type=MessageType.AGENT_MESSAGE
+        )[0],
+    )
+    assert "2 4 6 8 10" in job5_result_message.get_payload()
+    assert "11 12 13 14 15" in job5_result_message.get_payload()
+    assert job5_result_message.get_payload().startswith("Final Result")

@@ -76,8 +76,8 @@ def main():
 
     print("=== Decomposed Subtasks ===")
     for subjob_id in nx.topological_sort(job_graph.get_graph()):
-        subjob: SubJob = job_graph.get_job(subjob_id)
-        expert_id: str = job_graph.get_expert_id(subjob_id)
+        subjob: SubJob = job_service.get_subjob(subjob_id)
+        expert_id: str = subjob.expert_id
         expert: Expert = leader.state.get_expert_by_id(expert_id)
         expert_name: str = expert._profile.name
 

@@ -12,7 +12,7 @@ from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
 from app.core.service.knowledge_base_service import KnowledgeBaseService
-from app.core.knowledge.knowledge import Knowledge
+from app.core.model.knowledge import Knowledge
 from app.core.dal.database import init_db
 
 init_db()

@@ -4,7 +4,7 @@ from app.core.sdk.agentic_service import AgenticService
 
 def main():
     """Main function."""
-    mas = AgenticService.load("app/core/sdk/chat2graph copy.yml")
+    mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 
     # set the user message
     user_message = TextMessage(

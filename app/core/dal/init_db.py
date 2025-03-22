@@ -9,7 +9,7 @@ from app.core.dal.do.session_do import SessionDo
 
 def init_db() -> None:
     """Initialize database tables."""
-    Do.metadata.drop_all(bind=engine)
+    # Do.metadata.drop_all(bind=engine)
 
     # create tables in order
     GraphDbDo.__table__.create(engine, checkfirst=True)

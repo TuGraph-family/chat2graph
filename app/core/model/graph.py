@@ -1,7 +1,10 @@
 from abc import abstractmethod
-from typing import Any, Dict, List, Set, Tuple, Union
+import json
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import networkx as nx  # type: ignore
+
+T = TypeVar("T", bound="Graph")
 
 
 class Graph:
@@ -11,8 +14,8 @@ class Graph:
         _graph (nx.DiGraph): The oriented graph to present the dependencies.
     """
 
-    def __init__(self):
-        self._graph: nx.DiGraph = nx.DiGraph()  # only vertex ids
+    def __init__(self, graph: Optional[nx.DiGraph] = None) -> None:
+        self._graph: nx.DiGraph = graph or nx.DiGraph()  # only vertex ids
 
     def add_edge(self, u_of_edge: str, v_of_edge: str) -> None:
         """Add an edge to the graph."""
@@ -69,6 +72,23 @@ class Graph:
     def remove_edge(self, u_of_edge: str, v_of_edge: str) -> None:
         """Remove an edge from the graph."""
         self._graph.remove_edge(u_of_edge, v_of_edge)
+
+    def to_json_str(self) -> str:
+        """Convert the graph to JSON format."""
+        graph_dict = {
+            "vertices": [{"id": node} for node in self._graph.nodes()],
+            "edges": [{"source": u, "target": v} for u, v in self._graph.edges()],
+        }
+        return json.dumps(graph_dict, indent=4)
+
+    @classmethod
+    def from_json_str(cls: Type[T], json_str: str) -> T:
+        """Load the graph from JSON format."""
+        graph_dict = json.loads(json_str)
+        graph: nx.DiGraph = nx.DiGraph()
+        graph.add_nodes_from([node["id"] for node in graph_dict["vertices"]])
+        graph.add_edges_from([(edge["source"], edge["target"]) for edge in graph_dict["edges"]])
+        return cls(graph)
 
     @abstractmethod
     def add_vertex(self, id: str, **properties) -> None:

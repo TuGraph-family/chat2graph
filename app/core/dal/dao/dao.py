@@ -28,9 +28,13 @@ class Dao(Generic[T], metaclass=Singleton):
     def create(self, **kwargs: Any) -> T:
         """Create a new object."""
         obj = self._model(**kwargs)
-        self.session.add(obj)
-        self.session.commit()
-        return obj
+        try:
+            self.session.add(obj)
+            self.session.commit()
+            return obj
+        except Exception as e:
+            self.session.rollback()
+            raise e
 
     def get_by_id(self, id: str) -> Optional[T]:
         """Get an object by ID."""
@@ -57,7 +61,11 @@ class Dao(Generic[T], metaclass=Singleton):
     def delete(self, id: str) -> Optional[T]:
         """Delete an object."""
         obj = self.get_by_id(id)
-        if obj:
-            self.session.delete(obj)
-            self.session.commit()
-        return obj
+        try:
+            if obj:
+                self.session.delete(obj)
+                self.session.commit()
+            return obj
+        except Exception as e:
+            self.session.rollback()
+            raise e

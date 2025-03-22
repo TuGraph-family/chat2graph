@@ -5,7 +5,6 @@ from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.toolkit import Toolkit
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
@@ -16,8 +15,6 @@ ServiceFactory.initialize()
 def main():
     """Main function to demonstrate Operator usage."""
     # initialize
-    toolkit = Toolkit()
-
     action1 = Action(
         id="search",
         name="Search Knowledge",

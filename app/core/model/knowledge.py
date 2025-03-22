@@ -13,7 +13,7 @@ All related knowledges retrieved from the knowledge base are listed below.
 """
 
 
-class Knowledge(Message):
+class Knowledge():
     """Knowledge"""
 
     def __init__(
@@ -27,13 +27,11 @@ class Knowledge(Message):
         super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         global_knowledges = ""
         for chunk in global_chunks:
-            global_knowledges += f"chunk_id:{chunk.chunk_id}\n"
             global_knowledges += f"chunk_name:{chunk.chunk_name}\n"
             global_knowledges += f"content:{chunk.content}\n"
             global_knowledges += "\n"
         local_knowledges = ""
         for chunk in local_chunks:
-            local_knowledges += f"chunk_id:{chunk.chunk_id}\n"
             local_knowledges += f"chunk_name:{chunk.chunk_name}\n"
             local_knowledges += f"content:{chunk.content}\n"
             local_knowledges += "\n"

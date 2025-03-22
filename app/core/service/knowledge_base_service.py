@@ -7,7 +7,7 @@ from app.core.common.singleton import Singleton
 from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileToKBDao
 from app.core.dal.dao.file_dao import FileDao
 from app.core.model.knowledge_base import KnowledgeBase
-from app.core.knowledge.knowledge import Knowledge
+from app.core.model.knowledge import Knowledge
 from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
 from dbgpt.core import Chunk
 from app.core.common.system_env import SystemEnv

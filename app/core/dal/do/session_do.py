@@ -13,3 +13,5 @@ class SessionDo(Do):  # type: ignore
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
     name = Column(String(80), nullable=True)
+
+    latest_job_id = Column(String(36), nullable=True)  # FK constraint

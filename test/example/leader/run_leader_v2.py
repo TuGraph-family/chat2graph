@@ -1,16 +1,23 @@
+from typing import cast
+
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
-from app.core.model.job import SubJob
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
+from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
+from app.core.model.message import AgentMessage, MessageType
 from app.core.prompt.operator import EVAL_OPERATION_INSTRUCTION_PROMPT, EVAL_OPERATION_OUTPUT_PROMPT
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 
+DaoFactory.initialize(DbSession())
 ServiceFactory.initialize()
 
 
@@ -19,7 +26,7 @@ def main():
     # initialize components
     reasoner = DualModelReasoner()
     agent_config = AgentConfig(
-        profile="academic_reviewer", reasoner=reasoner, workflow=DbgptWorkflow()
+        profile=Profile(name="Academic_reviewer"), reasoner=reasoner, workflow=DbgptWorkflow()
     )
     leader = Leader(agent_config=agent_config)
 
@@ -59,8 +66,14 @@ paper content:
     """  # noqa: E501
 
     # create jobs for paper analysis
+    job = Job(
+        id="main_job_id",
+        session_id="paper_analysis_session",
+        goal="Analyze an academic paper on Mixture-of-Experts (MoE) architectures in large language models (LLMs) to evaluate its methodology, results, and technical soundness, and generate a comprehensive summary of its key contributions and implications.",  # noqa: E501
+    )
     job_1 = SubJob(
         id="extract_key_info",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Identify and extract the core information from the paper, including research problem, proposed solution, and key findings. Ensure to preserve key supporting details and specific examples related to these core elements.",  # noqa: E501
         context=paper_content,
@@ -69,6 +82,7 @@ paper content:
 
     job_2 = SubJob(
         id="analyze_methodology",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Analyze the paper's methodology to understand its research approach, considering aspects like research design, data sources, and analytical techniques.",  # noqa: E501
         context=paper_content,
@@ -77,6 +91,7 @@ paper content:
 
     job_3 = SubJob(
         id="analyze_results",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Analyze the paper's results and discuss their implications, focusing on key findings, statistical evidence, and practical significance.",  # noqa: E501
         context=paper_content,
@@ -85,6 +100,7 @@ paper content:
 
     job_4 = SubJob(
         id="technical_review",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Evaluate the technical soundness of the paper's methodology and analysis, assessing methodological rigor, validity of analysis, and potential limitations.",  # noqa: E501
         context=paper_content,
@@ -93,6 +109,7 @@ paper content:
 
     job_5 = SubJob(
         id="generate_summary",
+        original_job_id=job.id,
         session_id="paper_analysis_session",
         goal="Synthesize a detailed comprehensive summary based on the methodology and results analyses, highlighting the paper's main contributions and significance. Incorporate key supporting details and specific findings from the analyses to provide a rich and informative summary.",  # noqa: E501
         context=paper_content,
@@ -189,7 +206,8 @@ paper content:
     #          ↘                                       ↗
     #            job_3 (Results)
 
-    job_service: JobService = JobService()
+    job_service: JobService = JobService.instance
+    job_service.save_job(job=job)
     job_service.add_job(
         original_job_id="test_original_job_id",
         job=job_1,
@@ -231,20 +249,31 @@ paper content:
     )
 
     # execute job graph
+    message_service: MessageService = MessageService.instance
     print("\n=== Starting Paper Analysis ===")
-    leader.execute_job_graph(job_graph=job_service.get_job_graph("test_original_job_id"))
+    leader.execute_job_graph(original_job_id="test_original_job_id")
     job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
 
     for tail_vertex in tail_vertices:
-        job = job_graph.get_job(tail_vertex)
-        job_result = job_graph.get_job_result(tail_vertex)
+        job = job_service.get_subjob(tail_vertex)
+        job_result = job_service.query_job_result(tail_vertex)
         if not job_result:
             print(f"Job {tail_vertex} is not completed yet.")
             continue
         print(f"\nTask {job.id}:")
         print(f"Status: {job_result.status}")
-        print(f"Output: {job_result.result.get_payload()}")
+        print(
+            "Output: "
+            + {
+                cast(
+                    AgentMessage,
+                    message_service.get_message_by_job_id(
+                        job_id=job.id, message_type=MessageType.AGENT_MESSAGE
+                    )[0],
+                ).get_payload()
+            }
+        )
         print("-" * 50)
 
 
