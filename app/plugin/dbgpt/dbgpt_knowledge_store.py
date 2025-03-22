@@ -18,12 +18,14 @@ from app.core.reasoner.model_service_factory import ModelServiceFactory
 from dbgpt.rag.retriever import RetrieverStrategy
 from app.core.model.knowledge import KnowledgeChunk
 
+KNOWLEDGE_STORE_PATH = "/knowledge_bases"
+
 
 class VectorKnowledgeStore(KnowledgeStore):
     """Knowledge base for storing vectors."""
 
     def __init__(self, name):
-        config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + "/knowledge_base")
+        config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH)
         self._vector_base = ChromaStore(
             config,
             name=name,
@@ -91,7 +93,7 @@ class GraphKnowledgeStore(KnowledgeStore):
             port="7687",
             enable_summary="True",
         )
-        vector_store_config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + "/knowledge_base")
+        vector_store_config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH)
         self._graph_base = CommunitySummaryKnowledgeGraph(
             config=config,
             name=name,
