@@ -65,6 +65,19 @@ class KnowledgeBaseService(metaclass=Singleton):
         """
         # fetch the knowledge base
         result = self._knowledge_base_dao.get_by_id(id=id)
+        # fetch all related file_kb_mapping
+        mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
+        file_descriptor_list = [
+            {
+                "name": mapping.name,
+                "type": mapping.type,
+                "size": mapping.size,
+                "status": mapping.status,
+                "time_stamp": mapping.timestamp,
+                "file_id": mapping.id,
+            }
+            for mapping in mappings
+        ]
         if not result:
             raise ValueError(f"Knowledge base with ID {id} not found")
         return KnowledgeBase(
@@ -72,7 +85,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=result.name,
             knowledge_type=result.knowledge_type,
             session_id=result.session_id,
-            files=self._file_kb_mapping_dao.filter_by(kb_id=result.id),
+            file_descriptor_list=file_descriptor_list,
             description=result.description,
             timestamp=result.timestamp,
         )
@@ -118,27 +131,48 @@ class KnowledgeBaseService(metaclass=Singleton):
         # get local knowledge bases
         results = self._knowledge_base_dao.get_all()
         # get global knowledge base
+        file_name_list = os.listdir(self._global_knowledge_path)
+        global_file_descriptor_list = [
+            {
+                "name": file_name
+            } for file_name in file_name_list
+        ]
         global_kb = KnowledgeBase(
             id="global_knowledge_base",
             name="global_knowledge_base",
             knowledge_type="vector",
             session_id="",
-            files=os.listdir(self._global_knowledge_path),
+            file_descriptor_list=global_file_descriptor_list,
             description="",
             timestamp=0,
         )
-        return global_kb, [
-            KnowledgeBase(
-                id=result.id,
-                name=result.name,
-                knowledge_type=result.knowledge_type,
-                session_id=result.session_id,
-                files=self._file_kb_mapping_dao.filter_by(kb_id=result.id),
-                description=result.description,
-                timestamp=result.timestamp,
+        # get local knowledge bases
+        local_kbs = []
+        for result in results:
+            mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
+            file_descriptor_list = [
+                {
+                    "name": mapping.name,
+                    "type": mapping.type,
+                    "size": mapping.size,
+                    "status": mapping.status,
+                    "time_stamp": mapping.timestamp,
+                    "file_id": mapping.id,
+                }
+                for mapping in mappings
+            ]
+            local_kbs.append(
+                KnowledgeBase(
+                    id=result.id,
+                    name=result.name,
+                    knowledge_type=result.knowledge_type,
+                    session_id=result.session_id,
+                    file_descriptor_list=file_descriptor_list,
+                    description=result.description,
+                    timestamp=result.timestamp,
+                )
             )
-            for result in results
-        ]
+        return global_kb, local_kbs
 
     def get_knowledge(self, query, job) -> Any:
         """Get knowledge by ID."""

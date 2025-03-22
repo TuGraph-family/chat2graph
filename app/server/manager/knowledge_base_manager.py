@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Tuple
 
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
+from app.server.manager.view.knowledge_base_view import KnowledgeBaseViewTransformer
 
 
 # TODO: move to the common module
@@ -19,6 +20,7 @@ class KnowledgeBaseManager:
     def __init__(self):
         self._knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
         self._session_service: SessionService = SessionService.instance
+        self._knowledge_base_view: KnowledgeBaseViewTransformer = KnowledgeBaseViewTransformer()
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -57,24 +59,7 @@ class KnowledgeBaseManager:
             Tuple[Dict[str, Any], str]: A tuple containing knowledge base details and success message
         """
         knowledge_base = self._knowledge_base_service.get_knowledge_base(id=id)
-        data = {
-            "id": knowledge_base.id,
-            "name": knowledge_base.name,
-            "knowledge_type": knowledge_base.knowledge_type,
-            "session_id": knowledge_base.session_id,
-            "time_stamp": knowledge_base.timestamp,
-            "files": [
-                {
-                    "name": file.name,
-                    "type": file.type,
-                    "size": file.size,
-                    "status": file.status,
-                    "time_stamp": file.timestamp,
-                    "file_id": file.id,
-                }
-                for file in knowledge_base.files
-            ],
-        }
+        data = self._knowledge_base_view.serialize_knowledge_base(knowledge_base)
         return data, "Knowledge base fetched successfully"
 
     def edit_knowledge_base(
@@ -115,26 +100,10 @@ class KnowledgeBaseManager:
             Tuple[List[dict], str]: A tuple containing a list of knowledge base details and success
                 message
         """
-        global_knowledge_base, local_knowledge_bases = (
-            self._knowledge_base_service.get_all_knowledge_bases()
-        )
-        knowledge_base_list = {
-            "global_knowledge_base": {"file_count": len(global_knowledge_base.files)},
-            "local_knowledge_base": [
-                {
-                    "id": kb.id,
-                    "name": kb.name,
-                    "knowledge_type": kb.knowledge_type,
-                    "session_id": kb.session_id,
-                    "file_count": len(kb.files),
-                    "description": kb.description,
-                    "time_stamp": kb.timestamp,
-                }
-                for kb in local_knowledge_bases
-            ],
-        }
+        global_knowledge_base, local_knowledge_bases = self._knowledge_base_service.get_all_knowledge_bases()
+        data = self._knowledge_base_view.serialize_knowledge_base(global_knowledge_base, local_knowledge_bases)
 
-        return knowledge_base_list, "Get all knowledge bases successfully"
+        return data, "Get all knowledge bases successfully"
 
     def load_knowledge(self, kb_id: str, file_id: str, config: str) -> Tuple[Dict[str, Any], str]:
         """Load knowledge with file ID.
