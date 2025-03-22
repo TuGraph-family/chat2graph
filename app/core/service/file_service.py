@@ -25,7 +25,7 @@ class FileService(metaclass=Singleton):
         return file_hash.hexdigest()
 
     def upload_file(self, file: FileStorage) -> str:
-        """upload a new file.
+        """Upload a new file.
 
         Args:
             name (str): Name of the knowledge base
@@ -47,7 +47,7 @@ class FileService(metaclass=Singleton):
         return result.id
 
     def delete_file(self, id):
-        """Create a new knowledge base.
+        """Delete a file with ID.
 
         Args:
             name (str): Name of the knowledge base
