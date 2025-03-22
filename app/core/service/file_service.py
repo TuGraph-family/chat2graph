@@ -64,3 +64,11 @@ class FileService(metaclass=Singleton):
                 file_path = os.path.join(path, file_name)
                 os.remove(file_path)
             os.rmdir(path)
+
+    def get_file_payload(self, id) -> str:
+        file = self._file_dao.get_by_id(id=id)
+        path = file.path
+        file_name = os.listdir(path)[0]
+        file_path = os.path.join(path, file_name)
+        with open(file_path, 'r') as f:
+            return f.read()
