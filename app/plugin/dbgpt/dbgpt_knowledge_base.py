@@ -16,6 +16,7 @@ from app.core.common.async_func import run_async_function
 from app.core.common.type import PlatformType
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from dbgpt.rag.retriever import RetrieverStrategy
+from app.core.model.knowledge import KnowledgeChunk
 
 
 class VectorKnowledgeBase(KnowledgeBase):
@@ -128,11 +129,12 @@ class GraphKnowledgeBase(KnowledgeBase):
         self.delete_document(chunk_ids)
         return run_async_function(self.load_document, file_path=file_path)
     
-    def retrieve(self, query):
+    def retrieve(self, query) -> KnowledgeChunk:
         chunks = run_async_function(
             self._graph_base.asimilar_search_with_scores, query=query, score_threshold=0.3
         )
-        return chunks
+        knowledge_chunks = [KnowledgeChunk(content_name=chunk.content_name, content=chunk.content) for chunk in chunks]
+        return knowledge_chunks
     
     def clear(self):
         file_path_list = list(self._chunk_id_dict.keys)

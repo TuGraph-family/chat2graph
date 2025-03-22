@@ -151,9 +151,8 @@ class KnowledgeBaseService(metaclass=Singleton):
             if kb.knowledge_type == "vector":
                 local_chunks = VectorKnowledgeBase(knowledge_base_id).retrieve(query)
         else:
-            local_chunks = [Chunk(content="")]
-        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-        return Knowledge(global_chunks, local_chunks, job.id, timestamp)
+            local_chunks = None
+        return Knowledge(global_chunks, local_chunks)
 
     def load_knowledge(self, knowledge_base_id, file_id, config):
         """Load new knowledge entry."""

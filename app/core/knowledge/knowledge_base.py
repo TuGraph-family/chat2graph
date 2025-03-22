@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, List
+from app.core.model.knowledge import KnowledgeChunk
 
 
 class KnowledgeBase(ABC):
@@ -22,7 +23,7 @@ class KnowledgeBase(ABC):
         """Update document."""
 
     @abstractmethod
-    def retrieve(self, query):
+    def retrieve(self, query) -> KnowledgeChunk:
         """retrieve knowledge from knowledge base."""
 
     @abstractmethod

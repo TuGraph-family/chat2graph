@@ -1,6 +1,6 @@
 from app.core.model.message import Message
 from typing import Any, Dict, List, Optional
-from dbgpt.core import Chunk
+from dataclasses import dataclass
 
 KNOWLEDGE_PROMPT = """
 All related knowledges retrieved from the knowledge base are listed below.
@@ -12,19 +12,23 @@ All related knowledges retrieved from the knowledge base are listed below.
 {local_knowledges}
 """
 
+@dataclass
+class KnowledgeChunk:
+    """Knowledge Chunk class"""
+
+    chunk_name: str
+    content: str
+
+
 
 class Knowledge():
     """Knowledge"""
 
     def __init__(
         self,
-        global_chunks: List[Chunk],
-        local_chunks: List[Chunk],
-        job_id: str,
-        timestamp: str,
-        id: Optional[str] = None,
+        global_chunks: List[KnowledgeChunk],
+        local_chunks: List[KnowledgeChunk],
     ):
-        super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         global_knowledges = ""
         for chunk in global_chunks:
             global_knowledges += f"chunk_name:{chunk.chunk_name}\n"
@@ -43,19 +47,9 @@ class Knowledge():
         """Get the content of the knowledge."""
         return self._payload
 
-    def get_timestamp(self) -> str:
-        """Get the timestamp of the knowledge."""
-        return self._timestamp
-
-    def get_id(self) -> str:
-        """Get the knowledge id."""
-        return self._id
-
     def copy(self) -> Any:
         """Copy the knowledge."""
         return Knowledge(
             global_chunk_list=self._global_chunk_list,
             local_chunk_list=self._local_chunk_list,
-            timestamp=self._timestamp,
-            id=self._id,
         )
