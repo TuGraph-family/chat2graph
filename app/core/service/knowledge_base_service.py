@@ -151,7 +151,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             if kb.knowledge_type == "vector":
                 local_chunks = VectorKnowledgeBase(knowledge_base_id).retrieve(query)
         else:
-            local_chunks = None
+            local_chunks = []
         return Knowledge(global_chunks, local_chunks)
 
     def load_knowledge(self, knowledge_base_id, file_id, config):

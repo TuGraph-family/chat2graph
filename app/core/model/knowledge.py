@@ -26,8 +26,8 @@ class Knowledge():
 
     def __init__(
         self,
-        global_chunks: List[KnowledgeChunk],
-        local_chunks: List[KnowledgeChunk],
+        global_chunks: Optional[List[KnowledgeChunk]],
+        local_chunks: Optional[List[KnowledgeChunk]],
     ):
         global_knowledges = ""
         for chunk in global_chunks:
