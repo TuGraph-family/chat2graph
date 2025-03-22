@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.model.knowledge_base import Knowledge
 from app.core.model.session import Session
 from app.core.service.job_service import JobService
 from app.core.service.knowledge_base_service import KnowledgeBaseService

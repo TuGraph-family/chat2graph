@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
-from app.core.model.file import FileDescriptor
 
 
 @dataclass

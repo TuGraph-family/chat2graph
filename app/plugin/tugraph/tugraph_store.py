@@ -1,6 +1,6 @@
 from typing import Optional
 
-from dbgpt.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig  # type: ignore
+from dbgpt_ext.storage.graph_store.tugraph_store import TuGraphStore, TuGraphStoreConfig  # type: ignore
 
 
 def get_tugraph(config: Optional[TuGraphStoreConfig] = None) -> TuGraphStore:
