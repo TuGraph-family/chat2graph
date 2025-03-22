@@ -9,7 +9,7 @@ from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
-from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase
+from app.plugin.dbgpt.dbgpt_knowledge_base import VectorKnowledgeBase, GraphKnowledgeBase
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.dal.init_db import init_db
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -36,6 +36,15 @@ async def test_vector_knowledge_base():
     chunks = VectorKnowledgeBase("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
 
+async def test_graph_knowledge_base():
+    chunks = GraphKnowledgeBase("test_graph_knowledge_base").retrieve("what is awel talk about")
+    assert len(chunks) == 0
+
+    GraphKnowledgeBase("test_graph_knowledge_base").load_document(
+        SystemEnv.APP_ROOT + "/global_knowledge/awel.md"
+    )
+    chunks = GraphKnowledgeBase("test_graph_knowledge_base").retrieve("what is awel talk about")
+    assert len(chunks) != 0
 
 async def test_knowledge_base_service():
     job = SubJob(

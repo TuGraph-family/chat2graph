@@ -89,7 +89,9 @@ class GraphKnowledgeBase(KnowledgeBase):
             password="73@TuGraph",
             host="47.76.118.68",
             port="7687",
+            enable_summary="True",
         )
+        vector_store_config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + "/knowledge_base")
         self._graph_base = CommunitySummaryKnowledgeGraph(
             config=config,
             name=name,
@@ -99,9 +101,9 @@ class GraphKnowledgeBase(KnowledgeBase):
                 ),
             ).create(),
             llm_client=ModelServiceFactory.create(platform_type=PlatformType.DBGPT)._llm_client,
-            document_graph_enabled=True,
-            triplet_graph_enabled=True,
-            enable_summary="True",
+            kg_document_graph_enabled=True,
+            kg_triplet_graph_enabled=True,
+            vector_store_config=vector_store_config,
         )
         self._retriever = EmbeddingRetriever(
             top_k=3, index_store=self._graph_base, retrieve_strategy=RetrieverStrategy.GRAPH
@@ -135,7 +137,7 @@ class GraphKnowledgeBase(KnowledgeBase):
 
     def retrieve(self, query) -> KnowledgeChunk:
         chunks = run_async_function(
-            self._graph_base.asimilar_search_with_scores, query=query, score_threshold=0.3
+            self._graph_base.asimilar_search_with_scores, text=query, topk=3, score_threshold=0.3
         )
         knowledge_chunks = [
             KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content)
@@ -149,4 +151,4 @@ class GraphKnowledgeBase(KnowledgeBase):
             self.delete_document(self._chunk_id_dict[file_path])
 
     def delete(self):
-        self._graph_base._clean_persist_folder()
+        self._graph_base.delete_vector_name("")
