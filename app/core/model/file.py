@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
+
 class File:
     """File class"""
 
@@ -17,7 +18,7 @@ class File:
         self._path = path
         self._type = type
         self._session_id = session_id
-    
+
     def get_payload(self) -> str:
         """Get the content of the file."""
         return ""

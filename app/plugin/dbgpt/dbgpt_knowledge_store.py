@@ -32,7 +32,7 @@ class VectorKnowledgeStore(KnowledgeStore):
             embedding_fn=DefaultEmbeddingFactory.remote(
                 api_url=SystemEnv.EMBEDDING_MODEL_API_URL,
                 api_key=SystemEnv.EMBEDDING_API_KEY,
-                model_name=SystemEnv.EMBEDDING_MODEL_NAME
+                model_name=SystemEnv.EMBEDDING_MODEL_NAME,
             ),
         )
         self._retriever = EmbeddingRetriever(
@@ -56,10 +56,10 @@ class VectorKnowledgeStore(KnowledgeStore):
         self._chunk_id_dict[file_path] = ",".join(chunk_ids)
         return ",".join(chunk_ids)
 
-    def delete_document(self, chunk_ids):
+    def delete_document(self, chunk_ids) -> None:
         self._vector_base.delete_by_ids(chunk_ids)
 
-    def update_document(self, file_path, chunk_ids):
+    def update_document(self, file_path, chunk_ids) -> str:
         self.delete_document(chunk_ids)
         return run_async_function(self.load_document, file_path=file_path)
 
@@ -68,17 +68,16 @@ class VectorKnowledgeStore(KnowledgeStore):
             self._retriever.aretrieve_with_scores, query=query, score_threshold=0.3
         )
         knowledge_chunks = [
-            KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content)
-            for chunk in chunks
+            KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content) for chunk in chunks
         ]
         return knowledge_chunks
 
-    def clear(self):
+    def clear(self) -> None:
         file_path_list = list(self._chunk_id_dict.keys)
         for file_path in file_path_list:
             self.delete_document(self._chunk_id_dict[file_path])
 
-    def drop(self):
+    def drop(self) -> None:
         self._vector_base._clean_persist_folder()
 
 
@@ -93,14 +92,16 @@ class GraphKnowledgeStore(KnowledgeStore):
             port="7687",
             enable_summary="True",
         )
-        vector_store_config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH)
+        vector_store_config = ChromaVectorConfig(
+            persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH
+        )
         self._graph_base = CommunitySummaryKnowledgeGraph(
             config=config,
             name=name,
             embedding_fn=DefaultEmbeddingFactory.remote(
                 api_url=SystemEnv.EMBEDDING_MODEL_API_URL,
                 api_key=SystemEnv.EMBEDDING_API_KEY,
-                model_name=SystemEnv.EMBEDDING_MODEL_NAME
+                model_name=SystemEnv.EMBEDDING_MODEL_NAME,
             ),
             llm_client=ModelServiceFactory.create(platform_type=PlatformType.DBGPT)._llm_client,
             kg_document_graph_enabled=True,
@@ -112,7 +113,7 @@ class GraphKnowledgeStore(KnowledgeStore):
         )
         self._chunk_id_dict = {}
 
-    def load_document(self, file_path, config=None):
+    def load_document(self, file_path, config=None) -> str:
         knowledge = KnowledgeFactory.from_file_path(file_path)
         if config:
             chunk_parameters = ChunkParameters(
@@ -130,10 +131,10 @@ class GraphKnowledgeStore(KnowledgeStore):
         self._chunk_id_dict[file_path] = ",".join(chunk_ids)
         return ",".join(chunk_ids)
 
-    def delete_document(self, chunk_ids):
+    def delete_document(self, chunk_ids) -> None:
         self._graph_base.delete_by_ids(chunk_ids)
 
-    def update_document(self, file_path, chunk_ids):
+    def update_document(self, file_path, chunk_ids) -> str:
         self.delete_document(chunk_ids)
         return run_async_function(self.load_document, file_path=file_path)
 
@@ -142,15 +143,14 @@ class GraphKnowledgeStore(KnowledgeStore):
             self._graph_base.asimilar_search_with_scores, text=query, topk=3, score_threshold=0.3
         )
         knowledge_chunks = [
-            KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content)
-            for chunk in chunks
+            KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content) for chunk in chunks
         ]
         return knowledge_chunks
 
-    def clear(self):
+    def clear(self) -> None:
         file_path_list = list(self._chunk_id_dict.keys)
         for file_path in file_path_list:
             self.delete_document(self._chunk_id_dict[file_path])
 
-    def drop(self):
+    def drop(self) -> None:
         self._graph_base.delete_vector_name("")

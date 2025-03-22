@@ -65,6 +65,7 @@ class JobStatus(Enum):
     FAILED = "FAILED"
     STOPPED = "STOPPED"
 
+
 class KnowledgeBaseType(Enum):
     """Knowledge base type."""
 

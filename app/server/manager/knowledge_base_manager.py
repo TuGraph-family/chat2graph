@@ -75,9 +75,7 @@ class KnowledgeBaseManager:
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing edit status and success message
         """
-        self._knowledge_base_service.edit_knowledge_base(
-            id=id, name=name, description=description
-        )
+        self._knowledge_base_service.edit_knowledge_base(id=id, name=name, description=description)
         return {}, f"Knowledge base with ID {id} edited successfully"
 
     def delete_knowledge_base(self, id: str) -> Tuple[Dict[str, Any], str]:
@@ -100,8 +98,12 @@ class KnowledgeBaseManager:
             Tuple[List[dict], str]: A tuple containing a list of knowledge base details and success
                 message
         """
-        global_knowledge_base, local_knowledge_bases = self._knowledge_base_service.get_all_knowledge_bases()
-        data = self._knowledge_base_view.serialize_knowledge_bases(global_knowledge_base, local_knowledge_bases)
+        global_knowledge_base, local_knowledge_bases = (
+            self._knowledge_base_service.get_all_knowledge_bases()
+        )
+        data = self._knowledge_base_view.serialize_knowledge_bases(
+            global_knowledge_base, local_knowledge_bases
+        )
 
         return data, "Get all knowledge bases successfully"
 

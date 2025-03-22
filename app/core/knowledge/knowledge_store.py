@@ -11,15 +11,15 @@ class KnowledgeStore(ABC):
         """Init knowledge store."""
 
     @abstractmethod
-    def load_document(self, file_path) -> List[str]:
+    def load_document(self, file_path) -> str:
         """Load document."""
 
     @abstractmethod
-    def delete_document(self, chunk_ids):
+    def delete_document(self, chunk_ids) -> None:
         """Delete document."""
 
     @abstractmethod
-    def update_document(self, file_path, chunk_ids) -> List[str]:
+    def update_document(self, file_path, chunk_ids) -> str:
         """Update document."""
 
     @abstractmethod
@@ -27,9 +27,9 @@ class KnowledgeStore(ABC):
         """retrieve knowledge from knowledge store."""
 
     @abstractmethod
-    def clear(self):
+    def clear(self) -> None:
         """clear all knowledge in knowledge store."""
 
     @abstractmethod
-    def drop(self):
+    def drop(self) -> None:
         """drop the entire knowledge store persistance data."""

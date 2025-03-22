@@ -1,7 +1,6 @@
 from typing import Any, Dict, List
 
 from app.core.model.knowledge_base import KnowledgeBase
-    
 
 
 class KnowledgeBaseViewTransformer:
@@ -26,10 +25,14 @@ class KnowledgeBaseViewTransformer:
         }
 
     @staticmethod
-    def serialize_knowledge_bases(global_knowledge_base: KnowledgeBase, local_knowledge_bases: List[KnowledgeBase]) -> List[Dict[str, Any]]:
+    def serialize_knowledge_bases(
+        global_knowledge_base: KnowledgeBase, local_knowledge_bases: List[KnowledgeBase]
+    ) -> List[Dict[str, Any]]:
         """Serialize a list of knowledge base to a list of API response dictionaries"""
         return {
-            "global_knowledge_base": {"file_count": len(global_knowledge_base.file_descriptor_list)},
+            "global_knowledge_base": {
+                "file_count": len(global_knowledge_base.file_descriptor_list)
+            },
             "local_knowledge_base": [
                 {
                     "id": kb.id,

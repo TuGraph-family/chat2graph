@@ -36,6 +36,7 @@ async def test_vector_knowledge_base():
     chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
 
+
 async def test_graph_knowledge_base():
     chunks = GraphKnowledgeStore("test_graph_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) == 0
@@ -45,6 +46,7 @@ async def test_graph_knowledge_base():
     )
     chunks = GraphKnowledgeStore("test_graph_knowledge_base").retrieve("what is awel talk about")
     assert len(chunks) != 0
+
 
 async def test_knowledge_base_service():
     job = SubJob(

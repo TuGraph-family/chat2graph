@@ -43,7 +43,9 @@ class FileService(metaclass=Singleton):
             file_path = os.path.join(md5_folder, file.filename)
             file.seek(0)
             file.save(file_path)
-        result = self._file_dao.create(name=file.filename, path=md5_folder, type="local", session_id=session_id)
+        result = self._file_dao.create(
+            name=file.filename, path=md5_folder, type="local", session_id=session_id
+        )
         return result.id
 
     def delete_file(self, id):
@@ -70,5 +72,5 @@ class FileService(metaclass=Singleton):
         path = file.path
         file_name = os.listdir(path)[0]
         file_path = os.path.join(path, file_name)
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             return f.read()

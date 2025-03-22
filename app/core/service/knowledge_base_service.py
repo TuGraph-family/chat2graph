@@ -27,7 +27,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         self._file_dao: FileDao = FileDao.instance
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
         # create global knowledge store
-        self._global_knowledge_store: KnowledgeStore = KnowledgeStoreFactory.get_or_create("global_knowledge_store")
+        self._global_knowledge_store: KnowledgeStore = KnowledgeStoreFactory.get_or_create(
+            "global_knowledge_store"
+        )
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -222,7 +224,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         # load file to knowledge base
         try:
             if knowledge_base_id != GLOBAL_KB_ID:
-                chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(file_path, config)
+                chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(
+                    file_path, config
+                )
             else:
                 chunk_ids = self._global_knowledge_store.load_document(file_path, config)
         except Exception as e:
@@ -248,7 +252,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         FileService.instance.delete_file(id=file_id)
         # update knowledge base timestamp
         if knowledge_base_id != GLOBAL_KB_ID:
-            self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=func.strftime("%s", "now"))
+            self._knowledge_base_dao.update(
+                id=knowledge_base_id, timestamp=func.strftime("%s", "now")
+            )
 
     def __delete__(self):
         self._global_knowledge_base.clear()
