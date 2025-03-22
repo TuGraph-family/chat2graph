@@ -1,16 +1,7 @@
 from app.core.model.message import Message
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
-
-KNOWLEDGE_PROMPT = """
-All related knowledges retrieved from the knowledge base are listed below.
-
-[Knowledges From Gloabal Knowledge Base]:
-{global_knowledges}
-
-[Knowledges From Local Knowledge Base]:
-{local_knowledges}
-"""
+from app.core.prompt.knowledge import KNOWLEDGE_PROMPT
 
 @dataclass
 class KnowledgeChunk:
