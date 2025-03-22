@@ -13,7 +13,7 @@ class FileService(metaclass=Singleton):
     """File Service"""
 
     def __init__(self):
-        self._dao: FileDao = FileDao.instance
+        self._file_dao: FileDao = FileDao.instance
         self._upload_folder = SystemEnv.APP_ROOT + "/uploads"
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
@@ -43,7 +43,7 @@ class FileService(metaclass=Singleton):
             file_path = os.path.join(md5_folder, file.filename)
             file.seek(0)
             file.save(file_path)
-        result = self._dao.create(name=file.filename, path=md5_folder)
+        result = self._file_dao.create(name=file.filename, path=md5_folder)
         return result.id
 
     def delete_file(self, id):
@@ -55,10 +55,10 @@ class FileService(metaclass=Singleton):
             session_id (str): ID of the session
         """
         # delete the file
-        file = self._dao.get_by_id(id=id)
+        file = self._file_dao.get_by_id(id=id)
         path = file.path
-        self._dao.delete(id=id)
-        results = self._dao.filter_by(path=path)
+        self._file_dao.delete(id=id)
+        results = self._file_dao.filter_by(path=path)
         if len(results) == 0:
             for file_name in os.listdir(path):
                 file_path = os.path.join(path, file_name)

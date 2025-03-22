@@ -99,10 +99,11 @@ class KnowledgeBaseService(metaclass=Singleton):
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
             raise ValueError(f"Knowledge base with ID {id} not found")
-        # delte all related file from db
-        files = self._file_kb_mapping_dao.filter_by(kb_id=id)
-        for file in files:
-            FileService.instance.delete_file(id=file.id)
+        # delte all related file and file_kb_mapping from db
+        mappings = self._file_kb_mapping_dao.filter_by(kb_id=id)
+        for mapping in mappings:
+            self._file_kb_mapping_dao.delete(id=mapping.id)
+            FileService.instance.delete_file(id=mapping.id)
         # delete kb from db
         self._knowledge_base_dao.delete(id=id)
         # delete knolwledge base folder
@@ -199,6 +200,8 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete related chunks from knowledge base
         if kb.knowledge_type == "vector":
             VectorKnowledgeBase(knowledge_base_id).delete_document(chunk_ids)
+        # delete related file_kb_mapping
+        self._file_kb_mapping_dao.delete(id=file_id)
         # delete related virtual file
         FileService.instance.delete_file(id=file_id)
         # update knowledge base timestamp
