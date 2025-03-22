@@ -64,3 +64,9 @@ class JobStatus(Enum):
     FINISHED = "FINISHED"
     FAILED = "FAILED"
     STOPPED = "STOPPED"
+
+class KnowledgeBaseType(Enum):
+    """Knowledge base type."""
+
+    VECTOR = "VECTOR"
+    GRAPH = "GRAPH"
