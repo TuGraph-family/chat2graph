@@ -61,11 +61,15 @@ class VectorKnowledgeBase(KnowledgeBase):
         self.delete_document(chunk_ids)
         return run_async_function(self.load_document, file_path=file_path)
 
-    def retrieve(self, query):
+    def retrieve(self, query) -> KnowledgeChunk:
         chunks = run_async_function(
             self._retriever.aretrieve_with_scores, query=query, score_threshold=0.3
         )
-        return chunks
+        knowledge_chunks = [
+            KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content)
+            for chunk in chunks
+        ]
+        return knowledge_chunks
 
     def clear(self):
         file_path_list = list(self._chunk_id_dict.keys)
@@ -134,7 +138,7 @@ class GraphKnowledgeBase(KnowledgeBase):
             self._graph_base.asimilar_search_with_scores, query=query, score_threshold=0.3
         )
         knowledge_chunks = [
-            KnowledgeChunk(content_name=chunk.content_name, content=chunk.content)
+            KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content)
             for chunk in chunks
         ]
         return knowledge_chunks
