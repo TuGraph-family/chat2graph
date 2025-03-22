@@ -53,5 +53,5 @@ async def test_knowledge_base_service():
     knowledge = KnowledgeBaseService.instance.get_knowledge(
         query="what is awel talk about", job=job
     )
-    assert "[Knowledges From Gloabal Knowledge Base]" in knowledge.get_payload()
+    assert "[Knowledges From Global Knowledge Base]" in knowledge.get_payload()
     assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()

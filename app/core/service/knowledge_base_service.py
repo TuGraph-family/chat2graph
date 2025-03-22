@@ -8,7 +8,7 @@ from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileKbMappingDao
 from app.core.dal.dao.file_dao import FileDao
 from app.core.model.knowledge_base import KnowledgeBase
 from app.core.model.knowledge import Knowledge
-from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeBase
+from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore
 from dbgpt.core import Chunk
 from app.core.common.system_env import SystemEnv
 from app.core.service.file_service import FileService
@@ -20,7 +20,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
     def __init__(self):
         self._global_knowledge_path = SystemEnv.APP_ROOT + "/global_knowledge"
-        self._global_knowledge_base = VectorKnowledgeBase("global_knowledge_base")
+        self._global_knowledge_base = VectorKnowledgeStore("global_knowledge_base")
         for root, dirs, files in os.walk(self._global_knowledge_path):
             for file in files:
                 self._global_knowledge_base.load_document(root + "/" + file)
@@ -120,7 +120,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete kb from db
         self._knowledge_base_dao.delete(id=id)
         # delete knolwledge base folder
-        VectorKnowledgeBase(id).delete()
+        VectorKnowledgeStore(id).delete()
 
     def get_all_knowledge_bases(self) -> tuple[KnowledgeBase, List[KnowledgeBase]]:
         """Get all knowledge bases.
@@ -184,7 +184,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             kb = kbs[0]
             knowledge_base_id = kb.id
             if kb.knowledge_type == "vector":
-                local_chunks = VectorKnowledgeBase(knowledge_base_id).retrieve(query)
+                local_chunks = VectorKnowledgeStore(knowledge_base_id).retrieve(query)
         else:
             local_chunks = []
         return Knowledge(global_chunks, local_chunks)
@@ -217,7 +217,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # load file to knowledge base
         try:
             if kb.knowledge_type == "vector":
-                chunk_ids = VectorKnowledgeBase(knowledge_base_id).load_document(file_path, config)
+                chunk_ids = VectorKnowledgeStore(knowledge_base_id).load_document(file_path, config)
         except Exception as e:
             self._file_kb_mapping_dao.update(id=file_id, status="fail")
             raise e
@@ -234,7 +234,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # delete related chunks from knowledge base
         if kb.knowledge_type == "vector":
-            VectorKnowledgeBase(knowledge_base_id).delete_document(chunk_ids)
+            VectorKnowledgeStore(knowledge_base_id).delete_document(chunk_ids)
         # delete related file_kb_mapping
         self._file_kb_mapping_dao.delete(id=file_id)
         # delete related virtual file
