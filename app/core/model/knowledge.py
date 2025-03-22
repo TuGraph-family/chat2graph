@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from app.core.prompt.knowledge import KNOWLEDGE_PROMPT
 
+
 @dataclass
 class KnowledgeChunk:
     """Knowledge Chunk class"""
@@ -11,8 +12,7 @@ class KnowledgeChunk:
     content: str
 
 
-
-class Knowledge():
+class Knowledge:
     """Knowledge"""
 
     def __init__(

@@ -121,21 +121,24 @@ class GraphKnowledgeBase(KnowledgeBase):
         chunk_ids = run_async_function(assembler.apersist)
         self._chunk_id_dict[file_path] = ",".join(chunk_ids)
         return ",".join(chunk_ids)
-    
+
     def delete_document(self, chunk_ids):
         self._graph_base.delete_by_ids(chunk_ids)
 
     def update_document(self, file_path, chunk_ids):
         self.delete_document(chunk_ids)
         return run_async_function(self.load_document, file_path=file_path)
-    
+
     def retrieve(self, query) -> KnowledgeChunk:
         chunks = run_async_function(
             self._graph_base.asimilar_search_with_scores, query=query, score_threshold=0.3
         )
-        knowledge_chunks = [KnowledgeChunk(content_name=chunk.content_name, content=chunk.content) for chunk in chunks]
+        knowledge_chunks = [
+            KnowledgeChunk(content_name=chunk.content_name, content=chunk.content)
+            for chunk in chunks
+        ]
         return knowledge_chunks
-    
+
     def clear(self):
         file_path_list = list(self._chunk_id_dict.keys)
         for file_path in file_path_list:

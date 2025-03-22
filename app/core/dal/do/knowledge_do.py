@@ -24,9 +24,9 @@ class FileKbMappingDo(Do):  # type: ignore
 
     __tablename__ = "file_kb_mapping"
 
-    id = Column(String(36), primary_key=True) # FK constraint
+    id = Column(String(36), primary_key=True)  # FK constraint
     name = Column(Text)
-    kb_id = Column(String(36)) # FK constraint
+    kb_id = Column(String(36))  # FK constraint
     chunk_ids = Column(Text)
     status = Column(String(36))
     config = Column(Text)
