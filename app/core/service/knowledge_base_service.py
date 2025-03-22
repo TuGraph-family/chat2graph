@@ -8,6 +8,8 @@ from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileKbMappingDao
 from app.core.dal.dao.file_dao import FileDao
 from app.core.model.knowledge_base import KnowledgeBase
 from app.core.model.knowledge import Knowledge
+from app.core.knowledge.knowledge_store import KnowledgeStore
+from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore
 from dbgpt.core import Chunk
 from app.core.common.system_env import SystemEnv
@@ -19,11 +21,12 @@ class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
 
     def __init__(self):
-        self._global_knowledge_path = SystemEnv.APP_ROOT + "/global_knowledge"
-        self._global_knowledge_base = VectorKnowledgeStore("global_knowledge_base")
-        for root, dirs, files in os.walk(self._global_knowledge_path):
-            for file in files:
-                self._global_knowledge_base.load_document(root + "/" + file)
+        # self._global_knowledge_path = SystemEnv.APP_ROOT + "/global_knowledge"
+        # self._global_knowledge_base = VectorKnowledgeStore("global_knowledge_base")
+        # for root, dirs, files in os.walk(self._global_knowledge_path):
+        #     for file in files:
+        #         self._global_knowledge_base.load_document(root + "/" + file)
+        self._global_knowledge_store: KnowledgeStore = KnowledgeStoreFactory.get_or_create("global_knowledge_store")
         self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
         self._file_dao: FileDao = FileDao.instance
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance

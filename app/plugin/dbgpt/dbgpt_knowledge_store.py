@@ -29,11 +29,11 @@ class VectorKnowledgeStore(KnowledgeStore):
         self._vector_base = ChromaStore(
             config,
             name=name,
-            embedding_fn=DefaultEmbeddingFactory(
-                default_model_name=os.path.join(
-                    SystemEnv.APP_ROOT + "/models", SystemEnv.EMBEDDING_MODEL
-                ),
-            ).create(),
+            embedding_fn=DefaultEmbeddingFactory.remote(
+                api_url=SystemEnv.EMBEDDING_MODEL_API_URL,
+                api_key=SystemEnv.EMBEDDING_API_KEY,
+                model_name=SystemEnv.EMBEDDING_MODEL_NAME
+            ),
         )
         self._retriever = EmbeddingRetriever(
             top_k=3,
@@ -97,11 +97,11 @@ class GraphKnowledgeStore(KnowledgeStore):
         self._graph_base = CommunitySummaryKnowledgeGraph(
             config=config,
             name=name,
-            embedding_fn=DefaultEmbeddingFactory(
-                default_model_name=os.path.join(
-                    SystemEnv.APP_ROOT + "/models", SystemEnv.EMBEDDING_MODEL
-                ),
-            ).create(),
+            embedding_fn=DefaultEmbeddingFactory.remote(
+                api_url=SystemEnv.EMBEDDING_MODEL_API_URL,
+                api_key=SystemEnv.EMBEDDING_API_KEY,
+                model_name=SystemEnv.EMBEDDING_MODEL_NAME
+            ),
             llm_client=ModelServiceFactory.create(platform_type=PlatformType.DBGPT)._llm_client,
             kg_document_graph_enabled=True,
             kg_triplet_graph_enabled=True,

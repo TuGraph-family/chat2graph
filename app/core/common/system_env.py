@@ -29,7 +29,9 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
         str,
         f"{os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))}/.chat2graph",
     ),
-    "EMBEDDING_MODEL": (str, "text2vec-large-chinese"),
+    "EMBEDDING_MODEL_NAME": (str, "text-embedding-3-small"),
+    "EMBEDDING_MODEL_API_URL": (str, "https://api.openai-proxy.org/v1/embeddings"),
+    "EMBEDDING_API_KEY": (str, None),
     "KNOWLEDGE_STORE_TYPE": (KnowledgeBaseType, KnowledgeBaseType.VECTOR),
 }
 

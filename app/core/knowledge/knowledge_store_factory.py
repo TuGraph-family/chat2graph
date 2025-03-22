@@ -10,9 +10,9 @@ class KnowledgeStoreFactory:
     @classmethod
     def get_or_create(cls, name: str) -> KnowledgeStore:
         """Get ore create a knowledge store."""
-        if SystemEnv.NOWLEDGE_STORE_TYPE == KnowledgeBaseType.VECTOR:
+        if SystemEnv.KNOWLEDGE_STORE_TYPE == KnowledgeBaseType.VECTOR:
             return VectorKnowledgeStore(name)
-        elif SystemEnv.NOWLEDGE_STORE_TYPE == KnowledgeBaseType.GRAPH:
+        elif SystemEnv.KNOWLEDGE_STORE_TYPE == KnowledgeBaseType.GRAPH:
             return GraphKnowledgeStore(name)
 
         raise ValueError(f"Cannot create knowledge store of type {SystemEnv.NOWLEDGE_STORE_TYPE}")
