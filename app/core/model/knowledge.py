@@ -17,9 +17,11 @@ class Knowledge:
 
     def __init__(
         self,
-        global_chunks: Optional[List[KnowledgeChunk]],
-        local_chunks: Optional[List[KnowledgeChunk]],
+        global_chunks: List[KnowledgeChunk],
+        local_chunks: List[KnowledgeChunk],
     ):
+        self._global_chunks = global_chunks
+        self._local_chunks = local_chunks
         global_knowledges = ""
         for chunk in global_chunks:
             global_knowledges += f"chunk_name:{chunk.chunk_name}\n"
@@ -41,6 +43,6 @@ class Knowledge:
     def copy(self) -> Any:
         """Copy the knowledge."""
         return Knowledge(
-            global_chunk_list=self._global_chunk_list,
-            local_chunk_list=self._local_chunk_list,
+            global_chunks=self._global_chunks,
+            local_chunks=self._local_chunks,
         )

@@ -90,7 +90,7 @@ class KnowledgeBaseManager:
         self._knowledge_base_service.delete_knowledge_base(id=id)
         return {}, f"Knowledge base with ID {id} deleted successfully"
 
-    def get_all_knowledge_bases(self) -> Tuple[List[dict], str]:
+    def get_all_knowledge_bases(self) -> Tuple[dict, str]:
         """
         Get all knowledge bases.
 

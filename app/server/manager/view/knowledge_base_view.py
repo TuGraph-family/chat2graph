@@ -27,7 +27,7 @@ class KnowledgeBaseViewTransformer:
     @staticmethod
     def serialize_knowledge_bases(
         global_knowledge_base: KnowledgeBase, local_knowledge_bases: List[KnowledgeBase]
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """Serialize a list of knowledge base to a list of API response dictionaries"""
         return {
             "global_knowledge_base": {

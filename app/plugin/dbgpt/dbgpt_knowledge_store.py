@@ -1,5 +1,4 @@
-import os
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from app.core.knowledge.knowledge_store import KnowledgeStore
 
@@ -63,7 +62,7 @@ class VectorKnowledgeStore(KnowledgeStore):
         self.delete_document(chunk_ids)
         return run_async_function(self.load_document, file_path=file_path)
 
-    def retrieve(self, query) -> KnowledgeChunk:
+    def retrieve(self, query) -> List[KnowledgeChunk]:
         chunks = run_async_function(
             self._retriever.aretrieve_with_scores, query=query, score_threshold=0.3
         )
@@ -138,7 +137,7 @@ class GraphKnowledgeStore(KnowledgeStore):
         self.delete_document(chunk_ids)
         return run_async_function(self.load_document, file_path=file_path)
 
-    def retrieve(self, query) -> KnowledgeChunk:
+    def retrieve(self, query) -> List[KnowledgeChunk]:
         chunks = run_async_function(
             self._graph_base.asimilar_search_with_scores, text=query, topk=3, score_threshold=0.3
         )

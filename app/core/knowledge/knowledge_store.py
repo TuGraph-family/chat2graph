@@ -23,7 +23,7 @@ class KnowledgeStore(ABC):
         """Update document."""
 
     @abstractmethod
-    def retrieve(self, query) -> KnowledgeChunk:
+    def retrieve(self, query) -> List[KnowledgeChunk]:
         """retrieve knowledge from knowledge store."""
 
     @abstractmethod

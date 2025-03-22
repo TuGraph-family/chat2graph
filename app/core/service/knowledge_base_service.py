@@ -1,5 +1,4 @@
-import time
-from typing import Any, Dict, List
+from typing import Any, List
 import os
 import json
 
@@ -10,9 +9,6 @@ from app.core.model.knowledge_base import KnowledgeBase
 from app.core.model.knowledge import Knowledge
 from app.core.knowledge.knowledge_store import KnowledgeStore
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
-from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore
-from dbgpt.core import Chunk
-from app.core.common.system_env import SystemEnv
 from app.core.service.file_service import FileService
 from sqlalchemy import func
 
@@ -49,16 +45,16 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=name, knowledge_type=knowledge_type, session_id=session_id
         )
         return KnowledgeBase(
-            id=result.id,
-            name=result.name,
-            knowledge_type=result.knowledge_type,
-            session_id=result.session_id,
+            id=str(result.id),
+            name=str(result.name),
+            knowledge_type=str(result.knowledge_type),
+            session_id=str(result.session_id),
             file_descriptor_list=[],
             description="",
-            timestamp=result.timestamp,
+            timestamp=int(result.timestamp),
         )
 
-    def get_knowledge_base(self, id: str) -> Knowledge:
+    def get_knowledge_base(self, id: str) -> KnowledgeBase:
         """Get a knowledge base by ID.
 
         Args:
@@ -68,30 +64,33 @@ class KnowledgeBaseService(metaclass=Singleton):
         """
         # fetch the knowledge base
         result = self._knowledge_base_dao.get_by_id(id=id)
-        # fetch all related file_kb_mapping
-        mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
-        file_descriptor_list = [
-            {
-                "name": mapping.name,
-                "type": mapping.type,
-                "size": mapping.size,
-                "status": mapping.status,
-                "time_stamp": mapping.timestamp,
-                "file_id": mapping.id,
-            }
-            for mapping in mappings
-        ]
-        if not result:
-            raise ValueError(f"Knowledge base with ID {id} not found")
-        return KnowledgeBase(
-            id=result.id,
-            name=result.name,
-            knowledge_type=result.knowledge_type,
-            session_id=result.session_id,
-            file_descriptor_list=file_descriptor_list,
-            description=result.description,
-            timestamp=result.timestamp,
-        )
+        if result:
+            # fetch all related file_kb_mapping
+            mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
+            file_descriptor_list = [
+                {
+                    "name": mapping.name,
+                    "type": mapping.type,
+                    "size": mapping.size,
+                    "status": mapping.status,
+                    "time_stamp": mapping.timestamp,
+                    "file_id": mapping.id,
+                }
+                for mapping in mappings
+            ]
+            if not result:
+                raise ValueError(f"Knowledge base with ID {id} not found")
+            return KnowledgeBase(
+                id=str(result.id),
+                name=str(result.name),
+                knowledge_type=str(result.knowledge_type),
+                session_id=str(result.session_id),
+                file_descriptor_list=file_descriptor_list,
+                description=str(result.description),
+                timestamp=int(result.timestamp),
+            )
+        else:
+            raise ValueError(f"Cannot find knowledge base with ID {id}")
 
     def edit_knowledge_base(self, id: str, name: str, description: str):
         """edit a knowledge base by ID.
@@ -118,8 +117,8 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delte all related file and file_kb_mapping from db
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=id)
         for mapping in mappings:
-            self._file_kb_mapping_dao.delete(id=mapping.id)
-            FileService.instance.delete_file(id=mapping.id)
+            self._file_kb_mapping_dao.delete(id=str(mapping.id))
+            FileService.instance.delete_file(id=str(mapping.id))
         # delete kb from db
         self._knowledge_base_dao.delete(id=id)
         # delete knolwledge base folder
@@ -172,13 +171,13 @@ class KnowledgeBaseService(metaclass=Singleton):
             ]
             local_kbs.append(
                 KnowledgeBase(
-                    id=result.id,
-                    name=result.name,
-                    knowledge_type=result.knowledge_type,
-                    session_id=result.session_id,
+                    id=str(result.id),
+                    name=str(result.name),
+                    knowledge_type=str(result.knowledge_type),
+                    session_id=str(result.session_id),
                     file_descriptor_list=file_descriptor_list,
-                    description=result.description,
-                    timestamp=result.timestamp,
+                    description=str(result.description),
+                    timestamp=int(result.timestamp),
                 )
             )
         return global_kb, local_kbs
@@ -192,7 +191,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         if len(kbs) == 1:
             kb = kbs[0]
             knowledge_base_id = kb.id
-            local_chunks = KnowledgeStoreFactory.get_or_create(knowledge_base_id).retrieve(query)
+            local_chunks = KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).retrieve(
+                query
+            )
         else:
             local_chunks = []
         return Knowledge(global_chunks, local_chunks)

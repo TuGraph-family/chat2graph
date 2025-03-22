@@ -36,5 +36,5 @@ class FileManager:
             Tuple[Dict[str, Any], str]: A tuple containing deletion status and success message
         """
         self._file_service.delete_file(id)
-        data = {}
+        data: dict = {}
         return data, "File deleted successfully"

@@ -46,7 +46,7 @@ class FileService(metaclass=Singleton):
         result = self._file_dao.create(
             name=file.filename, path=md5_folder, type="local", session_id=session_id
         )
-        return result.id
+        return str(result.id)
 
     def delete_file(self, id):
         """Delete a file with ID.
@@ -69,8 +69,11 @@ class FileService(metaclass=Singleton):
 
     def get_file_payload(self, id) -> str:
         file = self._file_dao.get_by_id(id=id)
-        path = file.path
-        file_name = os.listdir(path)[0]
-        file_path = os.path.join(path, file_name)
-        with open(file_path, "r") as f:
-            return f.read()
+        if file:
+            path = file.path
+            file_name = os.listdir(path)[0]
+            file_path = os.path.join(path, file_name)
+            with open(file_path, "r") as f:
+                return f.read()
+        else:
+            raise ValueError("Cannot find file with ID {id}.")
