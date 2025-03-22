@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple, Type
 
 from dotenv import load_dotenv
 
-from app.core.common.type import PlatformType
+from app.core.common.type import PlatformType, KnowledgeBaseType
 
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {
@@ -30,6 +30,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
         f"{os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))}/.chat2graph",
     ),
     "EMBEDDING_MODEL": (str, "text2vec-large-chinese"),
+    "KNOWLEDGE_STORE_TYPE": (KnowledgeBaseType, KnowledgeBaseType.VECTOR),
 }
 
 # system environment variable value cache.
