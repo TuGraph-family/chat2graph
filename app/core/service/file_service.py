@@ -24,7 +24,7 @@ class FileService(metaclass=Singleton):
             file_hash.update(chunk)
         return file_hash.hexdigest()
 
-    def upload_file(self, file: FileStorage) -> str:
+    def upload_file(self, file: FileStorage, session_id: str) -> str:
         """Upload a new file.
 
         Args:
@@ -43,7 +43,7 @@ class FileService(metaclass=Singleton):
             file_path = os.path.join(md5_folder, file.filename)
             file.seek(0)
             file.save(file_path)
-        result = self._file_dao.create(name=file.filename, path=md5_folder)
+        result = self._file_dao.create(name=file.filename, path=md5_folder, type="local", session_id=session_id)
         return result.id
 
     def delete_file(self, id):
