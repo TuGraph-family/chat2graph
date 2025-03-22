@@ -22,10 +22,11 @@ class KnowledgeBaseViewTransformer:
             "session_id": knowledge_base.session_id,
             "time_stamp": knowledge_base.timestamp,
             "files": knowledge_base.file_descriptor_list,
+            "description": knowledge_base.description,
         }
 
     @staticmethod
-    def serialize_messages(global_knowledge_base: KnowledgeBase, local_knowledge_bases: List[KnowledgeBase]) -> List[Dict[str, Any]]:
+    def serialize_knowledge_bases(global_knowledge_base: KnowledgeBase, local_knowledge_bases: List[KnowledgeBase]) -> List[Dict[str, Any]]:
         """Serialize a list of knowledge base to a list of API response dictionaries"""
         return {
             "global_knowledge_base": {"file_count": len(global_knowledge_base.file_descriptor_list)},

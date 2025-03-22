@@ -27,10 +27,6 @@ class KnowledgeBaseService(metaclass=Singleton):
         self._file_dao: FileDao = FileDao.instance
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
         # create global knowledge store
-        if self._knowledge_base_dao.get_by_id(id=GLOBAL_KB_ID) == None:
-            self._knowledge_base_dao.create(
-                id=GLOBAL_KB_ID, name="global_knowledge_store", knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.name.lower(), session_id=""
-            )
         self._global_knowledge_store: KnowledgeStore = KnowledgeStoreFactory.get_or_create("global_knowledge_store")
 
     def create_knowledge_base(
@@ -55,7 +51,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=result.name,
             knowledge_type=result.knowledge_type,
             session_id=result.session_id,
-            files=[],
+            file_descriptor_list=[],
             description="",
             timestamp=result.timestamp,
         )
@@ -125,7 +121,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete kb from db
         self._knowledge_base_dao.delete(id=id)
         # delete knolwledge base folder
-        VectorKnowledgeStore(id).delete()
+        KnowledgeStoreFactory.get_or_create(id).drop()
 
     def get_all_knowledge_bases(self) -> tuple[KnowledgeBase, List[KnowledgeBase]]:
         """Get all knowledge bases.
@@ -136,7 +132,6 @@ class KnowledgeBaseService(metaclass=Singleton):
         # get local knowledge bases
         results = self._knowledge_base_dao.get_all()
         # get global knowledge base
-        global_kb = self._knowledge_base_dao.get_by_id(id=GLOBAL_KB_ID)
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=GLOBAL_KB_ID)
         global_file_descriptor_list = [
             {
@@ -150,13 +145,13 @@ class KnowledgeBaseService(metaclass=Singleton):
             for mapping in mappings
         ]
         global_kb = KnowledgeBase(
-            id=global_kb.id,
-            name=global_kb.name,
-            knowledge_type=global_kb.knowledge_type,
-            session_id=global_kb.session_id,
+            id=GLOBAL_KB_ID,
+            name="global_knowledge_store",
+            knowledge_type="",
+            session_id="",
             file_descriptor_list=global_file_descriptor_list,
-            description=global_kb.description,
-            timestamp=global_kb.timestamp,
+            description="",
+            timestamp=0,
         )
         # get local knowledge bases
         local_kbs = []
@@ -207,8 +202,6 @@ class KnowledgeBaseService(metaclass=Singleton):
         folder_path = file.path
         file_name = file.name
         file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
-        # get kb with kb_id
-        kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # add file_kb_mapping
         if self._file_kb_mapping_dao.get_by_id(id=file_id) == None:
             self._file_kb_mapping_dao.create(
@@ -221,13 +214,17 @@ class KnowledgeBaseService(metaclass=Singleton):
                 type="local",
             )
         # update knowledge base timestamp
-        timestamp = self._file_kb_mapping_dao.get_by_id(id=file_id).timestamp
-        self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
+        if knowledge_base_id != GLOBAL_KB_ID:
+            timestamp = self._file_kb_mapping_dao.get_by_id(id=file_id).timestamp
+            self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
         # load config
         config = json.loads(config)
         # load file to knowledge base
         try:
-            chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(file_path, config)
+            if knowledge_base_id != GLOBAL_KB_ID:
+                chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(file_path, config)
+            else:
+                chunk_ids = self._global_knowledge_store.load_document(file_path, config)
         except Exception as e:
             self._file_kb_mapping_dao.update(id=file_id, status="fail")
             raise e
@@ -240,16 +237,18 @@ class KnowledgeBaseService(metaclass=Singleton):
         file_kb_mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
         chunk_ids = file_kb_mapping.chunk_ids
         knowledge_base_id = file_kb_mapping.kb_id
-        # get kb with kb_id
-        kb = self._knowledge_base_dao.get_by_id(id=knowledge_base_id)
         # delete related chunks from knowledge base
-        KnowledgeStoreFactory.get_or_create(knowledge_base_id).delete_document(chunk_ids)
+        if knowledge_base_id != GLOBAL_KB_ID:
+            KnowledgeStoreFactory.get_or_create(knowledge_base_id).delete_document(chunk_ids)
+        else:
+            self._global_knowledge_store.delete_document(chunk_ids)
         # delete related file_kb_mapping
         self._file_kb_mapping_dao.delete(id=file_id)
         # delete related virtual file
         FileService.instance.delete_file(id=file_id)
         # update knowledge base timestamp
-        self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=func.strftime("%s", "now"))
+        if knowledge_base_id != GLOBAL_KB_ID:
+            self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=func.strftime("%s", "now"))
 
     def __delete__(self):
         self._global_knowledge_base.clear()

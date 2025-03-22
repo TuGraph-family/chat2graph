@@ -14,7 +14,7 @@ class FileService(metaclass=Singleton):
 
     def __init__(self):
         self._file_dao: FileDao = FileDao.instance
-        self._upload_folder = SystemEnv.APP_ROOT + "/uploads"
+        self._upload_folder = SystemEnv.APP_ROOT + "/files"
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
 

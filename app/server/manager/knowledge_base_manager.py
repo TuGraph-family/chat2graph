@@ -101,7 +101,7 @@ class KnowledgeBaseManager:
                 message
         """
         global_knowledge_base, local_knowledge_bases = self._knowledge_base_service.get_all_knowledge_bases()
-        data = self._knowledge_base_view.serialize_knowledge_base(global_knowledge_base, local_knowledge_bases)
+        data = self._knowledge_base_view.serialize_knowledge_bases(global_knowledge_base, local_knowledge_bases)
 
         return data, "Get all knowledge bases successfully"
 
