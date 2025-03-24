@@ -75,5 +75,5 @@ class KnowledgeBaseType(Enum):
 class KnowledgeBaseCategory(Enum):
     """Knowledge base category."""
 
-    GLOBAL="global"
-    LOCAL="local"
+    GLOBAL = "GLOBAL"
+    LOCAL = "LOCAL"

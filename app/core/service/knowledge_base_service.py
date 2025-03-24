@@ -24,9 +24,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         self._file_dao: FileDao = FileDao.instance
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
         # create global knowledge store
-        if len(self._knowledge_base_dao.filter_by(catgory=str(KnowledgeBaseCategory.GLOBAL))) == 0:
-            self._knowledge_base_dao.create(name="global_knowledge_base", knowledge_type=str(SystemEnv.KNOWLEDGE_STORE_TYPE), session_id="", category=str(KnowledgeBaseCategory.LOCAL))
-        self._global_kb_do = self._knowledge_base_dao.filter_by(catgory="global")[0]
+        if len(self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.GLOBAL.value)) == 0:
+            self._knowledge_base_dao.create(name="global_knowledge_base", knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value, session_id="", category=KnowledgeBaseCategory.GLOBAL.value)
+        self._global_kb_do = self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.GLOBAL.value)[0]
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -43,7 +43,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         """
         # create the knowledge base
         result = self._knowledge_base_dao.create(
-            name=name, knowledge_type=knowledge_type, session_id=session_id, category=str(KnowledgeBaseCategory.LOCAL)
+            name=name, knowledge_type=knowledge_type, session_id=session_id, category=KnowledgeBaseCategory.LOCAL.value
         )
         return KnowledgeBase(
             id=str(result.id),
@@ -52,6 +52,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id=str(result.session_id),
             file_descriptor_list=[],
             description="",
+            category=str(result.category),
             timestamp=int(result.timestamp),
         )
 
@@ -88,6 +89,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 session_id=str(result.session_id),
                 file_descriptor_list=file_descriptor_list,
                 description=str(result.description),
+                category=str(result.category),
                 timestamp=int(result.timestamp),
             )
         else:
@@ -132,7 +134,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         """
 
         # get local knowledge bases
-        results = self._knowledge_base_dao.get_all()
+        results = self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.LOCAL.value)
         # get global knowledge base
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=self._global_kb_do.id)
         global_file_descriptor_list = [
@@ -148,12 +150,13 @@ class KnowledgeBaseService(metaclass=Singleton):
         ]
         global_kb = GlobalKnowledgeBase(
             id=str(self._global_kb_do.id),
-            name=str(self._global_kb_do.id.name),
-            knowledge_type=str(self._global_kb_do.id.knowledge_type),
-            session_id=str(self._global_kb_do.id.session_id),
+            name=str(self._global_kb_do.name),
+            knowledge_type=str(self._global_kb_do.knowledge_type),
+            session_id=str(self._global_kb_do.session_id),
             file_descriptor_list=global_file_descriptor_list,
-            description=str(self._global_kb_do.id.description),
-            timestamp=int(self._global_kb_do.id.timestamp),
+            description=str(self._global_kb_do.description),
+            category=str(self._global_kb_do.category),
+            timestamp=int(self._global_kb_do.timestamp),
         )
         # get local knowledge bases
         local_kbs = []
@@ -178,6 +181,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                     session_id=str(result.session_id),
                     file_descriptor_list=file_descriptor_list,
                     description=str(result.description),
+                    category=str(result.category),
                     timestamp=int(result.timestamp),
                 )
             )

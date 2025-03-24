@@ -31,7 +31,13 @@ class KnowledgeBaseViewTransformer:
         """Serialize a list of knowledge base to a list of API response dictionaries"""
         return {
             "global_knowledge_base": {
-                "file_count": len(global_knowledge_base.file_descriptor_list)
+                "id": global_knowledge_base.id,
+                "name": global_knowledge_base.name,
+                "knowledge_type": global_knowledge_base.knowledge_type,
+                "session_id": global_knowledge_base.session_id,
+                "file_count": len(global_knowledge_base.file_descriptor_list),
+                "description": global_knowledge_base.description,
+                "time_stamp": global_knowledge_base.timestamp,
             },
             "local_knowledge_base": [
                 {

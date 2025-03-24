@@ -12,6 +12,7 @@ class KnowledgeBase:
     session_id: str
     file_descriptor_list: List[Dict[str, Any]]
     description: str
+    category: str
     timestamp: int
 
 
