@@ -80,7 +80,7 @@ class GraphKnowledgeStore(KnowledgeStore):
         config = TuGraphStoreConfig(
             username="admin",
             password="73@TuGraph",
-            host="47.76.118.68",
+            host="127.0.0.1",
             port="7687",
             enable_summary="True",
         )

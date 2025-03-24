@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import os
+from typing import Optional
 
 
 @dataclass
@@ -8,7 +9,7 @@ class FileDescriptor:
 
     id: str
     name: str
-    path: str
+    path: Optional[str]
     type: str
     size: str
     status: str
@@ -16,7 +17,10 @@ class FileDescriptor:
 
     def get_payload(self) -> str:
         """Get the content of the file."""
-        file_name = os.listdir(self.path)[0]
-        file_path = os.path.join(self.path, file_name)
-        with open(file_path, encoding="utf-8") as f:
-            return f.read()
+        if self.path:
+            file_name = os.listdir(self.path)[0]
+            file_path = os.path.join(self.path, file_name)
+            with open(file_path, encoding="utf-8") as f:
+                return f.read()
+        else:
+            return ""

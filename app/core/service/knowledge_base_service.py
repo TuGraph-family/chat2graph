@@ -72,7 +72,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             file_descriptor_list = [
                 FileDescriptor(
                     id=mapping.id,
-                    path=mapping.path,
+                    path=None,
                     name=mapping.name,
                     type=mapping.type,
                     size=mapping.size,
@@ -141,7 +141,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         global_file_descriptor_list = [
             FileDescriptor(
                 id=mapping.id,
-                path=mapping.path,
+                path=None,
                 name=mapping.name,
                 type=mapping.type,
                 size=mapping.size,
@@ -167,7 +167,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             file_descriptor_list = [
                 FileDescriptor(
                     id=mapping.id,
-                    path=mapping.path,
+                    path=None,
                     name=mapping.name,
                     type=mapping.type,
                     size=mapping.size,

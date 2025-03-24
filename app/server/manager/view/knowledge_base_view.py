@@ -20,7 +20,7 @@ class KnowledgeBaseViewTransformer:
             "knowledge_type": knowledge_base.knowledge_type,
             "session_id": knowledge_base.session_id,
             "time_stamp": knowledge_base.timestamp,
-            "files": {
+            "files": [
                 {
                     "name": file_descriptor.name,
                     "type": file_descriptor.type,
@@ -29,7 +29,7 @@ class KnowledgeBaseViewTransformer:
                     "time_stamp": file_descriptor.timestamp,
                     "file_id": file_descriptor.id,
                 } for file_descriptor in knowledge_base.file_descriptor_list
-            },
+            ],
             "description": knowledge_base.description,
         }
 

@@ -75,10 +75,14 @@ class FileService(metaclass=Singleton):
         """Get the content of a file with ID."""
         file_do = self._file_dao.get_by_id(id=id)
         if file_do:
-            path = str(file_do.path)
-            file_name = os.listdir(path)[0]
-            file_path = os.path.join(path, file_name)
-            with open(file_path, encoding="utf-8") as f:
-                return f.read()
+            return FileDescriptor(
+                id=id,
+                path=file_do.path,
+                name=file_do.name,
+                type=file_do.type,
+                size="",
+                status="",
+                timestamp="",
+            )
         else:
             raise ValueError(f"Cannot find file with ID {id}.")
