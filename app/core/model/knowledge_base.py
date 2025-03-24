@@ -13,3 +13,8 @@ class KnowledgeBase:
     file_descriptor_list: List[Dict[str, Any]]
     description: str
     timestamp: int
+
+
+@dataclass
+class GlobalKnowledgeBase(KnowledgeBase):
+    """Global Knowledge class"""

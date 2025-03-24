@@ -1,6 +1,6 @@
-from app.core.model.message import Message
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
+from typing import Any, List
+
 from app.core.prompt.knowledge import KNOWLEDGE_PROMPT
 
 

@@ -1,17 +1,18 @@
-from typing import Any, List
-import os
 import json
+import os
+from typing import List
+
+from sqlalchemy import func
 
 from app.core.common.singleton import Singleton
-from app.core.dal.dao.knowledge_dao import KnowledgeBaseDao, FileKbMappingDao
 from app.core.dal.dao.file_dao import FileDao
-from app.core.model.knowledge_base import KnowledgeBase
-from app.core.model.knowledge import Knowledge
+from app.core.dal.dao.knowledge_dao import FileKbMappingDao, KnowledgeBaseDao
 from app.core.knowledge.knowledge_store import KnowledgeStore
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
-from app.core.service.file_service import FileService
 from app.core.model.job import Job
-from sqlalchemy import func
+from app.core.model.knowledge import Knowledge
+from app.core.model.knowledge_base import KnowledgeBase
+from app.core.service.file_service import FileService
 
 GLOBAL_KB_ID = "global"
 

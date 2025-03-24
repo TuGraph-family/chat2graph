@@ -1,9 +1,8 @@
-from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
+
+from werkzeug.datastructures import FileStorage
 
 from app.core.service.file_service import FileService
-from app.core.service.session_service import SessionService
-from werkzeug.datastructures import FileStorage
 
 
 class FileManager:

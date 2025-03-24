@@ -18,6 +18,7 @@ class FileService(metaclass=Singleton):
             os.makedirs(self._upload_folder)
 
     def calculate_md5(self, file: FileStorage) -> str:
+        """Calculate the MD5 hash of a file."""
         file_hash = hashlib.md5()
         while chunk := file.read(8192):
             file_hash.update(chunk)
@@ -56,9 +57,9 @@ class FileService(metaclass=Singleton):
             session_id (str): ID of the session
         """
         # delete the file
-        file = self._file_dao.get_by_id(id=id)
-        if file:
-            path = file.path
+        file_do = self._file_dao.get_by_id(id=id)
+        if file_do:
+            path = file_do.path
             self._file_dao.delete(id=id)
             results = self._file_dao.filter_by(path=path)
             if len(results) == 0:
@@ -71,9 +72,9 @@ class FileService(metaclass=Singleton):
 
     def get_file_payload(self, id: str) -> str:
         """Get the content of a file with ID."""
-        file = self._file_dao.get_by_id(id=id)
-        if file:
-            path = file.path
+        file_do = self._file_dao.get_by_id(id=id)
+        if file_do:
+            path = str(file_do.path)
             file_name = os.listdir(path)[0]
             file_path = os.path.join(path, file_name)
             with open(file_path, encoding="utf-8") as f:

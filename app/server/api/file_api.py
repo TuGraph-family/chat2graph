@@ -1,9 +1,6 @@
-import os
 from flask import Blueprint, request
-from werkzeug.utils import secure_filename
 
 from app.server.common.util import ApiException, make_response
-from app.core.common.system_env import SystemEnv
 from app.server.manager.file_manager import FileManager
 
 files_bp = Blueprint("files", __name__)
@@ -11,9 +8,7 @@ files_bp = Blueprint("files", __name__)
 
 @files_bp.route("/<string:session_id>", methods=["POST"])
 def upload_file(session_id):
-    """
-    Upload a file to the server.
-    """
+    """Upload a file to the server."""
 
     manager = FileManager()
     if "file" not in request.files:
@@ -33,9 +28,7 @@ def upload_file(session_id):
 
 @files_bp.route("/<string:file_id>/", methods=["DELETE"])
 def delete_file(file_id):
-    """
-    Delete a file from the server.
-    """
+    """Delete a file from the server."""
 
     manager = FileManager()
     try:
