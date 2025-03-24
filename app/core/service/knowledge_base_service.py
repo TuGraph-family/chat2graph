@@ -193,7 +193,7 @@ class KnowledgeBaseService(metaclass=Singleton):
     def get_knowledge(self, query: str, job: Job) -> Knowledge:
         """Get knowledge by ID."""
         # get global knowledge
-        global_chunks = self._global_knowledge_store.retrieve(query)
+        global_chunks = KnowledgeStoreFactory.get_or_create(str(self._global_kb_do.id)).retrieve(query)
         # get local knowledge
         kbs = self._knowledge_base_dao.filter_by(session_id=job.session_id)
         if len(kbs) == 1:

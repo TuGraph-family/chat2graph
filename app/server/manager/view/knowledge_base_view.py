@@ -1,7 +1,6 @@
 from typing import Any, Dict, List
 
 from app.core.model.knowledge_base_descriptor import KnowledgeBaseDescriptor
-from app.core.model.file_descriptor import FileDescriptor
 
 
 class KnowledgeBaseViewTransformer:

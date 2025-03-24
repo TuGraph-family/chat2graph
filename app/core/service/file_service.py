@@ -6,6 +6,7 @@ from werkzeug.datastructures import FileStorage
 from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
 from app.core.dal.dao.file_dao import FileDao
+from app.core.model.file_descriptor import FileDescriptor
 
 
 class FileService(metaclass=Singleton):
@@ -70,7 +71,7 @@ class FileService(metaclass=Singleton):
         else:
             raise ValueError(f"Cannot find file with ID {id}.")
 
-    def get_file_payload(self, id: str) -> str:
+    def get_file_descriptor(self, file_id: str) -> FileDescriptor:
         """Get the content of a file with ID."""
         file_do = self._file_dao.get_by_id(id=id)
         if file_do:
