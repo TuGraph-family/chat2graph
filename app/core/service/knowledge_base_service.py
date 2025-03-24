@@ -11,9 +11,9 @@ from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.model.job import Job
 from app.core.model.knowledge import Knowledge
 from app.core.model.file_descriptor import FileDescriptor
-from app.core.model.knowledge_base_descriptor import (
-    KnowledgeBaseDescriptor,
-    GlobalKnowledgeBaseDescriptor,
+from app.core.model.knowledge_store_descriptor import (
+    KnowledgeStoreDescriptor,
+    GlobalKnowledgeStoreDescriptor,
 )
 from app.core.service.file_service import FileService
 from app.core.common.type import KnowledgeBaseCategory
@@ -44,7 +44,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
-    ) -> KnowledgeBaseDescriptor:
+    ) -> KnowledgeStoreDescriptor:
         """Create a new knowledge base.
 
         Args:
@@ -62,7 +62,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id=session_id,
             category=KnowledgeBaseCategory.LOCAL.value,
         )
-        return KnowledgeBaseDescriptor(
+        return KnowledgeStoreDescriptor(
             id=str(result.id),
             name=str(result.name),
             knowledge_type=str(result.knowledge_type),
@@ -73,7 +73,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             timestamp=int(result.timestamp),
         )
 
-    def get_knowledge_base(self, id: str) -> KnowledgeBaseDescriptor:
+    def get_knowledge_base(self, id: str) -> KnowledgeStoreDescriptor:
         """Get a knowledge base by ID.
 
         Args:
@@ -100,7 +100,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             ]
             if not result:
                 raise ValueError(f"Knowledge base with ID {id} not found")
-            return KnowledgeBaseDescriptor(
+            return KnowledgeStoreDescriptor(
                 id=str(result.id),
                 name=str(result.name),
                 knowledge_type=str(result.knowledge_type),
@@ -147,7 +147,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
     def get_all_knowledge_bases(
         self,
-    ) -> tuple[KnowledgeBaseDescriptor, List[KnowledgeBaseDescriptor]]:
+    ) -> tuple[KnowledgeStoreDescriptor, List[KnowledgeStoreDescriptor]]:
         """Get all knowledge bases.
         Returns:
             List[KnowledgeBase]: List of knowledge bases
@@ -169,7 +169,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
             for mapping in mappings
         ]
-        global_kb = GlobalKnowledgeBaseDescriptor(
+        global_kb = GlobalKnowledgeStoreDescriptor(
             id=str(self._global_kb_do.id),
             name=str(self._global_kb_do.name),
             knowledge_type=str(self._global_kb_do.knowledge_type),
@@ -196,7 +196,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                 for mapping in mappings
             ]
             local_kbs.append(
-                KnowledgeBaseDescriptor(
+                KnowledgeStoreDescriptor(
                     id=str(result.id),
                     name=str(result.name),
                     knowledge_type=str(result.knowledge_type),
