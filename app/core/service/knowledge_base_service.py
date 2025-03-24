@@ -10,7 +10,7 @@ from app.core.dal.dao.knowledge_dao import FileKbMappingDao, KnowledgeBaseDao
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.model.job import Job
 from app.core.model.knowledge import Knowledge
-from app.core.knowledge.knowledge_store import KnowledgeStore
+from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.knowledge_base_descriptor import KnowledgeBaseDescriptor, GlobalKnowledgeBaseDescriptor
 from app.core.service.file_service import FileService
 from app.core.common.type import KnowledgeBaseCategory
@@ -70,14 +70,15 @@ class KnowledgeBaseService(metaclass=Singleton):
             # fetch all related file_kb_mapping
             mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
             file_descriptor_list = [
-                {
-                    "name": mapping.name,
-                    "type": mapping.type,
-                    "size": mapping.size,
-                    "status": mapping.status,
-                    "time_stamp": mapping.timestamp,
-                    "file_id": mapping.id,
-                }
+                FileDescriptor(
+                    id=mapping.id,
+                    path=mapping.path,
+                    name=mapping.name,
+                    type=mapping.type,
+                    size=mapping.size,
+                    status=mapping.status,
+                    timestamp=mapping.timestamp,
+                )
                 for mapping in mappings
             ]
             if not result:
@@ -138,14 +139,15 @@ class KnowledgeBaseService(metaclass=Singleton):
         # get global knowledge base
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=self._global_kb_do.id)
         global_file_descriptor_list = [
-            {
-                "name": mapping.name,
-                "type": mapping.type,
-                "size": mapping.size,
-                "status": mapping.status,
-                "time_stamp": mapping.timestamp,
-                "file_id": mapping.id,
-            }
+            FileDescriptor(
+                id=mapping.id,
+                path=mapping.path,
+                name=mapping.name,
+                type=mapping.type,
+                size=mapping.size,
+                status=mapping.status,
+                timestamp=mapping.timestamp,
+            )
             for mapping in mappings
         ]
         global_kb = GlobalKnowledgeBaseDescriptor(
@@ -163,14 +165,15 @@ class KnowledgeBaseService(metaclass=Singleton):
         for result in results:
             mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
             file_descriptor_list = [
-                {
-                    "name": mapping.name,
-                    "type": mapping.type,
-                    "size": mapping.size,
-                    "status": mapping.status,
-                    "time_stamp": mapping.timestamp,
-                    "file_id": mapping.id,
-                }
+                FileDescriptor(
+                    id=mapping.id,
+                    path=mapping.path,
+                    name=mapping.name,
+                    type=mapping.type,
+                    size=mapping.size,
+                    status=mapping.status,
+                    timestamp=mapping.timestamp,
+                )
                 for mapping in mappings
             ]
             local_kbs.append(

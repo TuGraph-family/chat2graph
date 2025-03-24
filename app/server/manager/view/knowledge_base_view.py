@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from app.core.model.knowledge_base_descriptor import KnowledgeBaseDescriptor
+from app.core.model.file_descriptor import FileDescriptor
 
 
 class KnowledgeBaseViewTransformer:
@@ -20,7 +21,16 @@ class KnowledgeBaseViewTransformer:
             "knowledge_type": knowledge_base.knowledge_type,
             "session_id": knowledge_base.session_id,
             "time_stamp": knowledge_base.timestamp,
-            "files": knowledge_base.file_descriptor_list,
+            "files": {
+                {
+                    "name": file_descriptor.name,
+                    "type": file_descriptor.type,
+                    "size": file_descriptor.size,
+                    "status": file_descriptor.status,
+                    "time_stamp": file_descriptor.timestamp,
+                    "file_id": file_descriptor.id,
+                } for file_descriptor in knowledge_base.file_descriptor_list
+            },
             "description": knowledge_base.description,
         }
 
