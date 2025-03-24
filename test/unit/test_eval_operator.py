@@ -11,6 +11,12 @@ from app.core.toolkit.action import Action
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
+from app.core.dal.init_db import init_db
+from app.core.sdk.agentic_service import AgenticService
+
+init_db()
+
+AgenticService.load()
 
 
 @pytest.fixture
