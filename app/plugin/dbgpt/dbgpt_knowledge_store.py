@@ -24,7 +24,7 @@ class VectorKnowledgeStore(KnowledgeStore):
 
     def __init__(self, name: str):
         config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH)
-        self._vector_base = ChromaStore(
+        self._vector_store = ChromaStore(
             config,
             name=name,
             embedding_fn=DefaultEmbeddingFactory.remote(
@@ -35,7 +35,7 @@ class VectorKnowledgeStore(KnowledgeStore):
         )
         self._retriever = EmbeddingRetriever(
             top_k=3,
-            index_store=self._vector_base,
+            index_store=self._vector_store,
         )
 
     def load_document(self, file_path: str, config: Optional[str]) -> str:
@@ -47,13 +47,13 @@ class VectorKnowledgeStore(KnowledgeStore):
         else:
             chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE")
         assembler = EmbeddingAssembler.load_from_knowledge(
-            knowledge=knowledge, chunk_parameters=chunk_parameters, index_store=self._vector_base
+            knowledge=knowledge, chunk_parameters=chunk_parameters, index_store=self._vector_store
         )
         chunk_ids = run_async_function(assembler.apersist)
         return ",".join(chunk_ids)
 
     def delete_document(self, chunk_ids: str) -> None:
-        self._vector_base.delete_by_ids(chunk_ids)
+        self._vector_store.delete_by_ids(chunk_ids)
 
     def update_document(self, file_path: str, chunk_ids: str) -> str:
         self.delete_document(chunk_ids)
@@ -69,7 +69,7 @@ class VectorKnowledgeStore(KnowledgeStore):
         return knowledge_chunks
 
     def drop(self) -> None:
-        self._vector_base._clean_persist_folder()
+        self._vector_store._clean_persist_folder()
 
 
 class GraphKnowledgeStore(KnowledgeStore):
@@ -86,7 +86,7 @@ class GraphKnowledgeStore(KnowledgeStore):
         vector_store_config = ChromaVectorConfig(
             persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH
         )
-        self._graph_base = CommunitySummaryKnowledgeGraph(
+        self._graph_store = CommunitySummaryKnowledgeGraph(
             config=config,
             name=name,
             embedding_fn=DefaultEmbeddingFactory.remote(
@@ -111,14 +111,14 @@ class GraphKnowledgeStore(KnowledgeStore):
         assembler = EmbeddingAssembler.load_from_knowledge(
             knowledge=knowledge,
             chunk_parameters=chunk_parameters,
-            index_store=self._graph_base,
+            index_store=self._graph_store,
             retrieve_strategy=RetrieverStrategy.GRAPH,
         )
         chunk_ids = run_async_function(assembler.apersist)
         return ",".join(chunk_ids)
 
     def delete_document(self, chunk_ids: str) -> None:
-        self._graph_base.delete_by_ids(chunk_ids)
+        self._graph_store.delete_by_ids(chunk_ids)
 
     def update_document(self, file_path: str, chunk_ids: str) -> str:
         self.delete_document(chunk_ids)
@@ -126,7 +126,7 @@ class GraphKnowledgeStore(KnowledgeStore):
 
     def retrieve(self, query: str) -> List[KnowledgeChunk]:
         chunks = run_async_function(
-            self._graph_base.asimilar_search_with_scores, text=query, topk=3, score_threshold=0.3
+            self._graph_store.asimilar_search_with_scores, text=query, topk=3, score_threshold=0.3
         )
         knowledge_chunks = [
             KnowledgeChunk(chunk_name=chunk.chunk_name, content=chunk.content) for chunk in chunks
@@ -134,4 +134,4 @@ class GraphKnowledgeStore(KnowledgeStore):
         return knowledge_chunks
 
     def drop(self) -> None:
-        self._graph_base.delete_vector_name("")
+        self._graph_store.delete_vector_name("")
