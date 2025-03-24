@@ -1,7 +1,7 @@
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import KnowledgeBaseType
 from app.core.knowledge.knowledge_store import KnowledgeStore
-from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore, GraphKnowledgeStore
+from app.plugin.dbgpt.dbgpt_knowledge_store import GraphKnowledgeStore, VectorKnowledgeStore
 
 
 class KnowledgeStoreFactory:

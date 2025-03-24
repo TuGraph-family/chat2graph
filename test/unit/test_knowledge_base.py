@@ -1,12 +1,13 @@
 from unittest.mock import patch
 
-from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore, GraphKnowledgeStore
-from app.core.service.knowledge_base_service import KnowledgeBaseService
-from app.core.dal.init_db import init_db
+from dbgpt.core import Chunk
+
 from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
+from app.core.dal.init_db import init_db
 from app.core.model.job import SubJob
-from dbgpt.core import Chunk
+from app.core.service.knowledge_base_service import KnowledgeBaseService
+from app.plugin.dbgpt.dbgpt_knowledge_store import GraphKnowledgeStore, VectorKnowledgeStore
 
 init_db()
 # initialize the dao

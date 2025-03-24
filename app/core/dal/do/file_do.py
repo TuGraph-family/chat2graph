@@ -1,7 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, ForeignKey, String, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text
 
 from app.core.dal.database import Do
 
