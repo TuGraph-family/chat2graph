@@ -73,16 +73,16 @@ class FileService(metaclass=Singleton):
 
     def get_file_descriptor(self, file_id: str) -> FileDescriptor:
         """Get the content of a file with ID."""
-        file_do = self._file_dao.get_by_id(id=id)
+        file_do = self._file_dao.get_by_id(id=file_id)
         if file_do:
             return FileDescriptor(
-                id=id,
-                path=file_do.path,
-                name=file_do.name,
-                type=file_do.type,
+                id=file_id,
+                path=str(file_do.path),
+                name=str(file_do.name),
+                type=str(file_do.type),
                 size="",
                 status="",
-                timestamp="",
+                timestamp=0,
             )
         else:
             raise ValueError(f"Cannot find file with ID {id}.")

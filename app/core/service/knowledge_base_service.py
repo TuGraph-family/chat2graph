@@ -88,13 +88,13 @@ class KnowledgeBaseService(metaclass=Singleton):
             mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
             file_descriptor_list = [
                 FileDescriptor(
-                    id=mapping.id,
+                    id=str(mapping.id),
                     path=None,
-                    name=mapping.name,
-                    type=mapping.type,
-                    size=mapping.size,
-                    status=mapping.status,
-                    timestamp=mapping.timestamp,
+                    name=str(mapping.name),
+                    type=str(mapping.type),
+                    size=str(mapping.size),
+                    status=str(mapping.status),
+                    timestamp=int(mapping.timestamp),
                 )
                 for mapping in mappings
             ]
@@ -159,13 +159,13 @@ class KnowledgeBaseService(metaclass=Singleton):
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=self._global_kb_do.id)
         global_file_descriptor_list = [
             FileDescriptor(
-                id=mapping.id,
+                id=str(mapping.id),
                 path=None,
-                name=mapping.name,
-                type=mapping.type,
-                size=mapping.size,
-                status=mapping.status,
-                timestamp=mapping.timestamp,
+                name=str(mapping.name),
+                type=str(mapping.type),
+                size=str(mapping.size),
+                status=str(mapping.status),
+                timestamp=int(mapping.timestamp),
             )
             for mapping in mappings
         ]
@@ -185,13 +185,13 @@ class KnowledgeBaseService(metaclass=Singleton):
             mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
             file_descriptor_list = [
                 FileDescriptor(
-                    id=mapping.id,
+                    id=str(mapping.id),
                     path=None,
-                    name=mapping.name,
-                    type=mapping.type,
-                    size=mapping.size,
-                    status=mapping.status,
-                    timestamp=mapping.timestamp,
+                    name=str(mapping.name),
+                    type=str(mapping.type),
+                    size=str(mapping.size),
+                    status=str(mapping.status),
+                    timestamp=int(mapping.timestamp),
                 )
                 for mapping in mappings
             ]
