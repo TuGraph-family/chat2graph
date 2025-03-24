@@ -11,10 +11,14 @@ from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.model.job import Job
 from app.core.model.knowledge import Knowledge
 from app.core.model.file_descriptor import FileDescriptor
-from app.core.model.knowledge_base_descriptor import KnowledgeBaseDescriptor, GlobalKnowledgeBaseDescriptor
+from app.core.model.knowledge_base_descriptor import (
+    KnowledgeBaseDescriptor,
+    GlobalKnowledgeBaseDescriptor,
+)
 from app.core.service.file_service import FileService
 from app.core.common.type import KnowledgeBaseCategory
 from app.core.common.system_env import SystemEnv
+
 
 class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
@@ -24,9 +28,19 @@ class KnowledgeBaseService(metaclass=Singleton):
         self._file_dao: FileDao = FileDao.instance
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
         # create global knowledge store
-        if len(self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.GLOBAL.value)) == 0:
-            self._knowledge_base_dao.create(name="global_knowledge_base", knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value, session_id="", category=KnowledgeBaseCategory.GLOBAL.value)
-        self._global_kb_do = self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.GLOBAL.value)[0]
+        if (
+            len(self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.GLOBAL.value))
+            == 0
+        ):
+            self._knowledge_base_dao.create(
+                name="global_knowledge_base",
+                knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value,
+                session_id="",
+                category=KnowledgeBaseCategory.GLOBAL.value,
+            )
+        self._global_kb_do = self._knowledge_base_dao.filter_by(
+            category=KnowledgeBaseCategory.GLOBAL.value
+        )[0]
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -43,7 +57,10 @@ class KnowledgeBaseService(metaclass=Singleton):
         """
         # create the knowledge base
         result = self._knowledge_base_dao.create(
-            name=name, knowledge_type=knowledge_type, session_id=session_id, category=KnowledgeBaseCategory.LOCAL.value
+            name=name,
+            knowledge_type=knowledge_type,
+            session_id=session_id,
+            category=KnowledgeBaseCategory.LOCAL.value,
         )
         return KnowledgeBaseDescriptor(
             id=str(result.id),
@@ -128,7 +145,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete knolwledge base folder
         KnowledgeStoreFactory.get_or_create(id).drop()
 
-    def get_all_knowledge_bases(self) -> tuple[KnowledgeBaseDescriptor, List[KnowledgeBaseDescriptor]]:
+    def get_all_knowledge_bases(
+        self,
+    ) -> tuple[KnowledgeBaseDescriptor, List[KnowledgeBaseDescriptor]]:
         """Get all knowledge bases.
         Returns:
             List[KnowledgeBase]: List of knowledge bases
@@ -193,7 +212,9 @@ class KnowledgeBaseService(metaclass=Singleton):
     def get_knowledge(self, query: str, job: Job) -> Knowledge:
         """Get knowledge by ID."""
         # get global knowledge
-        global_chunks = KnowledgeStoreFactory.get_or_create(str(self._global_kb_do.id)).retrieve(query)
+        global_chunks = KnowledgeStoreFactory.get_or_create(str(self._global_kb_do.id)).retrieve(
+            query
+        )
         # get local knowledge
         kbs = self._knowledge_base_dao.filter_by(session_id=job.session_id)
         if len(kbs) == 1:
@@ -234,9 +255,9 @@ class KnowledgeBaseService(metaclass=Singleton):
             config = json.loads(config)
             # load file to knowledge base
             try:
-                chunk_ids = KnowledgeStoreFactory.get_or_create(
-                    knowledge_base_id
-                ).load_document(file_path, config)
+                chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(
+                    file_path, config
+                )
             except Exception as e:
                 self._file_kb_mapping_dao.update(id=file_id, status="fail")
                 raise e

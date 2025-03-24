@@ -33,7 +33,7 @@ class VectorKnowledgeStore(KnowledgeStore):
                 model_name=SystemEnv.EMBEDDING_MODEL_NAME,
             ),
         )
-        #TODO add top_k to env config
+        # TODO add top_k to env config
         self._retriever = EmbeddingRetriever(
             top_k=3,
             index_store=self._vector_store,

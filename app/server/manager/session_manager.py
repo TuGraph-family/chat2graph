@@ -6,6 +6,7 @@ from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
 from app.core.common.system_env import SystemEnv
 
+
 class SessionManager:
     """Session Manager class to handle business logic"""
 

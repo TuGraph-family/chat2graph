@@ -28,14 +28,16 @@ class KnowledgeBaseViewTransformer:
                     "status": file_descriptor.status,
                     "time_stamp": file_descriptor.timestamp,
                     "file_id": file_descriptor.id,
-                } for file_descriptor in knowledge_base.file_descriptor_list
+                }
+                for file_descriptor in knowledge_base.file_descriptor_list
             ],
             "description": knowledge_base.description,
         }
 
     @staticmethod
     def serialize_knowledge_bases(
-        global_knowledge_base: KnowledgeBaseDescriptor, local_knowledge_bases: List[KnowledgeBaseDescriptor]
+        global_knowledge_base: KnowledgeBaseDescriptor,
+        local_knowledge_bases: List[KnowledgeBaseDescriptor],
     ) -> Dict[str, Any]:
         """Serialize a list of knowledge base to a list of API response dictionaries"""
         return {

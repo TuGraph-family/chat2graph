@@ -4,6 +4,7 @@ from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
 from app.server.manager.view.knowledge_base_view import KnowledgeBaseViewTransformer
 
+
 class KnowledgeBaseManager:
     """Knowledge Base Manager class to handle business logic"""
 

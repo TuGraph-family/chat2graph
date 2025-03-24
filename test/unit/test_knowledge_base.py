@@ -15,9 +15,13 @@ knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
 
 async def test_vector_knowledge_base():
-    with patch("dbgpt.rag.retriever.embedding.EmbeddingRetriever.aretrieve_with_scores") as mock_retrieve:
+    with patch(
+        "dbgpt.rag.retriever.embedding.EmbeddingRetriever.aretrieve_with_scores"
+    ) as mock_retrieve:
         mock_retrieve.return_value = [Chunk(), Chunk(), Chunk()]
-        chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve("what is chat2graph talk about")
+        chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve(
+            "what is chat2graph talk about"
+        )
         assert len(chunks) != 0
 
         # chunk_ids = VectorKnowledgeStore("test_vector_knowledge_base").load_document("./chat2graph.md")
@@ -30,9 +34,13 @@ async def test_vector_knowledge_base():
 
 
 async def test_graph_knowledge_base():
-     with patch("dbgpt_ext.storage.knowledge_graph.community_summary.CommunitySummaryKnowledgeGraph.asimilar_search_with_scores") as mock_retrieve:
+    with patch(
+        "dbgpt_ext.storage.knowledge_graph.community_summary.CommunitySummaryKnowledgeGraph.asimilar_search_with_scores"
+    ) as mock_retrieve:
         mock_retrieve.return_value = [Chunk(), Chunk(), Chunk()]
-        chunks = GraphKnowledgeStore("test_graph_knowledge_base").retrieve("what is chat2graph talk about")
+        chunks = GraphKnowledgeStore("test_graph_knowledge_base").retrieve(
+            "what is chat2graph talk about"
+        )
         assert len(chunks) != 0
 
 

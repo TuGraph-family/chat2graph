@@ -27,7 +27,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "DATABASE_POOL_PRE_PING": (bool, True),
     "APP_ROOT": (
         str,
-        f"{os.path.expanduser("~")}/.chat2graph",
+        f"{os.path.expanduser('~')}/.chat2graph",
     ),
     "EMBEDDING_MODEL_NAME": (str, "text-embedding-3-small"),
     "EMBEDDING_MODEL_API_URL": (str, "https://api.openai-proxy.org/v1/embeddings"),

@@ -72,6 +72,7 @@ class KnowledgeBaseType(Enum):
     VECTOR = "VECTOR"
     GRAPH = "GRAPH"
 
+
 class KnowledgeBaseCategory(Enum):
     """Knowledge base category."""
 

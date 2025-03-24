@@ -16,7 +16,7 @@ def create_app():
 
     with app.app_context():
         init_db()
-    
+
     AgenticService.load()
 
     @app.route("/")

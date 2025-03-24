@@ -22,6 +22,7 @@ init_db()
 DaoFactory.initialize(DbSession())
 knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
+
 @pytest.fixture
 def mock_reasoner():
     """Create a mock reasoner."""
