@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 
 
 @dataclass
-class KnowledgeBase:
+class KnowledgeBaseDescriptor:
     """Knowledge class"""
 
     id: str
@@ -17,5 +17,5 @@ class KnowledgeBase:
 
 
 @dataclass
-class GlobalKnowledgeBase(KnowledgeBase):
+class GlobalKnowledgeBaseDescriptor(KnowledgeBaseDescriptor):
     """Global Knowledge class"""
