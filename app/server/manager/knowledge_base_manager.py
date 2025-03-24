@@ -1,18 +1,8 @@
-from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
 from app.server.manager.view.knowledge_base_view import KnowledgeBaseViewTransformer
-
-
-# TODO: move to the common module
-class KnowledgeBaseType(Enum):
-    """Knowledge base type Enum"""
-
-    PUBLIC = "public"
-    PRIVATE = "private"
-
 
 class KnowledgeBaseManager:
     """Knowledge Base Manager class to handle business logic"""

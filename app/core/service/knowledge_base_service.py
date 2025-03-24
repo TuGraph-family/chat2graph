@@ -7,15 +7,14 @@ from sqlalchemy import func
 from app.core.common.singleton import Singleton
 from app.core.dal.dao.file_dao import FileDao
 from app.core.dal.dao.knowledge_dao import FileKbMappingDao, KnowledgeBaseDao
-from app.core.knowledge.knowledge_store import KnowledgeStore
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.model.job import Job
 from app.core.model.knowledge import Knowledge
-from app.core.model.knowledge_base import KnowledgeBase
+from app.core.knowledge.knowledge_store import KnowledgeStore
+from app.core.model.knowledge_base import KnowledgeBase, GlobalKnowledgeBase
 from app.core.service.file_service import FileService
-
-GLOBAL_KB_ID = "global"
-
+from app.core.common.type import KnowledgeBaseCategory
+from app.core.common.system_env import SystemEnv
 
 class KnowledgeBaseService(metaclass=Singleton):
     """Knowledge Base Service"""
@@ -25,9 +24,9 @@ class KnowledgeBaseService(metaclass=Singleton):
         self._file_dao: FileDao = FileDao.instance
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
         # create global knowledge store
-        self._global_knowledge_store: KnowledgeStore = KnowledgeStoreFactory.get_or_create(
-            "global_knowledge_store"
-        )
+        if len(self._knowledge_base_dao.filter_by(catgory=str(KnowledgeBaseCategory.GLOBAL))) == 0:
+            self._knowledge_base_dao.create(name="global_knowledge_base", knowledge_type=str(SystemEnv.KNOWLEDGE_STORE_TYPE), session_id="", category=str(KnowledgeBaseCategory.LOCAL))
+        self._global_kb_do = self._knowledge_base_dao.filter_by(catgory="global")[0]
 
     def create_knowledge_base(
         self, name: str, knowledge_type: str, session_id: str
@@ -44,7 +43,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         """
         # create the knowledge base
         result = self._knowledge_base_dao.create(
-            name=name, knowledge_type=knowledge_type, session_id=session_id
+            name=name, knowledge_type=knowledge_type, session_id=session_id, category=str(KnowledgeBaseCategory.LOCAL)
         )
         return KnowledgeBase(
             id=str(result.id),
@@ -135,7 +134,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # get local knowledge bases
         results = self._knowledge_base_dao.get_all()
         # get global knowledge base
-        mappings = self._file_kb_mapping_dao.filter_by(kb_id=GLOBAL_KB_ID)
+        mappings = self._file_kb_mapping_dao.filter_by(kb_id=self._global_kb_do.id)
         global_file_descriptor_list = [
             {
                 "name": mapping.name,
@@ -147,14 +146,14 @@ class KnowledgeBaseService(metaclass=Singleton):
             }
             for mapping in mappings
         ]
-        global_kb = KnowledgeBase(
-            id=GLOBAL_KB_ID,
-            name="global_knowledge_store",
-            knowledge_type="",
-            session_id="",
+        global_kb = GlobalKnowledgeBase(
+            id=str(self._global_kb_do.id),
+            name=str(self._global_kb_do.id.name),
+            knowledge_type=str(self._global_kb_do.id.knowledge_type),
+            session_id=str(self._global_kb_do.id.session_id),
             file_descriptor_list=global_file_descriptor_list,
-            description="",
-            timestamp=0,
+            description=str(self._global_kb_do.id.description),
+            timestamp=int(self._global_kb_do.id.timestamp),
         )
         # get local knowledge bases
         local_kbs = []
@@ -220,21 +219,17 @@ class KnowledgeBaseService(metaclass=Singleton):
                     type="local",
                 )
             # update knowledge base timestamp
-            if knowledge_base_id != GLOBAL_KB_ID:
-                mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
-                if mapping:
-                    timestamp = mapping.timestamp
-                    self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
+            mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
+            if mapping:
+                timestamp = mapping.timestamp
+                self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
             # load config
             config = json.loads(config)
             # load file to knowledge base
             try:
-                if knowledge_base_id != GLOBAL_KB_ID:
-                    chunk_ids = KnowledgeStoreFactory.get_or_create(
-                        knowledge_base_id
-                    ).load_document(file_path, config)
-                else:
-                    chunk_ids = self._global_knowledge_store.load_document(file_path, config)
+                chunk_ids = KnowledgeStoreFactory.get_or_create(
+                    knowledge_base_id
+                ).load_document(file_path, config)
             except Exception as e:
                 self._file_kb_mapping_dao.update(id=file_id, status="fail")
                 raise e
@@ -251,21 +246,17 @@ class KnowledgeBaseService(metaclass=Singleton):
             chunk_ids = file_kb_mapping.chunk_ids
             knowledge_base_id = file_kb_mapping.kb_id
             # delete related chunks from knowledge base
-            if knowledge_base_id != GLOBAL_KB_ID:
-                KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).delete_document(
-                    str(chunk_ids)
-                )
-            else:
-                self._global_knowledge_store.delete_document(str(chunk_ids))
+            KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).delete_document(
+                str(chunk_ids)
+            )
             # delete related file_kb_mapping
             self._file_kb_mapping_dao.delete(id=file_id)
             # delete related virtual file
             FileService.instance.delete_file(id=file_id)
             # update knowledge base timestamp
-            if knowledge_base_id != GLOBAL_KB_ID:
-                self._knowledge_base_dao.update(
-                    id=str(knowledge_base_id), timestamp=func.strftime("%s", "now")
-                )
+            self._knowledge_base_dao.update(
+                id=str(knowledge_base_id), timestamp=func.strftime("%s", "now")
+            )
         else:
             raise ValueError(f"Cannot find knowledge with ID {file_id}.")
 

@@ -16,6 +16,7 @@ class KnowledgeBaseDo(Do):  # type: ignore
     knowledge_type = Column(String(36), nullable=False)
     session_id = Column(String(36), nullable=False)  # FK constraint
     description = Column(Text)
+    category = Column(String(36), nullable=False)
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
 
 
