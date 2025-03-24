@@ -39,10 +39,3 @@ class Knowledge:
     def get_payload(self) -> str:
         """Get the content of the knowledge."""
         return self._payload
-
-    def copy(self) -> Any:
-        """Copy the knowledge."""
-        return Knowledge(
-            global_chunks=self._global_chunks,
-            local_chunks=self._local_chunks,
-        )
