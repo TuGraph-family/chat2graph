@@ -6,7 +6,7 @@ from app.core.common.system_env import SystemEnv
 from app.core.common.type import JobStatus, WorkflowStatus
 from app.core.model.job import SubJob
 from app.core.model.job_result import JobResult
-from app.core.model.message import AgentMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
 
@@ -70,7 +70,9 @@ class Expert(Agent):
 
             # (1.1) save the expert message in the database
             try:
-                existed_expert_message = message_service.get_agent_message_by_job(job=job)
+                existed_expert_message = message_service.get_message_by_job_id(
+                    job_id=job.id, message_type=MessageType.AGENT_MESSAGE
+                )[0]
                 expert_message = AgentMessage(
                     id=existed_expert_message.get_id(),
                     job_id=job.id,
@@ -123,7 +125,10 @@ class Expert(Agent):
                     )
                 job_service.save_job_result(job_result=job_result)
 
-                raise Exception("The job cannot be executed successfully after retrying.")
+                raise Exception(
+                    "The job cannot be executed successfully "
+                    "after retrying {max_retry_count} times."
+                )
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
             # (3) WorkflowStatus.INPUT_DATA_ERROR
@@ -139,7 +144,9 @@ class Expert(Agent):
             # return the agent message to the leader, and let the leader handle the error
             # (3.1) save the expert message in the database
             try:
-                existed_expert_message = message_service.get_agent_message_by_job(job=job)
+                existed_expert_message = message_service.get_message_by_job_id(
+                    job_id=job.id, message_type=MessageType.AGENT_MESSAGE
+                )[0]
                 expert_message = AgentMessage(
                     id=existed_expert_message.get_id(),
                     job_id=job.id,
@@ -169,7 +176,9 @@ class Expert(Agent):
             # (4.1) save the expert message in the database
             lesson = "The job is too complicated to be executed by the expert"
             try:
-                existed_expert_message = message_service.get_agent_message_by_job(job=job)
+                existed_expert_message = message_service.get_message_by_job_id(
+                    job_id=job.id, message_type=MessageType.AGENT_MESSAGE
+                )[0]
                 expert_message = AgentMessage(
                     id=existed_expert_message.get_id(),
                     job_id=job.id,

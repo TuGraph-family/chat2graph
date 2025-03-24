@@ -71,3 +71,10 @@ class JobStatus(Enum):
     FINISHED = "FINISHED"
     FAILED = "FAILED"
     STOPPED = "STOPPED"
+
+
+class FunctionCallStatus(Enum):
+    """Status of a function call."""
+
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"

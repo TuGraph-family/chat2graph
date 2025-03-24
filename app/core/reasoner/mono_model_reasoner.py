@@ -83,7 +83,7 @@ class MonoModelReasoner(Reasoner):
                     "\033[92m<function_call_result>\n"
                     + "\n".join(
                         [
-                            f"{i + 1}. {result.status} called function "
+                            f"{i + 1}. {result.status.value} called function "
                             f"{result.func_name}:\n"
                             f"Call objective: {result.call_objective}\n"
                             f"Function Output: {result.output}"

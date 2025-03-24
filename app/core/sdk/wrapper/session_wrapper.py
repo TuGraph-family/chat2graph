@@ -43,9 +43,12 @@ class SessionWrapper:
             history_text_messages: List[TextMessage] = (
                 message_service.filter_text_messages_by_session(session_id=session_id)
             )
-            historical_context = "Chat history of the job goal:\n" + "\n".join(
-                [f"[{msg.get_role()}]: {msg.get_payload()}" for msg in history_text_messages]
-            )
+            if len(history_text_messages) > 0:
+                historical_context = "Chat history of the job goal:\n" + "\n".join(
+                    [f"[{msg.get_role()}]: {msg.get_payload()}" for msg in history_text_messages]
+                )
+            else:
+                historical_context = ""
         else:
             historical_context = ""
 

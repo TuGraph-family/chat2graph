@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Literal
+from typing import Any, Callable, Dict
 from uuid import uuid4
+
+from app.core.common.type import FunctionCallStatus
 
 
 @dataclass
@@ -11,7 +13,7 @@ class FunctionCallResult:
     func_args: Dict[str, Any]
     call_objective: str
     output: str
-    status: Literal["succeeded", "failed"] = field(default="succeeded")
+    status: FunctionCallStatus = field(default=FunctionCallStatus.SUCCEEDED)
 
     @classmethod
     def error(cls, error_message: str) -> "FunctionCallResult":
@@ -28,7 +30,7 @@ class FunctionCallResult:
             func_args={},
             call_objective="",
             output=error_message,
-            status="failed",
+            status=FunctionCallStatus.FAILED,
         )
 
 

@@ -103,9 +103,9 @@ class Leader(Agent):
         job_graph = JobGraph()
 
         # create the subjobs, and add them to the decomposed job graph
-        for job_id, subjob_dict in job_dict.items():
+        temp_to_unique_id_map: Dict[str, str] = {}  # id_generated_by_leader -> unique_id
+        for subjob_id, subjob_dict in job_dict.items():
             subjob = SubJob(
-                id=job_id,
                 original_job_id=job_id,
                 session_id=job.session_id,
                 goal=subjob_dict.get("goal", ""),
@@ -119,13 +119,18 @@ class Leader(Agent):
                 ).get_id(),
                 life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
             )
+            temp_to_unique_id_map[subjob_id] = subjob.id
+
             self._job_service.save_job(job=subjob)
             # add the subjob to the job graph
-            job_graph.add_vertex(job_id)
+            job_graph.add_vertex(subjob.id)
 
+        for subjob_id, subjob_dict in job_dict.items():
             # add edges for dependencies
             for dep_id in subjob_dict.get("dependencies", []):
-                job_graph.add_edge(dep_id, job_id)  # dep_id -> job_id shows dependency
+                job_graph.add_edge(
+                    temp_to_unique_id_map[dep_id], temp_to_unique_id_map[subjob_id]
+                )  # dep_id -> subjob_id shows dependency
 
         # the job graph should not be a directed acyclic graph (DAG)
         if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
