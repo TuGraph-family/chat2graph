@@ -1,12 +1,11 @@
-import time
-from typing import Any, Dict, List
+import hashlib
 import os
 
-from app.core.common.singleton import Singleton
-from app.core.dal.dao.file_dao import FileDao
-from app.core.common.system_env import SystemEnv
-import hashlib
 from werkzeug.datastructures import FileStorage
+
+from app.core.common.singleton import Singleton
+from app.core.common.system_env import SystemEnv
+from app.core.dal.dao.file_dao import FileDao
 
 
 class FileService(metaclass=Singleton):
@@ -71,12 +70,13 @@ class FileService(metaclass=Singleton):
             raise ValueError(f"Cannot find file with ID {id}.")
 
     def get_file_payload(self, id: str) -> str:
+        """Get the content of a file with ID."""
         file = self._file_dao.get_by_id(id=id)
         if file:
             path = file.path
             file_name = os.listdir(path)[0]
             file_path = os.path.join(path, file_name)
-            with open(file_path, "r") as f:
+            with open(file_path, encoding="utf-8") as f:
                 return f.read()
         else:
             raise ValueError(f"Cannot find file with ID {id}.")
