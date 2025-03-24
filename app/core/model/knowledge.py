@@ -11,7 +11,7 @@ class KnowledgeChunk:
     chunk_name: str
     content: str
 
-
+@dataclass
 class Knowledge:
     """Knowledge"""
 
