@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from app.core.model.knowledge_base_descriptor import KnowledgeBaseDescriptor
+from app.core.model.knowledge_store_descriptor import KnowledgeStoreDescriptor
 
 
 class KnowledgeBaseViewTransformer:
@@ -12,7 +12,7 @@ class KnowledgeBaseViewTransformer:
     """
 
     @staticmethod
-    def serialize_knowledge_base(knowledge_base: KnowledgeBaseDescriptor) -> Dict[str, Any]:
+    def serialize_knowledge_base(knowledge_base: KnowledgeStoreDescriptor) -> Dict[str, Any]:
         """Convert a KnowledgeBase model to an API response dictionary."""
         return {
             "id": knowledge_base.id,
@@ -36,8 +36,8 @@ class KnowledgeBaseViewTransformer:
 
     @staticmethod
     def serialize_knowledge_bases(
-        global_knowledge_base: KnowledgeBaseDescriptor,
-        local_knowledge_bases: List[KnowledgeBaseDescriptor],
+        global_knowledge_base: KnowledgeStoreDescriptor,
+        local_knowledge_bases: List[KnowledgeStoreDescriptor],
     ) -> Dict[str, Any]:
         """Serialize a list of knowledge base to a list of API response dictionaries"""
         return {
