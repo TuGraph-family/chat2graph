@@ -12,11 +12,14 @@ from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
 from app.core.dal.init_db import init_db
-from app.core.sdk.agentic_service import AgenticService
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
+from app.core.service.knowledge_base_service import KnowledgeBaseService
 
 init_db()
-
-AgenticService.load()
+# initialize the dao
+DaoFactory.initialize(DbSession())
+knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
 
 @pytest.fixture

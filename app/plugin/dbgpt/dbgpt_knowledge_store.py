@@ -99,9 +99,6 @@ class GraphKnowledgeStore(KnowledgeStore):
             kg_triplet_graph_enabled=True,
             vector_store_config=vector_store_config,
         )
-        self._retriever = EmbeddingRetriever(
-            top_k=3, index_store=self._graph_base, retrieve_strategy=RetrieverStrategy.GRAPH
-        )
 
     def load_document(self, file_path: str, config: Optional[str]) -> str:
         knowledge = KnowledgeFactory.from_file_path(file_path)
