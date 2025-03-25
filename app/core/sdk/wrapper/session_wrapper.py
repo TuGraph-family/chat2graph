@@ -17,7 +17,7 @@ class SessionWrapper:
         session_service: SessionService = SessionService.instance
         self._session: Session = session or session_service.get_session()
 
-    def submit(self, message: TextMessage) -> JobWrapper:
+    def submit(self, message: ChatMessage) -> JobWrapper:
         """Submit the job."""
         message_service: MessageService = MessageService.instance
 

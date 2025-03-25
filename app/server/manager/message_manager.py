@@ -19,7 +19,7 @@ class MessageManager:
         self._agent_service: AgentService = AgentService.instance
         self._message_view: MessageViewTransformer = MessageViewTransformer()
 
-    def chat(self, text_message: TextMessage) -> Tuple[Dict[str, Any], str]:
+    def chat(self, chat_message: ChatMessage) -> Tuple[Dict[str, Any], str]:
         """Create user message and system message return the response data."""
         # create the session wrapper
         session_wrapper = self._agentic_service.session(session_id=chat_message.get_session_id())
@@ -29,7 +29,7 @@ class MessageManager:
 
         # create system message
         system_chat_message = TextMessage(
-            session_id=text_message.get_session_id(),
+            session_id=chat_message.get_session_id(),
             job_id=job_wrapper.id,
             role=ChatMessageRole.SYSTEM,
             payload="",  # TODO: to be handled
