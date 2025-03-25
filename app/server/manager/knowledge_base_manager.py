@@ -54,10 +54,10 @@ class KnowledgeBaseManager:
         data = self._knowledge_base_view.serialize_knowledge_base(knowledge_base)
         return data, "Knowledge base fetched successfully"
 
-    def edit_knowledge_base(
+    def update_knowledge_base(
         self, id: str, name: str, description: str
     ) -> Tuple[Dict[str, Any], str]:
-        """Edit a knowledge base by ID.
+        """Update a knowledge base by ID.
 
         Args:
             kb_id (str): ID of the knowledge base
@@ -67,7 +67,7 @@ class KnowledgeBaseManager:
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing edit status and success message
         """
-        self._knowledge_base_service.edit_knowledge_base(id=id, name=name, description=description)
+        self._knowledge_base_service.update_knowledge_base(id=id, name=name, description=description)
         return {}, f"Knowledge base with ID {id} edited successfully"
 
     def delete_knowledge_base(self, id: str) -> Tuple[Dict[str, Any], str]:

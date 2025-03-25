@@ -51,8 +51,8 @@ def get_knowledge_base_by_id(knowledge_base_id):
 
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["PUT"])
-def edit_knowledge_base_by_id(knowledge_base_id):
-    """Edit a knowledge base by ID."""
+def update_knowledge_base_by_id(knowledge_base_id):
+    """Update a knowledge base by ID."""
     manager = KnowledgeBaseManager()
     data = request.json
     try:
@@ -60,7 +60,7 @@ def edit_knowledge_base_by_id(knowledge_base_id):
         if not data or not all(field in data for field in required_fields):
             raise ApiException("Missing required fields. Required: name, description")
 
-        result, message = manager.edit_knowledge_base(
+        result, message = manager.update_knowledge_base(
             id=knowledge_base_id, name=data.get("name"), description=data.get("description")
         )
         return make_response(True, data=result, message=message)

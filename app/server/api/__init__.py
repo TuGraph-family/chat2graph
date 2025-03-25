@@ -6,6 +6,7 @@ from app.server.api.session_api import sessions_bp
 
 
 def register_blueprints(app):
+    """Register all blueprints."""
     app.register_blueprint(sessions_bp, url_prefix="/api/sessions")
     app.register_blueprint(jobs_bp, url_prefix="/api/jobs")
     app.register_blueprint(graphdbs_bp, url_prefix="/api/graphdbs")

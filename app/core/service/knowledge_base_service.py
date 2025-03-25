@@ -116,8 +116,8 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
         raise ValueError(f"Cannot find knowledge base with ID {id}")
 
-    def edit_knowledge_base(self, id: str, name: str, description: str) -> None:
-        """edit a knowledge base by ID.
+    def update_knowledge_base(self, id: str, name: str, description: str) -> None:
+        """Update a knowledge base by ID.
         Args:
             id (str): ID of the knowledge base
         """
