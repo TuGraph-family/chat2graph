@@ -7,8 +7,6 @@ import useIntlConfig from '@/hooks/useIntlConfig';
 import AsyncTable from '@/components/AsyncTable'
 import { useEffect } from 'react'
 
-
-
 const Graphdb: React.FC = () => {
   const [state, setState] = useImmer<{
     open: boolean

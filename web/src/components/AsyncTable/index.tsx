@@ -5,16 +5,12 @@ import { debounce } from 'lodash'
 import useIntlConfig from '@/hooks/useIntlConfig'
 import { useSearchPagination } from '@/hooks/useSearchPagination'
 
-
-
 interface AsyncTableProps extends TableProps<any> {
   dataSource: any[],
   loading: boolean,
   columns: any[],
   extra: any[],
 }
-
-
 
 const AsyncTable: React.FC<AsyncTableProps> = ({
   dataSource,

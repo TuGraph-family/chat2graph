@@ -1,3 +1,4 @@
+import { MODAL_FORMS } from "@/constants"
 import { useDatabaseEntity } from "@/domains/entities/database-manager"
 import { Form, Input, message, Modal } from "antd"
 import { useEffect } from "react"
@@ -68,6 +69,14 @@ const GraphDataModal: React.FC<IGraphDataModalProps> = ({
         })
     }
 
+    const renderItem = (item: string, idx: number) => {
+        return <Form.Item label={formatMessage(`database.modal.label${idx}`)} name={item} rules={[{ required: true, message: formatMessage(`database.modal.placeholder${idx}`) }]}>
+            {
+                item !== 'pwd' ? <Input maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} /> : <Input.Password maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} />
+            }
+        </Form.Item>
+    }
+
 
     return <Modal
         title={<div style={{ fontSize: 20, fontWeight: 600, textAlign: 'center' }}>
@@ -80,24 +89,9 @@ const GraphDataModal: React.FC<IGraphDataModalProps> = ({
         confirmLoading={loadingCreateGraphdbs || loadingUpdateGraphdbs || loadingGetGraphdbById}
     >
         <Form form={form} layout="vertical">
-            <Form.Item label={formatMessage('database.modal.label1')} name="name" rules={[{ required: true, message: formatMessage('database.modal.placeholder1') }]}>
-                <Input maxLength={50} placeholder={formatMessage('database.modal.placeholder1')} />
-            </Form.Item>
-            <Form.Item label={formatMessage('database.modal.label2')} name="ip" rules={[{ required: true, message: formatMessage('database.modal.placeholder2') }]}>
-                <Input maxLength={50} placeholder={formatMessage('database.modal.placeholder2')} />
-            </Form.Item>
-            <Form.Item label={formatMessage('database.modal.label3')} name="port" rules={[{ required: true, message: formatMessage('database.modal.placeholder3') }]}>
-                <Input maxLength={50} placeholder={formatMessage('database.modal.placeholder3')} />
-            </Form.Item>
-            <Form.Item label={formatMessage('database.modal.label4')} name="user" rules={[{ required: true, message: formatMessage('database.modal.placeholder4') }]}>
-                <Input maxLength={50} placeholder={formatMessage('database.modal.placeholder4')} />
-            </Form.Item>
-            <Form.Item label={formatMessage('database.modal.label5')} name="pwd" rules={[{ required: true, message: formatMessage('database.modal.placeholder5') }]}>
-                <Input.Password maxLength={50} placeholder={formatMessage('database.modal.placeholder5')} />
-            </Form.Item>
-            <Form.Item label={formatMessage('database.modal.label6')} name="desc" >
-                <Input maxLength={50} placeholder={formatMessage('database.modal.placeholder6')} />
-            </Form.Item>
+            {
+                MODAL_FORMS?.map((key: string, idx: number) => renderItem(key, idx))
+            }
         </Form>
     </Modal>
 }

@@ -59,9 +59,6 @@ export const useSessionEntity = () => {
     manual: true,
   });
 
-
-
-
   const {
     run: runGetJobById,
     loading: loadingGetJobById,
@@ -79,7 +76,6 @@ export const useSessionEntity = () => {
 
   const {
     run: runGetMessagesBySessionId,
-    loading: loadingGetMessagesBySessionId
   } = useRequest(services.getMessagesBySessionId, {
     manual: true
   })

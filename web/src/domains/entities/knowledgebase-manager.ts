@@ -18,7 +18,6 @@ export const useKnowledgebaseEntity = () => {
         manual: true,
     });
 
-
     // 编辑知识库
     const { run: runEditKnowledgebase, loading: loadingEditKnowledgebase } = useRequest(services.editKnowledgebase, {
         manual: true,
@@ -49,7 +48,6 @@ export const useKnowledgebaseEntity = () => {
         manual: true
     })
 
-
     const getKnowledgebaseList = () => {
         runGetKnowledgebases().then((res) => {
             updateKnowledgebaseEntity((draft) => {
@@ -68,8 +66,6 @@ export const useKnowledgebaseEntity = () => {
             });
         });
     }
-
-
 
     return {
         knowledgebaseEntity,

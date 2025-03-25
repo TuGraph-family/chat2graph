@@ -126,7 +126,6 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
         />
 
         <Form form={form} style={{ marginTop: 30 }}>
-
             <Form.Item name="file" rules={[{ required: true, message: formatMessage('knowledgebase.detail.upload.required') }]} hidden={current !== 0}>
                 <Dragger {...props}>
                     <p className="ant-upload-drag-icon">
@@ -142,7 +141,6 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
                 <Input.TextArea rows={10} placeholder={formatMessage('knowledgebase.detail.configRequired')} />
             </Form.Item>
         </Form >
-
     </Drawer >
 }
 

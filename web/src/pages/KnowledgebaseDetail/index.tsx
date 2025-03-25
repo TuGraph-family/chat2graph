@@ -9,7 +9,6 @@ import useIntlConfig from "@/hooks/useIntlConfig"
 import { historyPushLinkAt } from "@/utils/link"
 import { useEffect } from "react"
 import dayjs from "dayjs"
-import detailIcon from '@/assets/detail.svg';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, } from "@ant-design/icons"
 import { FileTextOutlined } from "@ant-design/icons"
 const KnowledgebaseDetail = () => {
@@ -22,7 +21,6 @@ const KnowledgebaseDetail = () => {
     const searchParams = new URLSearchParams(location.search);
     const id = searchParams.get('id') || "";
     const sessionId = searchParams.get('sessionId') || "";
-
     const { open } = state
     const { getKnowledgebaseDetail, loadingGetKnowledgebaseById, knowledgebaseEntity, runDeleteFile, loadingDeleteFile } = useKnowledgebaseEntity();
     const { formatMessage } = useIntlConfig();
@@ -32,7 +30,6 @@ const KnowledgebaseDetail = () => {
             draft.open = true
         })
     }
-
 
     const onDeleteFile = (fileId: string) => {
         if (id) {
@@ -57,8 +54,6 @@ const KnowledgebaseDetail = () => {
     useEffect(() => {
         getKnowledgebaseDetail(id)
     }, [id])
-
-
 
     const columns = [
         {
@@ -106,7 +101,7 @@ const KnowledgebaseDetail = () => {
             title: formatMessage('knowledgebase.detail.label7'),
             dataIndex: 'file_id',
             key: 'file_id',
-            render: (file_id: string, record: any) => {
+            render: (file_id: string,) => {
                 return <>
                     {/* <Button type="link" onClick={() => { }} >{formatMessage('actions.edit')}</Button> */}
                     <Popconfirm
@@ -138,7 +133,7 @@ const KnowledgebaseDetail = () => {
                         <FileTextOutlined />
                     </div>
                     <div className={styles['knowledgebases-detail-header-info']}>
-                        <div className={styles['knowledgebases-detail-header-title']}>{sessionId ? name : '全局知识库'}</div>
+                        <div className={styles['knowledgebases-detail-header-title']}>{sessionId ? name : formatMessage('knowledgebase.home.subTitle1')}</div>
                         {/* TODO: 暂无用户体系 */}
                         {/* <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label1')}：{ }</p> */}
                         <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label6')}：{time_stamp ? dayjs(time_stamp * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}</p>
@@ -170,11 +165,7 @@ const KnowledgebaseDetail = () => {
                 sessionId={sessionId}
             />
         </Spin>
-
     </div>
-
-
 }
-
 
 export default KnowledgebaseDetail

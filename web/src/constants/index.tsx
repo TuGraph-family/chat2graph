@@ -30,8 +30,6 @@ export const MOCK_placeholderPromptsItems = [
   },
 ];
 
-
-
 export const ROLES: GetProp<typeof Bubble.List, 'roles'> = {
   ai: {
     placement: 'start',
@@ -42,6 +40,9 @@ export const ROLES: GetProp<typeof Bubble.List, 'roles'> = {
     variant: 'shadow',
   },
 };
+
+export const MODAL_FORMS = ['name', 'ip', 'port', 'user', 'pwd', 'desc']
+
 
 
 

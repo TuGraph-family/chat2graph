@@ -69,7 +69,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         status: (message?.thinking ? 'success' : 'pending') as ThoughtChainItem['status'],
         description: <ol>
           {lines.map((line, index) => (
-            <div key={index}><pre style={{background: 'rgba(201, 201, 201, 0.1)'}}>{line}</pre></div>
+            <div key={index}><pre style={{ background: 'rgba(201, 201, 201, 0.1)' }}>{line}</pre></div>
           ))}
         </ol>,
         icon: getStatusIcon(message?.thinking ? 'success' : 'pending'),
@@ -88,15 +88,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
   }, [message, lines])
 
   return <div style={{ textAlign: 'left' }}>
-    <style>
-      {`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}
-    </style>
-    <Card style={{border: 'unset'}}>
+    <Card style={{ border: 'unset' }}>
       <ThoughtChain items={items} />
     </Card>
     {

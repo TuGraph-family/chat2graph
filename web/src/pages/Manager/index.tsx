@@ -8,8 +8,6 @@ import useIntlConfig from '@/hooks/useIntlConfig';
 import { historyPushLinkAt } from '@/utils/link';
 import Graphdb from '@/pages/Graphdb';
 import Language from '@/components/Language';
-import knowledgebase from '@/assets/knowledgebase.svg';
-import database from '@/assets/database.svg';
 import { FolderOutlined, ReadOutlined } from '@ant-design/icons';
 const { Sider, Content } = Layout
 
@@ -19,9 +17,6 @@ const Manage = () => {
   const location = useLocation();
   const path = location.pathname
   const { formatMessage } = useIntlConfig()
-
-  // <img className={styles['manager-menu-icon']} src={knowledgebase} alt="knowledgebase" />
-  // <img className={styles['manager-menu-icon']} src={database} alt="database" />
   const items: MenuItem[] = [
     { key: '/manager/knowledgebase', icon: <FolderOutlined />, label: formatMessage('knowledgebase.home.title') },
     { key: '/manager/graphdb', icon: <ReadOutlined />, label: formatMessage('database.title') },
@@ -74,11 +69,7 @@ const Manage = () => {
           </Content>
         </Layout>
       </Layout>
-
     </div>
-
-
-
   </div>
 }
 

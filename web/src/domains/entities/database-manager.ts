@@ -11,7 +11,6 @@ export const useDatabaseEntity = () => {
         databaseDetail: {},
     })
 
-
     // 获取所有图数据库
     const {
         run: runGetGraphdbs,
@@ -51,7 +50,6 @@ export const useDatabaseEntity = () => {
     } = useRequest(services.updateGraphdbs, {
         manual: true,
     });
-
 
     const getDatabaseList = async () => {
         const res = await runGetGraphdbs()
