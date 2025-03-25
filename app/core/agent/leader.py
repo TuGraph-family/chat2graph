@@ -47,16 +47,13 @@ class Leader(Agent):
         try:
             job: Job = self._job_service.get_orignal_job(original_job_id=job_id)
         except ValueError:
-            job = self._job_service.get_subjob(job_id=job_id)
+            job = self._job_service.get_subjob(subjob_id=job_id)
 
         # check if the job is already assigned to an expert
         assigned_expert_name: Optional[str] = job.assigned_expert_name
         if assigned_expert_name:
             expert = self.state.get_expert_by_name(assigned_expert_name)
-            job_graph: JobGraph = JobGraph()
-            job_graph.add_vertex(job.id)
             subjob = SubJob(
-                id=job.id,
                 original_job_id=job.id,
                 session_id=job.session_id,
                 goal=job.goal,
@@ -64,6 +61,8 @@ class Leader(Agent):
                 expert_id=expert.get_id(),
             )
             self._job_service.save_job(job=subjob)
+            job_graph: JobGraph = JobGraph()
+            job_graph.add_vertex(subjob.id)
             return job_graph
 
         # else, the job is not assigned to an expert, then decompose the job
@@ -173,7 +172,7 @@ class Leader(Agent):
                     )
                     if all_predecessors_completed:
                         # form the agent message to the agent
-                        job: Job = self._job_service.get_subjob(job_id)
+                        job: SubJob = self._job_service.get_subjob(job_id)
                         pred_messages: List[WorkflowMessage] = [
                             expert_results[pred_id] for pred_id in job_graph.predecessors(job_id)
                         ]
@@ -196,7 +195,8 @@ class Leader(Agent):
                 # if there are no running jobs but still pending jobs, it may be a deadlock
                 if not running_jobs and pending_job_ids:
                     raise ValueError(
-                        "Deadlock detected or invalid job graph: some jobs cannot be executed due to dependencies."
+                        "Deadlock detected or invalid job graph: some jobs cannot be executed due "
+                        "to dependencies."
                     )
 
                 # check for completed jobs
@@ -208,67 +208,40 @@ class Leader(Agent):
                 # process completed jobs
                 for completed_job_id in completed_job_ids:
                     future = running_jobs[completed_job_id]
-                    try:
-                        # get the agent result
-                        agent_result: AgentMessage = future.result()
 
-                        if (
-                            agent_result.get_workflow_result_message().status
-                            == WorkflowStatus.INPUT_DATA_ERROR
-                        ):
-                            pending_job_ids.add(completed_job_id)
-                            predecessors = list(job_graph.predecessors(completed_job_id))
+                    # get the agent result
+                    agent_result: AgentMessage = future.result()
 
-                            # add the predecessors back to pending jobs
-                            pending_job_ids.update(predecessors)
+                    if (
+                        agent_result.get_workflow_result_message().status
+                        == WorkflowStatus.INPUT_DATA_ERROR
+                    ):
+                        pending_job_ids.add(completed_job_id)
+                        predecessors = list(job_graph.predecessors(completed_job_id))
 
-                            if predecessors:
-                                for pred_id in predecessors:
-                                    # remove the job result
-                                    if pred_id in expert_results:
-                                        del expert_results[pred_id]
-                                        # update the result in the job service
-                                        self._job_service.remove_job(
-                                            original_job_id=original_job_id, job_id=pred_id
-                                        )
+                        # add the predecessors back to pending jobs
+                        pending_job_ids.update(predecessors)
 
-                                    # update the lesson in the agent message
-                                    input_agent_message = job_inputs[pred_id]
-                                    lesson = agent_result.get_lesson()
-                                    assert lesson is not None
-                                    input_agent_message.set_lesson(lesson)
-                                    job_inputs[pred_id] = input_agent_message
-                        else:
-                            expert_results[completed_job_id] = (
-                                agent_result.get_workflow_result_message()
-                            )
-                            # update the result in the job service
-                            # self._job_service.update_job_result(
-                            #     JobResult(
-                            #         job_id=completed_job_id,
-                            #         status=JobStatus.FINISHED,
-                            #         message=TextMessage(
-                            #             payload=agent_result.get_payload(),
-                            #             job_id=completed_job_id,
-                            #         ),
-                            #     ),
-                            # )
-                    except Exception as e:
-                        raise ValueError(
-                            f"Failed to execute the job {completed_job_id}: {str(e)}"
-                        ) from e
-                        # expert_results[completed_job_id] = WorkflowMessage(
-                        #     payload={
-                        #         "status": WorkflowStatus.EXECUTION_ERROR,
-                        #         "scratchpad": str(e) + "\n" + traceback.format_exc(),
-                        #         "evaluation": "Some evaluation",
-                        #     },
-                        #     job_id=completed_job_id,
-                        # )
-                        # # update the result in the job service
-                        # self._job_service.update_job_result(
-                        #     JobResult(job_id=completed_job_id, status=JobStatus.FAILED)
-                        # )
+                        if predecessors:
+                            for pred_id in predecessors:
+                                # remove the job result
+                                if pred_id in expert_results:
+                                    del expert_results[pred_id]
+                                    # update the result in the job service
+                                    self._job_service.remove_job(
+                                        original_job_id=original_job_id, job_id=pred_id
+                                    )
+
+                                # update the lesson in the agent message
+                                input_agent_message = job_inputs[pred_id]
+                                lesson = agent_result.get_lesson()
+                                assert lesson is not None
+                                input_agent_message.set_lesson(lesson)
+                                job_inputs[pred_id] = input_agent_message
+                    else:
+                        expert_results[completed_job_id] = (
+                            agent_result.get_workflow_result_message()
+                        )
 
                     # remove from running jobs
                     del running_jobs[completed_job_id]
@@ -289,9 +262,6 @@ class Leader(Agent):
             return agent_result_message
         elif workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # TODO: implement the decompose job method
-            # job_graph, expert_assignments = self._decompse_job(
-            #     job=job, num_subjobs=2
-            # )
             raise NotImplementedError("Decompose the job into subjobs is not implemented.")
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 

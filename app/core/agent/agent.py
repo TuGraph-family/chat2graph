@@ -52,6 +52,7 @@ class Agent(ABC):
         id: Optional[str] = None,
     ):
         # since the expert instance is not persisted, we mock the id with the agent name
+        # TODO: persist the agent instance (leader and experts) in the database
         self._id: str = id or agent_config.profile.name + "_id"
         self._profile: Profile = agent_config.profile
         self._workflow: Workflow = agent_config.workflow

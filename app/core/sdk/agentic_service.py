@@ -65,7 +65,7 @@ class AgenticService(metaclass=Singleton):
         result_message: TextMessage = cast(
             TextMessage,
             self._message_service.get_message_by_job_id(
-                job_id=job_wrapper.job.id, type=MessageType.TEXT_MESSAGE
+                job_id=job_wrapper.job.id, message_type=MessageType.TEXT_MESSAGE
             ),
         )
         return result_message
@@ -82,7 +82,7 @@ class AgenticService(metaclass=Singleton):
 
     def tune_toolkit(self, id: str, *args, **kwargs) -> Any:
         """Train the toolkit."""
-        self._toolkit_service.tune(id=id, *args, **kwargs)
+        self._toolkit_service.tune(id, *args, **kwargs)
 
     def tune_workflow(self, expert: Expert, *args, **kwargs) -> Any:
         """Train the workflow."""

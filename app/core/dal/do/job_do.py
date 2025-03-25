@@ -36,5 +36,5 @@ class JobDo(Do):  # type: ignore
     # job result
     status = Column(String(36), default=JobStatus.CREATED.value)
     message_id = Column(String(36), nullable=True)  # FK constraint
-    duration = Column(Float, nullable=True)
-    tokens = Column(Integer, nullable=True)
+    duration = Column(Float, default=0.0)
+    tokens = Column(Integer, default=0)
