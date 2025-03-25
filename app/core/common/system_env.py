@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple, Type
 
 from dotenv import load_dotenv
 
-from app.core.common.type import PlatformType, KnowledgeBaseType
+from app.core.common.type import PlatformType, KnowledgeStoreType
 
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {
@@ -32,7 +32,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "EMBEDDING_MODEL_NAME": (str, "text-embedding-3-small"),
     "EMBEDDING_MODEL_API_URL": (str, "https://api.openai-proxy.org/v1/embeddings"),
     "EMBEDDING_API_KEY": (str, None),
-    "KNOWLEDGE_STORE_TYPE": (KnowledgeBaseType, KnowledgeBaseType.VECTOR),
+    "KNOWLEDGE_STORE_TYPE": (KnowledgeStoreType, KnowledgeStoreType.VECTOR),
 }
 
 # system environment variable value cache.

@@ -16,7 +16,7 @@ from app.core.model.knowledge_store_descriptor import (
     GlobalKnowledgeStoreDescriptor,
 )
 from app.core.service.file_service import FileService
-from app.core.common.type import KnowledgeBaseCategory
+from app.core.common.type import KnowledgeStoreCategory
 from app.core.common.system_env import SystemEnv
 
 
@@ -29,17 +29,17 @@ class KnowledgeBaseService(metaclass=Singleton):
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
         # create global knowledge store
         if (
-            len(self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.GLOBAL.value))
+            len(self._knowledge_base_dao.filter_by(category=KnowledgeStoreCategory.GLOBAL.value))
             == 0
         ):
             self._knowledge_base_dao.create(
                 name="global_knowledge_base",
                 knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value,
                 session_id="",
-                category=KnowledgeBaseCategory.GLOBAL.value,
+                category=KnowledgeStoreCategory.GLOBAL.value,
             )
         self._global_kb_do = self._knowledge_base_dao.filter_by(
-            category=KnowledgeBaseCategory.GLOBAL.value
+            category=KnowledgeStoreCategory.GLOBAL.value
         )[0]
 
     def create_knowledge_base(
@@ -60,7 +60,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=name,
             knowledge_type=knowledge_type,
             session_id=session_id,
-            category=KnowledgeBaseCategory.LOCAL.value,
+            category=KnowledgeStoreCategory.LOCAL.value,
         )
         return KnowledgeStoreDescriptor(
             id=str(result.id),
@@ -154,7 +154,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         """
 
         # get local knowledge bases
-        results = self._knowledge_base_dao.filter_by(category=KnowledgeBaseCategory.LOCAL.value)
+        results = self._knowledge_base_dao.filter_by(category=KnowledgeStoreCategory.LOCAL.value)
         # get global knowledge base
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=self._global_kb_do.id)
         global_file_descriptor_list = [

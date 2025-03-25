@@ -66,15 +66,15 @@ class JobStatus(Enum):
     STOPPED = "STOPPED"
 
 
-class KnowledgeBaseType(Enum):
-    """Knowledge base type."""
+class KnowledgeStoreType(Enum):
+    """Knowledge store type."""
 
     VECTOR = "VECTOR"
     GRAPH = "GRAPH"
 
 
-class KnowledgeBaseCategory(Enum):
-    """Knowledge base category."""
+class KnowledgeStoreCategory(Enum):
+    """Knowledge store category."""
 
     GLOBAL = "GLOBAL"
     LOCAL = "LOCAL"
