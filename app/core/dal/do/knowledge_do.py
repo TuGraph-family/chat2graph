@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import BigInteger, Column, String, Text, func
+from sqlalchemy import BigInteger, Column, String, Text, func, JSON
 
 from app.core.dal.database import Do
 
@@ -25,11 +25,11 @@ class FileKbMappingDo(Do):  # type: ignore
     __tablename__ = "file_kb_mapping"
 
     id = Column(String(36), primary_key=True)  # FK constraint
-    name = Column(Text)
+    name = Column(String(36))
     kb_id = Column(String(36))  # FK constraint
     chunk_ids = Column(Text)
     status = Column(String(36))
-    config = Column(Text)
+    config = dag = Column(JSON, nullable=True)
     type = Column(String(36), nullable=False)
     size = Column(String(36), nullable=False)
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
