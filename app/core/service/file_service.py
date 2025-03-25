@@ -7,6 +7,7 @@ from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
 from app.core.dal.dao.file_descriptor_dao import FileDescriptorDao
 from app.core.model.file_descriptor import FileDescriptor
+from app.core.common.type import KnowledgeStoreFileStatus
 
 
 class FileService(metaclass=Singleton):
@@ -42,8 +43,13 @@ class FileService(metaclass=Singleton):
             file_path = os.path.join(md5_folder, file.filename)
             file.seek(0)
             file.save(file_path)
+        file_path = os.path.join(md5_folder, os.listdir(md5_folder)[0])
         result = self._file_descriptor_dao.create(
-            name=file.filename, path=md5_folder, type="local", session_id=session_id
+            name=file.filename,
+            path=md5_folder,
+            type="local",
+            session_id=session_id,
+            size=os.path.getsize(file_path),
         )
         return str(result.id)
 
@@ -80,8 +86,8 @@ class FileService(metaclass=Singleton):
                 path=str(file_do.path),
                 name=str(file_do.name),
                 type=str(file_do.type),
-                size="",
-                status="",
-                timestamp=0,
+                size=str(file_do.size),
+                status=KnowledgeStoreFileStatus.value,
+                timestamp=int(file_do.timestamp),
             )
         raise ValueError(f"Cannot find file with ID {id}.")

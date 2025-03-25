@@ -67,7 +67,9 @@ class KnowledgeBaseManager:
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing edit status and success message
         """
-        self._knowledge_base_service.update_knowledge_base(id=id, name=name, description=description)
+        self._knowledge_base_service.update_knowledge_base(
+            id=id, name=name, description=description
+        )
         return {}, f"Knowledge base with ID {id} edited successfully"
 
     def delete_knowledge_base(self, id: str) -> Tuple[Dict[str, Any], str]:

@@ -79,6 +79,7 @@ class KnowledgeStoreCategory(Enum):
     GLOBAL = "GLOBAL"
     LOCAL = "LOCAL"
 
+
 class KnowledgeStoreFileStatus(Enum):
     """Knowledge store file status."""
 
