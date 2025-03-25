@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import os
 from typing import Optional
+from app.core.common.type import KnowledgeStoreFileStatus, FileStorageType
 
 
 @dataclass
@@ -10,9 +11,9 @@ class FileDescriptor:
     id: str
     name: str
     path: Optional[str]
-    type: str
+    type: FileStorageType
     size: str
-    status: str
+    status: KnowledgeStoreFileStatus
     timestamp: int
 
     def get_payload(self) -> str:

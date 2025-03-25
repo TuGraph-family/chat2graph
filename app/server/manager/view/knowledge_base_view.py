@@ -23,9 +23,9 @@ class KnowledgeBaseViewTransformer:
             "files": [
                 {
                     "name": file_descriptor.name,
-                    "type": file_descriptor.type,
+                    "type": file_descriptor.type.value,
                     "size": file_descriptor.size,
-                    "status": file_descriptor.status,
+                    "status": file_descriptor.status.value,
                     "time_stamp": file_descriptor.timestamp,
                     "file_id": file_descriptor.id,
                 }

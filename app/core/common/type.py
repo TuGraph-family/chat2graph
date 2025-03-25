@@ -86,3 +86,8 @@ class KnowledgeStoreFileStatus(Enum):
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
     FAIL = "FAIL"
+
+class FileStorageType(Enum):
+    """File storage type."""
+
+    LOCAL = "LOCAL"

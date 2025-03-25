@@ -22,6 +22,7 @@ from app.core.model.knowledge_base import (
     KnowledgeBase,
 )
 from app.core.service.file_service import FileService
+from app.core.common.type import KnowledgeStoreFileStatus, FileStorageType
 
 
 class KnowledgeBaseService(metaclass=Singleton):
@@ -95,9 +96,9 @@ class KnowledgeBaseService(metaclass=Singleton):
                     id=str(mapping.id),
                     path=None,
                     name=str(mapping.name),
-                    type=str(mapping.type),
+                    type=FileStorageType(mapping.type),
                     size=str(mapping.size),
-                    status=str(mapping.status),
+                    status=KnowledgeStoreFileStatus(mapping.status),
                     timestamp=int(mapping.timestamp),
                 )
                 for mapping in mappings
@@ -163,9 +164,9 @@ class KnowledgeBaseService(metaclass=Singleton):
                 id=str(mapping.id),
                 path=None,
                 name=str(mapping.name),
-                type=str(mapping.type),
+                type=FileStorageType(mapping.type),
                 size=str(mapping.size),
-                status=str(mapping.status),
+                status=KnowledgeStoreFileStatus(mapping.status),
                 timestamp=int(mapping.timestamp),
             )
             for mapping in mappings
@@ -189,9 +190,9 @@ class KnowledgeBaseService(metaclass=Singleton):
                     id=str(mapping.id),
                     path=None,
                     name=str(mapping.name),
-                    type=str(mapping.type),
+                    type=FileStorageType(mapping.type),
                     size=str(mapping.size),
-                    status=str(mapping.status),
+                    status=KnowledgeStoreFileStatus(mapping.status),
                     timestamp=int(mapping.timestamp),
                 )
                 for mapping in mappings
