@@ -6,7 +6,7 @@ from sqlalchemy import func
 
 from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
-from app.core.common.type import KnowledgeBaseCategory
+from app.core.common.type import KnowledgeStoreCategory
 from app.core.dal.dao.file_dao import FileDao
 from app.core.dal.dao.knowledge_dao import FileKbMappingDao, KnowledgeBaseDao
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
