@@ -254,25 +254,28 @@ class KnowledgeBaseService(metaclass=Singleton):
                     size=os.path.getsize(file_path),
                     type=FileStorageType.LOCAL.value,
                 )
-                # update knowledge base timestamp
-                mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
-                if mapping:
-                    timestamp = mapping.timestamp
-                    self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
-                # load file to knowledge base
-                try:
-                    chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(
-                        file_path, knowledge_config
-                    )
-                except Exception as e:
-                    self._file_kb_mapping_dao.update(
-                        id=file_id, status=KnowledgeStoreFileStatus.FAIL.value
-                    )
-                    raise e
-                else:
-                    self._file_kb_mapping_dao.update(
-                        id=file_id, status=KnowledgeStoreFileStatus.SUCCESS.value, chunk_ids=chunk_ids
-                    )
+            # update knowledge base timestamp
+            mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
+            if mapping:
+                timestamp = mapping.timestamp
+                self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
+                if mapping.status != KnowledgeStoreFileStatus.SUCCESS.value:
+                    # load file to knowledge base
+                    try:
+                        chunk_ids = KnowledgeStoreFactory.get_or_create(
+                            knowledge_base_id
+                        ).load_document(file_path, knowledge_config)
+                    except Exception as e:
+                        self._file_kb_mapping_dao.update(
+                            id=file_id, status=KnowledgeStoreFileStatus.FAIL.value
+                        )
+                        raise e
+                    else:
+                        self._file_kb_mapping_dao.update(
+                            id=file_id,
+                            status=KnowledgeStoreFileStatus.SUCCESS.value,
+                            chunk_ids=chunk_ids,
+                        )
         else:
             raise ValueError(f"Cannot find file with ID {file_id}.")
 
