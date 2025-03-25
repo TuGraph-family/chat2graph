@@ -7,7 +7,9 @@ from dbgpt_ext.rag.assembler import EmbeddingAssembler  # type: ignore
 from dbgpt_ext.rag.chunk_manager import ChunkParameters  # type: ignore
 from dbgpt_ext.rag.knowledge.factory import KnowledgeFactory  # type: ignore
 from dbgpt_ext.storage.graph_store.tugraph_store import TuGraphStoreConfig  # type: ignore
-from dbgpt_ext.storage.knowledge_graph.community_summary import CommunitySummaryKnowledgeGraph  # type: ignore
+from dbgpt_ext.storage.knowledge_graph.community_summary import (
+    CommunitySummaryKnowledgeGraph,  # type: ignore
+)
 from dbgpt_ext.storage.vector_store.chroma_store import (  # type: ignore
     ChromaStore,
     ChromaVectorConfig,
@@ -15,8 +17,8 @@ from dbgpt_ext.storage.vector_store.chroma_store import (  # type: ignore
 
 from app.core.common.async_func import run_async_function
 from app.core.common.system_env import SystemEnv
-from app.core.knowledge.knowledge_store import KnowledgeStore
 from app.core.knowledge.knowledge_config import KnowledgeConfig
+from app.core.knowledge.knowledge_store import KnowledgeStore
 from app.core.model.knowledge import KnowledgeChunk
 from app.plugin.dbgpt.dbgpt_llm_client import DbgptLlmClient
 

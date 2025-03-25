@@ -43,8 +43,8 @@ pytest-mock = "^3.14.0"
 
 
 [tool.poetry.group.db-gpt.dependencies]
-dbgpt = { version = "0.6.3", extras = ["framework", "rag"] }
-typing-inspect = ">=0.8.0"
+dbgpt = "0.7.0"
+dbgpt-ext = "0.7.0"
 
 [tool.ruff]
 line-length = 100

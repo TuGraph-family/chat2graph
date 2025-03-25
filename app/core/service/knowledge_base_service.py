@@ -7,12 +7,14 @@ from sqlalchemy import func
 from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import (
+    FileStorageType,
     KnowledgeStoreCategory,
     KnowledgeStoreFileStatus,
     KnowledgeStoreType,
 )
 from app.core.dal.dao.file_descriptor_dao import FileDescriptorDao
 from app.core.dal.dao.knowledge_dao import FileKbMappingDao, KnowledgeBaseDao
+from app.core.knowledge.knowledge_config import KnowledgeConfig
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.job import Job
@@ -22,8 +24,6 @@ from app.core.model.knowledge_base import (
     KnowledgeBase,
 )
 from app.core.service.file_service import FileService
-from app.core.common.type import KnowledgeStoreFileStatus, FileStorageType
-from app.core.knowledge.knowledge_config import KnowledgeConfig
 
 
 class KnowledgeBaseService(metaclass=Singleton):
