@@ -31,6 +31,6 @@ class FileKbMappingDo(Do):  # type: ignore
     chunk_ids = Column(Text)
     status = Column(String(36))
     config = Column(Text)
-    type = Column(Text)
-    size = Column(Text)
+    type = Column(String(36), nullable=False)
+    size = Column(String(36), nullable=False)
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))

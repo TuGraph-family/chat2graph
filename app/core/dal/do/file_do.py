@@ -14,5 +14,5 @@ class FileDo(Do):  # type: ignore
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     name = Column(String(36), nullable=False)
     path = Column(String(256), nullable=False)
-    type = Column(Text)
+    type = Column(String(36), nullable=False)
     session_id = Column(String(36), nullable=False)  # FK constraint
