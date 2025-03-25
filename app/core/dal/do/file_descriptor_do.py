@@ -5,8 +5,8 @@ from sqlalchemy import Column, String
 from app.core.dal.database import Do
 
 
-class FileDo(Do):  # type: ignore
-    """File to store file details."""
+class FileDescriptorDo(Do):  # type: ignore
+    """File descriptor to store file details."""
 
     __tablename__ = "file"
 
