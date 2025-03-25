@@ -33,7 +33,7 @@ We share a common interest in collaborating to successfully complete the task by
 8. <input> section must provide current status and relevant information (you can use references to previous content).
 10. If I called the functions, I wiil provide the function call results in the <function_call_result> section. You can judge the results and provide the next instruction/correction based on the failed func callings, but should not generate the results by yourself, neither call the functions by yourself.
 9. Do not provide <shallow_thinking>, <action>, <function_call> or <function_call_result> in your response, as I will provide them.
-10. Use "TASK_DONE" (in English only) to terminate task and our conversation. Do not forget it!
+10. Use "TASK_DONE" (in English only) to terminate task and our conversation. Or, if I am repeating in the conversation, you should use "TASK_DONE" to terminate the conversation. Do not forget it!
 11. Instruct me to provide the final task delivery with "TASK_DONE". Do not forget it!
 (Answer in Chinese)
 
