@@ -11,10 +11,13 @@ from app.server.common.util import ApiException, make_error_response
 
 def create_app():
     """Create the Flask app."""
-    AgenticService.load()
-
     static_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
     app = Flask(__name__, static_folder=static_folder_path)
+
+    with app.app_context():
+        init_db()
+
+    AgenticService.load()
 
     @app.route("/")
     def serve_index():
@@ -34,9 +37,6 @@ def create_app():
     @app.errorhandler(ApiException)
     def handle_base_exception(e):
         return make_error_response(e.status_code, e.message)
-
-    with app.app_context():
-        init_db()
 
     return app
 

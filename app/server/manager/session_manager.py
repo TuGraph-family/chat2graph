@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.model.knowledge_base import Knowledge
 from app.core.model.session import Session
 from app.core.service.job_service import JobService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
+from app.core.common.system_env import SystemEnv
 
 
 class SessionManager:
@@ -25,8 +25,8 @@ class SessionManager:
             Tuple[Dict[str, Any], str]: A tuple containing session details and success message
         """
         session: Session = self._session_service.create_session(name=name)
-        knowledgebase: Knowledge = self._knowledgebase_service.create_knowledge_base(
-            name=name, knowledge_type="private", session_id=session.id
+        knowledgebase = self._knowledgebase_service.create_knowledge_base(
+            name=name, knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE, session_id=session.id
         )
         data = {
             "id": session.id,

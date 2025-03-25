@@ -89,7 +89,7 @@ class EvalOperator(Operator):
             workflow_messages=workflow_messages_copy,
             tools=rec_tools,
             actions=rec_actions,
-            knowledge=self.get_knowledge(),
+            knowledge=self.get_knowledge(job),
             insights=self.get_env_insights(),
             lesson=lesson,
         )

@@ -6,6 +6,7 @@ from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator_config import OperatorConfig
 
@@ -48,16 +49,17 @@ class Operator:
             workflow_messages=workflow_messages,
             tools=rec_tools,
             actions=rec_actions,
-            knowledge=self.get_knowledge(),
+            knowledge=self.get_knowledge(job),
             insights=self.get_env_insights(),
             lesson=lesson,
         )
         return task
 
-    def get_knowledge(self) -> str:
+    def get_knowledge(self, job: Job) -> str:
         """Get the knowledge from the knowledge base."""
-        # TODO: get the knowledge from the knowledge base
-        return "Do not have provieded any knowledge yet."
+        query = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
+        knowledge = KnowledgeBaseService.instance.get_knowledge(query, job)
+        return knowledge
 
     def get_env_insights(self) -> Optional[List[Insight]]:
         """Get the environment information."""

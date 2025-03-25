@@ -1,13 +1,12 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, ForeignKey, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import BigInteger, Column, String, Text, func, JSON
 
 from app.core.dal.database import Do
 
 
 class KnowledgeBaseDo(Do):  # type: ignore
-    """Knowledge Base to store knowledge base details"""
+    """Knowledge Base to store knowledge store details"""
 
     __tablename__ = "knowledge_base"
 
@@ -15,16 +14,22 @@ class KnowledgeBaseDo(Do):  # type: ignore
     name = Column(String(36), nullable=False)
     knowledge_type = Column(String(36), nullable=False)
     session_id = Column(String(36), nullable=False)  # FK constraint
+    description = Column(Text)
+    category = Column(String(36), nullable=False)
+    timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
 
-    files = relationship("FileDo", secondary="kb_file_mapping", backref="knowledge_bases")
 
+class FileKbMappingDo(Do):  # type: ignore
+    """File to knowledge base association model."""
 
-class KbFileMappingDo(Do):  # type: ignore
-    """Knowledge Base to File association model."""
+    __tablename__ = "file_kb_mapping"
 
-    __tablename__ = "kb_file_mapping"
-
-    kb_id = Column(
-        String(36), ForeignKey("knowledge_base.id", ondelete="CASCADE"), primary_key=True
-    )
-    file_id = Column(String(36), ForeignKey("file.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(String(36), primary_key=True)  # FK constraint
+    name = Column(String(36))
+    kb_id = Column(String(36))  # FK constraint
+    chunk_ids = Column(Text)
+    status = Column(String(36))
+    config = Column(JSON, nullable=True)
+    type = Column(String(36), nullable=False)
+    size = Column(String(36), nullable=False)
+    timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))

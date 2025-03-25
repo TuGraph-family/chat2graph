@@ -1,16 +1,27 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
 import pytest
 
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
+from app.core.dal.init_db import init_db
 from app.core.model.job import SubJob
+from app.core.model.knowledge import Knowledge
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
+
+init_db()
+# initialize the dao
+DaoFactory.initialize(DbSession())
+knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
 
 @pytest.fixture
@@ -75,7 +86,10 @@ async def operator():
 async def test_execute_basic_functionality(operator: Operator, mock_reasoner: AsyncMock):
     """Test basic execution functionality."""
     job = SubJob(
-        id="test_job_id", session_id="test_session_id", goal="Test goal", context="Test context"
+        id="test_job_id" + str(uuid4()),
+        session_id="test_session_id" + str(uuid4()),
+        goal="Test goal",
+        context="Test context",
     )
     workflow_message = WorkflowMessage(payload={"scratchpad": "Test scratchpad"}, job_id=job.id)
 
@@ -103,7 +117,6 @@ async def test_execute_basic_functionality(operator: Operator, mock_reasoner: As
 
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_get_tools_from_actions(operator: Operator):
     """Test tool retrieval from actions."""
     toolkit_service: ToolkitService = ToolkitService.instance
@@ -121,6 +134,19 @@ async def test_get_tools_from_actions(operator: Operator):
     expected_tool_ids = {"search_tool", "analyze_tool", "generate_tool"}
     actual_tool_ids = {tool.id for tool in tools}
     assert actual_tool_ids == expected_tool_ids
+
+
+@pytest.mark.asyncio
+async def test_get_knowledge(operator: Operator):
+    """Test get knolwedge."""
+    with patch(
+        "app.core.service.knowledge_base_service.KnowledgeBaseService.get_knowledge"
+    ) as mock_get_knowledge:
+        mock_get_knowledge.return_value = Knowledge([], [])
+        job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
+        knowledge = operator.get_knowledge(job)
+        assert "[Knowledges From Global Knowledge Base]" in knowledge.get_payload()
+        assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
 
 
 @pytest.mark.asyncio
