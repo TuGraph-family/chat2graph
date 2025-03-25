@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, String, Text
+from sqlalchemy import Column, String
 
 from app.core.dal.database import Do
 

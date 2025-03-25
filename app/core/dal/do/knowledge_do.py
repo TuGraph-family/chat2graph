@@ -1,12 +1,12 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, String, Text, BigInteger, func
+from sqlalchemy import BigInteger, Column, String, Text, func
 
 from app.core.dal.database import Do
 
 
 class KnowledgeBaseDo(Do):  # type: ignore
-    """Knowledge Base to store knowledge base details"""
+    """Knowledge Base to store knowledge store details"""
 
     __tablename__ = "knowledge_base"
 
