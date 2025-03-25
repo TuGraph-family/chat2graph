@@ -29,7 +29,7 @@ class FileKbMappingDo(Do):  # type: ignore
     kb_id = Column(String(36))  # FK constraint
     chunk_ids = Column(Text)
     status = Column(String(36))
-    config = dag = Column(JSON, nullable=True)
+    config = Column(JSON, nullable=True)
     type = Column(String(36), nullable=False)
     size = Column(String(36), nullable=False)
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
