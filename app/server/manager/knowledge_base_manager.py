@@ -1,9 +1,10 @@
 from typing import Any, Dict, Tuple
 
+from app.core.common.type import KnowledgeStoreType
+from app.core.knowledge.knowledge_config import KnowledgeConfig
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
 from app.server.manager.view.knowledge_base_view import KnowledgeBaseViewTransformer
-from app.core.common.type import KnowledgeStoreType
 
 
 class KnowledgeBaseManager:
@@ -101,19 +102,21 @@ class KnowledgeBaseManager:
 
         return data, "Get all knowledge bases successfully"
 
-    def load_knowledge(self, kb_id: str, file_id: str, config: str) -> Tuple[Dict[str, Any], str]:
+    def load_knowledge(
+        self, kb_id: str, file_id: str, knowledge_config: KnowledgeConfig
+    ) -> Tuple[Dict[str, Any], str]:
         """Load knowledge with file ID.
 
         Args:
             kb_id (str): ID of the knowledge base
             file_id (str): ID of the file
-            config (str): config for knowledge base file loading
+            config (KnowledgeConfig): config for knowledge base file loading
 
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing load status and success message
         """
         self._knowledge_base_service.load_knowledge(
-            knowledge_base_id=kb_id, file_id=file_id, config=config
+            knowledge_base_id=kb_id, file_id=file_id, knowledge_config=knowledge_config
         )
         return (
             {},

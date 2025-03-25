@@ -230,7 +230,9 @@ class KnowledgeBaseService(metaclass=Singleton):
             local_chunks = []
         return Knowledge(global_chunks, local_chunks)
 
-    def load_knowledge(self, knowledge_base_id: str, file_id: str, config: str) -> None:
+    def load_knowledge(
+        self, knowledge_base_id: str, file_id: str, knowledge_config: KnowledgeConfig
+    ) -> None:
         """Load new knowledge entry."""
         # get file with file id
         file = self._file_descriptor_dao.get_by_id(id=file_id)
@@ -238,11 +240,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             folder_path = file.path
             file_name = file.name
             file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
-            # load config
-            config = json.loads(config)
-            knowledge_config = KnowledgeConfig()
-            if "chunk_size" in config:
-                knowledge_config.chunk_size = int(config["chunk_size"])
+
             # add file_kb_mapping
             if self._file_kb_mapping_dao.get_by_id(id=file_id) is None:
                 self._file_kb_mapping_dao.create(
@@ -250,10 +248,11 @@ class KnowledgeBaseService(metaclass=Singleton):
                     name=file_name,
                     kb_id=knowledge_base_id,
                     status=KnowledgeStoreFileStatus.PENDING.value,
-                    config=json.dumps(config),
+                    config=json.dumps(knowledge_config.to_dict()),
                     size=os.path.getsize(file_path),
                     type=FileStorageType.LOCAL.value,
                 )
+
             # update knowledge base timestamp
             mapping = self._file_kb_mapping_dao.get_by_id(id=file_id)
             if mapping:
@@ -276,8 +275,8 @@ class KnowledgeBaseService(metaclass=Singleton):
                             status=KnowledgeStoreFileStatus.SUCCESS.value,
                             chunk_ids=chunk_ids,
                         )
-        else:
-            raise ValueError(f"Cannot find file with ID {file_id}.")
+
+        raise ValueError(f"Cannot find file with ID {file_id}.")
 
     def delete_knowledge(self, file_id: str) -> None:
         """Delete knowledge entry."""
@@ -298,5 +297,5 @@ class KnowledgeBaseService(metaclass=Singleton):
             self._knowledge_base_dao.update(
                 id=str(knowledge_base_id), timestamp=func.strftime("%s", "now")
             )
-        else:
-            raise ValueError(f"Cannot find knowledge with ID {file_id}.")
+
+        raise ValueError(f"Cannot find knowledge with ID {file_id}.")

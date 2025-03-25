@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple, Type
 
 from dotenv import load_dotenv
 
-from app.core.common.type import PlatformType, KnowledgeStoreType
+from app.core.common.type import KnowledgeStoreType, PlatformType
 
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {
@@ -25,6 +25,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "DATABASE_POOL_TIMEOUT": (int, 60),
     "DATABASE_POOL_RECYCLE": (int, 3600),
     "DATABASE_POOL_PRE_PING": (bool, True),
+    "KNOWLEDGE_STORE_PATH": (str, "/knowledge_bases"),
     "APP_ROOT": (
         str,
         f"{os.path.expanduser('~')}/.chat2graph",

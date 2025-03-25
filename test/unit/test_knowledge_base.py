@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from uuid import uuid4
 
 from dbgpt.core import Chunk
 
@@ -28,7 +29,10 @@ async def test_vector_knowledge_base():
 
 async def test_knowledge_base_service():
     job = SubJob(
-        id="test_job_id", session_id="test_session_id", goal="Test goal", context="Test context"
+        id="test_job_id" + str(uuid4()),
+        session_id="test_session_id " + str(uuid4()),
+        goal="Test goal",
+        context="Test context",
     )
     knowledge = KnowledgeBaseService.instance.get_knowledge(
         query="what is chat2graph talk about", job=job

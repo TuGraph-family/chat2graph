@@ -7,8 +7,8 @@ from dbgpt_ext.rag.assembler import EmbeddingAssembler  # type: ignore
 from dbgpt_ext.rag.chunk_manager import ChunkParameters  # type: ignore
 from dbgpt_ext.rag.knowledge.factory import KnowledgeFactory  # type: ignore
 from dbgpt_ext.storage.graph_store.tugraph_store import TuGraphStoreConfig  # type: ignore
-from dbgpt_ext.storage.knowledge_graph.community_summary import (
-    CommunitySummaryKnowledgeGraph,  # type: ignore
+from dbgpt_ext.storage.knowledge_graph.community_summary import (  # type: ignore
+    CommunitySummaryKnowledgeGraph,
 )
 from dbgpt_ext.storage.vector_store.chroma_store import (  # type: ignore
     ChromaStore,
@@ -22,14 +22,14 @@ from app.core.knowledge.knowledge_store import KnowledgeStore
 from app.core.model.knowledge import KnowledgeChunk
 from app.plugin.dbgpt.dbgpt_llm_client import DbgptLlmClient
 
-KNOWLEDGE_STORE_PATH = "/knowledge_bases"
-
 
 class VectorKnowledgeStore(KnowledgeStore):
     """Knowledge base for storing vectors."""
 
     def __init__(self, name: str):
-        config = ChromaVectorConfig(persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH)
+        config = ChromaVectorConfig(
+            persist_path=SystemEnv.APP_ROOT + SystemEnv.KNOWLEDGE_STORE_PATH
+        )
         self._vector_store = ChromaStore(
             config,
             name=name,
@@ -91,7 +91,7 @@ class GraphKnowledgeStore(KnowledgeStore):
             enable_summary="True",
         )
         vector_store_config = ChromaVectorConfig(
-            persist_path=SystemEnv.APP_ROOT + KNOWLEDGE_STORE_PATH
+            persist_path=SystemEnv.APP_ROOT + SystemEnv.KNOWLEDGE_STORE_PATH
         )
         self._graph_store = CommunitySummaryKnowledgeGraph(
             config=config,

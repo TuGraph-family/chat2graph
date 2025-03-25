@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
 import pytest
 
@@ -95,7 +96,7 @@ def leader(mock_reasoner: Reasoner):
         del AbcSingleton._instances[Leader]
 
     decomp_operator_config = OperatorConfig(
-        id="job_decomp_operator_id",
+        id="job_decomp_operator_id" + str(uuid4()),
         instruction="",
         actions=[],
         output_schema=JOB_DECOMPOSITION_OUTPUT_SCHEMA,

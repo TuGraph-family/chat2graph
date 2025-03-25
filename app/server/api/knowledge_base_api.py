@@ -1,7 +1,10 @@
+import json
+
 from flask import Blueprint, request
 
 from app.server.common.util import ApiException, make_response
 from app.server.manager.knowledge_base_manager import KnowledgeBaseManager
+from app.server.manager.view import knowledge_base_view
 
 knowledgebases_bp = Blueprint("knowledgebases", __name__)
 
@@ -89,7 +92,11 @@ def load_knowledge_with_file_id(knowledge_base_id, file_id):
         if not data or not all(field in data for field in required_fields):
             raise ApiException("Missing required fields. Required: config")
         result, message = manager.load_knowledge(
-            kb_id=knowledge_base_id, file_id=file_id, config=data.get("config")
+            kb_id=knowledge_base_id,
+            file_id=file_id,
+            knowledge_config=knowledge_base_view.KnowledgeBaseViewTransformer.deserialize_knowledge_config(
+                json.loads(data.get("config", {}))
+            ),
         )
         return make_response(True, data=result, message=message)
     except ApiException as e:

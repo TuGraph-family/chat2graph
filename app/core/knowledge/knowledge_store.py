@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from app.core.model.knowledge import KnowledgeChunk
 from app.core.knowledge.knowledge_config import KnowledgeConfig
+from app.core.model.knowledge import KnowledgeChunk
 
 
 class KnowledgeStore(ABC):

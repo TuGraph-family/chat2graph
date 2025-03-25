@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 
+from app.core.knowledge.knowledge_config import KnowledgeConfig
 from app.core.model.knowledge_base import KnowledgeBase
 
 
@@ -63,3 +64,8 @@ class KnowledgeBaseViewTransformer:
                 for kb in local_knowledge_bases
             ],
         }
+
+    @staticmethod
+    def deserialize_knowledge_config(data: Dict[str, Any]) -> KnowledgeConfig:
+        """Deserialize knowledge config data from API request."""
+        return KnowledgeConfig(chunk_size=data.get("chunk_size", None))

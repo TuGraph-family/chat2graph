@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
 import pytest
 
@@ -85,7 +86,10 @@ async def operator():
 async def test_execute_basic_functionality(operator: Operator, mock_reasoner: AsyncMock):
     """Test basic execution functionality."""
     job = SubJob(
-        id="test_job_id", session_id="test_session_id", goal="Test goal", context="Test context"
+        id="test_job_id" + str(uuid4()),
+        session_id="test_session_id" + str(uuid4()),
+        goal="Test goal",
+        context="Test context",
     )
     workflow_message = WorkflowMessage(payload={"scratchpad": "Test scratchpad"}, job_id=job.id)
 
