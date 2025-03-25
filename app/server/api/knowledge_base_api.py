@@ -4,7 +4,7 @@ from flask import Blueprint, request
 
 from app.server.common.util import ApiException, make_response
 from app.server.manager.knowledge_base_manager import KnowledgeBaseManager
-from app.server.manager.view import knowledge_base_view
+from app.server.manager.view.knowledge_base_view import KnowledgeBaseViewTransformer
 
 knowledgebases_bp = Blueprint("knowledgebases", __name__)
 
@@ -94,7 +94,7 @@ def load_knowledge_with_file_id(knowledge_base_id, file_id):
         result, message = manager.load_knowledge(
             kb_id=knowledge_base_id,
             file_id=file_id,
-            knowledge_config=knowledge_base_view.KnowledgeBaseViewTransformer.deserialize_knowledge_config(
+            knowledge_config=KnowledgeBaseViewTransformer.deserialize_knowledge_config(
                 json.loads(data.get("config", {}))
             ),
         )
