@@ -29,14 +29,12 @@ class FileService(metaclass=Singleton):
         """Upload a new file.
 
         Args:
-            name (str): Name of the knowledge base
-            knowledge_type (str): Type of the knowledge base
+            file (FileStorage): file
             session_id (str): ID of the session
 
         Returns:
             str: ID of the file
         """
-        # upload the file
         md5_hash = self.calculate_md5(file)
         md5_folder = self._upload_folder + f"/{md5_hash}/"
         if not os.path.exists(md5_folder):
@@ -53,11 +51,9 @@ class FileService(metaclass=Singleton):
         """Delete a file with ID.
 
         Args:
-            name (str): Name of the knowledge base
-            knowledge_type (str): Type of the knowledge base
+            file (FileStorage): file
             session_id (str): ID of the session
         """
-        # delete the file
         file_do = self._file_dao.get_by_id(id=id)
         if file_do:
             path = file_do.path
@@ -72,7 +68,11 @@ class FileService(metaclass=Singleton):
             raise ValueError(f"Cannot find file with ID {id}.")
 
     def get_file_descriptor(self, file_id: str) -> FileDescriptor:
-        """Get the content of a file with ID."""
+        """Get the content of a file with ID.
+
+        Args:
+            file_id (str): ID of the file
+        """
         file_do = self._file_dao.get_by_id(id=file_id)
         if file_do:
             return FileDescriptor(
@@ -84,5 +84,4 @@ class FileService(metaclass=Singleton):
                 status="",
                 timestamp=0,
             )
-        else:
-            raise ValueError(f"Cannot find file with ID {id}.")
+        raise ValueError(f"Cannot find file with ID {id}.")

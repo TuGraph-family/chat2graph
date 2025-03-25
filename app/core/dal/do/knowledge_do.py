@@ -1,7 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Column, ForeignKey, String, Text, BigInteger, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text, BigInteger, func
 
 from app.core.dal.database import Do
 

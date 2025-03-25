@@ -16,7 +16,7 @@ from app.core.model.knowledge_store_descriptor import (
     GlobalKnowledgeStoreDescriptor,
 )
 from app.core.service.file_service import FileService
-from app.core.common.type import KnowledgeStoreCategory
+from app.core.common.type import KnowledgeStoreCategory, KnowledgeStoreType
 from app.core.common.system_env import SystemEnv
 
 
@@ -43,7 +43,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         )[0]
 
     def create_knowledge_base(
-        self, name: str, knowledge_type: str, session_id: str
+        self, name: str, knowledge_type: KnowledgeStoreType, session_id: str
     ) -> KnowledgeStoreDescriptor:
         """Create a new knowledge base.
 
@@ -58,7 +58,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         # create the knowledge base
         result = self._knowledge_base_dao.create(
             name=name,
-            knowledge_type=knowledge_type,
+            knowledge_type=knowledge_type.value,
             session_id=session_id,
             category=KnowledgeStoreCategory.LOCAL.value,
         )
@@ -67,7 +67,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=str(result.name),
             knowledge_type=str(result.knowledge_type),
             session_id=str(result.session_id),
-            file_descriptor_list=[],
+            file_descriptors=[],
             description="",
             category=str(result.category),
             timestamp=int(result.timestamp),
@@ -86,7 +86,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         if result:
             # fetch all related file_kb_mapping
             mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
-            file_descriptor_list = [
+            file_descriptors = [
                 FileDescriptor(
                     id=str(mapping.id),
                     path=None,
@@ -98,20 +98,17 @@ class KnowledgeBaseService(metaclass=Singleton):
                 )
                 for mapping in mappings
             ]
-            if not result:
-                raise ValueError(f"Knowledge base with ID {id} not found")
             return KnowledgeStoreDescriptor(
                 id=str(result.id),
                 name=str(result.name),
                 knowledge_type=str(result.knowledge_type),
                 session_id=str(result.session_id),
-                file_descriptor_list=file_descriptor_list,
+                file_descriptors=file_descriptors,
                 description=str(result.description),
                 category=str(result.category),
                 timestamp=int(result.timestamp),
             )
-        else:
-            raise ValueError(f"Cannot find knowledge base with ID {id}")
+        raise ValueError(f"Cannot find knowledge base with ID {id}")
 
     def edit_knowledge_base(self, id: str, name: str, description: str) -> None:
         """edit a knowledge base by ID.
@@ -157,7 +154,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         results = self._knowledge_base_dao.filter_by(category=KnowledgeStoreCategory.LOCAL.value)
         # get global knowledge base
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=self._global_kb_do.id)
-        global_file_descriptor_list = [
+        global_file_descriptors = [
             FileDescriptor(
                 id=str(mapping.id),
                 path=None,
@@ -174,7 +171,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             name=str(self._global_kb_do.name),
             knowledge_type=str(self._global_kb_do.knowledge_type),
             session_id=str(self._global_kb_do.session_id),
-            file_descriptor_list=global_file_descriptor_list,
+            file_descriptors=global_file_descriptors,
             description=str(self._global_kb_do.description),
             category=str(self._global_kb_do.category),
             timestamp=int(self._global_kb_do.timestamp),
@@ -183,7 +180,7 @@ class KnowledgeBaseService(metaclass=Singleton):
         local_kbs = []
         for result in results:
             mappings = self._file_kb_mapping_dao.filter_by(kb_id=result.id)
-            file_descriptor_list = [
+            file_descriptors = [
                 FileDescriptor(
                     id=str(mapping.id),
                     path=None,
@@ -201,7 +198,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                     name=str(result.name),
                     knowledge_type=str(result.knowledge_type),
                     session_id=str(result.session_id),
-                    file_descriptor_list=file_descriptor_list,
+                    file_descriptors=file_descriptors,
                     description=str(result.description),
                     category=str(result.category),
                     timestamp=int(result.timestamp),
@@ -236,7 +233,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             file_name = file.name
             file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
             # add file_kb_mapping
-            if self._file_kb_mapping_dao.get_by_id(id=file_id) == None:
+            if self._file_kb_mapping_dao.get_by_id(id=file_id) is None:
                 self._file_kb_mapping_dao.create(
                     id=file_id,
                     name=file_name,
@@ -287,6 +284,3 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
         else:
             raise ValueError(f"Cannot find knowledge with ID {file_id}.")
-
-    def __delete__(self):
-        self._global_knowledge_base.clear()

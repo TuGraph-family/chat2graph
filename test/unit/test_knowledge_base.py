@@ -24,14 +24,6 @@ async def test_vector_knowledge_base():
         )
         assert len(chunks) != 0
 
-        # chunk_ids = VectorKnowledgeStore("test_vector_knowledge_base").load_document("./chat2graph.md")
-        # chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve("what is chat2graph talk about")
-        # assert len(chunks) != 0
-
-        # VectorKnowledgeStore("test_vector_knowledge_base").delete_document(chunk_ids)
-        # chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve("what is chat2graph talk about")
-        # assert len(chunks) == 0
-
 
 async def test_graph_knowledge_base():
     with patch(

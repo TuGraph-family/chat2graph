@@ -29,7 +29,7 @@ class KnowledgeBaseViewTransformer:
                     "time_stamp": file_descriptor.timestamp,
                     "file_id": file_descriptor.id,
                 }
-                for file_descriptor in knowledge_base.file_descriptor_list
+                for file_descriptor in knowledge_base.file_descriptors
             ],
             "description": knowledge_base.description,
         }
@@ -46,7 +46,7 @@ class KnowledgeBaseViewTransformer:
                 "name": global_knowledge_base.name,
                 "knowledge_type": global_knowledge_base.knowledge_type,
                 "session_id": global_knowledge_base.session_id,
-                "file_count": len(global_knowledge_base.file_descriptor_list),
+                "file_count": len(global_knowledge_base.file_descriptors),
                 "description": global_knowledge_base.description,
                 "time_stamp": global_knowledge_base.timestamp,
             },
@@ -56,7 +56,7 @@ class KnowledgeBaseViewTransformer:
                     "name": kb.name,
                     "knowledge_type": kb.knowledge_type,
                     "session_id": kb.session_id,
-                    "file_count": len(kb.file_descriptor_list),
+                    "file_count": len(kb.file_descriptors),
                     "description": kb.description,
                     "time_stamp": kb.timestamp,
                 }

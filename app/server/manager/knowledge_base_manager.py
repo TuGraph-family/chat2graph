@@ -3,6 +3,7 @@ from typing import Any, Dict, Tuple
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
 from app.server.manager.view.knowledge_base_view import KnowledgeBaseViewTransformer
+from app.core.common.type import KnowledgeStoreType
 
 
 class KnowledgeBaseManager:
@@ -29,7 +30,7 @@ class KnowledgeBaseManager:
         _ = self._session_service.get_session(session_id=session_id)
 
         knowledge_base = self._knowledge_base_service.create_knowledge_base(
-            name=name, knowledge_type=knowledge_type, session_id=session_id
+            name=name, knowledge_type=KnowledgeStoreType(knowledge_type), session_id=session_id
         )
         # TODO: use knowledge base type Enum
         data = {

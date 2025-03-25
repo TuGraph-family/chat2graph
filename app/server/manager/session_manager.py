@@ -26,7 +26,7 @@ class SessionManager:
         """
         session: Session = self._session_service.create_session(name=name)
         knowledgebase = self._knowledgebase_service.create_knowledge_base(
-            name=name, knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value, session_id=session.id
+            name=name, knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE, session_id=session.id
         )
         data = {
             "id": session.id,

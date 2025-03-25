@@ -12,7 +12,7 @@ class KnowledgeStoreDescriptor:
     name: str
     knowledge_type: str
     session_id: str
-    file_descriptor_list: List[FileDescriptor]
+    file_descriptors: List[FileDescriptor]
     description: str
     category: str
     timestamp: int
