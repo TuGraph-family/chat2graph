@@ -1,5 +1,5 @@
 from app.core.dal.database import Do, engine
-from app.core.dal.do.file_do import FileDo
+from app.core.dal.do.file_descriptor_do import FileDescriptorDo
 from app.core.dal.do.graph_db_do import GraphDbDo
 from app.core.dal.do.job_do import JobDo
 from app.core.dal.do.knowledge_do import KnowledgeBaseDo
@@ -13,7 +13,7 @@ def init_db() -> None:
 
     # create tables in order
     GraphDbDo.__table__.create(engine, checkfirst=True)
-    FileDo.__table__.create(engine, checkfirst=True)
+    FileDescriptorDo.__table__.create(engine, checkfirst=True)
     KnowledgeBaseDo.__table__.create(engine, checkfirst=True)
     SessionDo.__table__.create(engine, checkfirst=True)
     JobDo.__table__.create(engine, checkfirst=True)

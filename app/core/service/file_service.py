@@ -5,7 +5,7 @@ from werkzeug.datastructures import FileStorage
 
 from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
-from app.core.dal.dao.file_dao import FileDao
+from app.core.dal.dao.file_descriptor_dao import FileDescriptorDao
 from app.core.model.file_descriptor import FileDescriptor
 
 
@@ -13,7 +13,7 @@ class FileService(metaclass=Singleton):
     """File Service"""
 
     def __init__(self):
-        self._file_dao: FileDao = FileDao.instance
+        self._file_descriptor_dao: FileDescriptorDao = FileDescriptorDao.instance
         self._upload_folder = SystemEnv.APP_ROOT + "/files"
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
@@ -42,7 +42,7 @@ class FileService(metaclass=Singleton):
             file_path = os.path.join(md5_folder, file.filename)
             file.seek(0)
             file.save(file_path)
-        result = self._file_dao.create(
+        result = self._file_descriptor_dao.create(
             name=file.filename, path=md5_folder, type="local", session_id=session_id
         )
         return str(result.id)
@@ -54,11 +54,11 @@ class FileService(metaclass=Singleton):
             file (FileStorage): file
             session_id (str): ID of the session
         """
-        file_do = self._file_dao.get_by_id(id=id)
+        file_do = self._file_descriptor_dao.get_by_id(id=id)
         if file_do:
             path = file_do.path
-            self._file_dao.delete(id=id)
-            results = self._file_dao.filter_by(path=path)
+            self._file_descriptor_dao.delete(id=id)
+            results = self._file_descriptor_dao.filter_by(path=path)
             if len(results) == 0:
                 for file_name in os.listdir(path):
                     file_path = os.path.join(path, file_name)
@@ -73,7 +73,7 @@ class FileService(metaclass=Singleton):
         Args:
             file_id (str): ID of the file
         """
-        file_do = self._file_dao.get_by_id(id=file_id)
+        file_do = self._file_descriptor_dao.get_by_id(id=file_id)
         if file_do:
             return FileDescriptor(
                 id=file_id,

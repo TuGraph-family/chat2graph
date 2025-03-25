@@ -11,7 +11,7 @@ from app.core.common.type import (
     KnowledgeStoreFileStatus,
     KnowledgeStoreType,
 )
-from app.core.dal.dao.file_dao import FileDao
+from app.core.dal.dao.file_descriptor_dao import FileDescriptorDao
 from app.core.dal.dao.knowledge_dao import FileKbMappingDao, KnowledgeBaseDao
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.model.file_descriptor import FileDescriptor
@@ -29,7 +29,7 @@ class KnowledgeBaseService(metaclass=Singleton):
 
     def __init__(self):
         self._knowledge_base_dao: KnowledgeBaseDao = KnowledgeBaseDao.instance
-        self._file_dao: FileDao = FileDao.instance
+        self._file_descriptor_dao: FileDescriptorDao = FileDescriptorDao.instance
         self._file_kb_mapping_dao: FileKbMappingDao = FileKbMappingDao.instance
         # create global knowledge store
         if (
@@ -231,7 +231,7 @@ class KnowledgeBaseService(metaclass=Singleton):
     def load_knowledge(self, knowledge_base_id: str, file_id: str, config: str) -> None:
         """Load new knowledge entry."""
         # get file with file id
-        file = self._file_dao.get_by_id(id=file_id)
+        file = self._file_descriptor_dao.get_by_id(id=file_id)
         if file:
             folder_path = file.path
             file_name = file.name
