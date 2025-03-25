@@ -4,6 +4,8 @@ import KnowledgebasesTable from './components/KnowledgebasesTable';
 import useIntlConfig from '@/hooks/useIntlConfig';
 import { useEffect } from 'react';
 import { useKnowledgebaseEntity } from '@/domains/entities/knowledgebase-manager';
+import { history } from 'umi'
+import { historyPushLinkAt } from '@/utils/link';
 
 const Knowledgebase = () => {
   const { formatMessage } = useIntlConfig();
@@ -25,11 +27,13 @@ const Knowledgebase = () => {
 
   return <div>
     <div className={styles['title']}>{formatMessage('knowledgebase.home.title')}</div>
-    <div className={styles['knowledge-base-total']}>
-      <div className={styles['knowledge-base-total-header']}>
+    <div className={styles['knowledge-base-total']} onClick={() => {
+      history.push(historyPushLinkAt('/manager/knowledgebase/detail', { id: knowledgebaseEntity?.global_knowledge_base?.id }))
+    }}>
+      <div className={styles['knowledge-base-total-header']} >
         <div className={styles['knowledge-base-total-header-title']}>
           {formatMessage('knowledgebase.home.subTitle1')}
-          <span className={styles['knowledge-base-total-header-count']}>{formatMessage('knowledgebase.docs')}：<strong>{knowledgebaseEntity?.global_knowledge_base}</strong></span>
+          <span className={styles['knowledge-base-total-header-count']}>{formatMessage('knowledgebase.docs')}：<strong>{knowledgebaseEntity?.global_knowledge_base?.file_count || 0}</strong></span>
         </div>
       </div>
 

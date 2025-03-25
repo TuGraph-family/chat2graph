@@ -89,7 +89,7 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
       {paginatedData?.map(item => {
         return <Col span={8} key={item?.id}>
           <div className={styles['knowledgebases-table-card']} onClick={() => {
-            history.push(historyPushLinkAt('/manager/knowledgebase/detail', { id: item?.id }))
+            history.push(historyPushLinkAt('/manager/knowledgebase/detail', { id: item?.id, sessionId: item?.session_id }))
           }}>
             <div className={styles['knowledgebases-table-card-header']}>
               <Typography.Paragraph

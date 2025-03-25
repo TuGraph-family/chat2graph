@@ -264,7 +264,7 @@ const HomePage: React.FC = () => {
       avatar: message?.role === 'SYSTEM' ? {
         icon: <img src={logoSrc} />
       } : undefined,
-      typing: message?.role === 'SYSTEM' && !isInit,
+      typing: (message?.role === 'SYSTEM' && !isInit) ? { step: 3, interval: 50 } : false,
       messageRender: (text) => {
         return message?.role === 'SYSTEM' ? <BubbleContent status={status} message={message} content={text} /> : <pre>{text}</pre>
       }

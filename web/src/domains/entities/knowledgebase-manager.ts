@@ -4,13 +4,13 @@ import { useImmer } from "use-immer";
 
 export const useKnowledgebaseEntity = () => {
     const [knowledgebaseEntity, updateKnowledgebaseEntity] = useImmer<{
-        knowledgebase: any[],
+        knowledgebase: API.KnowledgebaseVO[],
         knowledgebaseDetail: any,
-        global_knowledge_base: number
+        global_knowledge_base?: API.KnowledgebaseVO,
     }>({
         knowledgebase: [],
         knowledgebaseDetail: {},
-        global_knowledge_base: 0
+        global_knowledge_base: {}
     });
 
     // 上传文件
@@ -56,7 +56,7 @@ export const useKnowledgebaseEntity = () => {
 
                 const { global_knowledge_base, local_knowledge_base = [] } = res?.data || {}
                 draft.knowledgebase = local_knowledge_base;
-                draft.global_knowledge_base = global_knowledge_base?.file_count || 0;
+                draft.global_knowledge_base = global_knowledge_base;
             });
         });
     }

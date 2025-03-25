@@ -58,9 +58,7 @@ declare namespace API {
     success?: boolean;
     message?: string;
     data?: {
-      global_knowledge_base?: {
-        file_count?: number;
-      },
+      global_knowledge_base?: KnowledgebaseVO,
       local_knowledge_base?: Array<KnowledgebaseVO>;
     };
   }

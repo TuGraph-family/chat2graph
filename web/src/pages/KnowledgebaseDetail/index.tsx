@@ -21,6 +21,7 @@ const KnowledgebaseDetail = () => {
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const id = searchParams.get('id') || "";
+    const sessionId = searchParams.get('sessionId') || "";
 
     const { open } = state
     const { getKnowledgebaseDetail, loadingGetKnowledgebaseById, knowledgebaseEntity, runDeleteFile, loadingDeleteFile } = useKnowledgebaseEntity();
@@ -82,11 +83,11 @@ const KnowledgebaseDetail = () => {
             key: 'status',
             render: (status: string) => {
                 switch (status) {
-                    case 'success':
+                    case 'SUCCESS':
                         return <Tag icon={<CheckCircleOutlined />} color="success">{formatMessage('knowledgebase.detail.success')}</Tag>
-                    case 'fail':
+                    case 'FAIL':
                         return <Tag icon={<CloseCircleOutlined />} color="error">{formatMessage('knowledgebase.detail.fail')}</Tag>
-                    case 'pending':
+                    case 'PENDING':
                         return <Tag icon={<SyncOutlined spin />} color="processing">{formatMessage('knowledgebase.detail.pending')}</Tag>
                     default:
                         return null
@@ -137,7 +138,7 @@ const KnowledgebaseDetail = () => {
                         <FileTextOutlined />
                     </div>
                     <div className={styles['knowledgebases-detail-header-info']}>
-                        <div className={styles['knowledgebases-detail-header-title']}>{name}</div>
+                        <div className={styles['knowledgebases-detail-header-title']}>{sessionId ? name : '全局知识库'}</div>
                         {/* TODO: 暂无用户体系 */}
                         {/* <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label1')}：{ }</p> */}
                         <p className={styles['knowledgebases-detail-header-desc']}>{formatMessage('knowledgebase.detail.label6')}：{time_stamp ? dayjs(time_stamp * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}</p>
@@ -166,6 +167,7 @@ const KnowledgebaseDetail = () => {
                 setState((draft) => { draft.open = false })
             }} formatMessage={formatMessage}
                 id={id}
+                sessionId={sessionId}
             />
         </Spin>
 
