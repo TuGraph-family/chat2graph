@@ -68,4 +68,6 @@ class KnowledgeBaseViewTransformer:
     @staticmethod
     def deserialize_knowledge_config(data: Dict[str, Any]) -> KnowledgeConfig:
         """Deserialize knowledge config data from API request."""
-        return KnowledgeConfig(chunk_size=data.get("chunk_size", None))
+        knowledge_config = KnowledgeConfig()
+        knowledge_config.chunk_size = data.get("chunk_size", knowledge_config.chunk_size)
+        return knowledge_config

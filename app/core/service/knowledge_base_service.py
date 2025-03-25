@@ -275,8 +275,8 @@ class KnowledgeBaseService(metaclass=Singleton):
                             status=KnowledgeStoreFileStatus.SUCCESS.value,
                             chunk_ids=chunk_ids,
                         )
-
-        raise ValueError(f"Cannot find file with ID {file_id}.")
+        else:
+            raise ValueError(f"Cannot find file with ID {file_id}.")
 
     def delete_knowledge(self, file_id: str) -> None:
         """Delete knowledge entry."""
