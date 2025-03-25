@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session as SqlAlchemySession
 
 from app.core.dal.dao.dao import Dao
-from app.core.dal.do.knowledge_do import KnowledgeBaseDo, FileKbMappingDo
+from app.core.dal.do.knowledge_do import FileKbMappingDo, KnowledgeBaseDo
 
 
 class KnowledgeBaseDao(Dao[KnowledgeBaseDo]):

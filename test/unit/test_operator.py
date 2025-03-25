@@ -1,21 +1,21 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-import os
+
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
+from app.core.dal.init_db import init_db
 from app.core.model.job import SubJob
+from app.core.model.knowledge import Knowledge
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.tool_resource import Query
-from app.core.service.knowledge_base_service import KnowledgeBaseService
-from app.core.model.knowledge import Knowledge
-from app.core.dal.init_db import init_db
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 
 init_db()
 # initialize the dao

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, List
+from typing import List
 
 from app.core.prompt.knowledge import KNOWLEDGE_PROMPT
 

@@ -1,8 +1,8 @@
+from app.server.api.file_api import files_bp
 from app.server.api.graphdb_api import graphdbs_bp
 from app.server.api.job_api import jobs_bp
 from app.server.api.knowledge_base_api import knowledgebases_bp
 from app.server.api.session_api import sessions_bp
-from app.server.api.file_api import files_bp
 
 
 def register_blueprints(app):

@@ -6,9 +6,9 @@ from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator_config import OperatorConfig
-from app.core.service.knowledge_base_service import KnowledgeBaseService
 
 
 class Operator:
