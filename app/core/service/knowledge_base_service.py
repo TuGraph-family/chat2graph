@@ -18,7 +18,11 @@ from app.core.model.knowledge_store_descriptor import (
     KnowledgeStoreDescriptor,
 )
 from app.core.service.file_service import FileService
-from app.core.common.type import KnowledgeStoreCategory, KnowledgeStoreType
+from app.core.common.type import (
+    KnowledgeStoreCategory,
+    KnowledgeStoreType,
+    KnowledgeStoreFileStatus,
+)
 from app.core.common.system_env import SystemEnv
 
 
@@ -240,7 +244,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                     id=file_id,
                     name=file_name,
                     kb_id=knowledge_base_id,
-                    status="pending",
+                    status=KnowledgeStoreFileStatus.PENDING.value,
                     config=config,
                     size=os.path.getsize(file_path),
                     type="local",
@@ -258,10 +262,14 @@ class KnowledgeBaseService(metaclass=Singleton):
                     file_path, config
                 )
             except Exception as e:
-                self._file_kb_mapping_dao.update(id=file_id, status="fail")
+                self._file_kb_mapping_dao.update(
+                    id=file_id, status=KnowledgeStoreFileStatus.FAIL.value
+                )
                 raise e
             else:
-                self._file_kb_mapping_dao.update(id=file_id, status="success", chunk_ids=chunk_ids)
+                self._file_kb_mapping_dao.update(
+                    id=file_id, status=KnowledgeStoreFileStatus.SUCCESS.value, chunk_ids=chunk_ids
+                )
         else:
             raise ValueError(f"Cannot find file with ID {file_id}.")
 
