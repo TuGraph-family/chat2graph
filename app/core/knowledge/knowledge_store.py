@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from app.core.model.knowledge import KnowledgeChunk
+from app.core.knowledge.knowledge_config import KnowledgeConfig
 
 
 class KnowledgeStore(ABC):
@@ -12,7 +13,7 @@ class KnowledgeStore(ABC):
         """Init knowledge store."""
 
     @abstractmethod
-    def load_document(self, file_path: str, config: Optional[str]) -> str:
+    def load_document(self, file_path: str, config: Optional[KnowledgeConfig]) -> str:
         """Load document."""
 
     @abstractmethod

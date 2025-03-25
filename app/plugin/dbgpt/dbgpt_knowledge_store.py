@@ -7,9 +7,7 @@ from dbgpt_ext.rag.assembler import EmbeddingAssembler  # type: ignore
 from dbgpt_ext.rag.chunk_manager import ChunkParameters  # type: ignore
 from dbgpt_ext.rag.knowledge.factory import KnowledgeFactory  # type: ignore
 from dbgpt_ext.storage.graph_store.tugraph_store import TuGraphStoreConfig  # type: ignore
-from dbgpt_ext.storage.knowledge_graph.community_summary import (
-    CommunitySummaryKnowledgeGraph,  # type: ignore
-)
+from dbgpt_ext.storage.knowledge_graph.community_summary import CommunitySummaryKnowledgeGraph  # type: ignore
 from dbgpt_ext.storage.vector_store.chroma_store import (  # type: ignore
     ChromaStore,
     ChromaVectorConfig,
@@ -18,6 +16,7 @@ from dbgpt_ext.storage.vector_store.chroma_store import (  # type: ignore
 from app.core.common.async_func import run_async_function
 from app.core.common.system_env import SystemEnv
 from app.core.knowledge.knowledge_store import KnowledgeStore
+from app.core.knowledge.knowledge_config import KnowledgeConfig
 from app.core.model.knowledge import KnowledgeChunk
 from app.plugin.dbgpt.dbgpt_llm_client import DbgptLlmClient
 
@@ -44,11 +43,11 @@ class VectorKnowledgeStore(KnowledgeStore):
             index_store=self._vector_store,
         )
 
-    def load_document(self, file_path: str, config: Optional[str]) -> str:
+    def load_document(self, file_path: str, config: Optional[KnowledgeConfig]) -> str:
         knowledge = KnowledgeFactory.from_file_path(file_path)
         if config:
             chunk_parameters = ChunkParameters(
-                chunk_strategy="CHUNK_BY_SIZE", chunk_size=int(config["chunk_size"])
+                chunk_strategy="CHUNK_BY_SIZE", chunk_size=config.chunk_size
             )
         else:
             chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE")
@@ -106,11 +105,11 @@ class GraphKnowledgeStore(KnowledgeStore):
             vector_store_config=vector_store_config,
         )
 
-    def load_document(self, file_path: str, config: Optional[str]) -> str:
+    def load_document(self, file_path: str, config: Optional[KnowledgeConfig]) -> str:
         knowledge = KnowledgeFactory.from_file_path(file_path)
         if config:
             chunk_parameters = ChunkParameters(
-                chunk_strategy="CHUNK_BY_SIZE", chunk_size=int(config["chunk_size"])
+                chunk_strategy="CHUNK_BY_SIZE", chunk_size=config.chunk_size
             )
         else:
             chunk_parameters = ChunkParameters(chunk_strategy="CHUNK_BY_SIZE")

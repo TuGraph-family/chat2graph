@@ -23,6 +23,7 @@ from app.core.model.knowledge_base import (
 )
 from app.core.service.file_service import FileService
 from app.core.common.type import KnowledgeStoreFileStatus, FileStorageType
+from app.core.knowledge.knowledge_config import KnowledgeConfig
 
 
 class KnowledgeBaseService(metaclass=Singleton):
@@ -237,6 +238,11 @@ class KnowledgeBaseService(metaclass=Singleton):
             folder_path = file.path
             file_name = file.name
             file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
+            # load config
+            config = json.loads(config)
+            knowledge_config = KnowledgeConfig()
+            if "chunk_size" in config:
+                knowledge_config.chunk_size = int(config["chunk_size"])
             # add file_kb_mapping
             if self._file_kb_mapping_dao.get_by_id(id=file_id) is None:
                 self._file_kb_mapping_dao.create(
@@ -244,7 +250,7 @@ class KnowledgeBaseService(metaclass=Singleton):
                     name=file_name,
                     kb_id=knowledge_base_id,
                     status=KnowledgeStoreFileStatus.PENDING.value,
-                    config=config,
+                    config=json.dumps(config),
                     size=os.path.getsize(file_path),
                     type="local",
                 )
@@ -253,12 +259,10 @@ class KnowledgeBaseService(metaclass=Singleton):
             if mapping:
                 timestamp = mapping.timestamp
                 self._knowledge_base_dao.update(id=knowledge_base_id, timestamp=timestamp)
-            # load config
-            config = json.loads(config)
             # load file to knowledge base
             try:
                 chunk_ids = KnowledgeStoreFactory.get_or_create(knowledge_base_id).load_document(
-                    file_path, config
+                    file_path, knowledge_config
                 )
             except Exception as e:
                 self._file_kb_mapping_dao.update(

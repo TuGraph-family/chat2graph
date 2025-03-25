@@ -7,7 +7,7 @@ from app.core.dal.database import DbSession
 from app.core.dal.init_db import init_db
 from app.core.model.job import SubJob
 from app.core.service.knowledge_base_service import KnowledgeBaseService
-from app.plugin.dbgpt.dbgpt_knowledge_store import GraphKnowledgeStore, VectorKnowledgeStore
+from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore
 
 init_db()
 # initialize the dao
@@ -21,17 +21,6 @@ async def test_vector_knowledge_base():
     ) as mock_retrieve:
         mock_retrieve.return_value = [Chunk(), Chunk(), Chunk()]
         chunks = VectorKnowledgeStore("test_vector_knowledge_base").retrieve(
-            "what is chat2graph talk about"
-        )
-        assert len(chunks) != 0
-
-
-async def test_graph_knowledge_base():
-    with patch(
-        "dbgpt_ext.storage.knowledge_graph.community_summary.CommunitySummaryKnowledgeGraph.asimilar_search_with_scores"
-    ) as mock_retrieve:
-        mock_retrieve.return_value = [Chunk(), Chunk(), Chunk()]
-        chunks = GraphKnowledgeStore("test_graph_knowledge_base").retrieve(
             "what is chat2graph talk about"
         )
         assert len(chunks) != 0

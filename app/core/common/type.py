@@ -87,6 +87,7 @@ class KnowledgeStoreFileStatus(Enum):
     SUCCESS = "SUCCESS"
     FAIL = "FAIL"
 
+
 class FileStorageType(Enum):
     """File storage type."""
 
