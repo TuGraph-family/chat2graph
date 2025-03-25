@@ -11,7 +11,7 @@ from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
 from app.core.model.message import ChatMessage, MessageType, TextMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper

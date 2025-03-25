@@ -121,9 +121,9 @@ def chat(session_id):
             "莎士比亚的悲剧《罗密欧与朱丽叶》描述了两个敌对家族（蒙太古家族和凯普莱特家族）中的年轻人之间的爱情故事。"
             "假设我们已经将《罗密欧与朱丽叶》的三元组图谱数据导入到图数据库中。"
             "现在，通过图数据库建模和算法分析，我们可以从网络科学的角度重新审视这部经典作品中的人物关系结构。"
-            "因此，请你使用PageRank算法分析剧中最具影响力的人物。"
+            # "因此，请你使用PageRank算法分析剧中最具影响力的人物。"
         )
-        # data["instruction_message"]["assigned_expert_name"] = "Graph Analysis Expert"
+        data["instruction_message"]["assigned_expert_name"] = "Graph Analysis Expert"
         # data["instruction_message"]["assigned_expert_name"] = "Question Answering Expert"
         # data["instruction_message"]["assigned_expert_name"] = "Graph Query Expert"
 

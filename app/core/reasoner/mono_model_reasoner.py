@@ -117,21 +117,21 @@ class MonoModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            scratchpad = "\n".join(
+            previous_input = "Here is the previous job execution's output:\n" + "\n".join(
                 [f"{workflow_message.scratchpad}" for workflow_message in task.workflow_messages]
             )
         else:
-            scratchpad = "No scratchpad provided in this round."
+            previous_input = "No previous input provided in this round."
         action_rels = "\n".join(
             [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
         )
 
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
+            action_rels=action_rels,
             context=task.job.context,
             env_info=env_info,
             knowledge=task.knowledge,
-            action_rels=action_rels,
-            scratchpad=scratchpad,
+            previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )
 

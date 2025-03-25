@@ -3,7 +3,10 @@ import matplotlib.pyplot as plt
 from app.core.common.type import WorkflowStatus
 from app.core.model.job import SubJob
 from app.core.model.message import WorkflowMessage
-from app.core.prompt.operator import EVAL_OPERATION_INSTRUCTION_PROMPT, EVAL_OPERATION_OUTPUT_PROMPT
+from app.core.prompt.eval_operator import (
+    EVAL_OPERATION_INSTRUCTION_PROMPT,
+    EVAL_OPERATION_OUTPUT_PROMPT,
+)
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService

@@ -1,6 +1,6 @@
 from app.core.common.type import ModelPlatformType, ReasonerType, WorkflowPlatformType
 from app.core.model.message import TextMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.toolkit.toolkit import Action

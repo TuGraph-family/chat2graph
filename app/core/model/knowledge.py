@@ -31,7 +31,10 @@ class Knowledge:
             local_knowledges += f"chunk_name:{chunk.chunk_name}\n"
             local_knowledges += f"content:{chunk.content}\n"
             local_knowledges += "\n"
-        self._payload = KNOWLEDGE_PROMPT.format(
+
+        if not global_knowledges and not local_knowledges:
+            return "No knowledge found."
+
+        return KNOWLEDGE_PROMPT.format(
             global_knowledges=global_knowledges, local_knowledges=local_knowledges
         )
-        return self._payload

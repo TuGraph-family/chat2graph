@@ -4,7 +4,10 @@ from app.core.agent.agent import Agent, AgentConfig, Profile
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.common.type import WorkflowPlatformType
-from app.core.prompt.operator import EVAL_OPERATION_INSTRUCTION_PROMPT, EVAL_OPERATION_OUTPUT_PROMPT
+from app.core.prompt.eval_operator import (
+    EVAL_OPERATION_INSTRUCTION_PROMPT,
+    EVAL_OPERATION_OUTPUT_PROMPT,
+)
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper

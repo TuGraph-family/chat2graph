@@ -14,7 +14,7 @@ from app.core.common.util import parse_json
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, WorkflowMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job import JOB_DECOMPOSITION_PROMPT
 from app.core.service.job_service import JobService
 
 

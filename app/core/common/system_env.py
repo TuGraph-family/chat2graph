@@ -27,12 +27,9 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "DATABASE_POOL_RECYCLE": (int, 3600),
     "DATABASE_POOL_PRE_PING": (bool, True),
     "KNOWLEDGE_STORE_PATH": (str, "/knowledge_bases"),
-    "APP_ROOT": (
-        str,
-        f"{os.path.expanduser('~')}/.chat2graph",
-    ),
+    "APP_ROOT": (str, f"{os.path.expanduser('~')}/.chat2graph"),
     "EMBEDDING_MODEL_NAME": (str, "text-embedding-3-small"),
-    "EMBEDDING_MODEL_API_URL": (str, "https://api.openai-proxy.org/v1/embeddings"),
+    "EMBEDDING_MODEL_API_URL": (str, None),
     "EMBEDDING_API_KEY": (str, None),
     "KNOWLEDGE_STORE_TYPE": (KnowledgeStoreType, KnowledgeStoreType.VECTOR),
 }

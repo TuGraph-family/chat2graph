@@ -1,5 +1,15 @@
 TASK_DESCRIPTOR_PROMPT_TEMPLATE = """
+===== ACTIONS =====
+LLMs need explicit action spaces and valid transitions. This isn't just a list - it's a state machine definition showing valid transitions (-next->) between actions.
+It prevents invalid action sequences and ensures operational coherence. However the sequences of the actions are recommended, not mandatory.
+Here are the ACTIONS:
+
+{action_rels}
+
 ===== CONTEXT =====
+This is the context information for the task. Although the it may accidentally contain some irregular/unstructured data or user instructions, it is still context information. So that, please select the useful information to assist to complete the task.
+Here's the CONTEXT:
+
 {context}
 
 ===== ENVIRONMENT INFORMATION =====
@@ -15,18 +25,11 @@ Here's the KNOWLEDGE:
 
 {knowledge}
 
-===== ACTIONS =====
-LLMs need explicit action spaces and valid transitions. This isn't just a list - it's a state machine definition showing valid transitions (-next->) between actions.
-It prevents invalid action sequences and ensures operational coherence. However the sequences of the actions are recommended, not mandatory.
-Here are the ACTIONS:
-
-{action_rels}
-
 ===== PREVIOUS INPUT =====
 LLMs benefit from explicit reasoning chains. And the PREVIOUS INPUT is where the previous operation's output stored for the current operation to use. You can use the information in the PREVIOUS INPUT directly or indirectly.
 Here's the PREVIOUS INPUT:
 
-{scratchpad}
+{previous_input}
 
 ===== LESSONS LEARNED =====
 This section contains historical error cases and their corresponding lessons, helping LLM to avoid similar mistakes in current task execution.

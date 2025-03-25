@@ -199,7 +199,7 @@ actions:
 
   - &algorithms_intention_identification_action
     name: "algorithms_intention_identification"
-    desc: "识别并理解用户需求中的算法要求，调用相关工具函数查找图数据库中支持的算法，然后基于此确定算法的名称和要求"
+    desc: "识别并理解用户需求中的算法要求，确定算法的名称等信息下"
     tools:
       - *algorithms_getter_tool
 
@@ -463,10 +463,6 @@ operators:
       你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
       你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
       注意，你不需要执行算法，也不能询问用户更多的信息。
-
-      1.算法需求分析
-      - 分析需求和具体的诉求
-      - 确定需要执行的算法和相关的要求
     output_schema: |
       {
           "algorithms_supported_by_db": ["图数据库支持的算法列表，算法的名字（（名称和数据库中支持的算法名称保持一致）"],
@@ -493,11 +489,9 @@ operators:
       - 验证算法的可执行性（包括图数据库中是否支持该算法）
       - 按照算法的输入
     output_schema: |
-      {
-          "called_algorithms": "调用的算法和参数",
-          "status": "算法执行的状态",
-          "algorithms_result": "算法执行的结果。如果失败，返回失败原因"
-      }
+      called_algorithms, 调用的算法和参数
+      status, 算法执行的状态
+      algorithms_result, 算法执行的结果。如果失败，返回失败原因
     actions:
       - *algorithms_validation_action
       - *algorithms_execution_action
@@ -597,9 +591,7 @@ experts:
   - profile:
       name: "Graph Analysis Expert"
       desc: |
-        你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
-        你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
-        注意，你不需要执行算法，也不能询问用户更多的信息。
+        你是一个专业的算法意图分析专家。
     reasoner:
       actor_name: "Graph Analysis Expert"
       thinker_name: "Graph Analysis Expert"
