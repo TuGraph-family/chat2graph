@@ -8,6 +8,9 @@ export enum FRAMEWORK {
   QUERY = 'QUERY',
 };
 
+export const ENGLISH_LOCALE = 'en-US';
+export const ENGLISH_LANG_PARAM = 'en';
+
 export const FRAMEWORK_CONFIG = [{
   key: FRAMEWORK.MODEL,
   textId: 'home.model',
