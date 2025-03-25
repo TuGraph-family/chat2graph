@@ -5,7 +5,7 @@ from app.core.model.file_descriptor import FileDescriptor
 
 
 @dataclass
-class KnowledgeStoreDescriptor:
+class KnowledgeBase:
     """Knowledge Store Descriptor class"""
 
     id: str
@@ -19,5 +19,5 @@ class KnowledgeStoreDescriptor:
 
 
 @dataclass
-class GlobalKnowledgeStoreDescriptor(KnowledgeStoreDescriptor):
+class GlobalKnowledgeBase(KnowledgeBase):
     """Global Knowledge Store Descriptor class"""
