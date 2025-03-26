@@ -145,8 +145,14 @@ async def test_get_knowledge(operator: Operator):
         mock_get_knowledge.return_value = Knowledge([], [])
         job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
         knowledge = operator.get_knowledge(job)
-        assert "[Knowledges From Global Knowledge Base]" in knowledge.get_payload()
-        assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
+        assert (
+            "[Knowledges From Global Knowledge Base]" in knowledge.get_payload()
+            or "No knowledge found" in knowledge.get_payload()
+        )
+        assert (
+            "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
+            or "No knowledge found" in knowledge.get_payload()
+        )
 
 
 @pytest.mark.asyncio

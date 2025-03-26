@@ -180,10 +180,10 @@ class DualModelReasoner(Reasoner):
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
             action_rels=action_rels,
             context=task.job.context,
-            sesseion_id=task.job.session_id,
+            session_id=task.job.session_id,
             file_descriptors=file_desc,
             env_info=env_info,
-            knowledge=task.knowledge,
+            knowledge=task.knowledge.get_payload() if task.knowledge else "",
             previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )
@@ -216,10 +216,7 @@ class DualModelReasoner(Reasoner):
             output_schema=output_schema,
         )
 
-    def _format_thinker_sys_prompt(
-        self,
-        task: Task,
-    ) -> str:
+    def _format_thinker_sys_prompt(self, task: Task) -> str:
         """Set the system prompt."""
         # set the task description
         task_description = task.operator_config.instruction if task.operator_config else ""
@@ -250,10 +247,10 @@ class DualModelReasoner(Reasoner):
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
             action_rels=action_rels,
             context=task.job.context,
-            sesseion_id=task.job.session_id,
+            session_id=task.job.session_id,
             file_descriptors=file_desc,
             env_info=env_info,
-            knowledge=task.knowledge,
+            knowledge=task.knowledge.get_payload() if task.knowledge else "",
             previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )

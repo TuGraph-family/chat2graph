@@ -138,7 +138,7 @@ class MonoModelReasoner(Reasoner):
             session_id=task.job.session_id,
             file_descriptors=file_desc,
             env_info=env_info,
-            knowledge=task.knowledge,
+            knowledge=task.knowledge.get_payload() if task.knowledge else "",
             previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )
