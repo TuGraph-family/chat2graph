@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
 import pytest
 
@@ -120,7 +121,7 @@ async def test_execute_error_handling(operator: EvalOperator, mock_reasoner: Asy
     # make reasoner.infer raise an exception
     mock_reasoner.infer.side_effect = Exception("Test error")
 
-    job = SubJob(id="test_job_id", session_id="test_session_id", goal="Test goal")
+    job = SubJob(id="test_job_id" + str(uuid4()), session_id="test_session_id", goal="Test goal")
     workflow_message = WorkflowMessage(
         payload={"scratchpad": "[2, 3, 5, 7, 11, 13, 17, 19]"}, job_id=job.id
     )

@@ -202,12 +202,12 @@ class SchemaGetter(Tool):
         )
 
     async def get_schema(self) -> str:
-        """获取图数据库的 schema 信息"""
+        """Get the schema of the graph database."""
         schema = await SchemaManager.read_schema()
 
         result = "# Neo4j Graph Schema\n\n"
 
-        # 节点信息
+        # vertices information
         result += "## Node Labels\n\n"
         for label, info in schema["nodes"].items():
             result += f"### {label}\n"
@@ -222,7 +222,7 @@ class SchemaGetter(Tool):
                 result += f"  - `{prop['name']}` ({prop['type']}){index_info}\n"
             result += "\n"
 
-        # 关系信息
+        # edges information
         result += "## Relationship Types\n\n"
         for label, info in schema["relationships"].items():
             result += f"### {label}\n"

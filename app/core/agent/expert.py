@@ -24,6 +24,7 @@ class Expert(Agent):
             Job: The job with the response (WorkflowMessage).
         """
         message_service: MessageService = MessageService.instance
+        job_service: JobService = JobService.instance
 
         # TODO: convert to a state machine (?)
 
@@ -81,7 +82,7 @@ class Expert(Agent):
             print(f"\033[38;5;208mLesson: {workflow_message.lesson}\033[0m")
 
             # workflow experience -> agent lesson
-            agent_message.set_lesson(workflow_message.lesson)
+            agent_message.add_lesson(workflow_message.evaluation + "\n" + workflow_message.lesson)
 
             # retry the job, until the max_retry_count or the job is executed successfully
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
@@ -124,6 +125,7 @@ class Expert(Agent):
 
             # return the job to the leader, and let the leader decompose the job
             # workflow experience -> agent lesson
+            # (4.1) save the expert message in the database
             lesson = "The job is too complicated to be executed by the expert"
             expert_message = AgentMessage(
                 job_id=job.id,

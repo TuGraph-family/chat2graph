@@ -34,10 +34,10 @@ class DualModelReasoner(Reasoner):
         self._actor_name = actor_name
         self._thinker_name = thinker_name
         self._actor_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
+            model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
         self._thinker_model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
+            model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
     async def infer(self, task: Task) -> str:
@@ -63,9 +63,7 @@ class DualModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
             payload=(
-                "<scratchpad>\nEmpty\n</scratchpad>\n"
-                "<action>\nEmpty\n</action>\n"
-                "<feedback>\nNo feadback\n</feedback>\n"
+                "<shallow_thinking>\nEmpty\n</shallow_thinking>\n<action>\nEmpty\n</action>\n"
             ),
             job_id=task.job.id,
             step=1,
@@ -105,7 +103,7 @@ class DualModelReasoner(Reasoner):
                         "\033[92m<function_call_result>\n"
                         + "\n".join(
                             [
-                                f"{i + 1}. {result.status} called function "
+                                f"{i + 1}. {result.status.value} called function "
                                 f"{result.func_name}:\n"
                                 f"Call objective: {result.call_objective}\n"
                                 f"Function Output: {result.output}"
@@ -115,7 +113,7 @@ class DualModelReasoner(Reasoner):
                         + "\n</function_call_result>\033[0m\n"
                     )
 
-            if self.stop(response):
+            if self.stopped(response):
                 break
 
         return await self.conclude(reasoner_memory=reasoner_memory)
@@ -133,31 +131,19 @@ class DualModelReasoner(Reasoner):
 
         content = reasoner_memory.get_message_by_index(-1).get_payload()
 
-        # find DELIVERABLE content
-        match = re.search(r"<DELIVERABLE>\s*(.*?)\s*</DELIVERABLE>", content, re.DOTALL)
+        # find deliverable content
+        match = re.search(r"<deliverable>\s*(.*?)\s*</deliverable>", content, re.DOTALL)
 
         # If match found, process and return the content
         if match:
-            deliverable_content = match.group(1)
-            reasoner_output = (
-                deliverable_content.replace("<scratchpad>", "")
-                .replace("</scratchpad>", "")
-                .replace("<action>", "")
-                .replace("</action>", "")
-                .replace("<feedback>", "")
-                .replace("</feedback>", "")
-                .replace("</DELIVERABLE>", "")
-                .replace("TASK_DONE", "")
-            )
+            deliverablee_content = match.group(1)
+            reasoner_output = deliverablee_content.replace("TASK_DONE", "")
         else:
             reasoner_output = (
-                content.replace("<scratchpad>", "")
-                .replace("</scratchpad>", "")
+                content.replace("<shallow_thinking>", "")
+                .replace("</shallow_thinking>", "")
                 .replace("<action>", "")
                 .replace("</action>", "")
-                .replace("<feedback>", "")
-                .replace("</feedback>", "")
-                .replace("</DELIVERABLE>", "")
                 .replace("TASK_DONE", "")
             )
         if SystemEnv.PRINT_REASONER_OUTPUT:
@@ -176,20 +162,21 @@ class DualModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            scratchpad = "Here is the previous job execution's output:\n" + "\n".join(
+            previous_input = "Here is the previous job execution's output:\n" + "\n".join(
                 [f"{workflow_message.scratchpad}" for workflow_message in task.workflow_messages]
             )
         else:
-            scratchpad = "No scratchpad provided in this round."
+            previous_input = "No previous input provided in this round."
         action_rels = "\n".join(
             [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
         )
+
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
+            action_rels=action_rels,
             context=task.job.context,
             env_info=env_info,
             knowledge=task.knowledge,
-            action_rels=action_rels,
-            scratchpad=scratchpad,
+            previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )
 
@@ -205,14 +192,9 @@ class DualModelReasoner(Reasoner):
             func_description = "No function calling in this round."
 
         if task.operator_config and task.operator_config.output_schema:
-            output_schema = "\n".join(
-                [
-                    "\t    " + schema
-                    for schema in (
-                        "[Follow the final delivery example:]\n"
-                        f"{task.operator_config.output_schema.strip()}"
-                    ).split("\n")
-                ]
+            output_schema = (
+                "[Follow the final delivery example:]\n"
+                + task.operator_config.output_schema.strip()
             )
         else:
             output_schema = ""
@@ -239,23 +221,24 @@ class DualModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            scratchpad = "\n".join(
+            previous_input = "\n".join(
                 [
                     f"{str(workflow_message.scratchpad)}"
                     for workflow_message in task.workflow_messages
                 ]
             )
         else:
-            scratchpad = "No scratchpad provided in this round."
+            previous_input = "No scratchpad provided in this round."
         action_rels = "\n".join(
             [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
         )
+
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
+            action_rels=action_rels,
             context=task.job.context,
             env_info=env_info,
             knowledge=task.knowledge,
-            action_rels=action_rels,
-            scratchpad=scratchpad,
+            previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )
 
@@ -300,7 +283,7 @@ class DualModelReasoner(Reasoner):
             return self.init_memory(task=task)
 
     @staticmethod
-    def stop(message: ModelMessage) -> bool:
+    def stopped(message: ModelMessage) -> bool:
         """Stop the reasoner."""
-        # TODO: fix the stop condition
-        return "DELIVERABLE" in message.get_payload()
+        # TODO: improve the stop condition
+        return "<deliverable>" in message.get_payload()

@@ -1,6 +1,6 @@
-from app.core.common.type import PlatformType, ReasonerType
+from app.core.common.type import ModelPlatformType, ReasonerType, WorkflowPlatformType
 from app.core.model.message import TextMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.toolkit.toolkit import Action
@@ -76,13 +76,13 @@ def main():
 
     # leader & expert
     mas.leader(name="Leader").workflow(
-        job_decomposition_operator, platform_type=PlatformType.DBGPT
+        job_decomposition_operator, platform_type=WorkflowPlatformType.DBGPT
     ).build()
 
     mas.expert(name="Graph Modeling Expert").reasoner(
         thinker_name="Graph Modeling Expert", actor_name="Graph Modeling Expert"
     ).workflow(
-        (analysis_operator, concept_modeling_operator), platform_type=PlatformType.DBGPT
+        (analysis_operator, concept_modeling_operator), platform_type=ModelPlatformType.DBGPT
     ).build()
 
     # set the user message

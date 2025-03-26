@@ -6,7 +6,7 @@ from app.core.agent.leader import Leader
 from app.core.model.job import SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.service.job_service import JobService
 from app.core.service.service_factory import ServiceFactory

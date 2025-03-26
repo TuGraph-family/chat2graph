@@ -71,14 +71,8 @@ def get_neo4j(config: Optional[Neo4jStoreConfig] = None) -> Neo4jStore:
     """
     try:
         config = config or Neo4jStoreConfig()
-
-        # Initialize store
         store = Neo4jStore(config)
-
-        # Test connection
         print(f"[log] get graph: {config.name}")
-        with store.conn.session(database=config.name) as session:
-            session.run("RETURN 1")
 
         return store
 

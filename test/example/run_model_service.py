@@ -10,7 +10,7 @@ from app.core.reasoner.model_service_factory import ModelServiceFactory
 async def main():
     """Main function."""
     # create model service using factory method
-    model_service = ModelServiceFactory.create(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
+    model_service = ModelServiceFactory.create(model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
     job_id: str = "test_job_id"
 
     # create test messages

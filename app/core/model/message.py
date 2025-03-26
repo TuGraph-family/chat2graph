@@ -203,9 +203,12 @@ class AgentMessage(Message):
         """Get the lesson of the execution of the job."""
         return self._lesson
 
-    def set_lesson(self, lesson: str):
-        """Set the lesson of the execution of the job."""
-        self._lesson = lesson
+    def add_lesson(self, lesson: str) -> None:
+        """Add the lesson of the execution of the job."""
+        if self._lesson:
+            self._lesson += "\n" + lesson
+        else:
+            self._lesson = lesson
 
     def copy(self) -> "AgentMessage":
         """Copy the message."""

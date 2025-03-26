@@ -79,7 +79,10 @@ def update_session_by_id(session_id):
 
         updated_session, message = manager.update_session(
             session=Session(
-                id=session_id, name=name, timestamp=timestamp, latest_job_id=latest_job_id
+                id=session_id,
+                name=name,
+                timestamp=timestamp,
+                latest_job_id=latest_job_id,
             )
         )
         return make_response(True, data=updated_session, message=message)
@@ -114,7 +117,18 @@ def chat(session_id):
             attached_message["session_id"] = session_id
 
         # TODO: remove the mocked data
-        data["instruction_message"]["assigned_expert_name"] = "Question Answering Expert"
+        data["instruction_message"]["payload"] = (
+            # "首先，我需要对给定的文本中的关系进行*复杂*的图建模。这个建模能够覆盖掉文本以及一些文本细节（5 个以上 vertices labels，和同等量级的 edge labels。"
+            # "然后将给定的文本的所有的数据导入到图数据库中（总共至少导入 30 个三元组关系来满足知识图谱的数据丰富性）。"
+            # "朱丽叶节点有哪些属性。需要拆分成 3 个子任务。"
+            "莎士比亚的悲剧《罗密欧与朱丽叶》描述了两个敌对家族（蒙太古家族和凯普莱特家族）中的年轻人之间的爱情故事。"
+            "假设我们已经将《罗密欧与朱丽叶》的三元组图谱数据导入到图数据库中。"
+            "现在，通过图数据库建模和算法分析，我们可以从网络科学的角度重新审视这部经典作品中的人物关系结构。"
+            # "因此，请你使用PageRank算法分析剧中最具影响力的人物。"
+        )
+        data["instruction_message"]["assigned_expert_name"] = "Graph Analysis Expert"
+        # data["instruction_message"]["assigned_expert_name"] = "Question Answering Expert"
+        # data["instruction_message"]["assigned_expert_name"] = "Graph Query Expert"
 
         chat_message: TextMessage = MessageViewTransformer.deserialize_message(
             message=data, message_type=MessageType.HYBRID_MESSAGE

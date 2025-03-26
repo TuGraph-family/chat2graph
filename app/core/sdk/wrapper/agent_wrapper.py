@@ -3,12 +3,18 @@ from typing import Optional, Tuple, Union
 from app.core.agent.agent import Agent, AgentConfig, Profile
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
-from app.core.common.type import PlatformType
+from app.core.common.type import WorkflowPlatformType
+from app.core.prompt.eval_operator import (
+    EVAL_OPERATION_INSTRUCTION_PROMPT,
+    EVAL_OPERATION_OUTPUT_PROMPT,
+)
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.service.agent_service import AgentService
+from app.core.workflow.eval_operator import EvalOperator
+from app.core.workflow.operator_config import OperatorConfig
 from app.core.workflow.workflow import Workflow
 
 
@@ -45,7 +51,7 @@ class AgentWrapper:
     def workflow(
         self,
         *operator_chain: Union[OperatorWrapper, Tuple[OperatorWrapper, ...]],
-        platform_type: Optional[PlatformType] = None,
+        platform_type: Optional[WorkflowPlatformType] = None,
     ) -> "AgentWrapper":
         """Set the workflow of the expert."""
 
@@ -54,6 +60,22 @@ class AgentWrapper:
             self._workflow = workflow_wrapper.chain(*operator_chain).workflow
         else:
             self._workflow = WorkflowWrapper(platform=platform_type).chain(*operator_chain).workflow
+        return self
+
+    def evaluator(self) -> "AgentWrapper":
+        """Set the evaluator of the workflow."""
+        evaluator = EvalOperator(
+            config=OperatorConfig(
+                instruction=EVAL_OPERATION_INSTRUCTION_PROMPT,
+                actions=[],
+                output_schema=EVAL_OPERATION_OUTPUT_PROMPT,
+            )
+        )
+        if not self._workflow:
+            raise ValueError(
+                "Evaluator must be set after setting the workflow. Please use .workflow(*) first."
+            )
+        self._workflow.set_evaluator(evaluator)
         return self
 
     def build(self) -> "AgentWrapper":

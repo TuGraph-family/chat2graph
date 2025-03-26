@@ -5,13 +5,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
-from app.core.common.type import PlatformType, ReasonerType
+from app.core.common.type import ReasonerType, WorkflowPlatformType
 from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
 from app.core.model.message import ChatMessage, MessageType, TextMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
@@ -53,7 +53,8 @@ class AgenticService(metaclass=Singleton):
     def execute(self, message: TextMessage) -> ChatMessage:
         """Execute the service synchronously."""
         job = Job(
-            goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name()
+            goal=message.get_payload(),
+            assigned_expert_name=message.get_assigned_expert_name(),
         )
         self._job_service.save_job(job=job)
         job_wrapper = JobWrapper(job)
@@ -105,7 +106,8 @@ class AgenticService(metaclass=Singleton):
 
     @staticmethod
     def load(
-        yaml_path: Union[str, Path] = "app/core/sdk/chat2graph.yml", encoding: str = "utf-8"
+        yaml_path: Union[str, Path] = "app/core/sdk/chat2graph.yml",
+        encoding: str = "utf-8",
     ) -> "AgenticService":
         """Configure the AgenticService from yaml file."""
 
@@ -152,12 +154,12 @@ class AgenticService(metaclass=Singleton):
             .build()
         )
 
-        platform_type = None
-        if agentic_service_config.plugin.model_platform:
-            platform_type = PlatformType(agentic_service_config.plugin.model_platform)
+        workflow_platform_type: Optional[WorkflowPlatformType] = (
+            agentic_service_config.plugin.get_workflow_platform_type()
+        )
 
         mas.leader(name="Leader Test").workflow(
-            job_decomposition_operator, platform_type=platform_type
+            job_decomposition_operator, platform_type=workflow_platform_type
         ).build()
 
         # configure the experts
@@ -188,15 +190,15 @@ class AgenticService(metaclass=Singleton):
 
                 if len(operator_chain) > 1:
                     expert_wrapper = expert_wrapper.workflow(
-                        tuple(operator_chain), platform_type=platform_type
+                        tuple(operator_chain), platform_type=workflow_platform_type
                     )
                 elif len(operator_chain) == 1:
                     expert_wrapper = expert_wrapper.workflow(
-                        operator_chain[0], platform_type=platform_type
+                        operator_chain[0], platform_type=workflow_platform_type
                     )
                 else:
                     raise ValueError("Operator chain in the workflow cannot be empty.")
 
-            expert_wrapper.build()
+            expert_wrapper.evaluator().build()
 
         return mas

@@ -1,8 +1,15 @@
 from enum import Enum
 
 
-class PlatformType(Enum):
-    """Model type enum."""
+class ModelPlatformType(Enum):
+    """Model platform type enum."""
+
+    DBGPT = "DBGPT"
+    AISUITE = "AISUITE"
+
+
+class WorkflowPlatformType(Enum):
+    """Workflow platform type enum."""
 
     DBGPT = "DBGPT"
 
@@ -64,6 +71,13 @@ class JobStatus(Enum):
     FINISHED = "FINISHED"
     FAILED = "FAILED"
     STOPPED = "STOPPED"
+
+
+class FunctionCallStatus(Enum):
+    """Status of a function call."""
+
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
 
 
 class KnowledgeStoreType(Enum):

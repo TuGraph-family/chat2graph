@@ -26,7 +26,7 @@ JOB_DECOMPOSITION_PROMPT = """
 
 JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
 Here is the Subtasks Template
-// You must generate subtasks at the end of <DELIVERABLE> section.
+// You must generate subtasks at the end of <deliverable> section.
 // And the subtasks should be in the following json format.
 // Must use ```json``` to mark the beginning of the json content.
 ```json
