@@ -58,7 +58,7 @@ class Operator:
     def get_knowledge(self, job: Job) -> str:
         """Get the knowledge from the knowledge base."""
         query = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
-        knowledge = KnowledgeBaseService.instance.get_knowledge(query, job)
+        knowledge = KnowledgeBaseService.instance.get_knowledge(query, job.session_id)
         return knowledge
 
     def get_env_insights(self) -> Optional[List[Insight]]:
