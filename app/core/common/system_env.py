@@ -36,6 +36,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "EMBEDDING_MODEL_API_URL": (str, None),
     "EMBEDDING_API_KEY": (str, None),
     "KNOWLEDGE_STORE_TYPE": (KnowledgeStoreType, KnowledgeStoreType.VECTOR),
+    "GLOBAL_KNOWLEDGE_BASE_NAME": (str, "Global Knowledge Base"),
 }
 
 # system environment variable value cache.

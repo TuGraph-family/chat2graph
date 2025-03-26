@@ -39,7 +39,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             == 0
         ):
             self._knowledge_base_dao.create(
-                name="global_knowledge_base",
+                name=SystemEnv.GLOBAL_KNOWLEDGE_BASE_NAME,
                 knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value,
                 session_id="",
                 category=KnowledgeStoreCategory.GLOBAL.value,
