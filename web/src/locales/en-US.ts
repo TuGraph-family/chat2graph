@@ -38,6 +38,7 @@ export default {
             fail: 'Error',
             pending: 'Adding',
             jsonTip: 'Please enter a valid JSON format',
+            local: 'Local File'
 
         },
         docs: 'Document Count',

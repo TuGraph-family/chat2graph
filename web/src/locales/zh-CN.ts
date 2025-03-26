@@ -38,6 +38,7 @@ export default {
             fail: '添加失败',
             pending: '添加中',
             jsonTip: '请输入有效的 JSON 格式',
+            local: '本地文件'
 
         },
         docs: '文档数',

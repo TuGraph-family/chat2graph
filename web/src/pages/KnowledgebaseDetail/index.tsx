@@ -1,4 +1,4 @@
-import { Breadcrumb, Button, Popconfirm, Spin, Tag } from "antd"
+import { Breadcrumb, Spin, } from "antd"
 import { Link, useLocation, } from "umi"
 import styles from './index.less'
 import AsyncTable from "@/components/AsyncTable"
@@ -9,8 +9,8 @@ import useIntlConfig from "@/hooks/useIntlConfig"
 import { historyPushLinkAt } from "@/utils/link"
 import { useEffect } from "react"
 import dayjs from "dayjs"
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, } from "@ant-design/icons"
 import { FileTextOutlined } from "@ant-design/icons"
+import { useKnowledgeColumns } from "@/hooks/useKnowledgeColumns"
 const KnowledgebaseDetail = () => {
     const [state, setState] = useImmer<{
         open: boolean
@@ -55,64 +55,11 @@ const KnowledgebaseDetail = () => {
         getKnowledgebaseDetail(id)
     }, [id])
 
-    const columns = [
-        {
-            title: formatMessage('knowledgebase.detail.label2'),
-            dataIndex: 'name',
-            key: 'name',
-        },
-        {
-            title: formatMessage('knowledgebase.detail.label3'),
-            dataIndex: 'type',
-            key: 'type',
-        },
-        {
-            title: formatMessage('knowledgebase.detail.label4'),
-            dataIndex: 'size',
-            key: 'size',
-            render: (size: string) => size + 'KB'
-        },
-        {
-            title: formatMessage('knowledgebase.detail.label5'),
-            dataIndex: 'status',
-            key: 'status',
-            render: (status: string) => {
-                switch (status) {
-                    case 'SUCCESS':
-                        return <Tag icon={<CheckCircleOutlined />} color="success">{formatMessage('knowledgebase.detail.success')}</Tag>
-                    case 'FAIL':
-                        return <Tag icon={<CloseCircleOutlined />} color="error">{formatMessage('knowledgebase.detail.fail')}</Tag>
-                    case 'PENDING':
-                        return <Tag icon={<SyncOutlined spin />} color="processing">{formatMessage('knowledgebase.detail.pending')}</Tag>
-                    default:
-                        return null
-                }
-            }
-        },
-        {
-            title: formatMessage('knowledgebase.detail.label6'),
-            dataIndex: 'time_stamp',
-            key: 'updateTime',
-            render: (text: string, record: any) => {
-                return <span>{dayjs(record.time_stamp * 1000).format('YYYY-MM-DD HH:mm:ss')}</span>
-            }
-        },
-        {
-            title: formatMessage('knowledgebase.detail.label7'),
-            dataIndex: 'file_id',
-            key: 'file_id',
-            render: (file_id: string,) => {
-                return <>
-                    {/* <Button type="link" onClick={() => { }} >{formatMessage('actions.edit')}</Button> */}
-                    <Popconfirm
-                        title={formatMessage('knowledgebase.detail.removeFile')}
-                        onConfirm={() => { onDeleteFile(file_id) }}
-                    >
-                        <Button type="link">{formatMessage('actions.delete')}</Button>
-                    </Popconfirm></>
-            }
-        },
-    ]
+    const { columns } = useKnowledgeColumns({
+        onDeleteFile
+    })
+
+
 
     return <div className={styles['knowledgebases-detail']}>
         <Breadcrumb

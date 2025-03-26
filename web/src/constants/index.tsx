@@ -9,6 +9,7 @@ export enum FRAMEWORK {
 };
 
 export const ENGLISH_LOCALE = 'en-US';
+export const ZH_CN_LOCALE = 'zh-CN';
 export const ENGLISH_LANG_PARAM = 'en';
 
 export const FRAMEWORK_CONFIG = [{

@@ -27,7 +27,7 @@ const Language: React.FC = () => {
       className={styles.language}
       type='text'
       size='small'
-      onClick={onChangeLang}>{locale === 'en-US' ? 'EN' : '中'}
+      onClick={onChangeLang}>{locale === ENGLISH_LOCALE ? 'EN' : '中'}
     </Button>
   </Tooltip>
 };
