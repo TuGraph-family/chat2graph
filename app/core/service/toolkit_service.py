@@ -29,12 +29,12 @@ class ToolkitService(metaclass=Singleton):
         # TODO: implement the persistent storage for the toolkit
         raise NotImplementedError("This method is not implemented")
 
-    def add_tool(self, tool: Tool, connected_actions: List[tuple[Action, float]]):
+    def add_tool(self, tool: Tool, connected_actions: List[Tuple[Action, float]]):
         """Add tool to toolkit graph. Action --Call--> Tool.
 
         Args:
             tool (Tool): The tool to be added
-            connected_actions (List[tuple[Action, float]]): List of tuples (action, score) that
+            connected_actions (List[Tuple[Action, float]]): List of tuples (action, score) that
                 call this tool
         """
         has_connected_actions = False
@@ -58,16 +58,16 @@ class ToolkitService(metaclass=Singleton):
     def add_action(
         self,
         action: Action,
-        next_actions: List[tuple[Action, float]],
-        prev_actions: List[tuple[Action, float]],
+        next_actions: List[Tuple[Action, float]],
+        prev_actions: List[Tuple[Action, float]],
     ) -> None:
         """Add action to the toolkit graph. Action --Next--> Action.
 
         Args:
             action (Action): The action to be added
-            next_actions (List[tuple[Action, float]]): List of tuples (action, score) that follow
+            next_actions (List[Tuple[Action, float]]): List of tuples (action, score) that follow
                 this action
-            prev_actions (List[tuple[Action, float]]): List of tuples (action, score) that precede
+            prev_actions (List[Tuple[Action, float]]): List of tuples (action, score) that precede
                 this action
         """
         # add action vertex if not exists

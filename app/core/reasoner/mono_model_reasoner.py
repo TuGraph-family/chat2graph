@@ -125,12 +125,20 @@ class MonoModelReasoner(Reasoner):
         action_rels = "\n".join(
             [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
         )
+        file_desc = (
+            "\n".join(
+                f"File name: {f.name} - File id: {f.id}" for f in (task.file_descriptors or [])
+            )
+            or "No files provided in this round."
+        )
 
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
             action_rels=action_rels,
             context=task.job.context,
+            session_id=task.job.session_id,
+            file_descriptors=file_desc,
             env_info=env_info,
-            knowledge=task.knowledge,
+            knowledge=task.knowledge.get_payload() if task.knowledge else "",
             previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )

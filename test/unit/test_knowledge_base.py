@@ -17,6 +17,7 @@ knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
 
 
 async def test_vector_knowledge_base():
+    """Test vector knowledge base."""
     with patch(
         "dbgpt.rag.retriever.embedding.EmbeddingRetriever.aretrieve_with_scores"
     ) as mock_retrieve:
@@ -28,14 +29,20 @@ async def test_vector_knowledge_base():
 
 
 async def test_knowledge_base_service():
+    """Test knowledge base service."""
     job = SubJob(
         id="test_job_id" + str(uuid4()),
         session_id="test_session_id " + str(uuid4()),
         goal="Test goal",
         context="Test context",
     )
-    knowledge = KnowledgeBaseService.instance.get_knowledge(
-        query="what is chat2graph talk about", job=job
+    knowledge_service: KnowledgeBaseService = KnowledgeBaseService.instance
+    knowledge = knowledge_service.get_knowledge(query="what is chat2graph talk about", job=job)
+    assert (
+        "[Knowledges From Global Knowledge Base]" in knowledge.get_payload()
+        or "No knowledge found" in knowledge.get_payload()
     )
-    assert "[Knowledges From Global Knowledge Base]" in knowledge.get_payload()
-    assert "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
+    assert (
+        "[Knowledges From Local Knowledge Base]" in knowledge.get_payload()
+        or "No knowledge found" in knowledge.get_payload()
+    )

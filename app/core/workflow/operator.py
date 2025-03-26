@@ -3,6 +3,7 @@ from typing import List, Optional
 from app.core.common.async_func import run_async_function
 from app.core.env.insight.insight import Insight
 from app.core.model.job import Job
+from app.core.model.knowledge import Knowledge
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
@@ -60,12 +61,11 @@ class Operator:
         )
         return task
 
-    def get_knowledge(self, job: Job) -> str:
+    def get_knowledge(self, job: Job) -> Knowledge:
         """Get the knowledge from the knowledge base."""
         query = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
         knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
-        knowledge = knowledge_base_service.get_knowledge(query, job)
-        return knowledge.get_payload()
+        return knowledge_base_service.get_knowledge(query, job)
 
     def get_env_insights(self) -> Optional[List[Insight]]:
         """Get the environment information."""

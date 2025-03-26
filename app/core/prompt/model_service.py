@@ -12,6 +12,16 @@ Here's the CONTEXT:
 
 {context}
 
+===== CONVERSATION INFORMATION =====
+The CONVERSATION INFORMATION provides the information in the LLM multi-agent system. Within this framework, agents collaborate through structured conversations, with each conversation containing specific CONVERSATION INFORMATION:
+1. session_id: Uniquely identifies the current conversation, used to maintain session state and context continuity
+
+current session_id: {session_id}
+
+2. file_descriptors: Identifies accessible file resources, allowing agents to read and manipulate specified files
+
+{file_descriptors}
+
 ===== ENVIRONMENT INFORMATION =====
 As the perception interface of LLM, env info only contains the part of environmental information that it can directly observe.
 This local design not only conforms to the partially observable characteristics of the real world, but also promotes the distributed collaboration of the system, allowing each LLM to make decisions and actions based on limited but reliable environmental information.

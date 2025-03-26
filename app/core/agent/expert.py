@@ -28,10 +28,11 @@ class Expert(Agent):
 
         # TODO: convert to a state machine (?)
 
-        # local variables
+        # get the job from the agent message
         job_id = agent_message.get_job_id()
         job: SubJob = job_service.get_subjob(subjob_id=job_id)
 
+        # get the workflow messages from the agent message
         workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
 
         # update the job status to running
@@ -53,9 +54,7 @@ class Expert(Agent):
                     "scratchpad": str(e) + "\n" + traceback.format_exc(),
                     "status": WorkflowStatus.EXECUTION_ERROR,
                     "evaluation": "There occurs some errors during the execution: "
-                    + str(e)
-                    + "\n"
-                    + traceback.format_exc(),
+                    f"{str(e)}\n{traceback.format_exc()}",
                     "lesson": "",  # TODO: add the lesson learned
                 },
             )
@@ -103,7 +102,8 @@ class Expert(Agent):
             print(f"\033[38;5;208mLesson: {workflow_message.lesson}\033[0m")
 
             # workflow experience -> agent lesson
-            agent_message.add_lesson(workflow_message.evaluation + "\n" + workflow_message.lesson)
+            lesson = workflow_message.evaluation + "\n" + workflow_message.lesson
+            agent_message.add_lesson(lesson)
 
             # retry the job, until the max_retry_count or the job is executed successfully
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
