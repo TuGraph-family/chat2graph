@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.core.common.system_env import SystemEnv
 from app.core.model.session import Session
 from app.core.service.job_service import JobService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
-from app.core.common.system_env import SystemEnv
 
 
 class SessionManager:
@@ -92,6 +92,7 @@ class SessionManager:
                 success message
         """
         sessions = self._session_service.get_all_sessions()
+        sessions = sorted(sessions, key=lambda session: session.timestamp, reverse=False)
         total_sessions = len(sessions)
 
         if size and page and size > 0 and page >= 1:

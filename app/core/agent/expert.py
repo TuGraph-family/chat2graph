@@ -103,7 +103,7 @@ class Expert(Agent):
             print(f"\033[38;5;208mLesson: {workflow_message.lesson}\033[0m")
 
             # workflow experience -> agent lesson
-            agent_message.set_lesson(workflow_message.lesson)
+            agent_message.add_lesson(workflow_message.evaluation + "\n" + workflow_message.lesson)
 
             # retry the job, until the max_retry_count or the job is executed successfully
             max_retry_count = SystemEnv.MAX_RETRY_COUNT

@@ -246,7 +246,7 @@ class Leader(Agent):
                                 input_agent_message = job_inputs[pred_id]
                                 lesson = agent_result.get_lesson()
                                 assert lesson is not None
-                                input_agent_message.set_lesson(lesson)
+                                input_agent_message.add_lesson(lesson)
                                 job_inputs[pred_id] = input_agent_message
 
                     elif (
