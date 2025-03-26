@@ -1,6 +1,5 @@
 import { Bubble } from "@ant-design/x";
 import { GetProp } from "antd";
-
 export const DEFAULT_NAME = 'Umi Max';
 
 export enum FRAMEWORK {
@@ -9,37 +8,45 @@ export enum FRAMEWORK {
   QUERY = 'QUERY',
 };
 
+export const ENGLISH_LOCALE = 'en-US';
+export const ZH_CN_LOCALE = 'zh-CN';
+export const ENGLISH_LANG_PARAM = 'en';
+
 export const FRAMEWORK_CONFIG = [{
   key: FRAMEWORK.MODEL,
-  text: '建模框架',
+  textId: 'home.model',
 }, {
   key: FRAMEWORK.EXPORT_DATA,
-  text: '导数框架',
+  textId: 'home.exportData',
 }, {
   key: FRAMEWORK.QUERY,
-  text: '查询框架',
+  textId: 'home.query',
 }];
 
 export const MOCK_placeholderPromptsItems = [
   {
     key: '1',
-    label: '图是什么？',
+    labelId: 'home.placeholderPromptsItems1',
   },
   {
     key: '2',
-    label: '怎么用 ISOGQL 查询一个点？',
+    labelId: 'home.placeholderPromptsItems2',
   },
 ];
 
 export const ROLES: GetProp<typeof Bubble.List, 'roles'> = {
   ai: {
     placement: 'start',
-    typing: true,
-    messageRender: (text) => <pre>{text}</pre>,
+    variant: 'borderless',
   },
   local: {
     placement: 'end',
     variant: 'shadow',
-    messageRender: (text) => <pre>{text}</pre>,
   },
 };
+
+export const MODAL_FORMS = ['name', 'ip', 'port', 'user', 'pwd', 'desc']
+
+
+
+

@@ -1,6 +1,6 @@
 import styles from './index.less';
-import { Badge, Button, GetProp, Modal, Tooltip, Flex, Spin, message } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, UploadOutlined, MessageOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, FloatButton } from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled } from '@ant-design/icons';
 import {
   Attachments,
   Bubble,
@@ -18,18 +18,23 @@ import Placeholder from '@/components/Placeholder';
 import SenderHeader from '@/components/SenderHeader';
 import { useEffect } from 'react';
 import { useSessionEntity } from '@/domains/entities';
+import useIntlConfig from '@/hooks/useIntlConfig';
+import Language from '@/components/Language';
+import logoSrc from '@/assets/logo.png';
+import BubbleContent from '@/components/BubbleContent';
 
 const HomePage: React.FC = () => {
-  
+
   const [state, setState] = useImmer<{
     selectedFramework?: FRAMEWORK;
     conversationsItems: ConversationsProps['items'];
     headerOpen: boolean;
     activeKey: string;
     collapse: boolean;
-    placeholderPromptsItems: GetProp<typeof Prompts, 'items'>;
+    placeholderPromptsItems: { labelId: string, key: string }[];
     content: string;
     attachedFiles: GetProp<typeof Attachments, 'items'>;
+    isInit: boolean;
   }>({
     conversationsItems: [],
     headerOpen: false,
@@ -38,10 +43,13 @@ const HomePage: React.FC = () => {
     placeholderPromptsItems: MOCK_placeholderPromptsItems,
     content: '',
     attachedFiles: [],
+    isInit: false
   });
 
 
-  const { conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
+  const { isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
+
+  const { formatMessage } = useIntlConfig();
 
   const {
     sessionEntity,
@@ -51,10 +59,10 @@ const HomePage: React.FC = () => {
     runUpdateSession,
     runDeleteSession,
     runGetSessionById,
-    runGetMessageIdByChat,
+    runGetJobById,
+    runGetJobResults,
+    runGetJobIdsBySessionId,
     runGetMessagesBySessionId,
-    runGetMessagesById,
-    loadingGetMessagesById,
   } = useSessionEntity();
   const { sessions } = sessionEntity;
 
@@ -74,32 +82,32 @@ const HomePage: React.FC = () => {
   const menuConfig: ConversationsProps['menu'] = (conversation) => ({
     items: [
       {
-        label: '重命名',
+        label: formatMessage('home.rename'),
         key: 'rename',
         icon: <EditOutlined />,
       },
       {
-        label: '删除',
+        label: formatMessage('home.delete'),
         key: 'delete',
         icon: <DeleteOutlined />,
         danger: true,
       },
     ],
     onClick: (menuInfo) => {
-      const {key: menuKey} = menuInfo || {};
+      const { key: menuKey } = menuInfo || {};
       if (menuKey === 'delete') {
         Modal.warning({
-          title: '删除对话',
-          content: '删除后无法恢复，是否继续删除？',
-          okText: '确认',
-          cancelText: '取消',
+          title: formatMessage('home.deleteConversation'),
+          content: formatMessage('home.deleteConversationConfirm'),
+          okText: formatMessage('home.confirm'),
+          cancelText: formatMessage('home.cancel'),
           onOk: () => {
             runDeleteSession({
               session_id: conversation.key,
             }).then((res: API.Result_Session_) => {
               if (res?.success) {
                 getSessionList();
-                message.success('删除成功');
+                message.success(formatMessage('home.deleteConversationSuccess'));
               }
             })
           }
@@ -112,7 +120,7 @@ const HomePage: React.FC = () => {
           if (item.key !== conversation.key) {
             return item;
           }
-    
+
           return {
             ...item,
             label: <NameEditor
@@ -128,9 +136,96 @@ const HomePage: React.FC = () => {
     },
   });
 
+  let timer: any = null;
+
+
+  const transformMessage = (answer: any) => {
+    if (!answer) return null;
+    const { message, thinking } = answer || {};
+
+    const thinkingList = thinking?.map((item: any) => {
+      const { message: thinkMsg, metrics } = item
+
+      return {
+        payload: thinkMsg?.payload,
+        message_type: thinkMsg?.message_type,
+        status: metrics?.status,
+      }
+    })
+    return {
+      payload: message?.payload,
+      session_id: message?.session_id,
+      job_id: message?.job_id,
+      role: message?.role,
+      thinking: thinkingList,
+    }
+  }
+
+
+  const getMessage = (job_id: string, onSuccess: (message: any) => void) => {
+    timer = setTimeout(() => {
+      runGetJobResults({
+        job_id,
+      }).then(res => {
+        const { status } = res?.data?.answer?.metrics || {};
+
+        if (['RUNNING', 'CREATED'].includes(status)) {
+          getMessage(job_id, onSuccess);
+          return;
+        }
+        clearTimeout(timer);
+        onSuccess(transformMessage(res?.data?.answer));
+      });
+    }, 500);
+  }
+
+  const [agent] = useXAgent<API.ChatVO>({
+    request: async ({ message: msg }, { onSuccess, onUpdate }) => {
+      const { payload = '', session_id = '' } = msg || {};
+      runGetJobIdsBySessionId({
+        session_id,
+      }, {
+        instruction_message: {
+          payload,
+          message_type: 'TEXT',
+        }, attached_messages: []
+      }).then((res: API.Result_Chat_) => {
+        const { job_id = '' } = res?.data || {};
+        getMessage(job_id, onSuccess);
+        onUpdate(res?.data || {})
+      });
+    },
+  });
+  const { onRequest, parsedMessages, setMessages } = useXChat({
+    agent,
+    parser: (agentMessages) => {
+      return agentMessages;
+    }
+  });
+
   const onAddConversation = () => {
     setMessages([]);
   };
+
+
+  const getHistoryMessage = (data: API.JobVO) => {
+
+    const { answer, question } = data || {};
+    const viewItem = [
+      {
+        id: question?.message?.id,
+        message: question?.message,
+        status: 'success',
+      },
+      {
+        id: answer?.message?.id,
+        message: transformMessage(answer),
+        status: 'success',
+      }
+    ]
+
+    return viewItem
+  }
 
   const onConversationClick: GetProp<typeof Conversations, 'onActiveChange'> = (key: string) => {
     runGetSessionById({
@@ -145,68 +240,51 @@ const HomePage: React.FC = () => {
 
     runGetMessagesBySessionId({
       session_id: key,
-    }).then((res: any) => {
-      setMessages(res?.data || []);
+    }).then((res: API.Result_Messages_) => {
+
+      if (res?.data?.length) {
+        setState((draft) => {
+          draft.isInit = true;
+        });
+        setMessages(res?.data?.map(item => getHistoryMessage(item))?.flat() || [])
+      }
+
     })
 
   };
 
-  let timer: any = null;
-  const getMessage = (message_id: string, onSuccess: (message: API.MessageVO) => void) => {
-    timer = setTimeout(() => {
-      runGetMessagesById({
-        message_id,
-      }).then(res => {
-        const { status } = res?.data || {};
-
-        if (status === 'running') {
-          getMessage(message_id, onSuccess);
-          return;
-        }
-
-        clearTimeout(timer);
-        onSuccess(res?.data || {});
-      });
-    }, 500);
-  }
-
-  const [agent] = useXAgent<API.MessageVO>({
-    request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { message = '', session_id = '' } = msg || {}; 
-      runGetMessageIdByChat({
-        message,
-        session_id,
-      }).then((res: API.Result_Message_) => {
-        const { id: message_id = '' } = res?.data || {};
-        getMessage(message_id, onSuccess);
-        onUpdate(res?.data || {})
-      });
-    },
-  });
-
-  const { onRequest, parsedMessages, setMessages } = useXChat({
-    agent,
-    parser: (agentMessages) => {
-      return agentMessages;
-    },
-  });
-
   const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
     // @ts-ignore
-    const { id, message, role, status } = item;
+    const { message, id, status, } = item;
     return {
       key: id,
       loading: status === 'loading',
-      role: message?.role === 'system' ? 'ai' : 'local',
-      content: message?.message || '暂未搜索到',
-      avatar: message?.role === 'system' ? {
-        icon: 'GU'
+      role: message?.role === 'SYSTEM' ? 'ai' : 'local',
+      content: message?.payload || formatMessage('home.noResult'),
+      avatar: message?.role === 'SYSTEM' ? {
+        icon: <img src={logoSrc} />
       } : undefined,
+      typing: (message?.role === 'SYSTEM' && !isInit) ? { step: 3, interval: 50 } : false,
+      messageRender: (text) => {
+        return message?.role === 'SYSTEM' ? <BubbleContent status={status} message={message} content={text} /> : <pre>{text}</pre>
+      }
+    }
+  });
+
+
+
+  // 更新输入内容
+  const updateContent = (newContent: string = '') => {
+    setState((draft) => {
+      draft.content = newContent;
+    })
   }
-});
 
   const onSubmit = (nextContent: string) => {
-    if (!nextContent) return; 
+    if (!nextContent) return;
+    setState((draft) => {
+      draft.isInit = false;
+    });
 
     // 新建对话
     if (!items.length) {
@@ -219,7 +297,7 @@ const HomePage: React.FC = () => {
             draft.activeKey = res?.data?.id || '';
           });
           onRequest({
-            message: nextContent,
+            payload: nextContent,
             session_id: res?.data?.id
           });
           updateContent('');
@@ -230,7 +308,7 @@ const HomePage: React.FC = () => {
 
     // 已有对话更新
     onRequest({
-      message: nextContent,
+      payload: nextContent,
       session_id: state.activeKey,
     });
     updateContent('');
@@ -247,12 +325,7 @@ const HomePage: React.FC = () => {
     })
   }
 
-  // 更新输入内容
-  const updateContent = (newContent: string = '') => {
-    setState((draft) => {
-      draft.content = newContent;
-    })
-  }
+
 
   useEffect(() => {
     setState((draft) => {
@@ -270,37 +343,54 @@ const HomePage: React.FC = () => {
     getSessionList();
   }, []);
 
+  const onTranslate = (items: { labelId: string, key: string }[]): GetProp<typeof Prompts, 'items'> => {
+    return items.map(item => {
+      return {
+        ...item,
+        label: formatMessage(item.labelId),
+      }
+    })
+  }
   return (
     <div className={styles.wrapper}>
       <div className={`${styles.sider} ${collapse ? styles['sider-collapsed'] : ''}`}>
         <div className={styles.title}>
-          <span className={styles['title-text']}>TuGraph</span>
-          <Tooltip
-            title={collapse ? '打开边栏' : '收起边栏'}
-          >
-            <Button
-              type='text'
-              icon={collapse ? <RightCircleOutlined /> : <LeftCircleOutlined />}
-              className={styles['sider-collapsed-icon']}
-              onClick={() => {
-                setState((draft) => {
-                  draft.collapse = !draft.collapse;
-                })
-              }}
-            />
-          </Tooltip>
+          <span className={styles['title-text']}>
+            <img src={logoSrc} className={styles['title-logo']} />
+            {
+              !collapse && <span>TuGraph</span>
+            }
+          </span>
+          {
+            !collapse && <div className={styles['title-right']}>
+              <Language />
+              <Tooltip title={formatMessage('home.expand')}>
+                <Button
+                  type='text'
+                  icon={<LeftCircleOutlined />}
+                  className={styles['sider-collapsed-icon']}
+                  onClick={() => {
+                    setState((draft) => {
+                      draft.collapse = !draft.collapse;
+                    })
+                  }}
+                />
+              </Tooltip>
+            </div>
+          }
         </div>
 
-        <Tooltip title={collapse ? '开启新对话' : ''}>
+        <Tooltip title={collapse ? formatMessage('home.openNewConversation') : ''}>
           <Button
             onClick={onAddConversation}
             type={collapse ? 'text' : 'primary'}
             className={styles['create-conversation']}
             icon={<PlusOutlined />}
+            size='large'
             block
-            ghost={collapse ? false : true}
+            ghost={collapse ? true : false}
           >
-            {collapse ? '' : '新对话'}
+            {collapse ? '' : formatMessage('home.newConversation')}
           </Button>
         </Tooltip>
 
@@ -313,15 +403,33 @@ const HomePage: React.FC = () => {
             menu={menuConfig}
           />
         </Spin>
-        <p className={styles.tips}>仅展示最近 10 条对话</p>
+        <p className={styles.tips}>{formatMessage('home.tips')}</p>
+        {
+          collapse ? <Tooltip
+            title={formatMessage('home.collapse')}
+          >
+            <Button
+              type='text'
+              icon={<RightCircleOutlined />}
+              className={styles['sider-collapsed-icon']}
+              onClick={() => {
+                setState((draft) => {
+                  draft.collapse = !draft.collapse;
+                })
+              }}
+            />
+          </Tooltip> : null
+        }
       </div>
 
-      <div className={styles.chat}>
+      <div className={
+        [styles.chat,
+        !items?.length ? styles['chat-emty'] : ''].join(' ')}>
         {/* 消息列表 */}
         <Bubble.List
           items={items.length > 0 ? items : [{
-            content: <Placeholder 
-              placeholderPromptsItems={placeholderPromptsItems}
+            content: <Placeholder
+              placeholderPromptsItems={onTranslate(placeholderPromptsItems)}
               onPromptsItemClick={onPromptsItemClick}
             />,
             variant: 'borderless',
@@ -342,7 +450,7 @@ const HomePage: React.FC = () => {
                 })
               }}
             >
-              {item.text}
+              {formatMessage(item.textId)}
             </Button>)}
           </Flex>
 
@@ -354,10 +462,10 @@ const HomePage: React.FC = () => {
               attachedFiles={attachedFiles}
               handleFileChange={handleFileChange}
               onOpenChange={(open: boolean) => {
-              setState((draft) => {
-                draft.headerOpen = open;
-              });
-            }}/>}
+                setState((draft) => {
+                  draft.headerOpen = open;
+                });
+              }} />}
             onSubmit={onSubmit}
             onChange={updateContent}
             // 上传文件先关闭入口
@@ -378,6 +486,15 @@ const HomePage: React.FC = () => {
             // }
             loading={agent.isRequesting()}
             className={styles.sender}
+          />
+          <FloatButton
+            tooltip={<div>{formatMessage('home.manager')}</div>}
+            shape="circle"
+            type="primary"
+            icon={<LayoutFilled />}
+            onClick={() => {
+              window.open('/manager', '_blank')
+            }}
           />
         </footer>
       </div>

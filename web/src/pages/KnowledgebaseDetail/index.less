@@ -1,0 +1,72 @@
+.knowledgebases-detail {
+    height: 100%;
+    overflow: scroll;
+
+    &-container {
+        margin: 16px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    &-header {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        background: aliceblue;
+        border-radius: 12px;
+        padding: 12px 16px;
+        flex: auto;
+
+        &-icon {
+            font-size: 32px;
+            color: #fff;
+            background-color: #379ae6;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        &-title {
+            font-size: 24px;
+            line-height: 32px;
+        }
+
+        &-desc {
+            margin-top: 8px;
+            line-height: 22px;
+            color: rgba(0, 0, 0, 0.45);
+        }
+
+        &-info {
+            p {
+                margin-bottom: 0;
+            }
+        }
+    }
+
+    &-content {
+        background: rgb(255 242 216 / 40%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: space-around;
+        padding: 16px;
+
+        p {
+            color: #999;
+        }
+    }
+
+    :global {
+        .ant-breadcrumb {
+            line-height: 32px;
+            padding: 0 4px;
+        }
+
+        .ant-breadcrumb a {
+            height: auto;
+        }
+    }
+}

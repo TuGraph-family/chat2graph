@@ -1,0 +1,63 @@
+.knowledgebases-table {
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &-title {
+      font-size: 18px;
+    }
+
+    &-input {
+      width: 200px;
+    }
+  }
+
+
+
+  &-card-row {
+    margin: 16px 0;
+  }
+
+  &-card {
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 0 6px rgb(210 210 210 / 20%);
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 1px 2px 10px rgba(210, 210, 210, 0.2);
+    }
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+
+      &-title {
+        font-size: 16px;
+        margin-bottom: 0 !important;
+      }
+    }
+
+    &-content {
+      font-size: 16px;
+      margin-top: 12px;
+      line-height: 24px;
+      color: #1f0651;
+
+      :global {
+        h2, p {
+          margin-bottom: 0;
+        }
+      }
+
+      p {
+        font-size: 12px;
+        color: #999;
+      }
+
+    }
+  }
+}

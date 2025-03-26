@@ -53,28 +53,38 @@ export const useSessionEntity = () => {
   });
 
   const {
-    run: runGetMessageIdByChat,
-    loading: loadingGetMessageIdByChat,
-  } = useRequest(services.getMessageIdByChat, {
+    run: runGetJobIdsBySessionId,
+    loading: loadingGetJobIdsBySessionId,
+  } = useRequest(services.getJobIdsBySessionId, {
     manual: true,
   });
+
+  const {
+    run: runGetJobById,
+    loading: loadingGetJobById,
+  } = useRequest(services.getJobIdById, {
+    manual: true,
+  });
+
+  const {
+    run: runGetJobResults,
+    loading: loadingGetJobResults,
+  } = useRequest(services.getJobResults, {
+    manual: true,
+  });
+
 
   const {
     run: runGetMessagesBySessionId,
-    loading: loadingGetMessagesBySessionId,
   } = useRequest(services.getMessagesBySessionId, {
-    manual: true,
-  });
-
-  const {
-    run: runGetMessagesById,
-    loading: loadingGetMessagesById,
-  } = useRequest(services.getMessageById, {
-    manual: true,
-  });
+    manual: true
+  })
 
   const getSessionList = () => {
-    runGetSessions().then(res => {
+    runGetSessions({
+      page: 1,
+      size: 10,
+    }).then(res => {
       const { data } = res || {};
       updateSessionList(sessionListTranslator(data));
     })
@@ -92,11 +102,12 @@ export const useSessionEntity = () => {
     loadingDeleteSession,
     runUpdateSession,
     loadingUpdateSession,
-    runGetMessageIdByChat,
-    loadingGetMessageIdByChat,
+    runGetJobIdsBySessionId,
+    loadingGetJobIdsBySessionId,
+    runGetJobById,
+    loadingGetJobById,
+    runGetJobResults,
+    loadingGetJobResults,
     runGetMessagesBySessionId,
-    loadingGetMessagesBySessionId,
-    runGetMessagesById,
-    loadingGetMessagesById,
   };
 };

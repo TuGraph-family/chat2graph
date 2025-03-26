@@ -1,29 +1,47 @@
 .wrapper {
   display: flex;
   height: 100vh;
+  padding: 20px;
 }
 
 .sider {
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 20px;
   width: 300px;
-  height: 100%;
-  background-color: #fbfbfb;
+  background-color: rgba(5, 145, 255, 0.1);
   transition: all 0.3s;
+  border-radius: 12px;
+
+  .create-conversation {
+    background: #484848;
+
+    &:hover {
+      background: #272626 !important;
+    }
+  }
 
   &-collapsed {
     width: 80px;
+    position: relative;
 
     .create-conversation {
       font-size: 24px;
       line-height: 32px;
+      color: #484848;
+      background: transparent !important;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.04) !important;
+      }
     }
 
     &-icon {
       font-size: 24px;
       line-height: 32px;
       color: #6a6b71;
+      position: unset;
+      bottom: unset;
     }
 
     .title-text,
@@ -32,6 +50,30 @@
       display: none;
       transition: all 0.3s;
     }
+
+    .sider-collapsed-icon {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      margin: auto;
+    }
+  }
+
+  .title-text {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+
+  .title-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .title-logo {
+    width: 40px;
   }
 
 
@@ -45,14 +87,10 @@
       font-size: 12px;
     }
 
-    .ant-conversations .ant-conversations-item-active {
-      background-color: #e6f4ff;
-    }
-
     .ant-conversations .ant-conversations-item-active .ant-conversations-label,
     .ant-conversations .ant-conversations-item-active .ant-conversations-menu-icon,
     .ant-conversations .ant-conversations-item-active .ant-conversations-icon {
-      color: #1677ff;
+      color: #484848;
     }
 
     .ant-btn-variant-text:not(:disabled):not(.ant-btn-disabled):hover {
@@ -68,6 +106,8 @@
   font-size: 24px;
   line-height: 32px;
   font-style: italic;
+  align-items: center;
+  color: #484848;
 }
 
 .tips {
@@ -100,11 +140,23 @@
 
       .ant-prompts-item {
         flex: none !important;
-        width: 394px;
+        width: 370px;
       }
-  
+
       .ant-prompts .ant-prompts-item .ant-prompts-content {
         align-items: center;
+      }
+
+      .ant-bubble-end .ant-bubble-content {
+        background: aliceblue;
+        border-radius: 16px 16px 0 16px;
+        box-shadow: unset;
+      }
+
+      .ant-bubble-start .ant-bubble-content {
+        border-radius: 16px;
+        border: 1px solid #f0f0f0;
+        overflow: hidden;
       }
 
       .ant-bubble-content.ant-bubble-content-filled {
@@ -114,6 +166,44 @@
       .ant-bubble-content pre {
         margin-bottom: 0;
         white-space: pre-wrap;
+      }
+
+      .ant-bubble-start .ant-bubble-content pre {
+        padding: 12px;
+        background: #fff;
+        border: unset;
+        border-radius: 8px;
+        margin-top: 8px;
+      }
+
+      .ant-bubble-avatar .ant-avatar.ant-avatar-circle.ant-avatar-icon {
+        background: rgba(5, 145, 255, 0.1);
+        border: 3px solid rgba(5, 145, 255, 0.4);
+      }
+
+      .ant-card-body {
+        padding: 20px;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle .ant-thought-chain-item .ant-thought-chain-item-header .ant-thought-chain-item-icon {
+        height: 16px;
+        width: 16px;
+        font-size: 10px;
+        margin-top: 6px;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle>.ant-thought-chain-item .ant-thought-chain-item-header::before {
+        top: 12px;
+        bottom: -20px;
+        left: 7px;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle {
+        gap: 0;
+      }
+
+      .ant-thought-chain.ant-thought-chain-middle .ant-thought-chain-item .ant-thought-chain-item-header {
+        margin-bottom: 0;
       }
     }
   }
@@ -125,10 +215,22 @@
   .footer {
     width: 800px;
     margin: 32px auto;
+
     :global {
       .ant-sender {
         margin-top: 16px;
       }
+    }
+  }
+}
+
+
+.chat-emty>.messages {
+  :global {
+    .ant-bubble-start .ant-bubble-content {
+      border-color: transparent;
+      border-radius: 0;
+      overflow: visible;
     }
   }
 }

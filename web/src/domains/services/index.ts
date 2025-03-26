@@ -4,13 +4,30 @@ import {
   getSessionById,
   updateSession,
   deleteSession,
-} from '@/services/chat2graph/SessionsContraoller';
+  getJobIdById,
+  getJobIdsBySessionId,
+  getMessagesBySessionId,
+} from '@/services/chat2graph/SessionsController';
 
 import {
-  getMessageIdByChat,
-  getMessagesBySessionId,
-  getMessageById,
-} from '@/services/chat2graph/MessageController';
+  createGraphdbs,
+  getGraphdbs,
+  getGraphdbById,
+  deleteGraphdbs,
+  updateGraphdbs,
+} from '@/services/chat2graph/GraphdbController';
+
+import {
+  createKnowledgebase,
+  getKnowledgebases,
+  deleteKnowledgebases,
+  getKnowledgebasesById,
+  uploadFile,
+  editKnowledgebase,
+  deleteFile,
+  setKnowledgebasesConfig,
+} from '@/services/chat2graph/KnowledgebasesController';
+import { getJobResults } from '@/services/chat2graph/JobsController';
 
 class SessionsService {
   // 请求会话列表
@@ -23,13 +40,48 @@ class SessionsService {
   public updateSession = updateSession;
   // 删除会话
   public deleteSession = deleteSession;
-
-  // 聊天过程根据输入返回输出
-  public getMessageIdByChat = getMessageIdByChat;
-  // 根据 sessionid 获取聊天所有上下文
+  // 通过 id 获取 job ids
+  public getJobIdById = getJobIdById;
+  // 通过 sessionid 获取 jobId
+  public getJobIdsBySessionId = getJobIdsBySessionId;
+  // 通过 sessionId 获取 message view
   public getMessagesBySessionId = getMessagesBySessionId;
-  // 根据 messageid 获取查询结果
-  public getMessageById = getMessageById;
+
+
+
+  // job results
+  public getJobResults = getJobResults;
+
+
+
+  // 创建图数据库
+  public createGraphdbs = createGraphdbs;
+  // 获取所有图数据库
+  public getGraphdbs = getGraphdbs;
+  // 根据 id 获取图数据库详情
+  public getGraphdbById = getGraphdbById;
+  // 删除图数据库
+  public deleteGraphdbs = deleteGraphdbs;
+  // 更新图数据库
+  public updateGraphdbs = updateGraphdbs;
+
+
+  // 创建知识库
+  public createKnowledgebase = createKnowledgebase;
+  // 获取所有知识库
+  public getKnowledgebases = getKnowledgebases;
+  // 根据 id 获取知识库详情
+  public getKnowledgebaseById = getKnowledgebasesById;
+  // 删除知识库
+  public deleteKnowledgebase = deleteKnowledgebases;
+  // 上传文件
+  public uploadFile = uploadFile;
+  // 编辑知识库
+  public editKnowledgebase = editKnowledgebase;
+  // 删除文件
+  public deleteFile = deleteFile;
+  // 知识库加载
+  public setKnowledgebasesConfig = setKnowledgebasesConfig;
 }
 
 export default new SessionsService();

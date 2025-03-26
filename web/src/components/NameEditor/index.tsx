@@ -1,10 +1,8 @@
-import { Layout, Row, Typography, Input, Button } from 'antd';
+import { Input, Button } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-
 import React from 'react';
 import styles from './index.less';
 import { useImmer } from 'use-immer';
-
 
 interface Props {
   name: React.ReactNode;
