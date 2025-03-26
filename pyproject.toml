@@ -17,6 +17,8 @@ pytest-asyncio = "^0.24.0"
 httpx = ">=0.27.0,<0.28.0"
 neo4j = "^5.27.0"
 sqlalchemy-utils = "^0.41.2"
+matplotlib = "^3.10.1"
+networkx = "^3.4.2"
 
 [[tool.poetry.source]]
 name = "PyPI"
@@ -41,10 +43,9 @@ pytest = "*"
 pytest-cov = "*"
 pytest-mock = "^3.14.0"
 
-
 [tool.poetry.group.db-gpt.dependencies]
-dbgpt = "0.7.0"
-dbgpt-ext = "0.7.0"
+dbgpt = { version = "0.7.0", extras = ["agent", "simple_framework"] }
+dbgpt-ext = { version = "0.7.0", extras = ["rag", "graph_rag", "storage_chromadb"] }
 
 [tool.ruff]
 line-length = 100
