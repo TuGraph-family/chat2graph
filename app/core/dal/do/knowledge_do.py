@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import BigInteger, Column, String, Text, func, JSON
+from sqlalchemy import JSON, BigInteger, Column, String, Text, func
 
 from app.core.dal.database import Do
 

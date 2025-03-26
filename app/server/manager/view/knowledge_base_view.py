@@ -5,8 +5,8 @@ from app.core.model.knowledge_base import KnowledgeBase
 
 
 class KnowledgeBaseViewTransformer:
-    """Knowledge base view transformer responsible for transforming internal knowledge base models to API response
-        formats.
+    """Knowledge base view transformer responsible for transforming internal knowledge base models
+        to API response formats.
 
     This class ensures that internal field names (like timestamp) are
     properly converted to API field names (like time_stamp) for consistent API responses.

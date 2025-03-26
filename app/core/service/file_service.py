@@ -5,9 +5,9 @@ from werkzeug.datastructures import FileStorage
 
 from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
+from app.core.common.type import FileStorageType, KnowledgeStoreFileStatus
 from app.core.dal.dao.file_descriptor_dao import FileDescriptorDao
 from app.core.model.file_descriptor import FileDescriptor
-from app.core.common.type import KnowledgeStoreFileStatus, FileStorageType
 
 
 class FileService(metaclass=Singleton):

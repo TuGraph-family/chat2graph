@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 import os
 from typing import Optional
-from app.core.common.type import KnowledgeStoreFileStatus, FileStorageType
+
+from app.core.common.type import FileStorageType, KnowledgeStoreFileStatus
 
 
 @dataclass

@@ -162,7 +162,7 @@ DOC_CONTENT = """
 8. 因为罗密欧以为朱丽叶死了，所以他自杀
 9. 因为罗密欧自杀，所以朱丽叶也自杀
 10. 因为罗密欧和朱丽叶的死，所以两家族最终和解
-"""
+"""  # noqa: E501
 
 
 class DocumentReader(Tool):
@@ -354,7 +354,7 @@ class DataImport(Tool):
             ON CREATE SET r = {rel_props}
             ON MATCH SET r = {rel_props}
             RETURN source, target, r
-            """
+            """  # noqa: E501
 
             store = get_neo4j()
             with store.conn.session() as session:
@@ -417,7 +417,7 @@ class DataImport(Tool):
 """
 
         except Exception as e:
-            raise Exception(f"Failed to import data: {str(e)}")
+            raise Exception(f"Failed to import data: {str(e)}") from e
 
 
 SCHEMA_BOOK = """

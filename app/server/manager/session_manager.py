@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.core.common.system_env import SystemEnv
 from app.core.model.session import Session
 from app.core.service.job_service import JobService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
-from app.core.common.system_env import SystemEnv
 
 
 class SessionManager:
@@ -124,7 +124,8 @@ class SessionManager:
             session_id (str): ID of the session
 
         Returns:
-            Tuple[List[Dict[str, Any]], str]: A tuple containing a list of job IDs and success message
+            Tuple[List[Dict[str, Any]], str]: A tuple containing a list of job IDs and success
+                message
         """
         jobs = self._job_service.get_original_jobs_by_session_id(session_id=session_id)
         job_list = [job.id for job in jobs]

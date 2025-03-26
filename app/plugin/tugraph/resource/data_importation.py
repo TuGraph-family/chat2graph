@@ -165,7 +165,7 @@ DOC_CONTENT = """
 8. 因为罗密欧以为朱丽叶死了，所以他自杀
 9. 因为罗密欧自杀，所以朱丽叶也自杀
 10. 因为罗密欧和朱丽叶的死，所以两家族最终和解
-"""
+"""  # noqa: E501
 
 
 class DocumentReader(Tool):
@@ -249,7 +249,7 @@ class CypherExecutor(Tool):
 
         Returns:
             Validation and execution results.
-        """
+        """  # noqa: E501
 
         print("\n".join(cyphers))
         try:
@@ -283,7 +283,7 @@ class CypherExecutor(Tool):
 
             _model = ModelServiceFactory.create(platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
             response = await _model.generate(sys_prompt=prompt, messages=[message])
-            raise Exception(response.get_payload())
+            raise Exception(response.get_payload()) from e
 
 
 class DataImport(Tool):
@@ -362,7 +362,7 @@ class DataImport(Tool):
         Returns:
             str: Summary of the import operation, including counts of entities and relationships
                 processed, created, and updated.
-        """
+        """  # noqa: E501
 
         def format_date(value: str) -> str:
             """Format date value to ensure it has a leading zero in the year."""
