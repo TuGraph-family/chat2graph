@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from app.core.env.insight.insight import Insight
+from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
 from app.core.toolkit.action import Action
@@ -14,7 +15,7 @@ class Task:
     """Task in the system.
 
     Attributes:
-        job (Job): The job assigned to the experts.
+        job (Job): The job assigned to the expert.
         operator_config (OperatorConfig): The configuration of the operator.
         workflow_messages (List[WorkflowMessage]): The workflow messages.
         tools (List[Action]): The tools recommended by the toolkit for the operator.
@@ -22,10 +23,9 @@ class Task:
         knowledge (str): The knowledge from the knowledge base.
         insights (List[Insight]): The insights from the environment.
         lesson (str): The lesson learned from the job execution.
+        file_descriptors (List[FileDescriptor]): The file descriptors.
     """
 
-    # TODO: make the job optional. Now the reasoner memory must use the session_id and
-    # job_id to store the memory.
     job: Job
     operator_config: Optional[OperatorConfig] = None
     workflow_messages: Optional[List[WorkflowMessage]] = None
@@ -34,3 +34,4 @@ class Task:
     knowledge: str = ""
     insights: Optional[List[Insight]] = None
     lesson: Optional[str] = None
+    file_descriptors: Optional[List[FileDescriptor]] = None
