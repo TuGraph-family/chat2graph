@@ -4,7 +4,11 @@ from typing import Any, Dict, Tuple, Type
 
 from dotenv import load_dotenv
 
-from app.core.common.type import KnowledgeStoreType, ModelPlatformType, WorkflowPlatformType
+from app.core.common.type import (
+    KnowledgeStoreType,
+    ModelPlatformType,
+    WorkflowPlatformType,
+)
 
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {

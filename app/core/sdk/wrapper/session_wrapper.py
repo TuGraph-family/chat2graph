@@ -29,7 +29,9 @@ class SessionWrapper:
                 message_service.save_message(message=attached_message)
 
             # get the instruction message in the hybrid message
-            text_message: TextMessage = cast(TextMessage, message.get_instruction_message())
+            text_message: TextMessage = cast(
+                TextMessage, message.get_instruction_message()
+            )
         elif isinstance(message, TextMessage):
             text_message = message
         else:

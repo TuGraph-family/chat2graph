@@ -161,7 +161,7 @@ DOC_CONTENT = """
 8. 因为罗密欧以为朱丽叶死了，所以他自杀
 9. 因为罗密欧自杀，所以朱丽叶也自杀
 10. 因为罗密欧和朱丽叶的死，所以两家族最终和解
-"""
+"""  # noqa: E501
 
 
 class DocumentReader(Tool):
@@ -427,7 +427,7 @@ class GraphReachabilityGetter(Tool):
             relationship_types = result.single()["types"]
 
         return (
-            "Here is the schema, you have to check if there exists at least one edge label "
-            "between two vertex labels! If no, create more edges to make the graph more connected.\n"
+            "Here is the schema, you have to check if there exists at least one edge label between "
+            "two vertex labels! If no, create more edges to make the graph more connected.\n"
             f"Vertex labels: {vertex_labels}\nRelationship types: {relationship_types}"
         )

@@ -38,10 +38,15 @@ class Operator:
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
     def _build_task(
-        self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]
+        self,
+        job: Job,
+        workflow_messages: Optional[List[WorkflowMessage]],
+        lesson: Optional[str],
     ) -> Task:
         rec_tools, rec_actions = self._toolkit_service.recommend_tools_actions(
-            actions=self._config.actions, threshold=self._config.threshold, hops=self._config.hops
+            actions=self._config.actions,
+            threshold=self._config.threshold,
+            hops=self._config.hops,
         )
         task = Task(
             job=job,
@@ -57,7 +62,9 @@ class Operator:
 
     def get_knowledge(self, job: Job) -> str:
         """Get the knowledge from the knowledge base."""
-        query = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
+        query = (
+            "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
+        )
         knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
         knowledge = knowledge_base_service.get_knowledge(query, job)
         return knowledge.get_payload()

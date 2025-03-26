@@ -53,7 +53,8 @@ class AgenticService(metaclass=Singleton):
     def execute(self, message: TextMessage) -> ChatMessage:
         """Execute the service synchronously."""
         job = Job(
-            goal=message.get_payload(), assigned_expert_name=message.get_assigned_expert_name()
+            goal=message.get_payload(),
+            assigned_expert_name=message.get_assigned_expert_name(),
         )
         self._job_service.save_job(job=job)
         job_wrapper = JobWrapper(job)
@@ -70,12 +71,16 @@ class AgenticService(metaclass=Singleton):
         )
         return result_message
 
-    def reasoner(self, reasoner_type: ReasonerType = ReasonerType.DUAL) -> "AgenticService":
+    def reasoner(
+        self, reasoner_type: ReasonerType = ReasonerType.DUAL
+    ) -> "AgenticService":
         """Chain the reasoner."""
         self._reasoner_service.init_reasoner(reasoner_type)
         return self
 
-    def toolkit(self, *action_chain: Union[Action, Tuple[Action, ...]]) -> "AgenticService":
+    def toolkit(
+        self, *action_chain: Union[Action, Tuple[Action, ...]]
+    ) -> "AgenticService":
         """Chain the actions in the toolkit."""
         ToolkitWrapper(self._toolkit_service.get_toolkit()).chain(*action_chain)
         return self
@@ -105,7 +110,8 @@ class AgenticService(metaclass=Singleton):
 
     @staticmethod
     def load(
-        yaml_path: Union[str, Path] = "app/core/sdk/chat2graph.yml", encoding: str = "utf-8"
+        yaml_path: Union[str, Path] = "app/core/sdk/chat2graph.yml",
+        encoding: str = "utf-8",
     ) -> "AgenticService":
         """Configure the AgenticService from yaml file."""
 
@@ -132,7 +138,10 @@ class AgenticService(metaclass=Singleton):
                     id=action_config.id,
                     name=action_config.name,
                     description=action_config.desc,
-                    tools=[tools_dict[tool_config.name] for tool_config in action_config.tools],
+                    tools=[
+                        tools_dict[tool_config.name]
+                        for tool_config in action_config.tools
+                    ],
                 )
                 actions_dict[action_config.name] = action
                 chain.append(action)

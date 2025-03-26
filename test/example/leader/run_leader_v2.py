@@ -29,7 +29,9 @@ def main():
     # initialize components
     reasoner = DualModelReasoner()
     agent_config = AgentConfig(
-        profile=Profile(name="Academic_reviewer"), reasoner=reasoner, workflow=DbgptWorkflow()
+        profile=Profile(name="Academic_reviewer"),
+        reasoner=reasoner,
+        workflow=DbgptWorkflow(),
     )
     leader = Leader(agent_config=agent_config)
 
@@ -256,7 +258,9 @@ paper content:
     print("\n=== Starting Paper Analysis ===")
     leader.execute_job_graph(original_job_id="test_original_job_id")
     job_graph: JobGraph = job_service.get_job_graph("test_original_job_id")
-    tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
+    tail_vertices = [
+        vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
+    ]
 
     for tail_vertex in tail_vertices:
         job = job_service.get_subjob(tail_vertex)

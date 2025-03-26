@@ -14,7 +14,9 @@ from app.core.service.message_service import MessageService
 class Expert(Agent):
     """Expert is a role that can execute a workflow."""
 
-    def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> AgentMessage:
+    def execute(
+        self, agent_message: AgentMessage, retry_count: int = 0
+    ) -> AgentMessage:
         """Execute to resolve the job with enhanced error handling and lesson learned.
 
         Args:
@@ -66,7 +68,9 @@ class Expert(Agent):
         if workflow_message.status == WorkflowStatus.SUCCESS:
             # (1) WorkflowStatus.SUCCESS
             # color: bright green
-            print(f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m")
+            print(
+                f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m"
+            )
 
             # (1.1) save the expert message in the database
             try:
@@ -103,7 +107,9 @@ class Expert(Agent):
             print(f"\033[38;5;208mLesson: {workflow_message.lesson}\033[0m")
 
             # workflow experience -> agent lesson
-            agent_message.add_lesson(workflow_message.evaluation + "\n" + workflow_message.lesson)
+            agent_message.add_lesson(
+                workflow_message.evaluation + "\n" + workflow_message.lesson
+            )
 
             # retry the job, until the max_retry_count or the job is executed successfully
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
@@ -129,7 +135,9 @@ class Expert(Agent):
                     "The job cannot be executed successfully "
                     "after retrying {max_retry_count} times."
                 )
-            return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
+            return self.execute(
+                agent_message=agent_message, retry_count=retry_count + 1
+            )
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
             # (3) WorkflowStatus.INPUT_DATA_ERROR
 
@@ -167,7 +175,9 @@ class Expert(Agent):
         if workflow_message.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # (4) WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
             # color: orange
-            print(f"\033[38;5;208m[JOB_TOO_COMPLICATED_ERROR]: Job {job.id} failed.\033[0m")
+            print(
+                f"\033[38;5;208m[JOB_TOO_COMPLICATED_ERROR]: Job {job.id} failed.\033[0m"
+            )
             print(f"\033[38;5;208mEvaluation: {workflow_message.evaluation}\033[0m")
             print(f"\033[38;5;208mLesson: {workflow_message.lesson}\033[0m")
 

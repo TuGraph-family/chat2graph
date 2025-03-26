@@ -1,7 +1,9 @@
+import useIntlConfig from '@/hooks/useIntlConfig';
 import { Prompts, Welcome } from '@ant-design/x';
 import { Space } from 'antd';
 import { GetProp } from 'antd/lib';
 import React from 'react';
+import logoSrc from '@/assets/logo.png';
 
 interface Props {
   placeholderPromptsItems: GetProp<typeof Prompts, 'items'>;
@@ -10,21 +12,14 @@ interface Props {
 
 const Placeholder: React.FC<Props> = (props) => {
   const { placeholderPromptsItems, onPromptsItemClick } = props;
+  const { formatMessage } = useIntlConfig();
   return <Space direction="vertical" size={16}>
     <Welcome
       variant="borderless"
-      // icon="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*s5sNRo5LjfQAAAAAAAAAAAAADgCCAQ/fmt.webp"
-      title="TuGraph"
-      description="你好，我是小图，你可以对我说"
-      // extra={
-      //   <Space>
-      //     <Button icon={<ShareAltOutlined />} />
-      //     <Button icon={<EllipsisOutlined />} />
-      //   </Space>
-      // }
+      title={<img src={logoSrc} width={240} />}
+      description={formatMessage('home.description')}
     />
     <Prompts
-      // title="Do you want?"
       items={placeholderPromptsItems}
       styles={{
         list: {

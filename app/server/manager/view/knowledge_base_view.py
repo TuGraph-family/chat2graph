@@ -5,8 +5,8 @@ from app.core.model.knowledge_base import KnowledgeBase
 
 
 class KnowledgeBaseViewTransformer:
-    """Knowledge base view transformer responsible for transforming internal knowledge base models to API response
-        formats.
+    """Knowledge base view transformer responsible for transforming internal knowledge base models
+        to API response formats.
 
     This class ensures that internal field names (like timestamp) are
     properly converted to API field names (like time_stamp) for consistent API responses.
@@ -69,5 +69,7 @@ class KnowledgeBaseViewTransformer:
     def deserialize_knowledge_config(data: Dict[str, Any]) -> KnowledgeConfig:
         """Deserialize knowledge config data from API request."""
         knowledge_config = KnowledgeConfig()
-        knowledge_config.chunk_size = data.get("chunk_size", knowledge_config.chunk_size)
+        knowledge_config.chunk_size = data.get(
+            "chunk_size", knowledge_config.chunk_size
+        )
         return knowledge_config

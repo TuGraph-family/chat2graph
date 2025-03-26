@@ -13,7 +13,7 @@ export default defineConfig({
   // },
   proxy: {
     '/api': {
-      'target': 'http://gengsheng.alipay.net:5000',
+      'target': 'http://127.0.0.1:5000',
       'changeOrigin': true,
       // 'pathRewrite': { '^/api' : '' },
     }
@@ -28,7 +28,22 @@ export default defineConfig({
       path: '/home',
       component: './Home',
     },
+    {
+      path: '/manager',
+      redirect: '/manager/knowledgebase',
+    },
+    {
+      name: '管理',
+      path: '/manager/*',
+      component: './Manager',
+    },
+
   ],
   npmClient: 'tnpm',
+  locale: {
+    antd: true,
+    default: 'zh-CN',
+    baseSeparator: '-',
+  },
 });
 

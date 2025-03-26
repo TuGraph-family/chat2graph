@@ -60,10 +60,8 @@ class TestAgentOperator(Operator):
 
         # job5: format result
         elif self._config.id == "format":
-            result = (
-                f"Final Result\n:{'{}'.join([msg.scratchpad for msg in workflow_messages])}".format(
-                    "\n"
-                )
+            result = f"Final Result\n:{'{}'.join([msg.scratchpad for msg in workflow_messages])}".format(
+                "\n"
             )
             return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
@@ -131,7 +129,9 @@ def test_agent_job_graph():
         )
 
     # build job graph
-    original_job: Job = Job(id="test_original_job_id" + str(uuid4()), goal="Test Job Graph")
+    original_job: Job = Job(
+        id="test_original_job_id" + str(uuid4()), goal="Test Job Graph"
+    )
     job_service.save_job(job=original_job)
     job_service.add_job(
         original_job_id=original_job.id,
@@ -176,7 +176,9 @@ def test_agent_job_graph():
     # execute job graph
     leader.execute_job_graph(original_job_id=original_job.id)
     job_graph: JobGraph = job_service.get_job_graph(job_id=original_job.id)
-    tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
+    tail_vertices = [
+        vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
+    ]
     terminal_job_results: List[JobResult] = [
         job_service.query_job_result(vertex) for vertex in tail_vertices
     ]
@@ -185,8 +187,12 @@ def test_agent_job_graph():
     assert len(tail_vertices) == 2, "Should receive 2 messages from terminal vertices"
 
     # extract job4 (sum) and job5 (format) results
-    job4_result = next(result for result in terminal_job_results if "job_4" in result.job_id)
-    job5_result = next(result for result in terminal_job_results if "job_5" in result.job_id)
+    job4_result = next(
+        result for result in terminal_job_results if "job_4" in result.job_id
+    )
+    job5_result = next(
+        result for result in terminal_job_results if "job_5" in result.job_id
+    )
 
     # verify job statuses
     assert job4_result.status == JobStatus.FINISHED

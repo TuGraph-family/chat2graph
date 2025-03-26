@@ -33,7 +33,9 @@ class JobManager:
             job_id, ChatMessageRole.SYSTEM
         )
         # get thinking chain messages
-        message_result_pairs: List[Tuple[AgentMessage, JobResult]] = []  # to sort by timestamp
+        message_result_pairs: List[
+            Tuple[AgentMessage, JobResult]
+        ] = []  # to sort by timestamp
 
         subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
         for subjob_id in subjob_ids:
@@ -72,7 +74,9 @@ class JobManager:
         )
 
         # separate the sorted pairs back into individual lists
-        thinking_messages: List[AgentMessage] = [pair[0] for pair in message_result_pairs]
+        thinking_messages: List[AgentMessage] = [
+            pair[0] for pair in message_result_pairs
+        ]
         subjob_results: List[JobResult] = [pair[1] for pair in message_result_pairs]
 
         return MessageViewTransformer.serialize_conversation_view(

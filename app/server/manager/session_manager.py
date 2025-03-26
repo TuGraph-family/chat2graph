@@ -13,7 +13,9 @@ class SessionManager:
     def __init__(self):
         self._session_service: SessionService = SessionService.instance
         self._job_service: JobService = JobService.instance
-        self._knowledgebase_service: KnowledgeBaseService = KnowledgeBaseService.instance
+        self._knowledgebase_service: KnowledgeBaseService = (
+            KnowledgeBaseService.instance
+        )
 
     def create_session(self, name: str) -> Tuple[Dict[str, Any], str]:
         """Create a new session and return the response data.
@@ -26,7 +28,9 @@ class SessionManager:
         """
         session: Session = self._session_service.create_session(name=name)
         knowledgebase = self._knowledgebase_service.create_knowledge_base(
-            name=name, knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE, session_id=session.id
+            name=name,
+            knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE,
+            session_id=session.id,
         )
         data = {
             "id": session.id,
@@ -92,7 +96,9 @@ class SessionManager:
                 success message
         """
         sessions = self._session_service.get_all_sessions()
-        sessions = sorted(sessions, key=lambda session: session.timestamp, reverse=False)
+        sessions = sorted(
+            sessions, key=lambda session: session.timestamp, reverse=False
+        )
         total_sessions = len(sessions)
 
         if size and page and size > 0 and page >= 1:
@@ -125,7 +131,8 @@ class SessionManager:
             session_id (str): ID of the session
 
         Returns:
-            Tuple[List[Dict[str, Any]], str]: A tuple containing a list of job IDs and success message
+            Tuple[List[Dict[str, Any]], str]: A tuple containing a list of job IDs and success
+                message
         """
         jobs = self._job_service.get_original_jobs_by_session_id(session_id=session_id)
         job_list = [job.id for job in jobs]

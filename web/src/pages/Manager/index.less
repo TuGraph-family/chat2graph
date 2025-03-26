@@ -1,0 +1,103 @@
+.manager-container {
+    .manager-content {
+        height: 100vh;
+
+        :global {
+            .ant-layout {
+                background-color: #fff;
+            }
+
+            .ant-layout-has-sider {
+                height: 100%;
+            }
+
+            .ant-menu-item-selected,
+            .ant-menu-item-active {
+                border-radius: 40px;
+                background: transparent;
+            }
+
+            .ant-layout-sider-children {
+                display: flex;
+                flex-direction: column;
+
+                .ant-menu {
+                    flex: 1;
+                    border-right: none;
+                }
+            }
+
+            .ant-menu-light:not(.ant-menu-horizontal) .ant-menu-item:not(.ant-menu-item-selected):hover,
+            .ant-menu-light>.ant-menu:not(.ant-menu-horizontal) .ant-menu-item:not(.ant-menu-item-selected):hover {
+                background-color: transparent;
+                color: #1677ff;
+            }
+
+
+        }
+
+        .manager-sider {
+            background-color: #fff;
+            padding: 16px;
+            border-right: 1px solid #f0f0f0;
+
+            .manager-logo-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 20px;
+
+                .manager-logo {
+                    width: 100px;
+
+                }
+
+
+            }
+
+            .manager-user {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                .manager-user-avatar {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    overflow: hidden;
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                }
+
+                .manager-user-info {
+                    margin-left: 20px;
+
+                    .manager-user-name {
+                        font-size: 16px;
+                        font-weight: 600;
+                        margin-bottom: 5px;
+                    }
+
+                    .manager-user-email {
+                        font-size: 14px;
+                        color: #999;
+                    }
+
+                }
+            }
+        }
+
+
+    }
+
+
+}
+
+.manager-menu-icon {
+    width: 14px;
+    height: 14px;
+}

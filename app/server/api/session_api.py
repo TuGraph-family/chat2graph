@@ -74,12 +74,19 @@ def update_session_by_id(session_id):
         timestamp = data.get("timestamp")
         latest_job_id = data.get("latest_job_id")
         assert isinstance(name, Optional[str]), "Name should be a string or None"
-        assert isinstance(timestamp, Optional[int]), "Timestamp should be an integer or None"
-        assert isinstance(latest_job_id, Optional[str]), "Latest job ID should be a string or None"
+        assert isinstance(timestamp, Optional[int]), (
+            "Timestamp should be an integer or None"
+        )
+        assert isinstance(latest_job_id, Optional[str]), (
+            "Latest job ID should be a string or None"
+        )
 
         updated_session, message = manager.update_session(
             session=Session(
-                id=session_id, name=name, timestamp=timestamp, latest_job_id=latest_job_id
+                id=session_id,
+                name=name,
+                timestamp=timestamp,
+                latest_job_id=latest_job_id,
             )
         )
         return make_response(True, data=updated_session, message=message)

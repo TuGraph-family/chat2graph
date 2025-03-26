@@ -26,7 +26,8 @@ class KnowledgeBaseManager:
             session_id (str): ID of the associated session
 
         Returns:
-            Tuple[Dict[str, Any], str]: A tuple containing knowledge base details and success message
+            Tuple[Dict[str, Any], str]: A tuple containing knowledge base details and success
+                message
         """
         _ = self._session_service.get_session(session_id=session_id)
 
@@ -49,7 +50,8 @@ class KnowledgeBaseManager:
             id (str): ID of the knowledge base
 
         Returns:
-            Tuple[Dict[str, Any], str]: A tuple containing knowledge base details and success message
+            Tuple[Dict[str, Any], str]: A tuple containing knowledge base details and success
+                message
         """
         knowledge_base = self._knowledge_base_service.get_knowledge_base(id=id)
         data = self._knowledge_base_view.serialize_knowledge_base(knowledge_base)

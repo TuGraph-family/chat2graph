@@ -1,5 +1,5 @@
-from concurrent.futures import Future, ThreadPoolExecutor
 import time
+from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Dict, List, Optional, Set
 
 import networkx as nx  # type: ignore
@@ -79,7 +79,9 @@ class Leader(Agent):
             ]
         )
 
-        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(task=job.goal, role_list=role_list)
+        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(
+            task=job.goal, role_list=role_list
+        )
         decompsed_job = Job(
             session_id=job.session_id,
             goal=job.goal,
@@ -87,11 +89,15 @@ class Leader(Agent):
         )
 
         # decompose the job by the reasoner in the workflow
-        workflow_message = self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
+        workflow_message = self._workflow.execute(
+            job=decompsed_job, reasoner=self._reasoner
+        )
 
         # extract the subjobs from the json block
         try:
-            job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
+            job_dict: Dict[str, Dict[str, str]] = parse_json(
+                text=workflow_message.scratchpad
+            )
             assert job_dict is not None
         except Exception as e:
             raise ValueError(
@@ -103,7 +109,9 @@ class Leader(Agent):
         job_graph = JobGraph()
 
         # create the subjobs, and add them to the decomposed job graph
-        temp_to_unique_id_map: Dict[str, str] = {}  # id_generated_by_leader -> unique_id
+        temp_to_unique_id_map: Dict[
+            str, str
+        ] = {}  # id_generated_by_leader -> unique_id
         for subjob_id, subjob_dict in job_dict.items():
             subjob = SubJob(
                 original_job_id=job_id,
@@ -141,7 +149,9 @@ class Leader(Agent):
     def execute_job(self, job: Job) -> None:
         """Execute the job."""
         # decompose the job into decomposed job graph
-        decomposed_job_graph: JobGraph = self.execute(agent_message=AgentMessage(job_id=job.id))
+        decomposed_job_graph: JobGraph = self.execute(
+            agent_message=AgentMessage(job_id=job.id)
+        )
 
         # update the decomposed job graph in the job service
         self._job_service.replace_subgraph(
@@ -167,7 +177,9 @@ class Leader(Agent):
         job_graph: JobGraph = self._job_service.get_job_graph(original_job_id)
         pending_job_ids: Set[str] = set(job_graph.vertices())
         running_jobs: Dict[str, Future] = {}  # job_id -> Concurrent Future
-        expert_results: Dict[str, WorkflowMessage] = {}  # job_id -> WorkflowMessage (expert result)
+        expert_results: Dict[
+            str, WorkflowMessage
+        ] = {}  # job_id -> WorkflowMessage (expert result)
         job_inputs: Dict[str, AgentMessage] = {}  # job_id -> AgentMessage (input)
 
         with ThreadPoolExecutor() as executor:
@@ -184,7 +196,8 @@ class Leader(Agent):
                         # form the agent message to the agent
                         job: SubJob = self._job_service.get_subjob(job_id)
                         pred_messages: List[WorkflowMessage] = [
-                            expert_results[pred_id] for pred_id in job_graph.predecessors(job_id)
+                            expert_results[pred_id]
+                            for pred_id in job_graph.predecessors(job_id)
                         ]
                         job_inputs[job.id] = AgentMessage(
                             job_id=job.id, workflow_messages=pred_messages
@@ -257,7 +270,9 @@ class Leader(Agent):
                         old_job_graph.add_vertex(completed_job_id)
 
                         # reexecute the subjob with a new sub-subjob
-                        new_job_graqph: JobGraph = self.execute(agent_message=agent_result)
+                        new_job_graqph: JobGraph = self.execute(
+                            agent_message=agent_result
+                        )
                         self._job_service.replace_subgraph(
                             original_job_id=original_job_id,
                             new_subgraph=new_job_graqph,
@@ -304,7 +319,9 @@ class Leader(Agent):
     def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
         """Dispatch the job to the expert, and handle the result."""
         agent_result_message: AgentMessage = expert.execute(agent_message=agent_message)
-        workflow_result: WorkflowMessage = agent_result_message.get_workflow_result_message()
+        workflow_result: WorkflowMessage = (
+            agent_result_message.get_workflow_result_message()
+        )
 
         if workflow_result.status == WorkflowStatus.SUCCESS:
             return agent_result_message
@@ -315,7 +332,9 @@ class Leader(Agent):
             # raise NotImplementedError("Decompose the job into subjobs is not implemented.")
 
             # reduce the life cycle of the subjob
-            subjob: SubJob = self._job_service.get_subjob(subjob_id=agent_message.get_job_id())
+            subjob: SubJob = self._job_service.get_subjob(
+                subjob_id=agent_message.get_job_id()
+            )
             subjob.life_cycle -= 1
             subjob.is_legacy = True
             self._job_service.save_job(job=subjob)
@@ -332,7 +351,9 @@ class Leader(Agent):
             # reexecute the subjob with a new sub-subjob
             new_job_graqph: JobGraph = self.execute(agent_message=agent_result_message)
             self._job_service.replace_subgraph(
-                original_job_id=subjob.id, new_subgraph=new_job_graqph, old_subgraph=old_job_graph
+                original_job_id=subjob.id,
+                new_subgraph=new_job_graqph,
+                old_subgraph=old_job_graph,
             )
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 

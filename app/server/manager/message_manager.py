@@ -22,7 +22,9 @@ class MessageManager:
     def chat(self, chat_message: ChatMessage) -> Tuple[Dict[str, Any], str]:
         """Create user message and system message return the response data."""
         # create the session wrapper
-        session_wrapper = self._agentic_service.session(session_id=chat_message.get_session_id())
+        session_wrapper = self._agentic_service.session(
+            session_id=chat_message.get_session_id()
+        )
 
         # submit the message to the multi-agent system
         job_wrapper = session_wrapper.submit(message=chat_message)
