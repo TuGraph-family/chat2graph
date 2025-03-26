@@ -45,7 +45,10 @@ class SessionWrapper:
             )
             if len(history_text_messages) > 0:
                 historical_context = "Chat history of the job goal:\n" + "\n".join(
-                    [f"[{msg.get_role()}]: {msg.get_payload()}" for msg in history_text_messages]
+                    [
+                        f"[Chat history: {msg.get_role().value}] said: {msg.get_payload()}"
+                        for msg in history_text_messages
+                    ]
                 )
             else:
                 historical_context = ""
