@@ -308,31 +308,33 @@ class Leader(Agent):
 
         if workflow_result.status == WorkflowStatus.SUCCESS:
             return agent_result_message
-        elif workflow_result.status == WorkflowStatus.INPUT_DATA_ERROR:
+        if workflow_result.status == WorkflowStatus.INPUT_DATA_ERROR:
             # reexecute all the dependent jobs (predecessors)
             return agent_result_message
-        elif workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
+        if workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
             # reduce the life cycle of the subjob
             subjob: SubJob = self._job_service.get_subjob(subjob_id=agent_message.get_job_id())
             subjob.life_cycle -= 1
             subjob.is_legacy = True
             self._job_service.save_job(job=subjob)
+
+            # the job is too complicated to be executed
             if subjob.life_cycle == 0:
-                # the job is too complicated to be executed
                 raise ValueError(
                     f"Job {subjob.id} runs out of life cycle. "
-                    f"(original life cycle: {SystemEnv.LIFE_CYCLE})"
+                    f"(initial life cycle: {SystemEnv.LIFE_CYCLE})"
                 )
 
-            old_job_graph: JobGraph = JobGraph()
-            old_job_graph.add_vertex(subjob.id)
+            # construct the job graph which will be replaced by the new sub job graph
+            replaced_job_graph: JobGraph = JobGraph()
+            replaced_job_graph.add_vertex(subjob.id)
 
             # reexecute the subjob with a new sub-subjob
             new_job_graqph: JobGraph = self.execute(agent_message=agent_result_message)
             self._job_service.replace_subgraph(
                 original_job_id=subjob.id,
                 new_subgraph=new_job_graqph,
-                old_subgraph=old_job_graph,
+                old_subgraph=replaced_job_graph,
             )
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 

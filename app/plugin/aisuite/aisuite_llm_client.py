@@ -56,7 +56,6 @@ class AiSuiteLlmClient(ModelService):
             model=self._model_alias,
             messages=aisuite_messages,
             temperature=SystemEnv.TEMPERATURE,
-            # response_validation=False if "goole" in self.,  # forbid validating the response (Google Vertex AI)
         )
 
         # call functions based on the model output

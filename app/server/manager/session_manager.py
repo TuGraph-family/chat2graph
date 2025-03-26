@@ -94,7 +94,7 @@ class SessionManager:
                 success message
         """
         sessions = self._session_service.get_all_sessions()
-        sessions = sorted(sessions, key=lambda session: session.timestamp, reverse=False)
+        sessions = sorted(sessions, key=lambda session: session.timestamp or 0, reverse=True)
         total_sessions = len(sessions)
 
         if size and page and size > 0 and page >= 1:

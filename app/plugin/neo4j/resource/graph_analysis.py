@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 from app.core.toolkit.tool import Tool
@@ -35,7 +35,7 @@ class AlgorithmsGetter(Tool):
             {
                 "name": "PageRankExecutor",
                 "category": "Centrality",
-                "description": "Measures the importance of nodes based on the importance of their incoming neighbors.",
+                "description": "Measures the importance of nodes based on the importance of their incoming neighbors.",  # noqa: E501
             },
             {
                 "name": "BetweennessCentralityExecutor",
@@ -45,12 +45,12 @@ class AlgorithmsGetter(Tool):
             {
                 "name": "LouvainExecutor",
                 "category": "Community Detection",
-                "description": "Detects communities in a graph using the Louvain method for optimizing modularity.",
+                "description": "Detects communities in a graph using the Louvain method for optimizing modularity.",  # noqa: E501
             },
             {
                 "name": "LabelPropagationExecutor",
                 "category": "Community Detection",
-                "description": "Detects communities by propagating labels based on neighbor consensus.",
+                "description": "Detects communities by propagating labels based on neighbor consensus.",  # noqa: E501
             },
             {
                 "name": "ShortestPathExecutor",
@@ -70,7 +70,7 @@ class AlgorithmsGetter(Tool):
             {
                 "name": "KMeansExecutor",
                 "category": "Machine Learning",
-                "description": "Clusters nodes based on their properties using the K-means algorithm.",
+                "description": "Clusters nodes based on their properties using the K-means algorithm.",  # noqa: E501
             },
         ]
 
@@ -109,7 +109,7 @@ class PageRankExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
         # generate a unique name for the graph projection
         graph_name = f"pagerank_graph_{uuid4().hex[:8]}"
@@ -170,7 +170,7 @@ class PageRankExecutor(Tool):
                     }})
                     YIELD ranIterations, didConverge, preProcessingMillis, computeMillis, postProcessingMillis
                     RETURN ranIterations, didConverge, preProcessingMillis, computeMillis, postProcessingMillis
-                    """
+                    """  # noqa: E501
                 ).data()
 
                 result["algorithm_stats"] = stats[0] if stats else {}
@@ -249,7 +249,7 @@ class BetweennessCentralityExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
         # generate a unique name for the graph projection
         graph_name = f"betweenness_graph_{uuid4().hex[:8]}"
@@ -393,7 +393,7 @@ class LouvainExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
         # generate a unique name for the graph projection
         graph_name = f"louvain_graph_{uuid4().hex[:8]}"
@@ -434,7 +434,7 @@ class LouvainExecutor(Tool):
                         intermediateCommunityIds
                     ORDER BY communityId, name
                     LIMIT {top_n}
-                    """
+                    """  # noqa: E501
                 ).data()
 
                 # clean up result for better readability
@@ -482,7 +482,7 @@ class LouvainExecutor(Tool):
                     }})
                     YIELD preProcessingMillis, computeMillis, postProcessingMillis, communityCount, modularity, modularities
                     RETURN preProcessingMillis, computeMillis, postProcessingMillis, communityCount, modularity, modularities
-                    """
+                    """  # noqa: E501
                 ).data()
 
                 result["algorithm_stats"] = stats[0] if stats else {}
@@ -567,7 +567,7 @@ class LabelPropagationExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
         # generate a unique name for the graph projection
         graph_name = f"labelprop_graph_{uuid4().hex[:8]}"
@@ -665,7 +665,7 @@ class LabelPropagationExecutor(Tool):
                     CALL gds.labelPropagation.stats('{graph_name}', {config})
                     YIELD preProcessingMillis, computeMillis, postProcessingMillis, communityCount, didConverge, ranIterations
                     RETURN preProcessingMillis, computeMillis, postProcessingMillis, communityCount, didConverge, ranIterations
-                    """
+                    """  # noqa: E501
                 ).data()
 
                 result["algorithm_stats"] = stats[0] if stats else {}
@@ -770,7 +770,7 @@ class ShortestPathExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
         # generate a unique name for the graph projection
         graph_name = f"shortestpath_graph_{uuid4().hex[:8]}"
@@ -894,7 +894,7 @@ class ShortestPathExecutor(Tool):
                     CALL gds.shortestPath.dijkstra.stream('{graph_name}', {config})
                     YIELD totalCost
                     RETURN min(totalCost) AS minCost, max(totalCost) AS maxCost, count(*) AS pathCount
-                    """
+                    """  # noqa: E501
                 ).data()
 
                 result["algorithm_stats"] = stats[0] if stats else {}
@@ -990,7 +990,7 @@ class NodeSimilarityExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
         # generate a unique name for the graph projection
         graph_name = f"similarity_graph_{uuid4().hex[:8]}"
@@ -1067,7 +1067,7 @@ class NodeSimilarityExecutor(Tool):
                     CALL gds.nodeSimilarity.stats('{graph_name}', {config})
                     YIELD preProcessingMillis, computeMillis, postProcessingMillis, similarityPairs, similarityDistribution
                     RETURN preProcessingMillis, computeMillis, postProcessingMillis, similarityPairs, similarityDistribution
-                    """
+                    """  # noqa: E501
                 ).data()
 
                 result["algorithm_stats"] = stats[0] if stats else {}
@@ -1143,9 +1143,9 @@ class CommonNeighborsExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
-        result = {}
+        result: Dict[str, Any] = {}
 
         try:
             with store.conn.session() as session:
@@ -1189,7 +1189,7 @@ class CommonNeighborsExecutor(Tool):
                     "commonNeighborsCount", 0
                 )
 
-                # step 2: get common neighbors details if requested and relationship type is specified
+                # step 2: get common neighbors details if requested and relationship type is specified  # noqa: E501
                 if include_neighbor_details and relationship_type:
                     rel_type = f":{relationship_type}"
                     neighbors_query = f"""
@@ -1199,12 +1199,12 @@ class CommonNeighborsExecutor(Tool):
                         common.id AS neighbor_id, 
                         labels(common) AS neighbor_labels
                     ORDER BY neighbor_name
-                    """
+                    """  # noqa: E501
 
                     neighbors_details = session.run(neighbors_query).data()
 
                     # clean up result for better readability
-                    cleaned_neighbors = []
+                    cleaned_neighbors: List[Dict[str, Any]] = []
                     for record in neighbors_details:
                         cleaned_record = {
                             "name": record.get("neighbor_name", "N/A"),
@@ -1236,7 +1236,7 @@ class KMeansExecutor(Tool):
     async def execute_kmeans_algorithm(
         self,
         vertex_label: str = "*",
-        node_properties: List[str] = None,
+        node_properties: Optional[List[str]] = None,
         k: int = 3,
         max_iterations: int = 20,
         seed: int = 42,
@@ -1287,7 +1287,7 @@ class KMeansExecutor(Tool):
 
         Returns:
             str: The result of the algorithm execution in JSON format.
-        """
+        """  # noqa: E501
         store = get_neo4j()
         # generate a unique name for the graph projection
         graph_name = f"kmeans_graph_{uuid4().hex[:8]}"
@@ -1299,7 +1299,7 @@ class KMeansExecutor(Tool):
         # convert node properties list to string for cypher query
         properties_str = str(node_properties).replace("'", '"')
 
-        result = {}
+        result: Dict[str, Any] = {}
 
         try:
             with store.conn.session() as session:
@@ -1401,7 +1401,7 @@ class KMeansExecutor(Tool):
                     CALL gds.beta.kmeans.stats('{graph_name}', {config})
                     YIELD preProcessingMillis, computeMillis, postProcessingMillis, k, didConverge, ranIterations
                     RETURN preProcessingMillis, computeMillis, postProcessingMillis, k, didConverge, ranIterations
-                    """
+                    """  # noqa: E501
                 ).data()
 
                 result["algorithm_stats"] = stats[0] if stats else {}
@@ -1430,10 +1430,15 @@ class KMeansExecutor(Tool):
 
                 result["graph_removal"] = drop_result
 
-        except Exception:
+        except Exception as e:
             # in case of errors, try to clean up the graph projection
             try:
                 with store.conn.session() as session:
                     session.run(f"CALL gds.graph.drop('{graph_name}', false)")
             except Exception:
                 pass
+
+            result["error"] = str(e)
+
+        # return results as json string
+        return json.dumps(result, indent=2)
