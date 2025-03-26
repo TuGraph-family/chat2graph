@@ -20,7 +20,7 @@ class KnowledgeBaseRetriever(Tool):
         self, question: str, session_id: str
     ) -> Tuple[List[str], List[str]]:
         """Retrive a list of related contents and a list of their reference name from knowledge
-        base given the question.
+        base given the question and the session id of current job.
 
         Args:
             question (str): The question asked by user.
