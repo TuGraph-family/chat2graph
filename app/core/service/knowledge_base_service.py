@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List
+from typing import List, Tuple
 
 from sqlalchemy import func
 
@@ -148,12 +148,12 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete knolwledge base folder
         KnowledgeStoreFactory.get_or_create(id).drop()
 
-    def get_all_knowledge_bases(
-        self,
-    ) -> tuple[KnowledgeBase, List[KnowledgeBase]]:
+    def get_all_knowledge_bases(self) -> Tuple[KnowledgeBase, List[KnowledgeBase]]:
         """Get all knowledge bases.
+
         Returns:
-            List[KnowledgeBase]: List of knowledge bases
+            Tuple[KnowledgeBase, List[KnowledgeBase]]: A tuple containing global knowledge base and
+                list of local knowledge
         """
 
         # get local knowledge bases
