@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import func
 
@@ -211,22 +211,22 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
         return global_kb, local_kbs
 
-    def get_knowledge(self, query: str, session_id: str) -> Knowledge:
+    def get_knowledge(self, query: str, session_id: Optional[str]) -> Knowledge:
         """Get knowledge by ID."""
         # get global knowledge
         global_chunks = KnowledgeStoreFactory.get_or_create(str(self._global_kb_do.id)).retrieve(
             query
         )
         # get local knowledge
-        kbs = self._knowledge_base_dao.filter_by(session_id=session_id)
-        if len(kbs) == 1:
-            kb = kbs[0]
-            knowledge_base_id = kb.id
-            local_chunks = KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).retrieve(
-                query
-            )
-        else:
-            local_chunks = []
+        local_chunks = []
+        if session_id:
+            kbs = self._knowledge_base_dao.filter_by(session_id=session_id)
+            if len(kbs) == 1:
+                kb = kbs[0]
+                knowledge_base_id = kb.id
+                local_chunks = KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).retrieve(
+                    query
+                )
         return Knowledge(global_chunks, local_chunks)
 
     def load_knowledge(
