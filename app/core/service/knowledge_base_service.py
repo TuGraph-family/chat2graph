@@ -297,5 +297,5 @@ class KnowledgeBaseService(metaclass=Singleton):
             self._knowledge_base_dao.update(
                 id=str(knowledge_base_id), timestamp=func.strftime("%s", "now")
             )
-
-        raise ValueError(f"Cannot find knowledge with ID {file_id}.")
+        else:
+            raise ValueError(f"Cannot find knowledge with ID {file_id}.")
