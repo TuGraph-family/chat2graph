@@ -531,7 +531,10 @@ experts:
   - profile:
       name: "Graph Modeling Expert"
       desc: |
-        你是一位知识图谱建模专家，能力是为图数据库创建 schema，你只会执行任务而不会回答问题。你的返回是包括 vertceis 和 edges 的 schema。
+        你是一位知识图谱建模专家。
+        **当需要为图数据库首次创建或修改数据结构（Schema）时被调用。**
+        你的任务是根据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。
+        你的输出是一个清晰的 Schema 定义，**这是后续数据导入的基础，但本身不处理具体数据。**
     reasoner:
       actor_name: "Graph Modeling Expert"
       thinker_name: "Graph Modeling Expert"
@@ -541,9 +544,10 @@ experts:
   - profile:
       name: "Data Importation Expert"
       desc: |
-        你是一位资深的图数据抽取专家。
-        你的使命是，基于文档内容和图 schema，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。       
-        你会把抽取的数据导入到图数据库中，然后输出导入结果的汇总。
+        你是一位图数据抽取与导入专家。
+        **必须在图 Schema 定义完成后，且有原始数据（如文档、表格等）可供处理时被调用。**
+        你的任务是：1. 根据已定义的 Schema 从原始数据中抽取结构化信息。 2. 将抽取的信息导入到图数据库中。
+        你会输出数据导入过程的总结或状态报告。**你不负责设计 Schema 或执行查询分析。**
     reasoner:
       actor_name: "Data Importation Expert"
       thinker_name: "Data Importation Expert"
@@ -553,8 +557,10 @@ experts:
   - profile:
       name: "Graph Query Expert"
       desc: |
-        你是一位专业的查询意图识别专家。你的工作是，理解给定任务的输入，做一些简单的意图分析。
-        然后，调用图数据库工具函数，查询相关的数据。最后会返回查询结果。
+        你是一位图数据查询专家。
+        **必须在图数据库中已存在数据时被调用，用于回答关于图中具体事实或关系的问题。**
+        你的任务是：1. 理解用户的查询意图。 2. 编写精确的图查询语句（如 Cypher, Gremlin, SPARQL 等）。 3. 在图数据库上执行查询。
+        你会返回查询到的具体数据结果。**你不执行复杂的图算法分析，也不负责导入数据。**
     reasoner:
       actor_name: "Graph Query Expert"
       thinker_name: "Graph Query Expert"
@@ -564,7 +570,10 @@ experts:
   - profile:
       name: "Graph Analysis Expert"
       desc: |
-        你是一个专业的算法意图分析专家。
+        你是一位图数据分析与算法应用专家。
+        **必须在图数据库中已存在结构化的图数据，且需要进行超越简单查询的复杂分析时被调用。**
+        你的任务是根据分析目标（如社区发现、中心性计算、路径分析等），选择、配置并 **在图数据库上执行相应的图算法**。
+        你会返回算法执行的结果及其解释。**你不负责数据建模、导入或简单的节点/关系查找。**
     reasoner:
       actor_name: "Graph Analysis Expert"
       thinker_name: "Graph Analysis Expert"
@@ -574,8 +583,10 @@ experts:
   - profile:
       name: "Question Answering Expert"
       desc: |
-        你是一位专业的文档检索专家。你能力是从知识库和互联网两个信息来源检索与问题相关的文档，
-        你会阅读这些材料，然后回答任务需要回答的问题。（类似于 RAG）
+        你是一位通用问答与信息检索专家。
+        **当需要基于通用知识、互联网信息或提供的特定文档来回答问题时被调用，尤其是在问题不直接关联或不需要利用已构建的图数据库结构时。**
+        你的任务是：1. 理解问题。 2. 从指定的知识来源（知识库、互联网、文档）检索相关信息。 3. 综合信息并生成回答。
+        你会输出对问题的直接回答。**此专家不与项目特定的图数据库交互，不执行图查询或图算法。** (类似于 RAG)
     reasoner:
       actor_name: "Question Answering Expert"
       thinker_name: "Question Answering Expert"

@@ -6,11 +6,16 @@ JOB_DECOMPOSITION_PROMPT = """
 ## Given Task:
 {task}
 
-## Capabilities: Focus on expert strengths, and provide the contextual information for each of them.
-## Self-contained: Each subtask includes all necessary information
-## Role-neutral: Avoid mentioning specific roles unless in TASK
-## Boundary-aware: Stay the subtasks within original TASK scope
-## You must complete the task decomposition in one round.
+
+## Capabilities:
+ - Focus on expert strengths, and provide the contextual information for each of them.
+ - Critically evaluate the `Given Task` to determine the *minimum necessary* steps and experts required to make progress.
+ - **Only assign subtasks to experts whose capabilities are directly and immediately needed.** Do not preemptively assign tasks for the entire potential workflow unless logically required as a prerequisite for the very next step.
+ - For example, do not assign database modeling, importation, or querying tasks if the `Given Task` only asks for preliminary analysis, text summarization, or information gathering that doesn't yet require a structured database.
+## Self-contained: Each subtask includes all necessary information.
+## Role-neutral: Avoid mentioning specific roles unless in TASK.
+## Boundary-aware: Stay the subtasks within original TASK scope.
+## You must complete the task decomposition in one round, focusing on the immediate, actionable steps derived from the `Given Task`.
 
 ===== Expert Names & Descriptions =====
 {role_list}
