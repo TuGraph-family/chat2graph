@@ -210,7 +210,7 @@ class ToolkitService(metaclass=Singleton):
         # TODO: implement the tune method
         raise NotImplementedError("This method is not implemented")
 
-    def visualize(self, graph: Toolkit, title: str, show=True):
+    def visualize(self, graph: Toolkit, title: str, show=False):
         """Visualize the toolkit graph with different colors for actions and tools.
 
         Args:

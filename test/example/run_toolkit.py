@@ -87,7 +87,7 @@ def main():
     )
 
     # visualize the full graph
-    toolkit_service.visualize(toolkit, "Full Toolkit Graph")
+    toolkit_service.visualize(toolkit, "Full Toolkit Graph", show=True)
     plt.show(block=False)
 
     print("\nTesting recommendation with different parameters:")
@@ -179,7 +179,7 @@ def main():
         )
 
         plt.figure(i + 2)
-        toolkit_service.visualize(subgraph, case["title"])
+        toolkit_service.visualize(subgraph, case["title"], show=True)
         # plt.show(block=False)
 
     print("\nAll assertions passed! (press ctrl+c to exit)")
