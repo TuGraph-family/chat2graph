@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from flask import Blueprint, request
 
@@ -71,18 +71,14 @@ def update_session_by_id(session_id):
     data = request.json
     try:
         name = data.get("name")
-        timestamp = data.get("timestamp")
-        latest_job_id = data.get("latest_job_id")
-        assert isinstance(name, Optional[str]), "Name should be a string or None"
-        assert isinstance(timestamp, Optional[int]), "Timestamp should be an integer or None"
-        assert isinstance(latest_job_id, Optional[str]), "Latest job ID should be a string or None"
-
+        assert isinstance(name, str), "Name should be a string"
+        session_dict, _ = manager.get_session(session_id=session_id)
         updated_session, message = manager.update_session(
             session=Session(
                 id=session_id,
                 name=name,
-                timestamp=timestamp,
-                latest_job_id=latest_job_id,
+                timestamp=session_dict["timestamp"],
+                latest_job_id=session_dict["latest_job_id"],
             )
         )
         return make_response(True, data=updated_session, message=message)
