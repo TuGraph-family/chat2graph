@@ -49,7 +49,9 @@ class MessageService(metaclass=Singleton):
             List[TextMessage]: List of TextMessage objects
         """
         # fetch filtered messages
-        results = self._message_dao.filter_by(session_id=session_id)
+        results = self._message_dao.filter_by(
+            session_id=session_id, type=MessageType.TEXT_MESSAGE.value
+        )
         return [
             cast(TextMessage, self._message_dao.parse_into_message(message_do=result))
             for result in results

@@ -1,4 +1,5 @@
 from typing import List, Optional, cast
+from uuid import uuid4
 
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
@@ -91,11 +92,11 @@ def test_agent_job_graph():
     initial_numbers = "1 2 3 4 5"
     for i, (id, goal) in enumerate(
         [
-            ("job_1", "Generate numbers"),
-            ("job_2", "Multiply by 2"),
-            ("job_3", "Add 10"),
-            ("job_4", "Sum the numbers"),
-            ("job_5", "Format final result"),
+            ("job_1" + str(uuid4()), "Generate numbers"),
+            ("job_2" + str(uuid4()), "Multiply by 2"),
+            ("job_3" + str(uuid4()), "Add 10"),
+            ("job_4" + str(uuid4()), "Sum the numbers"),
+            ("job_5" + str(uuid4()), "Format final result"),
         ]
     ):
         jobs.append(
@@ -130,7 +131,7 @@ def test_agent_job_graph():
         )
 
     # build job graph
-    original_job: Job = Job(id="test_original_job_id", goal="Test Job Graph")
+    original_job: Job = Job(id="test_original_job_id" + str(uuid4()), goal="Test Job Graph")
     job_service.save_job(job=original_job)
     job_service.add_job(
         original_job_id=original_job.id,
@@ -184,8 +185,8 @@ def test_agent_job_graph():
     assert len(tail_vertices) == 2, "Should receive 2 messages from terminal vertices"
 
     # extract job4 (sum) and job5 (format) results
-    job4_result = next(result for result in terminal_job_results if result.job_id == "job_4")
-    job5_result = next(result for result in terminal_job_results if result.job_id == "job_5")
+    job4_result = next(result for result in terminal_job_results if "job_4" in result.job_id)
+    job5_result = next(result for result in terminal_job_results if "job_5" in result.job_id)
 
     # verify job statuses
     assert job4_result.status == JobStatus.FINISHED

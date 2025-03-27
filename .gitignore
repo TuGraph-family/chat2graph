@@ -21,5 +21,3 @@ web/.umi-test
 web/dist
 web/.mfsu
 web/.swc
-
-.env

@@ -56,13 +56,13 @@ EVAL_OPERATION_OUTPUT_PROMPT = """
 ```
 
 for example:
-<DELIVERABLE>
+<deliverable>
 ```json
 {
    "status": "SUCCESS",
    "evaluation": "The previous input is complete and valid, with no obvious error patterns.",
-   "lesson": "Ensuring information completeness and logical consistency is key in the analysis process.",
+   "lesson": "Ensuring information completeness and logical consistency is key in the analysis process."
 }
 ```
-</DELIVERABLE>
+</deliverable>
 """  # noqa: E501

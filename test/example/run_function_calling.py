@@ -176,7 +176,7 @@ async def main():
         if func_call_results:
             for j, result in enumerate(func_call_results):
                 print(
-                    f"{j + 1}. {result.status} called function {result.func_name}:\n"
+                    f"{j + 1}. {result.status.value} called function {result.func_name}:\n"
                     f"Call objective: {result.call_objective}\n"
                     f"Function Output: {result.output}"
                 )

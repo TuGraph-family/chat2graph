@@ -8,12 +8,13 @@ from app.core.agent.agent import Agent, AgentConfig
 from app.core.agent.builtin_leader_state import BuiltinLeaderState
 from app.core.agent.expert import Expert
 from app.core.agent.leader_state import LeaderState
+from app.core.common.system_env import SystemEnv
 from app.core.common.type import WorkflowStatus
 from app.core.common.util import parse_json
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, WorkflowMessage
-from app.core.prompt.agent import JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job import JOB_DECOMPOSITION_PROMPT
 from app.core.service.job_service import JobService
 
 
@@ -43,11 +44,13 @@ class Leader(Agent):
         """
         # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
 
+        life_cycle: Optional[int] = None
         job_id = agent_message.get_job_id()
         try:
             job: Job = self._job_service.get_orignal_job(original_job_id=job_id)
         except ValueError:
             job = self._job_service.get_subjob(subjob_id=job_id)
+            life_cycle = job.life_cycle
 
         # check if the job is already assigned to an expert
         assigned_expert_name: Optional[str] = job.assigned_expert_name
@@ -59,6 +62,7 @@ class Leader(Agent):
                 goal=job.goal,
                 context=job.goal + "\n" + job.context,
                 expert_id=expert.get_id(),
+                life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
             )
             self._job_service.save_job(job=subjob)
             job_graph: JobGraph = JobGraph()
@@ -99,9 +103,9 @@ class Leader(Agent):
         job_graph = JobGraph()
 
         # create the subjobs, and add them to the decomposed job graph
-        for job_id, subjob_dict in job_dict.items():
+        temp_to_unique_id_map: Dict[str, str] = {}  # id_generated_by_leader -> unique_id
+        for subjob_id, subjob_dict in job_dict.items():
             subjob = SubJob(
-                id=job_id,
                 original_job_id=job_id,
                 session_id=job.session_id,
                 goal=subjob_dict.get("goal", ""),
@@ -113,14 +117,20 @@ class Leader(Agent):
                 expert_id=self.state.get_expert_by_name(
                     subjob_dict.get("assigned_expert", "")
                 ).get_id(),
+                life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
             )
+            temp_to_unique_id_map[subjob_id] = subjob.id
+
             self._job_service.save_job(job=subjob)
             # add the subjob to the job graph
-            job_graph.add_vertex(job_id)
+            job_graph.add_vertex(subjob.id)
 
+        for subjob_id, subjob_dict in job_dict.items():
             # add edges for dependencies
             for dep_id in subjob_dict.get("dependencies", []):
-                job_graph.add_edge(dep_id, job_id)  # dep_id -> job_id shows dependency
+                job_graph.add_edge(
+                    temp_to_unique_id_map[dep_id], temp_to_unique_id_map[subjob_id]
+                )  # dep_id -> subjob_id shows dependency
 
         # the job graph should not be a directed acyclic graph (DAG)
         if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
@@ -215,7 +225,7 @@ class Leader(Agent):
                     if (
                         agent_result.get_workflow_result_message().status
                         == WorkflowStatus.INPUT_DATA_ERROR
-                    ):
+                    ):  # TODO: how to handle the concurrent situations?
                         pending_job_ids.add(completed_job_id)
                         predecessors = list(job_graph.predecessors(completed_job_id))
 
@@ -236,8 +246,49 @@ class Leader(Agent):
                                 input_agent_message = job_inputs[pred_id]
                                 lesson = agent_result.get_lesson()
                                 assert lesson is not None
-                                input_agent_message.set_lesson(lesson)
+                                input_agent_message.add_lesson(lesson)
                                 job_inputs[pred_id] = input_agent_message
+
+                    elif (
+                        agent_result.get_workflow_result_message().status
+                        == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
+                    ):  # TODO: how to handle the concurrent situations?
+                        old_job_graph: JobGraph = JobGraph()
+                        old_job_graph.add_vertex(completed_job_id)
+
+                        # reexecute the subjob with a new sub-subjob
+                        new_job_graqph: JobGraph = self.execute(agent_message=agent_result)
+                        self._job_service.replace_subgraph(
+                            original_job_id=original_job_id,
+                            new_subgraph=new_job_graqph,
+                            old_subgraph=old_job_graph,
+                        )
+
+                        # get the newest job graph
+                        job_graph = self._job_service.get_job_graph(original_job_id)
+
+                        # remove the old subjob from the pending jobs
+                        del running_jobs[completed_job_id]
+
+                        # save the old subjob result
+                        expert_results[completed_job_id] = (
+                            agent_result.get_workflow_result_message()
+                        )
+
+                        for new_subjob_id in new_job_graqph.vertices():
+                            # add the new subjobs to the pending jobs
+                            pending_job_ids.add(new_subjob_id)
+                            # add the inputs for the new head subjobs
+                            if not job_graph.predecessors(new_subjob_id):
+                                pred_messages = [
+                                    expert_results[pred_id]
+                                    for pred_id in job_graph.predecessors(new_subjob_id)
+                                ]
+                                job_inputs[new_subjob_id] = AgentMessage(
+                                    job_id=new_subjob_id,
+                                    workflow_messages=pred_messages,
+                                )
+
                     else:
                         expert_results[completed_job_id] = (
                             agent_result.get_workflow_result_message()
@@ -257,12 +308,34 @@ class Leader(Agent):
 
         if workflow_result.status == WorkflowStatus.SUCCESS:
             return agent_result_message
-        elif workflow_result.status == WorkflowStatus.INPUT_DATA_ERROR:
+        if workflow_result.status == WorkflowStatus.INPUT_DATA_ERROR:
             # reexecute all the dependent jobs (predecessors)
             return agent_result_message
-        elif workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
-            # TODO: implement the decompose job method
-            raise NotImplementedError("Decompose the job into subjobs is not implemented.")
+        if workflow_result.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
+            # reduce the life cycle of the subjob
+            subjob: SubJob = self._job_service.get_subjob(subjob_id=agent_message.get_job_id())
+            subjob.life_cycle -= 1
+            subjob.is_legacy = True
+            self._job_service.save_job(job=subjob)
+
+            # the job is too complicated to be executed
+            if subjob.life_cycle == 0:
+                raise ValueError(
+                    f"Job {subjob.id} runs out of life cycle. "
+                    f"(initial life cycle: {SystemEnv.LIFE_CYCLE})"
+                )
+
+            # construct the job graph which will be replaced by the new sub job graph
+            replaced_job_graph: JobGraph = JobGraph()
+            replaced_job_graph.add_vertex(subjob.id)
+
+            # reexecute the subjob with a new sub-subjob
+            new_job_graqph: JobGraph = self.execute(agent_message=agent_result_message)
+            self._job_service.replace_subgraph(
+                original_job_id=subjob.id,
+                new_subgraph=new_job_graqph,
+                old_subgraph=replaced_job_graph,
+            )
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 
     @property

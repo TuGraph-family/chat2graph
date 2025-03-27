@@ -21,7 +21,7 @@ async def mock_reasoner() -> DualModelReasoner:
 
     actor_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
-        payload="<scratchpad>\nTesting\n</scratchpad>\n<action>\nProceed\n</action>\n<feedback>\nSuccess\n</feedback>",
+        payload="<shallow_thinking>\nTesting\n</shallow_thinking>\n<action>\nProceed\n</action>",
         job_id=job_id,
         step=1,
     )
@@ -62,7 +62,7 @@ async def test_infer_basic_flow(mock_reasoner: DualModelReasoner, task: Task):
 
     # check initial message
     assert messages[0].get_source_type() == MessageSourceType.ACTOR
-    assert "<scratchpad>\nEmpty" in messages[0].get_payload()
+    assert "<shallow_thinking>\nEmpty" in messages[0].get_payload()
 
     # check message flow
     assert len(messages) > 2  # Should have initial + at least one round of interaction
@@ -74,7 +74,7 @@ async def test_infer_early_stop(mock_reasoner: DualModelReasoner, task: Task):
     # modify actor response to trigger stop condition
     stop_response = ModelMessage(
         source_type=MessageSourceType.ACTOR,
-        payload="<scratchpad>\nDone\n</scratchpad>\n<action>\nStop\n</action>\n<feedback>\n<DELIVERABLE></DELIVERABLE>\n</feedback>",
+        payload="<shallow_thinking>\nDone\n</shallow_thinking>\n<action>\nStop\n</action>\n<deliverable></deliverable>",
         job_id=job_id,
         step=1,
     )

@@ -65,7 +65,11 @@ class JobManager:
                 message_result_pairs.append((thinking_message, subjob_result))
 
         # sort pairs by message timestamp
-        message_result_pairs.sort(key=lambda pair: cast(int, pair[0].get_timestamp()))
+        message_result_pairs.sort(
+            key=lambda pair: cast(int, pair[0].get_timestamp())
+            if pair[0].get_timestamp() is not None
+            else float("inf")
+        )
 
         # separate the sorted pairs back into individual lists
         thinking_messages: List[AgentMessage] = [pair[0] for pair in message_result_pairs]

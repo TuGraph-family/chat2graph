@@ -1,9 +1,9 @@
-import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.core.toolkit.tool import Tool
-from app.plugin.tugraph.tugraph_store import get_tugraph
+from app.plugin.neo4j.neo4j_store import get_neo4j
+from app.plugin.neo4j.resource.read_doc import SchemaManager
 
 QUERY_GRAMMER = """
 ===== 图vertex查询语法书 =====
@@ -33,15 +33,40 @@ class SchemaGetter(Tool):
 
         Returns:
             str: The schema of the graph database in string format
-
-        Example:
-            schema_str = get_schema()
         """
-        query = "CALL dbms.graph.getGraphSchema()"
-        store = get_tugraph()
-        schema = store.conn.run(query=query)
+        schema = await SchemaManager.read_schema()
 
-        return json.dumps(json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False)
+        result = "# Neo4j Graph Schema\n\n"
+
+        # vertices information
+        result += "## Node Labels\n\n"
+        for label, info in schema["nodes"].items():
+            result += f"### {label}\n"
+            result += f"- Primary Key: `{info['primary_key']}`\n"
+            result += "- Properties:\n"
+            for prop in info["properties"]:
+                index_info = ""
+                if prop["has_index"]:
+                    index_info = f" (Indexed: {prop['index_name']})"
+                else:
+                    index_info = " (Indexed: not indexed)"
+                result += f"  - `{prop['name']}` ({prop['type']}){index_info}\n"
+            result += "\n"
+
+        # edges information
+        result += "## Relationship Types\n\n"
+        for label, info in schema["relationships"].items():
+            result += f"### {label}\n"
+            result += f"- Primary Key: `{info['primary_key']}`\n"
+            result += "- Properties:\n"
+            for prop in info["properties"]:
+                index_info = ""
+                if prop["has_index"]:
+                    index_info = f" (Indexed: {prop['index_name']})"
+                result += f"  - `{prop['name']}` ({prop['type']}){index_info}\n"
+            result += "\n"
+
+        return result
 
 
 class GrammerReader(Tool):
@@ -71,7 +96,7 @@ class GrammerReader(Tool):
 
 
 class VertexQuerier(Tool):
-    """Tool for querying vertices in TuGraph."""
+    """Tool for querying vertices in Neo4j."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
@@ -180,6 +205,22 @@ WHERE {where_clause}
 RETURN {distinct_keyword}n
         """
 
-        store = get_tugraph()
-        result = "\n".join([str(record.get("n", "")) for record in store.conn.run(query=query)])
-        return f"查询图数据库成功。\n查询语句：\n{query}：\n查询结果：\n{result}"
+        store = get_neo4j()
+        results = []
+
+        with store.conn.session() as session:
+            result = session.run(query)
+
+            # handle and format the results
+            for record in result:
+                node = record.get("n")
+                if node:
+                    # get properties of the vertex
+                    props = dict(node.items())
+                    # use element_id to get node id in Neo4j 4.0+
+                    node_id = node.element_id if hasattr(node, "element_id") else node.id
+                    node_str = f"({node_id}:{vertex_type} {props})"
+                    results.append(node_str)
+
+        result_str = "\n".join(results)
+        return f"查询图数据库成功。\n查询语句：\n{query}：\n查询结果：\n{result_str}"

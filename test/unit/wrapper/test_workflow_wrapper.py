@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from app.core.common.type import PlatformType
+from app.core.common.type import WorkflowPlatformType
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.workflow.operator import Operator
@@ -52,13 +52,13 @@ def test_workflow_wrapper_init_default(mock_builtin_workflow: BuiltinWorkflow):
 
 def test_workflow_wrapper_init_dbgpt():
     """Test WorkflowWrapper init with DBGPT platform (DbgptWorkflow)."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     assert isinstance(wrapper.workflow, DbgptWorkflow)
 
 
 def test_workflow_wrapper_chain_single_operator(mock_dbgpt_workflow: DbgptWorkflow):
     """Test chain method with a single operator."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     wrapper._workflow = mock_dbgpt_workflow
 
     operator_wrapper = TestOperatorWrapper(TestOperator(id="test_operator_id"))
@@ -72,7 +72,7 @@ def test_workflow_wrapper_chain_single_operator(mock_dbgpt_workflow: DbgptWorkfl
 
 def test_workflow_wrapper_chain_two_operators(mock_dbgpt_workflow: DbgptWorkflow):
     """Test chain method with multiple operators in a tuple."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     wrapper._workflow = mock_dbgpt_workflow
 
     operator_1 = TestOperator(id="test_operator_id_1")
@@ -93,7 +93,7 @@ def test_workflow_wrapper_chain_two_operators(mock_dbgpt_workflow: DbgptWorkflow
 
 def test_workflow_wrapper_chain_multiple_operators(mock_builtin_workflow: DbgptWorkflow):
     """Test chain method with multiple operators."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     wrapper._workflow = mock_builtin_workflow
 
     operator_1 = TestOperator(id="test_operator_id_1")
@@ -122,7 +122,7 @@ def test_workflow_wrapper_chain_multiple_operators(mock_builtin_workflow: DbgptW
 
 def test_workflow_wrapper_chain_invalid_item():
     """Test chain method raises ValueError for invalid item."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     with pytest.raises(ValueError) as excinfo:
         wrapper.chain("invalid item")  # type: ignore
     assert "Invalid chain item" in str(excinfo.value)
@@ -130,7 +130,7 @@ def test_workflow_wrapper_chain_invalid_item():
 
 def test_workflow_wrapper_add_operator_not_implemented():
     """Test add_operator method raises NotImplementedError."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     operator_instance = mock.create_autospec(Operator)
     with pytest.raises(NotImplementedError) as excinfo:
         wrapper.add_operator(operator_instance)
@@ -139,7 +139,7 @@ def test_workflow_wrapper_add_operator_not_implemented():
 
 def test_workflow_wrapper_update_operator(mock_dbgpt_workflow: DbgptWorkflow):
     """Test update_operator method."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     wrapper._workflow = mock_dbgpt_workflow
 
     operator = TestOperator(id="test_operator_id")
@@ -152,7 +152,7 @@ def test_workflow_wrapper_update_operator(mock_dbgpt_workflow: DbgptWorkflow):
 
 def test_workflow_wrapper_remove_operator_not_implemented():
     """Test remove_operator method raises NotImplementedError."""
-    wrapper = WorkflowWrapper(PlatformType.DBGPT)
+    wrapper = WorkflowWrapper(WorkflowPlatformType.DBGPT)
     operator_instance = mock.create_autospec(Operator)
     with pytest.raises(NotImplementedError) as excinfo:
         wrapper.remove_operator(operator_instance)

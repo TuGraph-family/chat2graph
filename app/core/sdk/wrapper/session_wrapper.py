@@ -43,16 +43,22 @@ class SessionWrapper:
             history_text_messages: List[TextMessage] = (
                 message_service.filter_text_messages_by_session(session_id=session_id)
             )
+            if len(history_text_messages) > 0:
+                historical_context = "Chat history of the job goal:\n" + "\n".join(
+                    [
+                        f"[Chat history: {msg.get_role().value}] said: {msg.get_payload()}"
+                        for msg in history_text_messages
+                    ]
+                )
+            else:
+                historical_context = ""
         else:
-            history_text_messages = []
+            historical_context = ""
 
         # (3) create and save the job
         job = Job(
             goal=text_message.get_payload(),
-            context="Chat history of the job goal:\n"
-            + "\n".join(
-                [f"[{msg.get_role()}]: {msg.get_payload()}" for msg in history_text_messages]
-            ),
+            context=historical_context,
             session_id=self._session.id,
             assigned_expert_name=text_message.get_assigned_expert_name(),
         )

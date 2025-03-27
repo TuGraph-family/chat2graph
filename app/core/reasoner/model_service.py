@@ -5,6 +5,7 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from uuid import uuid4
 
+from app.core.common.type import FunctionCallStatus
 from app.core.model.message import ModelMessage
 from app.core.toolkit.tool import FunctionCallResult, Tool
 
@@ -53,7 +54,7 @@ class ModelService(ABC):
                         func_name=func_name,
                         call_objective=call_objective,
                         func_args=func_args,
-                        status="failed",
+                        status=FunctionCallStatus.FAILED,
                         output=f"Error: Function {func_name} does not exist in the current scope. "
                         "You have called a function that does not exist in the system, "
                         "and have made a mistake of function calling.",
@@ -73,7 +74,7 @@ class ModelService(ABC):
                         func_name=func_name,
                         call_objective=call_objective,
                         func_args=func_args,
-                        status="succeeded",
+                        status=FunctionCallStatus.SUCCEEDED,
                         output=str(result),
                     )
                 )
@@ -83,7 +84,7 @@ class ModelService(ABC):
                         func_name=func_name,
                         call_objective=call_objective,
                         func_args=func_args,
-                        status="failed",
+                        status=FunctionCallStatus.FAILED,
                         output=f"Function {func_name} execution failed: {str(e)}",
                     )
                 )

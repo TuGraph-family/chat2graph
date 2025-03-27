@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy import func
 
@@ -38,7 +38,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             == 0
         ):
             self._knowledge_base_dao.create(
-                name="global_knowledge_base",
+                name=SystemEnv.GLOBAL_KNOWLEDGE_BASE_NAME,
                 knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value,
                 session_id="",
                 category=KnowledgeStoreCategory.GLOBAL.value,
@@ -147,12 +147,12 @@ class KnowledgeBaseService(metaclass=Singleton):
         # delete knolwledge base folder
         KnowledgeStoreFactory.get_or_create(id).drop()
 
-    def get_all_knowledge_bases(
-        self,
-    ) -> tuple[KnowledgeBase, List[KnowledgeBase]]:
+    def get_all_knowledge_bases(self) -> Tuple[KnowledgeBase, List[KnowledgeBase]]:
         """Get all knowledge bases.
+
         Returns:
-            List[KnowledgeBase]: List of knowledge bases
+            Tuple[KnowledgeBase, List[KnowledgeBase]]: A tuple containing global knowledge base and
+                list of local knowledge
         """
 
         # get local knowledge bases

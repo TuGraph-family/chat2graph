@@ -3,6 +3,7 @@ from typing import List, Optional
 from app.core.common.async_func import run_async_function
 from app.core.env.insight.insight import Insight
 from app.core.model.job import Job
+from app.core.model.knowledge import Knowledge
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
@@ -38,10 +39,15 @@ class Operator:
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
     def _build_task(
-        self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]
+        self,
+        job: Job,
+        workflow_messages: Optional[List[WorkflowMessage]],
+        lesson: Optional[str],
     ) -> Task:
         rec_tools, rec_actions = self._toolkit_service.recommend_tools_actions(
-            actions=self._config.actions, threshold=self._config.threshold, hops=self._config.hops
+            actions=self._config.actions,
+            threshold=self._config.threshold,
+            hops=self._config.hops,
         )
         task = Task(
             job=job,
@@ -55,11 +61,11 @@ class Operator:
         )
         return task
 
-    def get_knowledge(self, job: Job) -> str:
+    def get_knowledge(self, job: Job) -> Knowledge:
         """Get the knowledge from the knowledge base."""
         query = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
-        knowledge = KnowledgeBaseService.instance.get_knowledge(query, job.session_id)
-        return knowledge
+        knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
+        return knowledge_base_service.get_knowledge(query, job)
 
     def get_env_insights(self) -> Optional[List[Insight]]:
         """Get the environment information."""

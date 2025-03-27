@@ -7,7 +7,10 @@ from app.core.dal.database import DbSession
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, MessageType
-from app.core.prompt.operator import EVAL_OPERATION_INSTRUCTION_PROMPT, EVAL_OPERATION_OUTPUT_PROMPT
+from app.core.prompt.eval_operator import (
+    EVAL_OPERATION_INSTRUCTION_PROMPT,
+    EVAL_OPERATION_OUTPUT_PROMPT,
+)
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
@@ -26,7 +29,9 @@ def main():
     # initialize components
     reasoner = DualModelReasoner()
     agent_config = AgentConfig(
-        profile=Profile(name="Academic_reviewer"), reasoner=reasoner, workflow=DbgptWorkflow()
+        profile=Profile(name="Academic_reviewer"),
+        reasoner=reasoner,
+        workflow=DbgptWorkflow(),
     )
     leader = Leader(agent_config=agent_config)
 

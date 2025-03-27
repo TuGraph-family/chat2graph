@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import yaml  # type: ignore
 
-from app.core.common.type import PlatformType, ReasonerType
+from app.core.common.type import ReasonerType, WorkflowPlatformType
 
 
 @dataclass
@@ -72,12 +72,12 @@ class AppConfig:
 class PluginConfig:
     """Plugin configuration data class"""
 
-    model_platform: Optional[str] = None
+    workflow_platform: Optional[str] = None
 
-    def get_platform_type(self) -> Optional[PlatformType]:
+    def get_workflow_platform_type(self) -> Optional[WorkflowPlatformType]:
         """Get the platform type enum value"""
-        if self.model_platform:
-            return PlatformType(self.model_platform)
+        if self.workflow_platform:
+            return WorkflowPlatformType(self.workflow_platform)
         return None
 
 
@@ -115,7 +115,7 @@ class AgenticConfig:
 
         # plugin configuration
         plugin_dict = config_dict.get("plugin", {})
-        plugin_config = PluginConfig(model_platform=plugin_dict.get("model_platform"))
+        plugin_config = PluginConfig(workflow_platform=plugin_dict.get("workflow_platform"))
 
         # reasoner configuration
         reasoner_dict = config_dict.get("reasoner", {})
@@ -239,8 +239,8 @@ class AgenticConfig:
         }
 
         # plugin exportation
-        if self.plugin.model_platform:
-            result["plugin"] = {"platform": self.plugin.model_platform}
+        if self.plugin.workflow_platform:
+            result["plugin"] = {"workflow_platform": self.plugin.workflow_platform}
 
         # reasoner exportation
         if self.reasoner.type:

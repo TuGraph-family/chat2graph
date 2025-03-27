@@ -31,7 +31,7 @@ class MonoModelReasoner(Reasoner):
 
         self._model_name = model_name
         self._model: ModelService = ModelServiceFactory.create(
-            platform_type=SystemEnv.MODEL_PLATFORM_TYPE
+            model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
     async def infer(self, task: Task) -> str:
@@ -56,9 +56,7 @@ class MonoModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.MODEL,
             payload=(
-                "<scratchpad>\nEmpty\n</scratchpad>\n"
-                "<action>\nEmpty\n</action>\n"
-                "<feedback>\nNo feadback\n</feedback>\n"
+                "<shallow_thinking>\nEmpty\n</shallow_thinking>\n<action>\nEmpty\n</action>\n"
             ),
             job_id=task.job.id,
             step=1,
@@ -85,7 +83,7 @@ class MonoModelReasoner(Reasoner):
                     "\033[92m<function_call_result>\n"
                     + "\n".join(
                         [
-                            f"{i + 1}. {result.status} called function "
+                            f"{i + 1}. {result.status.value} called function "
                             f"{result.func_name}:\n"
                             f"Call objective: {result.call_objective}\n"
                             f"Function Output: {result.output}"
@@ -119,21 +117,29 @@ class MonoModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            scratchpad = "\n".join(
+            previous_input = "Here is the previous job execution's output:\n" + "\n".join(
                 [f"{workflow_message.scratchpad}" for workflow_message in task.workflow_messages]
             )
         else:
-            scratchpad = "No scratchpad provided in this round."
+            previous_input = "No previous input provided in this round."
         action_rels = "\n".join(
             [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
         )
+        file_desc = (
+            "\n".join(
+                f"File name: {f.name} - File id: {f.id}" for f in (task.file_descriptors or [])
+            )
+            or "No files provided in this round."
+        )
 
         task_context = TASK_DESCRIPTOR_PROMPT_TEMPLATE.format(
-            context=task.job.context,
-            env_info=env_info,
-            knowledge=task.knowledge,
             action_rels=action_rels,
-            scratchpad=scratchpad,
+            context=task.job.context,
+            session_id=task.job.session_id,
+            file_descriptors=file_desc,
+            env_info=env_info,
+            knowledge=task.knowledge.get_payload() if task.knowledge else "",
+            previous_input=previous_input,
             lesson=task.lesson or "No lesson learned in this round.",
         )
 
@@ -147,14 +153,9 @@ class MonoModelReasoner(Reasoner):
             func_description = "No function calling in this round."
 
         if task.operator_config and task.operator_config.output_schema:
-            output_schema = "\n".join(
-                [
-                    "\t    " + schema
-                    for schema in (
-                        "[Follow the final delivery example:]\n"
-                        f"{task.operator_config.output_schema.strip()}"
-                    ).split("\n")
-                ]
+            output_schema = (
+                "[Follow the final delivery example:]\n"
+                + task.operator_config.output_schema.strip()
             )
         else:
             output_schema = ""
