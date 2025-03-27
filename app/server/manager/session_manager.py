@@ -5,6 +5,7 @@ from app.core.model.session import Session
 from app.core.service.job_service import JobService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService
+from app.server.manager.view.message_view import MessageViewTransformer
 
 
 class SessionManager:
@@ -133,3 +134,25 @@ class SessionManager:
         jobs = self._job_service.get_original_jobs_by_session_id(session_id=session_id)
         job_list = [job.id for job in jobs]
         return job_list, "Get all job ids successfully"
+
+    def get_conversation_views(self, session_id: str) -> Tuple[List[Dict[str, Any]], str]:
+        """Get all conversation views for a session.
+
+        Args:
+            session_id (str): ID of the session
+
+        Returns:
+            List[Dict[str, Any]]: List of MessageView objects
+        """
+        # get all job ids in the session
+        job_ids: List[str] = self.get_all_job_ids(session_id=session_id)[0]
+
+        # get message view data for the job
+        conversation_views: List[Dict[str, Any]] = []
+        for job_id in job_ids:
+            conversation_view = self._job_service.get_conversation_view(job_id=job_id)
+            conversation_views.append(
+                MessageViewTransformer.serialize_conversation_view(conversation_view)
+            )
+
+        return conversation_views, "Get all conversation views successfully"

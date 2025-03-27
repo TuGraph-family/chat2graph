@@ -1,3 +1,5 @@
+from typing import Any, Dict, cast
+
 from flask import Blueprint, request
 
 from app.server.common.util import ApiException, make_response
@@ -8,9 +10,7 @@ graphdbs_bp = Blueprint("graphdbs", __name__)
 
 @graphdbs_bp.route("/", methods=["GET"])
 def get_all_graph_dbs():
-    """
-    Get all GraphDBs.
-    """
+    """Get all GraphDBs."""
     manager = GraphDBManager()
     try:
         graph_dbs, message = manager.get_all_graph_dbs()
@@ -21,11 +21,9 @@ def get_all_graph_dbs():
 
 @graphdbs_bp.route("/", methods=["POST"])
 def create_graph_db():
-    """
-    Create a new GraphDB.
-    """
+    """Create a new GraphDB."""
     manager = GraphDBManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         required_fields = ["ip", "port", "user", "pwd", "desc", "name", "is_default_db"]
         if not data or not all(field in data for field in required_fields):
@@ -48,10 +46,8 @@ def create_graph_db():
 
 
 @graphdbs_bp.route("/<string:graph_db_id>", methods=["GET"])
-def get_graph_db_by_id(graph_db_id):
-    """
-    Get a GraphDB by ID.
-    """
+def get_graph_db_by_id(graph_db_id: str):
+    """Get a GraphDB by ID."""
     manager = GraphDBManager()
     try:
         graph_db, message = manager.get_graph_db(id=graph_db_id)
@@ -61,7 +57,7 @@ def get_graph_db_by_id(graph_db_id):
 
 
 @graphdbs_bp.route("/<string:graph_db_id>", methods=["DELETE"])
-def delete_graph_db_by_id(graph_db_id):
+def delete_graph_db_by_id(graph_db_id: str):
     """
     Delete a GraphDB by ID.
     """
@@ -74,12 +70,10 @@ def delete_graph_db_by_id(graph_db_id):
 
 
 @graphdbs_bp.route("/<string:graph_db_id>", methods=["PUT"])
-def update_graph_db_by_id(graph_db_id):
-    """
-    Update a GraphDB by ID.
-    """
+def update_graph_db_by_id(graph_db_id: str):
+    """Update a GraphDB by ID."""
     manager = GraphDBManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         updated_graph_db, message = manager.update_graph_db(
             id=graph_db_id,
@@ -102,7 +96,7 @@ def validate_graph_connection():
     Validate connection to a GraphDB.
     """
     manager = GraphDBManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         required_fields = ["ip", "port", "user", "pwd"]
         if not data or not all(field in data for field in required_fields):

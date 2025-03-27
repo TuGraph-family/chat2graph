@@ -111,9 +111,11 @@ class AgenticService(metaclass=Singleton):
     ) -> "AgenticService":
         """Configure the AgenticService from yaml file."""
 
+        print(f"Loading AgenticService from {yaml_path} with encoding {encoding}")
         agentic_service_config = AgenticConfig.from_yaml(yaml_path, encoding)
 
         # create an instance of AgenticService
+        print(f"Init application: {agentic_service_config.app.name}")
         mas = AgenticService(agentic_service_config.app.name)
 
         # tools and actions
@@ -158,11 +160,13 @@ class AgenticService(metaclass=Singleton):
             agentic_service_config.plugin.get_workflow_platform_type()
         )
 
-        mas.leader(name="Leader Test").workflow(
+        print(f"Init the Leader agent")
+        mas.leader(name="Leader").workflow(
             job_decomposition_operator, platform_type=workflow_platform_type
         ).build()
 
         # configure the experts
+        print(f"Init the Expert agents")
         for expert_config in agentic_service_config.experts:
             expert_wrapper = mas.expert(
                 name=expert_config.profile.name, description=expert_config.profile.desc

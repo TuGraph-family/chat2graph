@@ -1,4 +1,5 @@
 import json
+from typing import Any, Dict, cast
 
 from flask import Blueprint, request
 
@@ -21,7 +22,7 @@ def get_all_knowledge_bases():
 
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["GET"])
-def get_knowledge_base_by_id(knowledge_base_id):
+def get_knowledge_base_by_id(knowledge_base_id: str):
     """Get a knowledge base by ID."""
     manager = KnowledgeBaseManager()
     try:
@@ -32,17 +33,17 @@ def get_knowledge_base_by_id(knowledge_base_id):
 
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["PUT"])
-def update_knowledge_base_by_id(knowledge_base_id):
+def update_knowledge_base_by_id(knowledge_base_id: str):
     """Update a knowledge base by ID."""
     manager = KnowledgeBaseManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         required_fields = ["name", "description"]
         if not data or not all(field in data for field in required_fields):
             raise ApiException("Missing required fields. Required: name, description")
 
         result, message = manager.update_knowledge_base(
-            id=knowledge_base_id, name=data.get("name"), description=data.get("description")
+            id=knowledge_base_id, name=data["name"], description=data["description"]
         )
         return make_response(True, data=result, message=message)
     except ApiException as e:
@@ -50,7 +51,7 @@ def update_knowledge_base_by_id(knowledge_base_id):
 
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["DELETE"])
-def delete_knowledge_base_by_id(knowledge_base_id):
+def delete_knowledge_base_by_id(knowledge_base_id: str):
     """Delete a knowledge base by ID."""
     manager = KnowledgeBaseManager()
     try:
@@ -61,10 +62,10 @@ def delete_knowledge_base_by_id(knowledge_base_id):
 
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>/files/<string:file_id>", methods=["POST"])
-def load_knowledge_with_file_id(knowledge_base_id, file_id):
+def load_knowledge_with_file_id(knowledge_base_id: str, file_id: str):
     """Load knowledge with file ID."""
     manager = KnowledgeBaseManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         required_fields = ["config"]
         if not data or not all(field in data for field in required_fields):
@@ -82,7 +83,7 @@ def load_knowledge_with_file_id(knowledge_base_id, file_id):
 
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>/files/<string:file_id>", methods=["DELETE"])
-def delete_knowledge_with_file_id(knowledge_base_id, file_id):
+def delete_knowledge_with_file_id(knowledge_base_id: str, file_id: str):
     """Load knowledge with file ID."""
     manager = KnowledgeBaseManager()
     try:

@@ -199,13 +199,7 @@ actions:
 
   - &algorithms_intention_identification_action
     name: "algorithms_intention_identification"
-    desc: "识别并理解用户需求中的算法要求，确定算法的名称等信息下"
-    tools:
-      - *algorithms_getter_tool
-
-  - &algorithms_validation_action
-    name: "algorithms_validation"
-    desc: "确认当前图数据库中的算法是否支持相关的需求"
+    desc: "确认需要执行的算法（可能是多个），确定算法的名称等信息"
     tools:
       - *algorithms_getter_tool
 
@@ -265,9 +259,9 @@ toolkit:
   - [
       *content_understanding_action_3,
       *algorithms_intention_identification_action,
+      *algorithms_execution_action,
     ]
-  - [*algorithms_validation_action, *algorithms_execution_action]
-  - [*knowledge_base_retrieving_action]
+  - [*knowledge_base_retrieving_action, *internet_retrieving_action]
   - [*reference_listing_action]
 
 operators:
@@ -452,26 +446,6 @@ operators:
       - *query_execution_action
 
   # graph analysis operators
-  - &algorithms_intention_analysis_operator
-    instruction: |
-      你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
-      你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
-      注意，你不需要执行算法，也不能询问用户更多的信息。
-    output_schema: |
-      {
-          "algorithms_supported_by_db": ["图数据库支持的算法列表，算法的名字（（名称和数据库中支持的算法名称保持一致）"],
-          "selected_algorithms": [
-              {
-                  "analysis":"算法的要求",
-                  "algorithm_name":"算法的名称（名称和数据库中支持的算法名称保持一致）",
-                  "call_objective":"调用该算法的目的"
-              },
-          ]
-      }
-    actions:
-      - *content_understanding_action_3
-      - *algorithms_intention_identification_action
-
   - &algorithms_execute_operator
     instruction: |
       你是一个专业的图算法执行专家。你的工作是根据算法需求执行相应的图算法，并返回结果。
@@ -483,11 +457,14 @@ operators:
       - 验证算法的可执行性（包括图数据库中是否支持该算法）
       - 按照算法的输入
     output_schema: |
-      called_algorithms, 调用的算法和参数
-      status, 算法执行的状态
-      algorithms_result, 算法执行的结果。如果失败，返回失败原因
+      called_algorithm：调用的算法和参数
+      status：算法执行的状态
+      algorithms_result：算法执行的结果。如果失败，返回失败原因
+      called_algorithm：调用的算法和参数（如果有多个算法）
+      ...
     actions:
-      - *algorithms_validation_action
+      - *content_understanding_action_3
+      - *algorithms_intention_identification_action
       - *algorithms_execution_action
 
   # question answering operators
@@ -542,7 +519,10 @@ experts:
   - profile:
       name: "Graph Modeling Expert"
       desc: |
-        你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要设计合适的实体-关系模型，然后操作图数据库，确保任务的顺利完成。
+        他是一位知识图谱建模专家。
+        **仅当需要为某个特定的图数据库实例创建或修改数据结构（Schema）时，他才会被调用。**
+        他的任务是根据具体的数据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。
+        他的输出是一个用于后续数据导入的清晰 Schema 定义。**他本身不处理具体数据，也绝不回答关于图数据库产品或技术本身的一般性介绍或询问。**
     reasoner:
       actor_name: "Graph Modeling Expert"
       thinker_name: "Graph Modeling Expert"
@@ -552,12 +532,10 @@ experts:
   - profile:
       name: "Data Importation Expert"
       desc: |
-        你是一位资深的图数据抽取专家。
-        你的使命是，基于已分析的文档内容和图模型，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。
-        在这一阶段，你不是在创造知识，而是在发掘隐藏在文档中的事实。
-        你的目标是从文本中提取实体、关系和属性，请确保数据的准确、丰富、完整，因为后续的知识图谱构建将直接依赖于你抽取的数据质量。
-        抽取数据完成后，你需要调用指定的工具，完成数据的导入。
-        最后需要输出导入结果的总结。
+        他是一位图数据抽取与导入专家。
+        **必须在图 Schema 已定义完成，且有明确的原始数据源（如文档、文件、数据库表）需要处理和导入到一个特定的图数据库实例时，他才会被调用。**
+        他的任务是：1. 根据已定义的 Schema 从原始数据中抽取结构化信息。 2. 将抽取的信息导入到目标图数据库中。
+        他会输出数据导入过程的总结或状态报告。**他不负责设计 Schema、执行查询分析，也绝不提供关于图数据库技术或产品的一般性介绍。**
     reasoner:
       actor_name: "Data Importation Expert"
       thinker_name: "Data Importation Expert"
@@ -567,9 +545,10 @@ experts:
   - profile:
       name: "Graph Query Expert"
       desc: |
-        你是一位专业的查询意图识别专家。你的工作是，理解给定的输入，给出一些结论，然后为后续的写查询语句做好准备工作。
-        你需要识别图查询的诉求，并校验查询的节点内容和对应的图模型是否匹配。注意你的任务不是将输入进行查询语句的转换，而是识别出存在着单点查询的诉求。
-        如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
+        他是一位图数据查询专家。
+        **必须在一个已存在数据、且结构已知的特定图数据库实例上，需要执行精确查询以获取具体数据点或关系时，他才会被调用。**
+        他的任务是：1. 理解用户的具体查询意图。 2. 编写精确的图查询语句。 3. 在目标图数据库上执行查询。
+        他会返回查询到的具体数据结果。**他不执行复杂的图算法分析，不负责建模或导入数据，也绝不回答关于图数据库概念、产品或技术本身的一般性问题。**
     reasoner:
       actor_name: "Graph Query Expert"
       thinker_name: "Graph Query Expert"
@@ -579,20 +558,23 @@ experts:
   - profile:
       name: "Graph Analysis Expert"
       desc: |
-        你是一个专业的算法意图分析专家。
+        他是一位图数据分析与算法应用专家。
+        **必须在一个已存在结构化数据、且需要进行超越简单查询的复杂网络分析（如社区发现、中心性计算等）的特定图数据库实例上，他才会被调用。**
+        他的任务是根据分析目标，选择、配置并在目标图数据库上执行相应的图算法。
+        他会返回算法执行的结果及其解释。**他不负责数据建模、导入、简单的节点/关系查找，也绝不提供关于图数据库技术或产品的一般性介绍。**
     reasoner:
       actor_name: "Graph Analysis Expert"
       thinker_name: "Graph Analysis Expert"
     workflow:
-      - [*algorithms_intention_analysis_operator, *algorithms_execute_operator]
+      - [*algorithms_execute_operator]
 
   - profile:
       name: "Question Answering Expert"
       desc: |
-        你是一个用户答疑的专家。
-        你的功能是：回答用户提出的问题，如果有必要，通过检索知识库中的文档帮助答案生成。
-        你的限制是：只能检索知识库中有限数量的内容，借此进行推理，如果无法得到有用的信息，则放弃继续检索其他信息来源,如互联网等。
-        你的返回是：针对用户提出的问题的一段富文本回答。如果无法有效回答，告知用户即可
+        他是一位通用问答与信息检索专家。
+        **当任务是请求关于某个概念、技术、产品（例如，“介绍一下 TuGraph”）的一般性信息、定义、解释、比较或总结时，他是首选且通常是唯一的专家，** 尤其是当问题不涉及操作或查询一个具体的、已存在数据的图数据库实例时。
+        他的任务是：1. 理解问题。 2. 从通用知识库、互联网或提供的文档中检索最相关的信息。 3. 综合信息并生成一个全面、清晰的回答。
+        他会输出对问题的直接回答。**他完全不与任何项目特定的图数据库交互，不执行图查询或图算法，也不进行数据建模或导入。他专注于提供信息和解释，而非操作数据。** (类似于 RAG)
     reasoner:
       actor_name: "Question Answering Expert"
       thinker_name: "Question Answering Expert"
