@@ -8,6 +8,7 @@ from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
 from app.core.service.session_service import SessionService
+from app.server.manager.view.message_view import MessageView
 
 
 class SessionWrapper:
@@ -20,6 +21,7 @@ class SessionWrapper:
     def submit(self, message: ChatMessage) -> JobWrapper:
         """Submit the job."""
         message_service: MessageService = MessageService.instance
+        job_service: JobService = JobService.instance
 
         # (1) get text message from the hybrid message
         if isinstance(message, HybridMessage):
@@ -38,22 +40,21 @@ class SessionWrapper:
             )
 
         # (2) get chat history (text messages), and it will be used as the context of the job
-        session_id: Optional[str] = message.get_session_id()
-        if session_id:
-            history_text_messages: List[TextMessage] = (
-                message_service.filter_text_messages_by_session(session_id=session_id)
-            )
-            if len(history_text_messages) > 0:
-                historical_context = "Chat history of the job goal:\n" + "\n".join(
-                    [
-                        f"[Chat history: {msg.get_role().value}] said: {msg.get_payload()}"
-                        for msg in history_text_messages
-                    ]
-                )
-            else:
-                historical_context = ""
-        else:
-            historical_context = ""
+        session_id: str = self._session.id
+
+        # get all job ids in the session
+        original_jobs = job_service.get_original_jobs_by_session_id(session_id=session_id)
+        original_job_ids = [j.id for j in original_jobs]
+
+        # get message view data for the job
+        conversation_views_history: List[MessageView] = []
+        for original_job_id in original_job_ids:
+            conversation_view = job_service.get_conversation_view(job_id=original_job_id)
+            conversation_views_history.append(conversation_view)
+
+        historical_context = self._format_conversation_history(
+            conversation_views=conversation_views_history
+        )
 
         # (3) create and save the job
         job = Job(
@@ -62,7 +63,6 @@ class SessionWrapper:
             session_id=self._session.id,
             assigned_expert_name=text_message.get_assigned_expert_name(),
         )
-        job_service: JobService = JobService.instance
         job_service.save_job(job=job)
         job_wrapper = JobWrapper(job)
 
@@ -82,3 +82,43 @@ class SessionWrapper:
         run_in_thread(job_wrapper.execute)
 
         return job_wrapper
+
+    def _format_conversation_history(self, conversation_views: List[MessageView]) -> str:
+        """Converts a list of MessageView objects into a single, LLM-friendly string.
+
+        This format clearly delineates conversation turns, user questions,
+        agent's intermediate thinking steps, and the agent's final answers.
+
+        Args:
+            conversation_views (List[MessageView]): A list of MessageView objects representing
+                the conversation history.
+
+        Returns:
+            str: A formatted string representing the entire conversation history.
+        """
+        if len(conversation_views) == 0:
+            return ""
+
+        message_views = ["---- Conversation History of the Job Goal ----"]
+        for i, view in enumerate(conversation_views):
+            turn_number = i + 1
+            message_views.append(f"--- Conversation Turn {turn_number} ---")
+
+            # 1. user question
+            message_views.append("[User Question]")
+            message_views.append(view.question.get_payload().strip())
+
+            # 2. agent thinking steps (if available)
+            if view.thinking_messages:
+                message_views.append("[AI Thinking Steps]")
+                for j, thinking_msg in enumerate(view.thinking_messages):
+                    # Add numbering for clarity within the thinking process
+                    message_views.append(f"Step {j + 1}:")
+                    thinking_msg_payload = thinking_msg.get_payload() or "(No message)"
+                    message_views.append(thinking_msg_payload)
+
+            # 3. ai answer
+            message_views.append("[AI Answer]")
+            message_views.append(view.answer.get_payload().strip())
+
+        return "\n".join(message_views)

@@ -1,31 +1,29 @@
 JOB_DECOMPOSITION_PROMPT = """
 ===== Task Scope & LLM Capabilities =====
-
 ## Role: Decompose the main TASK into multi subtasks/single subtask for multi/single domain expert(s).
-
-## Given Task:
-{task}
-
 
 ## Capabilities:
  - Focus on expert strengths, and provide the contextual information for each of them.
- - Critically evaluate the `Given Task` to determine the *minimum necessary* steps and experts required to make progress.
- - **Only assign subtasks to experts whose capabilities are directly and immediately needed.** Do not preemptively assign tasks for the entire potential workflow unless logically required as a prerequisite for the very next step.
- - For example, do not assign database modeling, importation, or querying tasks if the `Given Task` only asks for preliminary analysis, text summarization, or information gathering that doesn't yet require a structured database.
+ - **First, evaluate if the `Given Task` is simple enough to be handled entirely by a single expert without decomposition.** Simple informational requests (e.g., "introduce X", "Define Y", "Compare A and B", "Help me correct the grammar syntax errors") often require only the one or two experts.
+ - Critically evaluate the `Given Task` to determine the *minimum necessary* steps and experts required to make progress. **If decomposition *is* truly needed, aim for the fewest logical steps.** Avoid creating multiple subtasks if one expert can fulfill the entire `Given Task`.
+ - **Only assign subtasks to experts whose capabilities, as strictly defined in their profiles, are directly and immediately needed.** Do not assign database modeling, importation, querying, or analysis tasks if the `Given Task` is purely informational and doesn't require interaction with a specific, data-filled graph instance.
 ## Self-contained: Each subtask includes all necessary information.
 ## Role-neutral: Avoid mentioning specific roles unless in TASK.
 ## Boundary-aware: Stay the subtasks within original TASK scope.
-## You must complete the task decomposition in one round, focusing on the immediate, actionable steps derived from the `Given Task`.
+## You must complete the task decomposition in one round. **If the task requires only one step/expert, present it as a single subtask.**
+
+==== Given Task ====
+{task}
 
 ===== Expert Names & Descriptions =====
 {role_list}
 
 ===== Task Structure & Dependencies =====
 
-## Granularity: Create actionable, distinct subtasks with clear boundaries
-## Context: Provied every necessary information in details, and state in verbose the expected input from the previous task & the expected input to the next task, so that the expert can aquire the contextual information and, can deliver it to the next task with the current task result & information
-## Dependencies: Define logical task flow in Gantt-chart compatible format
-## Completion Criteria: Specify quantifiable completion criteria for each subtask
+## Granularity: Create actionable, distinct subtasks with clear boundaries **only if the task genuinely requires multiple steps involving different expert capabilities.** **For simple tasks solvable by one expert, create only ONE subtask encompassing the entire `Given Task`.**
+## Context: Provied every necessary information in details, and state in verbose the expected input from the previous task & the expected input to the next task, so that the expert can aquire the contextual information and, can deliver it to the next task with the current task result & information.
+## Dependencies: Define logical task flow **only if multiple subtasks are generated**. Simple, single-subtask decompositions have no dependencies.
+## Completion Criteria: Specify quantifiable completion criteria for each subtask.
 
 """  # noqa: E501
 
