@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, cast
 
 from flask import Blueprint, request
 
@@ -32,7 +32,7 @@ def get_sessions():
 def create_session():
     """Create a new session."""
     manager = SessionManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         if not data or "name" not in data:
             raise ApiException("Session name is required")
@@ -43,7 +43,7 @@ def create_session():
 
 
 @sessions_bp.route("/<string:session_id>", methods=["GET"])
-def get_session_by_id(session_id):
+def get_session_by_id(session_id: str):
     """Get a session by ID."""
     manager = SessionManager()
     try:
@@ -54,7 +54,7 @@ def get_session_by_id(session_id):
 
 
 @sessions_bp.route("/<string:session_id>", methods=["DELETE"])
-def delete_session_by_id(session_id):
+def delete_session_by_id(session_id: str):
     """Delete a session by ID."""
     manager = SessionManager()
     try:
@@ -65,10 +65,10 @@ def delete_session_by_id(session_id):
 
 
 @sessions_bp.route("/<string:session_id>", methods=["PUT"])
-def update_session_by_id(session_id):
+def update_session_by_id(session_id: str):
     """Update a session by ID."""
     manager = SessionManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         name = data.get("name")
         assert isinstance(name, str), "Name should be a string"
@@ -87,22 +87,22 @@ def update_session_by_id(session_id):
 
 
 @sessions_bp.route("/<string:session_id>/job_id", methods=["GET"])
-def get_latest_job_id(session_id):
+def get_latest_job_id(session_id: str):
     """Get the latest job ID for a session."""
     manager = SessionManager()
     try:
         session, message = manager.get_session(session_id=session_id)
-        data = {"id": session["latest_job_id"]}
+        data: Dict[str, Any] = {"id": session["latest_job_id"]}
         return make_response(True, data=data, message=message)
     except ApiException as e:
         return make_response(False, message=str(e))
 
 
 @sessions_bp.route("/<string:session_id>/chat", methods=["POST"])
-def chat(session_id):
+def chat(session_id: str):
     """Handle chat message creation."""
     manager = MessageManager()
-    data = request.json
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     try:
         if not data:
             raise ApiException("Data is required")
@@ -122,12 +122,15 @@ def chat(session_id):
             "现在，通过图数据库建模和算法分析，我们可以从网络科学的角度重新审视这部经典作品中的人物关系结构。"
             # "因此，请你使用PageRank算法分析剧中最具影响力的人物。"
         )
-        data["instruction_message"]["assigned_expert_name"] = "Graph Analysis Expert"
+        # data["instruction_message"]["assigned_expert_name"] = "Graph Analysis Expert"
         # data["instruction_message"]["assigned_expert_name"] = "Question Answering Expert"
         # data["instruction_message"]["assigned_expert_name"] = "Graph Query Expert"
 
-        chat_message: TextMessage = MessageViewTransformer.deserialize_message(
-            message=data, message_type=MessageType.HYBRID_MESSAGE
+        chat_message: TextMessage = cast(
+            TextMessage,
+            MessageViewTransformer.deserialize_message(
+                message=data, message_type=MessageType.HYBRID_MESSAGE
+            ),
         )
         response_data, message = manager.chat(chat_message)
         return make_response(True, data=response_data, message=message)
@@ -136,7 +139,7 @@ def chat(session_id):
 
 
 @sessions_bp.route("/<string:session_id>/messages", methods=["GET"])
-def get_conversion_view(session_id):
+def get_conversion_view(session_id: str):
     """Get message view (including thinking chain) for a specific job.
     Returns the user's question, AI's answer, and thinking chain messages.
     """

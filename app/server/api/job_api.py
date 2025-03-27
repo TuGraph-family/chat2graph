@@ -7,7 +7,7 @@ jobs_bp = Blueprint("jobs", __name__)
 
 
 @jobs_bp.route("/<string:job_id>/message", methods=["GET"])
-def get_job_message_view(job_id):
+def get_job_message_view(job_id: str):
     """Get message view (including thinking chain) for a specific job.
     Returns the user's question, AI's answer, and thinking chain messages.
     """

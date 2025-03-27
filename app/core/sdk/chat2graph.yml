@@ -199,13 +199,7 @@ actions:
 
   - &algorithms_intention_identification_action
     name: "algorithms_intention_identification"
-    desc: "识别并理解用户需求中的算法要求，确定算法的名称等信息下"
-    tools:
-      - *algorithms_getter_tool
-
-  - &algorithms_validation_action
-    name: "algorithms_validation"
-    desc: "确认当前图数据库中的算法是否支持相关的需求"
+    desc: "确认需要执行的算法（可能是多个），确定算法的名称等信息"
     tools:
       - *algorithms_getter_tool
 
@@ -271,8 +265,8 @@ toolkit:
   - [
       *content_understanding_action_3,
       *algorithms_intention_identification_action,
+      *algorithms_execution_action,
     ]
-  - [*algorithms_validation_action, *algorithms_execution_action]
   - [*knowledge_base_retrieving_action, *internet_retrieving_action]
   - [*reference_listing_action]
 
@@ -458,26 +452,6 @@ operators:
       - *query_execution_action
 
   # graph analysis operators
-  - &algorithms_intention_analysis_operator
-    instruction: |
-      你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
-      你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
-      注意，你不需要执行算法，也不能询问用户更多的信息。
-    output_schema: |
-      {
-          "algorithms_supported_by_db": ["图数据库支持的算法列表，算法的名字（（名称和数据库中支持的算法名称保持一致）"],
-          "selected_algorithms": [
-              {
-                  "analysis":"算法的要求",
-                  "algorithm_name":"算法的名称（名称和数据库中支持的算法名称保持一致）",
-                  "call_objective":"调用该算法的目的"
-              },
-          ]
-      }
-    actions:
-      - *content_understanding_action_3
-      - *algorithms_intention_identification_action
-
   - &algorithms_execute_operator
     instruction: |
       你是一个专业的图算法执行专家。你的工作是根据算法需求执行相应的图算法，并返回结果。
@@ -489,11 +463,14 @@ operators:
       - 验证算法的可执行性（包括图数据库中是否支持该算法）
       - 按照算法的输入
     output_schema: |
-      called_algorithms, 调用的算法和参数
-      status, 算法执行的状态
-      algorithms_result, 算法执行的结果。如果失败，返回失败原因
+      called_algorithm：调用的算法和参数
+      status：算法执行的状态
+      algorithms_result：算法执行的结果。如果失败，返回失败原因
+      called_algorithm：调用的算法和参数（如果有多个算法）
+      ...
     actions:
-      - *algorithms_validation_action
+      - *content_understanding_action_3
+      - *algorithms_intention_identification_action
       - *algorithms_execution_action
 
   # question answering operators
@@ -554,7 +531,7 @@ experts:
   - profile:
       name: "Graph Modeling Expert"
       desc: |
-        你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要设计合适的实体-关系模型，然后操作图数据库，确保任务的顺利完成。
+        你是一位知识图谱建模专家，能力是为图数据库创建 schema，你只会执行任务而不会回答问题。你的返回是包括 vertceis 和 edges 的 schema。
     reasoner:
       actor_name: "Graph Modeling Expert"
       thinker_name: "Graph Modeling Expert"
@@ -565,11 +542,8 @@ experts:
       name: "Data Importation Expert"
       desc: |
         你是一位资深的图数据抽取专家。
-        你的使命是，基于已分析的文档内容和图模型，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。
-        在这一阶段，你不是在创造知识，而是在发掘隐藏在文档中的事实。
-        你的目标是从文本中提取实体、关系和属性，请确保数据的准确、丰富、完整，因为后续的知识图谱构建将直接依赖于你抽取的数据质量。
-        抽取数据完成后，你需要调用指定的工具，完成数据的导入。
-        最后需要输出导入结果的总结。
+        你的使命是，基于文档内容和图 schema，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。       
+        你会把抽取的数据导入到图数据库中，然后输出导入结果的汇总。
     reasoner:
       actor_name: "Data Importation Expert"
       thinker_name: "Data Importation Expert"
@@ -579,9 +553,8 @@ experts:
   - profile:
       name: "Graph Query Expert"
       desc: |
-        你是一位专业的查询意图识别专家。你的工作是，理解给定的输入，给出一些结论，然后为后续的写查询语句做好准备工作。
-        你需要识别图查询的诉求，并校验查询的节点内容和对应的图模型是否匹配。注意你的任务不是将输入进行查询语句的转换，而是识别出存在着单点查询的诉求。
-        如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
+        你是一位专业的查询意图识别专家。你的工作是，理解给定任务的输入，做一些简单的意图分析。
+        然后，调用图数据库工具函数，查询相关的数据。最后会返回查询结果。
     reasoner:
       actor_name: "Graph Query Expert"
       thinker_name: "Graph Query Expert"
@@ -596,15 +569,13 @@ experts:
       actor_name: "Graph Analysis Expert"
       thinker_name: "Graph Analysis Expert"
     workflow:
-      - [*algorithms_intention_analysis_operator, *algorithms_execute_operator]
+      - [*algorithms_execute_operator]
 
   - profile:
       name: "Question Answering Expert"
       desc: |
-        你是一位专业的文档检索专家。你的工作是，从知识库以及互联网两个信息来源检索与问题相关的文档，
-        仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
-        你阅读的文档未必与用户的问题直接相关，但是你仍然需要进行清晰全面的总结。
-        你的任务是检索并总结文档，为后续推理得到最终的答案做铺垫。
+        你是一位专业的文档检索专家。你能力是从知识库和互联网两个信息来源检索与问题相关的文档，
+        你会阅读这些材料，然后回答任务需要回答的问题。（类似于 RAG）
     reasoner:
       actor_name: "Question Answering Expert"
       thinker_name: "Question Answering Expert"
