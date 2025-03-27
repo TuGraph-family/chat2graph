@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from sqlalchemy import func
 
@@ -17,7 +17,6 @@ from app.core.dal.dao.knowledge_dao import FileKbMappingDao, KnowledgeBaseDao
 from app.core.knowledge.knowledge_config import KnowledgeConfig
 from app.core.knowledge.knowledge_store_factory import KnowledgeStoreFactory
 from app.core.model.file_descriptor import FileDescriptor
-from app.core.model.job import Job
 from app.core.model.knowledge import Knowledge
 from app.core.model.knowledge_base import (
     GlobalKnowledgeBase,
@@ -212,22 +211,22 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
         return global_kb, local_kbs
 
-    def get_knowledge(self, query: str, job: Job) -> Knowledge:
+    def get_knowledge(self, query: str, session_id: Optional[str]) -> Knowledge:
         """Get knowledge by ID."""
         # get global knowledge
         global_chunks = KnowledgeStoreFactory.get_or_create(str(self._global_kb_do.id)).retrieve(
             query
         )
         # get local knowledge
-        kbs = self._knowledge_base_dao.filter_by(session_id=job.session_id)
-        if len(kbs) == 1:
-            kb = kbs[0]
-            knowledge_base_id = kb.id
-            local_chunks = KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).retrieve(
-                query
-            )
-        else:
-            local_chunks = []
+        local_chunks = []
+        if session_id:
+            kbs = self._knowledge_base_dao.filter_by(session_id=session_id)
+            if len(kbs) == 1:
+                kb = kbs[0]
+                knowledge_base_id = kb.id
+                local_chunks = KnowledgeStoreFactory.get_or_create(str(knowledge_base_id)).retrieve(
+                    query
+                )
         return Knowledge(global_chunks, local_chunks)
 
     def load_knowledge(

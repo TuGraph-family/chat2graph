@@ -84,18 +84,17 @@ class GraphKnowledgeStore(KnowledgeStore):
 
     def __init__(self, name: str):
         config = TuGraphStoreConfig(
-            username="admin",
-            password="73@TuGraph",
-            host="127.0.0.1",
-            port="7687",
-            enable_summary="True",
+            username=SystemEnv.GRAPH_KNOWLEDGE_STORE_USERNAME,
+            password=SystemEnv.GRAPH_KNOWLEDGE_STORE_PASSWORD,
+            host=SystemEnv.GRAPH_KNOWLEDGE_STORE_HOST,
+            port=SystemEnv.GRAPH_KNOWLEDGE_STORE_PORT,
         )
         vector_store_config = ChromaVectorConfig(
             persist_path=SystemEnv.APP_ROOT + SystemEnv.KNOWLEDGE_STORE_PATH
         )
         self._graph_store = CommunitySummaryKnowledgeGraph(
             config=config,
-            name=name,
+            name="Tu_" + name.replace("-", ""),
             embedding_fn=DefaultEmbeddingFactory.remote(
                 api_url=SystemEnv.EMBEDDING_MODEL_API_URL,
                 api_key=SystemEnv.EMBEDDING_API_KEY,
