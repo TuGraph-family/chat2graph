@@ -21,28 +21,6 @@ def get_all_knowledge_bases():
         return make_response(False, message=str(e))
 
 
-@knowledgebases_bp.route("/", methods=["POST"])
-def create_knowledge_base():
-    """Create a new knowledge base."""
-    manager = KnowledgeBaseManager()
-    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
-    try:
-        required_fields = ["name", "knowledge_type", "session_id"]
-        if not data or not all(field in data for field in required_fields):
-            raise ApiException(
-                "Missing required fields. Required: name, knowledge_type, session_id"
-            )
-
-        new_knowledge_base, message = manager.create_knowledge_base(
-            name=data.get("name"),
-            knowledge_type=data.get("knowledge_type"),
-            session_id=data.get("session_id"),
-        )
-        return make_response(True, data=new_knowledge_base, message=message)
-    except ApiException as e:
-        return make_response(False, message=str(e))
-
-
 @knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["GET"])
 def get_knowledge_base_by_id(knowledge_base_id: str):
     """Get a knowledge base by ID."""
