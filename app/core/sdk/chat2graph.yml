@@ -261,7 +261,7 @@ toolkit:
       *algorithms_intention_identification_action,
       *algorithms_execution_action,
     ]
-  - [*knowledge_base_retrieving_action, *internet_retrieving_action]
+  - [*knowledge_base_retrieving_action]
   - [*reference_listing_action]
 
 operators:
