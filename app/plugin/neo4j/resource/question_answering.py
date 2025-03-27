@@ -16,9 +16,7 @@ class KnowledgeBaseRetriever(Tool):
             function=self.knowledge_base_search,
         )
 
-    async def knowledge_base_search(
-        self, question: str, session_id: str
-    ) -> str:
+    async def knowledge_base_search(self, question: str, session_id: str) -> str:
         """Retrive a list of related contents and a list of their reference name from knowledge
         base given the question and current session_id.
 
