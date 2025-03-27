@@ -225,15 +225,9 @@ actions:
   # question answering actions
   - &knowledge_base_retrieving_action
     name: "knowledge_base_retrieving"
-    desc: "调用knowledge_base_search工具，从外接知识库中检索得到问题相关的文档"
+    desc: "调用knowledge_base_search工具，从外接知识库中检索得到问题相关的文档，若多次检索得不到相关结果，放弃调用该工具"
     tools:
       - *knowledge_base_retriever_tool
-
-  - &internet_retrieving_action
-    name: "internet_retrieving"
-    desc: "调用internet_search工具，从互联网搜索引擎中检索得到问题相关的文档"
-    tools:
-      - *internet_retriever_tool
 
   - &reference_listing_action
     name: "reference_listing"
@@ -273,7 +267,7 @@ toolkit:
       *algorithms_intention_identification_action,
     ]
   - [*algorithms_validation_action, *algorithms_execution_action]
-  - [*knowledge_base_retrieving_action, *internet_retrieving_action]
+  - [*knowledge_base_retrieving_action]
   - [*reference_listing_action]
 
 operators:
@@ -499,7 +493,8 @@ operators:
   # question answering operators
   - &retrieving_operator
     instruction: |
-      你是一位专业的文档检索专家。你的工作是，从知识库以及互联网两个信息来源检索与问题相关的文档，
+      你是一位专业的文档检索专家。你的工作是，从知识库中检索与问题相关的文档，
+      如果未能从知识库中检索到相关文档，直接结束任务返回空内容即可。
       仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
       你阅读的文档未必与用户的问题直接相关，但是你仍然需要进行清晰全面的总结。
       你的任务是检索并总结文档，为后续推理得到最终的答案做铺垫。
@@ -508,21 +503,16 @@ operators:
 
       1.文档检索
       - 通过知识库检索得到与问题相关的文档
-      - 通过互联网检索得到与问题相关的网页
       2. 文档整理
       - 将知识库中检索得到各个文档分别总结为一段内容
-      - 将互联网中检索得到各个网页内容分别总结为一段内容
     output_schema: |
       {
           "original_question": "输入的原始提问",
-          "knowledge_base_result": ["知识库中", “检索得到的", "相关内容", "总结"],
-          "knowledge_base_references": ["知识库中", “检索得到的", "相关内容", "对应的", "章节编号"],
-          "internet_result": ["互联网", "搜索引擎中", "检索得到的", "相关内容", "总结"]
-          "internet_references": ["互联网", "搜索引擎中", "检索得到的", "相关内容", "对应的", "网址"]
+          "knowledge_base_result": "知识库中检索得到的相关内容总结",
+          "knowledge_base_references": ["知识库中", “检索得到的", "相关内容", "对应的", "章节名称"],
       }
     actions:
       - *knowledge_base_retrieving_action
-      - *internet_retrieving_action
 
   - &summarizing_operator
     instruction: |
@@ -532,7 +522,6 @@ operators:
 
       1. 分别总结不同来源的文档内容
       - 总结从知识库中检索得到问题相关内容
-      - 总结从互联网搜索引擎中检索得到问题相关内容
 
       2. 归纳不同来源的总结结果
       - 分析不同来源的文档总结的相同点与不同点
@@ -540,13 +529,12 @@ operators:
 
       3. 答案生成
       - 分析问题的实际意图
-      - 根据问题与归纳总结的文档内容，生成一份回答
-      - 提供回答中涉及的原文出处，给出一个List，其中包含markdown格式的原文链接
+      - 对用户提出的问题生成一个回答
+      - 如果来自文档的内容对回答问题有所帮助，则参考来自文档的内容总结，优化回答内容
+      - 如果回答中设计了来自知识库中的内容，提供回答中涉及的原文出处，给出一个List，其中包含markdown格式的原文链接
     output_schema: |
-      {
-          "anwser": "针对用户问题的最终回答",
-          "references": ["回答生成", "过程中", "参考的", "文档原文的", "markdown格式", "链接"]
-      }
+      answer: 针对用户问题的最终回答，如果无法有效回答，则明确说明自己无法回答用户的问题
+      references: ["回答生成", "过程中", "参考的", "文档原文的", "markdown格式", "链接"]
     actions:
       - *reference_listing_action
 
@@ -601,10 +589,10 @@ experts:
   - profile:
       name: "Question Answering Expert"
       desc: |
-        你是一位专业的文档检索专家。你的工作是，从知识库以及互联网两个信息来源检索与问题相关的文档，
-        仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
-        你阅读的文档未必与用户的问题直接相关，但是你仍然需要进行清晰全面的总结。
-        你的任务是检索并总结文档，为后续推理得到最终的答案做铺垫。
+        你是一个用户答疑的专家。
+        你的功能是：回答用户提出的问题，如果有必要，通过检索知识库中的文档帮助答案生成。
+        你的限制是：只能检索知识库中有限数量的内容，借此进行推理，如果无法得到有用的信息，则放弃继续检索其他信息来源,如互联网等。
+        你的返回是：针对用户提出的问题的一段富文本回答。如果无法有效回答，告知用户即可
     reasoner:
       actor_name: "Question Answering Expert"
       thinker_name: "Question Answering Expert"

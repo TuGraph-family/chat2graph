@@ -18,7 +18,7 @@ class KnowledgeBaseRetriever(Tool):
 
     async def knowledge_base_search(
         self, question: str, session_id: str
-    ) -> Tuple[List[str], List[str]]:
+    ) -> str:
         """Retrive a list of related contents and a list of their reference name from knowledge
         base given the question and current session_id.
 
@@ -27,22 +27,14 @@ class KnowledgeBaseRetriever(Tool):
             session_id (str): Current session_id.
 
         Returns:
-            (List[str], List[str]): The list of related contents and the list of reference name.
+            str: The related content and reference name in knowledge base.
         """
 
         knowledge = KnowledgeBaseService.instance.get_knowledge(question, session_id)
-        global_chunks = knowledge.global_chunks
-        local_chunks = knowledge.local_chunks
-        contents = []
-        refs = []
-        for chunk in global_chunks:
-            contents.append(chunk.content)
-            refs.append(chunk.chunk_name)
-        for chunk in local_chunks:
-            contents.append(chunk.content)
-            refs.append(chunk.chunk_name)
-
-        return contents, refs
+        if len(knowledge.global_chunks) == 0 and len(knowledge.local_chunks) == 0:
+            return "Knowledge base does not have the related knowledge you need, please consider generate the answer by yourself."
+        else:
+            return knowledge.get_payload()
 
 
 class InternetRetriever(Tool):

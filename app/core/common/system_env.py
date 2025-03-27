@@ -35,8 +35,12 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "EMBEDDING_MODEL_NAME": (str, "text-embedding-3-small"),
     "EMBEDDING_MODEL_API_URL": (str, None),
     "EMBEDDING_API_KEY": (str, None),
-    "KNOWLEDGE_STORE_TYPE": (KnowledgeStoreType, KnowledgeStoreType.VECTOR),
     "GLOBAL_KNOWLEDGE_BASE_NAME": (str, "Global Knowledge Base"),
+    "KNOWLEDGE_STORE_TYPE": (KnowledgeStoreType, KnowledgeStoreType.VECTOR),
+    "GRAPH_KNOWLEDGE_STORE_USERNAME": (str, "admin"),
+    "GRAPH_KNOWLEDGE_STORE_PASSWORD": (str, "73@TuGraph"),
+    "GRAPH_KNOWLEDGE_STORE_HOST": (str, "127.0.0.1"),
+    "GRAPH_KNOWLEDGE_STORE_PORT": (str, "7687"),
 }
 
 # system environment variable value cache.
