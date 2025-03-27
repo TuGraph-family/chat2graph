@@ -53,7 +53,7 @@ class SessionWrapper:
             conversation_views_history.append(conversation_view)
 
         historical_context = self._format_conversation_history(
-            conversation_views=conversation_views_history
+            conversation_views=conversation_views_history, current_question_message=text_message
         )
 
         # (3) create and save the job
@@ -83,7 +83,9 @@ class SessionWrapper:
 
         return job_wrapper
 
-    def _format_conversation_history(self, conversation_views: List[MessageView]) -> str:
+    def _format_conversation_history(
+        self, conversation_views: List[MessageView], current_question_message: Optional[TextMessage]
+    ) -> str:
         """Converts a list of MessageView objects into a single, LLM-friendly string.
 
         This format clearly delineates conversation turns, user questions,
@@ -92,6 +94,7 @@ class SessionWrapper:
         Args:
             conversation_views (List[MessageView]): A list of MessageView objects representing
                 the conversation history.
+            current_question_message (Optional[TextMessage]): The current user question message.
 
         Returns:
             str: A formatted string representing the entire conversation history.
@@ -99,26 +102,31 @@ class SessionWrapper:
         if len(conversation_views) == 0:
             return ""
 
-        message_views = ["---- Conversation History of the Job Goal ----"]
-        for i, view in enumerate(conversation_views):
-            turn_number = i + 1
-            message_views.append(f"--- Conversation Turn {turn_number} ---")
-
+        message_views = [
+            "---- Conversation History of the Job Goal ----",
+            "Please select the useful information from the history to assist in accurately "
+            "interpreting the user's intent and decomposing the task appropriately.",
+        ]
+        for view in conversation_views:
             # 1. user question
             message_views.append("[User Question]")
-            message_views.append(view.question.get_payload().strip())
+            message_views.append(cast(str, view.question.get_payload()).strip())
 
             # 2. agent thinking steps (if available)
             if view.thinking_messages:
-                message_views.append("[AI Thinking Steps]")
+                message_views.append("[AI Thinking Chain]")
                 for j, thinking_msg in enumerate(view.thinking_messages):
                     # Add numbering for clarity within the thinking process
                     message_views.append(f"Step {j + 1}:")
                     thinking_msg_payload = thinking_msg.get_payload() or "(No message)"
-                    message_views.append(thinking_msg_payload)
+                    message_views.append(thinking_msg_payload.strip())
 
             # 3. ai answer
             message_views.append("[AI Answer]")
-            message_views.append(view.answer.get_payload().strip())
+            message_views.append(cast(str, view.answer.get_payload()).strip())
+
+        if current_question_message:
+            message_views.append("[User Question]")
+            message_views.append(cast(str, current_question_message.get_payload()).strip())
 
         return "\n".join(message_views)
