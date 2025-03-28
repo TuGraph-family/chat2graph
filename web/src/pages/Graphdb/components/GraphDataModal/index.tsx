@@ -70,7 +70,7 @@ const GraphDataModal: React.FC<IGraphDataModalProps> = ({
     }
 
     const renderItem = (item: string, idx: number) => {
-        return <Form.Item label={formatMessage(`database.modal.label${idx}`)} name={item} rules={[{ required: true, message: formatMessage(`database.modal.placeholder${idx}`) }]}>
+        return <Form.Item label={formatMessage(`database.modal.label${idx}`)} name={item} rules={item !== 'desc' ? [{ required: true, message: formatMessage(`database.modal.placeholder${idx}`) }] : []}>
             {
                 item !== 'pwd' ? <Input maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} /> : <Input.Password maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} />
             }
