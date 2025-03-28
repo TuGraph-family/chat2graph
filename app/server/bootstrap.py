@@ -1,5 +1,6 @@
 import os
 
+import pyfiglet
 from flask import Flask, send_from_directory
 from flask_cors import CORS  # type: ignore
 
@@ -12,12 +13,14 @@ from app.server.common.util import ApiException, make_error_response
 def create_app():
     """Create the Flask app."""
     static_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+    print(f"Web resources location: {static_folder_path}")
     app = Flask(__name__, static_folder=static_folder_path)
 
     with app.app_context():
         init_db()
 
-    AgenticService.load()
+    service = AgenticService.load()
+    pyfiglet.print_figlet(service.name, font='small')
 
     @app.route("/")
     def serve_index():
@@ -42,5 +45,6 @@ def create_app():
 
 
 if __name__ == "__main__":
+    print("Starting server...")
     app = create_app()
     app.run(debug=False)

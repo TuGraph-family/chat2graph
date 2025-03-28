@@ -46,6 +46,10 @@ class AgenticService(metaclass=Singleton):
         self._toolkit_service: ToolkitService = ToolkitService.instance
         self._reasoner_service: ReasonerService = ReasonerService.instance
 
+    @property
+    def name(self) -> str:
+        return self._service_name
+
     def session(self, session_id: Optional[str] = None) -> SessionWrapper:
         """Get the session, if not exists or session_id is None, create a new one."""
         return SessionWrapper(self._session_service.get_session(session_id=session_id))
