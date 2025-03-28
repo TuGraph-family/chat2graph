@@ -1,15 +1,16 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
-class GraphDB:
-    """GraphDB class"""
+class GraphDbConfig:
+    """GraphDbConfig class"""
 
-    id: str
     ip: str
     port: int
     user: str
     pwd: str
-    desc: str
     name: str
-    is_default_db: bool
+    id: Optional[str] = None
+    desc: str = ""
+    is_default_db: bool = True

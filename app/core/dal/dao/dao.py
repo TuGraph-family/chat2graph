@@ -36,10 +36,6 @@ class Dao(Generic[T], metaclass=Singleton):
             self.session.rollback()
             raise e
 
-    def get_by_default(self) -> Optional[T]:
-        """Get an object by ID."""
-        return self.session.query(self._model).filter_by(is_default_db=True).first()
-
     def get_by_id(self, id: str) -> Optional[T]:
         """Get an object by ID."""
         return self.session.query(self._model).get(id)

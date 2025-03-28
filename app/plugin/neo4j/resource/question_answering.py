@@ -29,7 +29,6 @@ class KnowledgeBaseRetriever(Tool):
         Returns:
             str: The related content and reference name in knowledge base.
         """
-        # knowledge_service: KnowledgeBaseService = KnowledgeBaseService.instance
         knowledge = knowledge_service.get_knowledge(question, session_id)
         if len(knowledge.global_chunks) == 0 and len(knowledge.local_chunks) == 0:
             return (

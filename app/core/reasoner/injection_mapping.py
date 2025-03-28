@@ -1,10 +1,10 @@
-from typing import TYPE_CHECKING, Dict, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Dict, cast
 
 if TYPE_CHECKING:
     pass
 
-T = TypeVar("T")
-injection_services_mapping: Dict[Type[T], T] = {}
+
+injection_services_mapping: Dict = {}
 
 
 def setup_injection_services_mapping():
