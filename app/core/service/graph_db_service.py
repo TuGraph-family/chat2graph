@@ -13,6 +13,10 @@ class GraphDbService(metaclass=Singleton):
 
     def create_graph_db(self, graph_db_config: GraphDbConfig) -> GraphDbConfig:
         """Create a new GraphDB."""
+
+        # determinate default flag
+        graph_db_config.is_default_db = self._graph_db_dao.count() == 0
+
         result = self._graph_db_dao.create(
             port=graph_db_config.port,
             user=graph_db_config.user,
@@ -21,6 +25,7 @@ class GraphDbService(metaclass=Singleton):
             name=graph_db_config.name,
             is_default_db=graph_db_config.is_default_db,
         )
+
         return GraphDbConfig(
             ip=str(result.ip),
             id=str(result.id),
@@ -84,6 +89,14 @@ class GraphDbService(metaclass=Singleton):
         graph_db_do = self._graph_db_dao.get_by_id(id=graph_db_config.id)
         if not graph_db_do:
             raise ValueError(f"GraphDB with ID {id} not found")
+
+        # check default flag
+        if graph_db.is_default_db and not is_default_db:
+            raise ValueError(f"At least one default GraphDB required")
+
+        if not graph_db.is_default_db and is_default_db:
+            self._graph_db_dao.set_as_default(id=id)
+
         update_fields = {
             "ip": graph_db_config.ip,
             "port": graph_db_config.port,

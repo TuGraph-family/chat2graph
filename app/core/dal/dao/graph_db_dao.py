@@ -13,5 +13,19 @@ class GraphDbDao(Dao[GraphDbDo]):
         super().__init__(GraphDbDo, session)
 
     def get_by_default(self) -> Optional[GraphDbDo]:
-        """Get an object by ID."""
+        """Get default graph db."""
         return self.session.query(self._model).filter_by(is_default_db=True).first()
+
+    def set_as_default(self, id):
+        default_db = self.get_by_default()
+        if default_db and default_db.id == id:
+            return
+
+        obj = self.get_by_id(id)
+        if not obj:
+            return
+
+        with self.new_session() as s:
+            s.query(self._model).filter_by(id=default_db.id).update({"is_default_db": False})
+            s.query(self._model).filter_by(id=id).update({"is_default_db": True})
+
