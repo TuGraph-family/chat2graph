@@ -178,7 +178,9 @@ class JobService(metaclass=Singleton):
             job_id, ChatMessageRole.SYSTEM
         )
         # get thinking chain messages
-        message_result_pairs: List[Tuple[AgentMessage, JobResult]] = []  # to sort by timestamp
+        message_result_pairs: List[
+            Tuple[AgentMessage, SubJob, JobResult]
+        ] = []  # to sort by timestamp
 
         subjob_ids = self.get_subjob_ids(original_job_id=original_job.id)
         for subjob_id in subjob_ids:
@@ -200,14 +202,14 @@ class JobService(metaclass=Singleton):
                 elif len(agent_messages) == 0:
                     # handle the unexecuted subjob
                     thinking_message = AgentMessage(
-                        job_id=subjob_id, payload="The subjob is not executed"
+                        job_id=subjob_id, payload=f"The subjob is {subjob_result.status.value}."
                     )
                 else:
                     raise ValueError(
                         f"Multiple agent messages found for job ID {subjob_id}: {agent_messages}"
                     )
                 # store the pair of message and result
-                message_result_pairs.append((thinking_message, subjob_result))
+                message_result_pairs.append((thinking_message, subjob, subjob_result))
 
         # sort pairs by message timestamp
         message_result_pairs.sort(
@@ -218,13 +220,15 @@ class JobService(metaclass=Singleton):
 
         # separate the sorted pairs back into individual lists
         thinking_messages: List[AgentMessage] = [pair[0] for pair in message_result_pairs]
-        subjob_results: List[JobResult] = [pair[1] for pair in message_result_pairs]
+        subjobs: List[SubJob] = [pair[1] for pair in message_result_pairs]
+        subjob_results: List[JobResult] = [pair[2] for pair in message_result_pairs]
 
         return MessageView(
             question=question_message,
             answer=answer_message,
             answer_metrics=orignial_job_result,
             thinking_messages=thinking_messages,
+            thinking_subjobs=subjobs,
             thinking_metrics=subjob_results,
         )
 

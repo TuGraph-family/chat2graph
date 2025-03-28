@@ -43,28 +43,26 @@ class TestAgentOperator(Operator):
 
         # job2: multiply by 2
         elif self._config.id == "mult":
-            numbers = [int(x) for x in workflow_messages[-1].scratchpad.strip().split()]
+            numbers = [int(x) for x in previous_expert_outputs[-1].scratchpad.strip().split()]
             result = " ".join(str(x * 2) for x in numbers)
             return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
         # job3: add 10
         elif self._config.id == "add":
-            numbers = [int(x) for x in workflow_messages[-1].scratchpad.strip().split()]
+            numbers = [int(x) for x in previous_expert_outputs[-1].scratchpad.strip().split()]
             result = " ".join(str(x + 10) for x in numbers)
             return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
         # job4: sum
         elif self._config.id == "sum":
-            numbers = [int(x) for x in workflow_messages[-1].scratchpad.strip().split()]
+            numbers = [int(x) for x in previous_expert_outputs[-1].scratchpad.strip().split()]
             result = str(sum(numbers))
             return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
         # job5: format result
         elif self._config.id == "format":
-            result = (
-                f"Final Result\n:{'{}'.join([msg.scratchpad for msg in workflow_messages])}".format(
-                    "\n"
-                )
+            result = f"Final Result\n:{'{}'.join([msg.scratchpad for msg in previous_expert_outputs])}".format(
+                "\n"
             )
             return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 

@@ -4,6 +4,7 @@ from attr import dataclass
 
 from app.core.common.type import ChatMessageRole, ChatMessageType
 from app.core.dal.do.message_do import MessageType
+from app.core.model.job import SubJob
 from app.core.model.job_result import JobResult
 from app.core.model.message import (
     AgentMessage,
@@ -30,6 +31,7 @@ class MessageView:
         answer (ChatMessage): The system's response/answer message.
         answer_metrics (JobResult): Performance metrics related to the answer generation.
         thinking_messages (List[AgentMessage]): List of intermediate reasoning msg by the agent.
+        thinking_subjobs (List[SubJob]): List of subjobs for each thinking step.
         thinking_metrics (List[JobResult]): List of performance metrics for each thinking step.
     """
 
@@ -37,6 +39,7 @@ class MessageView:
     answer: ChatMessage
     answer_metrics: JobResult
     thinking_messages: List[AgentMessage]
+    thinking_subjobs: List[SubJob]
     thinking_metrics: List[JobResult]
 
 
@@ -91,10 +94,12 @@ class MessageViewTransformer:
                 "thinking": [
                     {
                         "message": MessageViewTransformer.serialize_message(thinking_message),
+                        "job": JobView.serialize_job(job=thinking_subjob),
                         "metrics": JobView.serialize_job_result(subjob_result),
                     }
-                    for thinking_message, subjob_result in zip(
+                    for thinking_message, thinking_subjob, subjob_result in zip(
                         conversation_view.thinking_messages,
+                        conversation_view.thinking_subjobs,
                         conversation_view.thinking_metrics,
                         strict=True,
                     )

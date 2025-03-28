@@ -7,7 +7,7 @@ plugin:
   workflow_platform: "DBGPT"
 
 reasoner:
-  type: "DUAL"
+  type: "MONO"
 
 tools:
   - &document_reader_tool

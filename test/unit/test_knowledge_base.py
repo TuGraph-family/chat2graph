@@ -37,7 +37,9 @@ async def test_knowledge_base_service():
         context="Test context",
     )
     knowledge_service: KnowledgeBaseService = KnowledgeBaseService.instance
-    knowledge = knowledge_service.get_knowledge(query="what is chat2graph talk about", job=job)
+    knowledge = knowledge_service.get_knowledge(
+        query="what is chat2graph talk about", session_id=job.session_id
+    )
     assert (
         "[Knowledges From Global Knowledge Base]" in knowledge.get_payload()
         or "No knowledge found" in knowledge.get_payload()

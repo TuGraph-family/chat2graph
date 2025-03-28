@@ -160,13 +160,13 @@ class AgenticService(metaclass=Singleton):
             agentic_service_config.plugin.get_workflow_platform_type()
         )
 
-        print(f"Init the Leader agent")
+        print("Init the Leader agent")
         mas.leader(name="Leader").workflow(
             job_decomposition_operator, platform_type=workflow_platform_type
         ).build()
 
         # configure the experts
-        print(f"Init the Expert agents")
+        print("Init the Expert agents")
         for expert_config in agentic_service_config.experts:
             expert_wrapper = mas.expert(
                 name=expert_config.profile.name, description=expert_config.profile.desc
