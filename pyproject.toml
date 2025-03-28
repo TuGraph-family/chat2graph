@@ -19,6 +19,7 @@ neo4j = "^5.27.0"
 sqlalchemy-utils = "^0.41.2"
 matplotlib = "^3.10.1"
 networkx = "^3.4.2"
+pyfiglet = "^1.0.2"
 
 [[tool.poetry.source]]
 name = "PyPI"

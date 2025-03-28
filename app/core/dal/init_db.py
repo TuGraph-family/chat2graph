@@ -12,6 +12,7 @@ def init_db() -> None:
     # Do.metadata.drop_all(bind=engine)
 
     # create tables in order
+    print("Prepare database tables ...")
     GraphDbDo.__table__.create(engine, checkfirst=True)
     FileDescriptorDo.__table__.create(engine, checkfirst=True)
     KnowledgeBaseDo.__table__.create(engine, checkfirst=True)
