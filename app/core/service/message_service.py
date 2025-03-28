@@ -15,7 +15,6 @@ class MessageService(metaclass=Singleton):
 
     def save_message(self, message: Message) -> Message:
         """Save a new message."""
-        # create the message
         self._message_dao.save_message(message=message)
         return message
 

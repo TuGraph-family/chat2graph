@@ -3,15 +3,8 @@ from uuid import uuid4
 
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.neo4j_store import get_neo4j
+from app.plugin.neo4j.resource.doc import QUERY_GRAMMER
 from app.plugin.neo4j.resource.read_doc import SchemaManager
-
-QUERY_GRAMMER = """
-===== 图vertex查询语法书 =====
-简单例子：
-MATCH (p:种类 {筛选条件}) RETURN p
-MATCH (p:种类), (q:种类) WHERE p,q的条件 RETURN p,q
-=====
-"""
 
 
 class SchemaGetter(Tool):

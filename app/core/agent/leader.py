@@ -1,4 +1,5 @@
 from concurrent.futures import Future, ThreadPoolExecutor
+import json
 import time
 from typing import Dict, List, Optional, Set
 
@@ -89,15 +90,22 @@ class Leader(Agent):
         # decompose the job by the reasoner in the workflow
         workflow_message = self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
 
-        # extract the subjobs from the json block
         try:
+            # extract the subjobs from the json block
             job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
             assert job_dict is not None
-        except Exception as e:
-            raise ValueError(
-                f"Failed to decompose the subjobs by json format: {str(e)}\n"
-                f"Input content:\n{workflow_message.scratchpad}"
-            ) from e
+        except (ValueError, json.JSONDecodeError) as e:
+            # retry to decompose the job with the new lesson
+            workflow_message = self._workflow.execute(
+                job=decompsed_job,
+                reasoner=self._reasoner,
+                lesson="LLM output format (json format for example) specification is crucial for "
+                "reliable parsing. And do not forget ```json prefix and ``` suffix when "
+                "you generate the json block in <deliverable>...</deliverable>. Error info: "
+                + str(e),
+            )
+            # extract the subjobs from the json block
+            job_dict = parse_json(text=workflow_message.scratchpad)
 
         # init the decomposed job graph
         job_graph = JobGraph()

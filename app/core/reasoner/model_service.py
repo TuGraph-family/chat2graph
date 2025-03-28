@@ -2,11 +2,15 @@ from abc import ABC, abstractmethod
 import inspect
 import json
 import re
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 from app.core.common.type import FunctionCallStatus
 from app.core.model.message import ModelMessage
+from app.core.reasoner.injection_mapping import (
+    injection_services_mapping,
+    setup_injection_services_mapping,
+)
 from app.core.toolkit.tool import FunctionCallResult, Tool
 
 
@@ -14,6 +18,10 @@ class ModelService(ABC):
     """Model service."""
 
     def __init__(self):
+        # setup the injection services mapping (used by function callings)
+        setup_injection_services_mapping()
+
+        # TODO: remove this?
         self._id = str(uuid4())
 
     @abstractmethod
@@ -63,6 +71,33 @@ class ModelService(ABC):
                 continue
 
             try:
+                # prepare function arguments:
+                # handle the service injection based on sig parameter types.
+                # this will auto-inject services from the mapping when a function requires them
+                # TODO: handle the case when the function has no type hints
+                # TODO: handle the case when the function has default value
+                sig = inspect.signature(func)
+                for param_name, param in sig.parameters.items():
+                    injection_type_found: bool = False
+                    param_type: Any = param.annotation
+                    # handle the union types
+                    if param_type is Union:
+                        available_types = getattr(param_type, "__args__", [])
+                        for available_type in available_types:
+                            # skip None type
+                            if available_type is type(None):
+                                continue
+
+                            if available_type in injection_services_mapping:
+                                func_args[param_name] = injection_services_mapping[available_type]
+                                injection_type_found = True
+                                break
+
+                    # try to inject service based on parameter type
+                    if not injection_type_found:
+                        if param_type in injection_services_mapping:
+                            func_args[param_name] = injection_services_mapping[param_type]
+
                 # execute function call
                 if inspect.iscoroutinefunction(func):
                     result = await func(**func_args)

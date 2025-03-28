@@ -244,5 +244,4 @@ Analyzing the task...
         job_graph = leader.execute(AgentMessage(job_id=subjob.id))
         job_service.replace_subgraph(new_subgraph=job_graph)
 
-    assert "Failed to decompose the subjobs by json format" in str(exc_info.value)
-    assert mock_response in str(exc_info.value)
+    assert "json' not found in scratchpad" in str(exc_info.value)

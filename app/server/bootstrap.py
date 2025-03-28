@@ -1,8 +1,8 @@
 import os
 
-import pyfiglet
 from flask import Flask, send_from_directory
 from flask_cors import CORS  # type: ignore
+import pyfiglet  # type: ignore
 
 from app.core.dal.init_db import init_db
 from app.core.sdk.agentic_service import AgenticService
@@ -20,7 +20,10 @@ def create_app():
         init_db()
 
     service = AgenticService.load()
-    pyfiglet.print_figlet(service.name, font='small')
+
+    print("\n\n")
+    pyfiglet.print_figlet(service.name, font="small")
+    print("\n\n")
 
     @app.route("/")
     def serve_index():
