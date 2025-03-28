@@ -43,6 +43,22 @@ class GraphDbService(metaclass=Singleton):
             is_default_db=bool(result.is_default_db),
         )
 
+    def get_default_graph_db(self) -> GraphDB:
+        """Get the default GraphDB."""
+        result = self._graph_db_dao.get_by_default()
+        if not result:
+            raise ValueError(f"Default GraphDB not found")
+        return GraphDB(
+            id=str(result.id),
+            ip=str(result.ip),
+            port=int(result.port),
+            user=str(result.user),
+            pwd=str(result.pwd),
+            desc=str(result.desc),
+            name=str(result.name),
+            is_default_db=bool(result.is_default_db),
+        )
+
     def get_graph_db(self, id: str) -> GraphDB:
         """Get a GraphDB by ID."""
         result = self._graph_db_dao.get_by_id(id=id)
