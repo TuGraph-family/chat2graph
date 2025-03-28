@@ -42,6 +42,12 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "GRAPH_KNOWLEDGE_STORE_PASSWORD": (str, "73@TuGraph"),
     "GRAPH_KNOWLEDGE_STORE_HOST": (str, "127.0.0.1"),
     "GRAPH_KNOWLEDGE_STORE_PORT": (str, "7687"),
+    "GRAPH_DB_NAME": (str, "graph_db"),
+    "GRAPH_DB_IP": (str, "localhost"),
+    "GRAPH_DB_PORT": (int, 7687),
+    "GRAPH_DB_USERNAME": (str, "username"),
+    "GRAPH_DB_PASSWORD": (str, "password"),
+    "GRAPH_DB_SCHEME": (str, "bolt"),
 }
 
 # system environment variable value cache.

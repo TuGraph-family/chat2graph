@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.neo4j_store import get_neo4j
+from app.plugin.neo4j.graph_store import get_graph_db
 from app.plugin.neo4j.resource.doc import SIMPLE_DOC_CONTENT
 from app.plugin.neo4j.resource.read_doc import SchemaManager
 
@@ -112,7 +112,7 @@ class VertexLabelGenerator(Tool):
                 }
             )
 
-        store = get_neo4j()
+        store = get_graph_db()
         with store.conn.session() as session:
             for statement in statements:
                 print(f"Executing statement: {statement}")
@@ -214,7 +214,7 @@ class EdgeLabelGenerator(Tool):
                 }
             )
 
-        store = get_neo4j()
+        store = get_graph_db()
         with store.conn.session() as session:
             for statement in statements:
                 print(f"Executing statement: {statement}")
@@ -249,7 +249,7 @@ class GraphReachabilityGetter(Tool):
         Returns:
             str: The reachability of the graph database in string format
         """
-        store = get_neo4j()
+        store = get_graph_db()
         vertex_labels: List = []
         relationship_types: List = []
         with store.conn.session() as session:

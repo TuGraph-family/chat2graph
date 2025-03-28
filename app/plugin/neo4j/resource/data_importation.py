@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.neo4j_store import get_neo4j
+from app.plugin.neo4j.graph_store import get_graph_db
 from app.plugin.neo4j.resource.read_doc import SchemaManager
 
 
@@ -173,7 +173,7 @@ class DataImport(Tool):
             RETURN source, target, r
             """  # noqa: E501
 
-            store = get_neo4j()
+            store = get_graph_db()
             with store.conn.session() as session:
                 # 执行导入操作
                 print(f"Executing statement: {cypher}")

@@ -1,20 +1,12 @@
 # test_neo4j.py
 
-from app.plugin.neo4j.neo4j_store import Neo4jStoreConfig, get_neo4j
+from app.plugin.neo4j.graph_store import get_graph_db
 
 
 def test_connection():
     """Test the connection to the Neo4j database."""
-    config = Neo4jStoreConfig(
-        name="neo4j",
-        host="localhost",
-        port=7687,
-        username="",
-        password="",
-    )
-
     try:
-        store = get_neo4j(config)
+        store = get_graph_db()
 
         with store.conn.session() as session:
             result = session.run("RETURN 'Hello, Neo4j!' as message")

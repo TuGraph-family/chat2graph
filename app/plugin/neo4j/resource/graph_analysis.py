@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.neo4j_store import get_neo4j
+from app.plugin.neo4j.graph_store import get_graph_db
 
 
 class AlgorithmsGetter(Tool):
@@ -110,7 +110,7 @@ class PageRankExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"pagerank_graph_{uuid4().hex[:8]}"
 
@@ -250,7 +250,7 @@ class BetweennessCentralityExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"betweenness_graph_{uuid4().hex[:8]}"
 
@@ -394,7 +394,7 @@ class LouvainExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"louvain_graph_{uuid4().hex[:8]}"
 
@@ -568,7 +568,7 @@ class LabelPropagationExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"labelprop_graph_{uuid4().hex[:8]}"
 
@@ -771,7 +771,7 @@ class ShortestPathExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"shortestpath_graph_{uuid4().hex[:8]}"
 
@@ -991,7 +991,7 @@ class NodeSimilarityExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"similarity_graph_{uuid4().hex[:8]}"
 
@@ -1144,7 +1144,7 @@ class CommonNeighborsExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         result: Dict[str, Any] = {}
 
         try:
@@ -1288,7 +1288,7 @@ class KMeansExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_neo4j()
+        store = get_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"kmeans_graph_{uuid4().hex[:8]}"
 
