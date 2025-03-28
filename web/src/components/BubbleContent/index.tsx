@@ -1,3 +1,4 @@
+import useIntlConfig from "@/hooks/useIntlConfig";
 import { CheckOutlined, CloseCircleTwoTone, LoadingOutlined } from "@ant-design/icons";
 import { ThoughtChain, ThoughtChainItem, XStream } from "@ant-design/x";
 import { Card } from "antd";
@@ -10,7 +11,7 @@ interface BubbleContentProps {
 }
 
 const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message }) => {
-
+  const { formatMessage } = useIntlConfig();
   const [lines, setLines] = useState<string[]>([]);
   const getStatusIcon = (status: ThoughtChainItem['status']) => {
     switch (status) {
@@ -88,11 +89,13 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
   }, [message, lines])
 
   return <div style={{ textAlign: 'left' }}>
-    <Card style={{ border: 'unset' }}>
-      <ThoughtChain items={items} />
-    </Card>
     {
-      content && <pre style={{ padding: 20 }}>{content}</pre>
+      content !== 'STOP' && <Card style={{ border: 'unset' }}>
+        <ThoughtChain items={items} />
+      </Card>
+    }
+    {
+      content && <pre style={{ padding: 20 }}>{content === 'STOP' ? formatMessage('home.stop') : content}</pre>
     }
   </div>
 }

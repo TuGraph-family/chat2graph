@@ -1,7 +1,9 @@
+import { useKnowledgebaseEntity } from '@/domains/entities/knowledgebase-manager';
+import useIntlConfig from '@/hooks/useIntlConfig';
 import { CloudUploadOutlined } from '@ant-design/icons';
 import { Attachments, Sender } from '@ant-design/x';
-import { UploadChangeParam } from 'antd/es/upload';
-import { GetProp, UploadFile } from 'antd/lib';
+import { RcFile, UploadChangeParam } from 'antd/es/upload';
+import { GetProp, message, UploadFile, UploadProps } from 'antd/lib';
 import React from 'react';
 
 interface Props {
@@ -9,10 +11,41 @@ interface Props {
   attachedFiles?: GetProp<typeof Attachments, 'items'>;
   onOpenChange: (open: boolean) => void;
   handleFileChange: (info: UploadChangeParam<UploadFile<any>>) => void;
+  onAddUploadId: (fileId: { file_id: string, uid: string }) => void
+  sessionId?: string;
 };
 
 const SenderHeader: React.FC<Props> = (props) => {
-  const { open, attachedFiles, onOpenChange, handleFileChange } = props;
+  const { open, attachedFiles, onOpenChange, handleFileChange, onAddUploadId, sessionId } = props;
+  const { runUploadFile } = useKnowledgebaseEntity()
+  const { formatMessage } = useIntlConfig();
+
+
+
+  const beforeUpload = async (file: RcFile) => {
+    const { type, size, name } = file
+    const fileBlob = new Blob([file], { type })
+    if (size > 20 * 1024 * 1024) {
+      message.error(formatMessage('knowledgebase.detail.upload.errorSize'))
+      return false
+    }
+    const res = await runUploadFile({
+      session_id: sessionId,
+    }, {
+      file: fileBlob,
+      filename: name
+    })
+
+    onAddUploadId({
+      file_id: res?.data?.file_id || '',
+      uid: file.uid
+    })
+
+    return res?.data?.file_id
+  }
+
+
+
 
   return <Sender.Header
     title="附件"
@@ -25,17 +58,19 @@ const SenderHeader: React.FC<Props> = (props) => {
     }}
   >
     <Attachments
-      beforeUpload={() => false}
+      beforeUpload={beforeUpload}
+      name='file'
+      accept='.pdf,.txt,.doc,.docx,.md'
       items={attachedFiles}
       onChange={handleFileChange}
       placeholder={(type) =>
         type === 'drop'
           ? { title: 'Drop file here' }
           : {
-              icon: <CloudUploadOutlined />,
-              title: '上传文件',
-              description: '点击或拖拽文件到此区域',
-            }
+            icon: <CloudUploadOutlined />,
+            title: '上传文件',
+            description: '点击或拖拽文件到此区域',
+          }
       }
     />
   </Sender.Header>

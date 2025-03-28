@@ -60,7 +60,6 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
     const beforeUpload = async (file: RcFile) => {
         const { type, size, name } = file
         const fileBlob = new Blob([file], { type })
-        console.log(fileBlob, file)
         if (size > 20 * 1024 * 1024) {
             message.error(formatMessage('knowledgebase.detail.upload.errorSize'))
             return false
@@ -81,7 +80,7 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
 
     const props: UploadProps = {
         name: 'file',
-        accept: '.pdf,.txt,.doc,.docx',
+        accept: '.pdf,.txt,.doc,.docx,.md',
         maxCount: 1,
         beforeUpload,
     }

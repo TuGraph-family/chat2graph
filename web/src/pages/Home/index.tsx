@@ -1,6 +1,6 @@
 import styles from './index.less';
-import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, FloatButton } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled } from '@ant-design/icons';
+import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, FloatButton, Badge } from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled, UploadOutlined } from '@ant-design/icons';
 import {
   Attachments,
   Bubble,
@@ -16,14 +16,17 @@ import NameEditor from '@/components/NameEditor';
 import { FRAMEWORK, FRAMEWORK_CONFIG, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
 import Placeholder from '@/components/Placeholder';
 import SenderHeader from '@/components/SenderHeader';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useSessionEntity } from '@/domains/entities';
 import useIntlConfig from '@/hooks/useIntlConfig';
 import Language from '@/components/Language';
 import logoSrc from '@/assets/logo.png';
 import BubbleContent from '@/components/BubbleContent';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const HomePage: React.FC = () => {
+
+  const { getLocalStorage, setLocalStorage } = useLocalStorage()
 
   const [state, setState] = useImmer<{
     selectedFramework?: FRAMEWORK;
@@ -35,6 +38,8 @@ const HomePage: React.FC = () => {
     content: string;
     attachedFiles: GetProp<typeof Attachments, 'items'>;
     isInit: boolean;
+    uplodaFileIds: { file_id: string, uid: string }[];
+    closeTag: boolean;
   }>({
     conversationsItems: [],
     headerOpen: false,
@@ -43,11 +48,13 @@ const HomePage: React.FC = () => {
     placeholderPromptsItems: MOCK_placeholderPromptsItems,
     content: '',
     attachedFiles: [],
-    isInit: false
+    isInit: false,
+    uplodaFileIds: [],
+    closeTag: false
   });
 
 
-  const { isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen } = state;
+  const { isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen, uplodaFileIds, closeTag } = state;
 
   const { formatMessage } = useIntlConfig();
 
@@ -59,7 +66,6 @@ const HomePage: React.FC = () => {
     runUpdateSession,
     runDeleteSession,
     runGetSessionById,
-    runGetJobById,
     runGetJobResults,
     runGetJobIdsBySessionId,
     runGetMessagesBySessionId,
@@ -78,6 +84,211 @@ const HomePage: React.FC = () => {
       }
     });
   };
+
+  let timer: any = null;
+
+  const transformMessage = (answer: any) => {
+    if (!answer) return null;
+    const { message, thinking } = answer || {};
+
+    const thinkingList = thinking?.map((item: any) => {
+      const { message: thinkMsg, metrics } = item
+
+      return {
+        payload: thinkMsg?.payload,
+        message_type: thinkMsg?.message_type,
+        status: metrics?.status,
+      }
+    })
+    return {
+      payload: message?.payload,
+      session_id: message?.session_id,
+      job_id: message?.job_id,
+      role: message?.role,
+      thinking: thinkingList,
+    }
+  }
+
+
+  const onStop = () => {
+    setLocalStorage('MESSAGE_TOP', '')
+  }
+
+  const getMessage = useCallback((job_id: string, onSuccess: (message: any) => void) => {
+    timer = setTimeout(() => {
+      runGetJobResults({
+        job_id,
+      }).then(res => {
+        const { status } = res?.data?.answer?.metrics || {};
+        if (getLocalStorage("MESSAGE_TOP") === "true") {
+          clearTimeout(timer);
+          onSuccess({
+            payload: 'STOP',
+            session_id: res?.data?.answer?.message?.session_id,
+            job_id,
+            role: res?.data?.answer?.message?.role,
+          });
+          onStop()
+          return;
+        }
+
+        if (['RUNNING', 'CREATED'].includes(status)) {
+          getMessage(job_id, onSuccess);
+          return;
+        }
+        clearTimeout(timer);
+        onSuccess(transformMessage(res?.data?.answer));
+      });
+    }, 500)
+  }, [closeTag])
+
+  const getAttached = () => {
+    const uid_list = attachedFiles?.map(item => item?.uid);
+    const attached_list: { file_id: string, message_type: string }[] = []
+
+    uplodaFileIds?.forEach(item => {
+      if (uid_list.includes(item?.uid)) {
+        attached_list.push({
+          file_id: item?.file_id,
+          message_type: 'FILE',
+        })
+      }
+    })
+
+    return attached_list
+  }
+
+  const [agent] = useXAgent<API.ChatVO>({
+    request: async ({ message: msg }, { onSuccess, onUpdate }) => {
+      const { payload = '', session_id = '', attached_messages = [] } = msg || {};
+
+      runGetJobIdsBySessionId({
+        session_id,
+      }, {
+        instruction_message: {
+          payload,
+          message_type: 'TEXT',
+        }, attached_messages
+      }).then((res: API.Result_Chat_) => {
+        const { job_id = '' } = res?.data || {};
+        getMessage(job_id, onSuccess);
+        onUpdate(res?.data || {})
+        setState((draft) => {
+          draft.uplodaFileIds = []
+          draft.attachedFiles = []
+          draft.headerOpen = false;
+        });
+
+      });
+    },
+
+  });
+  const { onRequest, parsedMessages, setMessages } = useXChat({
+    agent,
+    parser: (agentMessages) => {
+      return agentMessages;
+    }
+  });
+
+  const onRefreshUpload = () => {
+    setState((draft) => {
+      draft.activeKey = '';
+      draft.uplodaFileIds = []
+      draft.attachedFiles = []
+      draft.headerOpen = false;
+    });
+  }
+
+  // 更新输入内容
+  const updateContent = (newContent: string = '') => {
+    setState((draft) => {
+      draft.content = newContent;
+    })
+  }
+
+  const getHistoryMessage = (data: API.JobVO) => {
+
+    const { answer, question } = data || {};
+    const viewItem = [
+      {
+        id: question?.message?.id,
+        message: question?.message,
+        status: 'success',
+      },
+      {
+        id: answer?.message?.id,
+        message: transformMessage(answer),
+        status: 'success',
+      }
+    ]
+
+    return viewItem
+  }
+
+  const onConversationClick: GetProp<typeof Conversations, 'onActiveChange'> = (key: string) => {
+    runGetSessionById({
+      session_id: key,
+    }).then((res: API.Result_Session_) => {
+      if (res.success) {
+        setState((draft) => {
+          draft.activeKey = key;
+          draft.uplodaFileIds = []
+          draft.attachedFiles = []
+          draft.headerOpen = false;
+        });
+      }
+    });
+
+    runGetMessagesBySessionId({
+      session_id: key,
+    }).then((res: API.Result_Messages_) => {
+
+      if (res?.data?.length) {
+        setState((draft) => {
+          draft.isInit = true;
+        });
+      }
+      setMessages(res?.data?.map(item => getHistoryMessage(item))?.flat() || [])
+    })
+
+  };
+
+  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
+    // @ts-ignore
+    const { message, id, status, } = item;
+    return {
+      key: id,
+      loading: status === 'loading',
+      role: message?.role === 'SYSTEM' ? 'ai' : 'local',
+      content: message?.payload || formatMessage('home.noResult'),
+      avatar: message?.role === 'SYSTEM' ? {
+        icon: <img src={logoSrc} />
+      } : undefined,
+      typing: (message?.role === 'SYSTEM' && !isInit) ? { step: 3, interval: 50 } : false,
+      messageRender: (text) => {
+        return message?.role === 'SYSTEM' ? <BubbleContent status={status} message={message} content={text} /> : <pre>{text}</pre>
+      }
+    }
+  });
+
+
+
+  const onAddConversation = () => {
+    runCreateSession({
+      name: formatMessage('home.newConversation'),
+    }).then((res: API.Result_Session_) => {
+      if (res.success) {
+        getSessionList();
+        setState((draft) => {
+          draft.activeKey = res?.data?.id || '';
+        });
+        updateContent('');
+      }
+    });
+    setMessages([]);
+    onRefreshUpload()
+  };
+
 
   const menuConfig: ConversationsProps['menu'] = (conversation) => ({
     items: [
@@ -106,7 +317,12 @@ const HomePage: React.FC = () => {
               session_id: conversation.key,
             }).then((res: API.Result_Session_) => {
               if (res?.success) {
-                getSessionList();
+                getSessionList((list: any) => {
+                  if (list.length) {
+                    onConversationClick(list[0]?.id)
+                  }
+
+                });
                 message.success(formatMessage('home.deleteConversationSuccess'));
               }
             })
@@ -136,180 +352,17 @@ const HomePage: React.FC = () => {
     },
   });
 
-  let timer: any = null;
-
-
-  const transformMessage = (answer: any) => {
-    if (!answer) return null;
-    const { message, thinking } = answer || {};
-
-    const thinkingList = thinking?.map((item: any) => {
-      const { message: thinkMsg, metrics } = item
-
-      return {
-        payload: thinkMsg?.payload,
-        message_type: thinkMsg?.message_type,
-        status: metrics?.status,
-      }
-    })
-    return {
-      payload: message?.payload,
-      session_id: message?.session_id,
-      job_id: message?.job_id,
-      role: message?.role,
-      thinking: thinkingList,
-    }
-  }
-
-
-  const getMessage = (job_id: string, onSuccess: (message: any) => void) => {
-    timer = setTimeout(() => {
-      runGetJobResults({
-        job_id,
-      }).then(res => {
-        const { status } = res?.data?.answer?.metrics || {};
-
-        if (['RUNNING', 'CREATED'].includes(status)) {
-          getMessage(job_id, onSuccess);
-          return;
-        }
-        clearTimeout(timer);
-        onSuccess(transformMessage(res?.data?.answer));
-      });
-    }, 500);
-  }
-
-  const [agent] = useXAgent<API.ChatVO>({
-    request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { payload = '', session_id = '' } = msg || {};
-      runGetJobIdsBySessionId({
-        session_id,
-      }, {
-        instruction_message: {
-          payload,
-          message_type: 'TEXT',
-        }, attached_messages: []
-      }).then((res: API.Result_Chat_) => {
-        const { job_id = '' } = res?.data || {};
-        getMessage(job_id, onSuccess);
-        onUpdate(res?.data || {})
-      });
-    },
-  });
-  const { onRequest, parsedMessages, setMessages } = useXChat({
-    agent,
-    parser: (agentMessages) => {
-      return agentMessages;
-    }
-  });
-
-  const onAddConversation = () => {
-    setMessages([]);
-  };
-
-
-  const getHistoryMessage = (data: API.JobVO) => {
-
-    const { answer, question } = data || {};
-    const viewItem = [
-      {
-        id: question?.message?.id,
-        message: question?.message,
-        status: 'success',
-      },
-      {
-        id: answer?.message?.id,
-        message: transformMessage(answer),
-        status: 'success',
-      }
-    ]
-
-    return viewItem
-  }
-
-  const onConversationClick: GetProp<typeof Conversations, 'onActiveChange'> = (key: string) => {
-    runGetSessionById({
-      session_id: key,
-    }).then((res: API.Result_Session_) => {
-      if (res.success) {
-        setState((draft) => {
-          draft.activeKey = key;
-        });
-      }
-    });
-
-    runGetMessagesBySessionId({
-      session_id: key,
-    }).then((res: API.Result_Messages_) => {
-
-      if (res?.data?.length) {
-        setState((draft) => {
-          draft.isInit = true;
-        });
-        setMessages(res?.data?.map(item => getHistoryMessage(item))?.flat() || [])
-      }
-
-    })
-
-  };
-
-  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
-    // @ts-ignore
-    const { message, id, status, } = item;
-    return {
-      key: id,
-      loading: status === 'loading',
-      role: message?.role === 'SYSTEM' ? 'ai' : 'local',
-      content: message?.payload || formatMessage('home.noResult'),
-      avatar: message?.role === 'SYSTEM' ? {
-        icon: <img src={logoSrc} />
-      } : undefined,
-      typing: (message?.role === 'SYSTEM' && !isInit) ? { step: 3, interval: 50 } : false,
-      messageRender: (text) => {
-        return message?.role === 'SYSTEM' ? <BubbleContent status={status} message={message} content={text} /> : <pre>{text}</pre>
-      }
-    }
-  });
-
-
-
-  // 更新输入内容
-  const updateContent = (newContent: string = '') => {
-    setState((draft) => {
-      draft.content = newContent;
-    })
-  }
-
   const onSubmit = (nextContent: string) => {
     if (!nextContent) return;
     setState((draft) => {
       draft.isInit = false;
     });
 
-    // 新建对话
-    if (!items.length) {
-      runCreateSession({
-        name: nextContent,
-      }).then((res: API.Result_Session_) => {
-        if (res.success) {
-          getSessionList();
-          setState((draft) => {
-            draft.activeKey = res?.data?.id || '';
-          });
-          onRequest({
-            payload: nextContent,
-            session_id: res?.data?.id
-          });
-          updateContent('');
-        }
-      });
-      return;
-    }
-
     // 已有对话更新
     onRequest({
       payload: nextContent,
       session_id: state.activeKey,
+      attached_messages: getAttached()
     });
     updateContent('');
   };
@@ -338,10 +391,25 @@ const HomePage: React.FC = () => {
     })
   }, [sessions]);
 
+
+
   // 初始化请求对话列表
   useEffect(() => {
-    getSessionList();
+    getSessionList((list: any) => {
+      if (!list?.length || list[0]?.latest_job_id) {
+        onAddConversation()
+      } else {
+        onConversationClick(list[0]?.id)
+      }
+    });
+
   }, []);
+
+  const onAddUploadId = (fileId: { file_id: string, uid: string }) => {
+    setState((draft) => {
+      draft.uplodaFileIds = [...draft.uplodaFileIds, fileId]
+    })
+  }
 
   const onTranslate = (items: { labelId: string, key: string }[]): GetProp<typeof Prompts, 'items'> => {
     return items.map(item => {
@@ -358,7 +426,7 @@ const HomePage: React.FC = () => {
           <span className={styles['title-text']}>
             <img src={logoSrc} className={styles['title-logo']} />
             {
-              !collapse && <span>TuGraph</span>
+              !collapse && <span>Chat2Graph</span>
             }
           </span>
           {
@@ -382,7 +450,7 @@ const HomePage: React.FC = () => {
 
         <Tooltip title={collapse ? formatMessage('home.openNewConversation') : ''}>
           <Button
-            onClick={onAddConversation}
+            onClick={() => items?.length ? onAddConversation() : null}
             type={collapse ? 'text' : 'primary'}
             className={styles['create-conversation']}
             icon={<PlusOutlined />}
@@ -459,33 +527,35 @@ const HomePage: React.FC = () => {
             value={content}
             header={<SenderHeader
               open={headerOpen}
+              onAddUploadId={onAddUploadId}
               attachedFiles={attachedFiles}
               handleFileChange={handleFileChange}
               onOpenChange={(open: boolean) => {
                 setState((draft) => {
                   draft.headerOpen = open;
                 });
-              }} />}
+              }}
+              sessionId={activeKey} />}
             onSubmit={onSubmit}
             onChange={updateContent}
-            // 上传文件先关闭入口
-            // prefix={<Badge dot={attachedFiles.length > 0 && !headerOpen}>
-            //   <Button
-            //     type="text"
-            //     icon={<UploadOutlined />}
-            //     onClick={() => {
-            //       setState((draft) => {
-            //         draft.headerOpen = !draft.headerOpen;
-            //       })
-            //     }}
-            //     style={{
-            //       fontSize: '20px'
-            //     }}
-            //   />
-            // </Badge>
-            // }
+            prefix={<Badge dot={attachedFiles.length > 0 && !headerOpen}>
+              <Button
+                type="text"
+                icon={<UploadOutlined />}
+                onClick={() => {
+                  setState((draft) => {
+                    draft.headerOpen = !draft.headerOpen;
+                  })
+                }}
+                style={{
+                  fontSize: '20px'
+                }}
+              />
+            </Badge>
+            }
             loading={agent.isRequesting()}
             className={styles.sender}
+            onCancel={() => setLocalStorage('MESSAGE_TOP', true)}
           />
           <FloatButton
             tooltip={<div>{formatMessage('home.manager')}</div>}
@@ -503,3 +573,4 @@ const HomePage: React.FC = () => {
 };
 
 export default HomePage;
+

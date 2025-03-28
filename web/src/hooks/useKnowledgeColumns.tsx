@@ -1,4 +1,5 @@
 import useIntlConfig from "@/hooks/useIntlConfig";
+import { formatBytes } from "@/utils/formatBytes";
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Tag } from "antd"
 import dayjs from "dayjs";
@@ -34,7 +35,7 @@ export const useKnowledgeColumns = ({
             title: formatMessage('knowledgebase.detail.label4'),
             dataIndex: 'size',
             key: 'size',
-            render: (size: string) => size + 'KB'
+            render: (size: string) => formatBytes(size)
         },
         {
             title: formatMessage('knowledgebase.detail.label5'),

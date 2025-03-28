@@ -4,5 +4,5 @@ export const sessionListTranslator = (sessionList: API.SessionVO[] = []) => {
       key: session?.id || '',
       label: session?.name || '',
     };
-  }).reverse()
+  })
 };

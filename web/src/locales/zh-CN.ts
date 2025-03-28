@@ -28,7 +28,7 @@ export default {
             step2: "数据处理配置",
             upload: {
                 title: "点击上传或拖拽文档到这里",
-                description: "支持PDF、TXT、DOC、DOCX，文件大小不超过20MB",
+                description: "支持PDF、TXT、DOC、DOCX、MD，文件大小不超过20MB",
                 required: "请上传文件",
                 errorSize: "文件大小不能超过20MB",
             },
@@ -103,5 +103,6 @@ export default {
         confirm: '确认',
         cancel: '取消',
         noResult: '暂未搜索到',
+        stop: '思考已停止'
     }
 }

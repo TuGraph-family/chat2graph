@@ -28,7 +28,7 @@ export default {
             step2: "Data Processing Configuration",
             upload: {
                 title: "Click or drag file to this area to upload",
-                description: "Supports PDF, TXT, DOC, DOCX, The file size does not exceed 20MB",
+                description: "Supports PDF, TXT, DOC, DOCX, MD, The file size does not exceed 20MB",
                 required: "Please upload a file",
                 errorSize: "File size cannot exceed 20MB",
             },
@@ -102,5 +102,6 @@ export default {
         confirm: 'Confirm',
         cancel: 'Cancel',
         noResult: 'No Result',
+        stop: 'Thinking Stopped'
     }
 }

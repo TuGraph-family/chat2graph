@@ -80,13 +80,14 @@ export const useSessionEntity = () => {
     manual: true
   })
 
-  const getSessionList = () => {
+  const getSessionList = (callback?: (res: any) => void) => {
     runGetSessions({
       page: 1,
       size: 10,
     }).then(res => {
       const { data } = res || {};
       updateSessionList(sessionListTranslator(data));
+      callback?.(data)
     })
   };
 
