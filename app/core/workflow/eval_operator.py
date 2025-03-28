@@ -19,15 +19,35 @@ class EvalOperator(Operator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
-        """Execute the operator by LLM client."""
-        assert workflow_messages is not None and len(workflow_messages) > 0, (
-            "There is no workflow message(s) to be evaluated."
+        """Execute the operator by LLM client.
+
+        In this operator, the LLM client will evaluate the performance of the workflow outputs
+
+        Args:
+            reasoner (Reasoner): The reasoner.
+            job (Job): The job assigned to the expert.
+            workflow_messages (Optional[List[WorkflowMessage]]): The outputs of previous operators.
+            previous_expert_outputs (Optional[List[WorkflowMessage]]): The outputs of previous
+                experts in workflow message type.
+            lesson (Optional[str]): The lesson learned (provided by the successor expert).
+        """
+        assert workflow_messages is not None and len(workflow_messages) == 1, (
+            "There should be only one tail operator in the workflow, "
+            "so that the length of the workflow messages should be 1."
         )
+        # assume the there is only one tail operator in the workflow, so the first workflow message
+        # is the output of the evaluated operator
         previous_op_message = workflow_messages[0].scratchpad
 
-        task = self._build_task(job, workflow_messages, lesson)
+        task = self._build_task(
+            job=job,
+            workflow_messages=workflow_messages,
+            previous_expert_outputs=previous_expert_outputs,
+            lesson=lesson,
+        )
 
         result = run_async_function(reasoner.infer, task=task)
 
@@ -57,36 +77,55 @@ class EvalOperator(Operator):
         )
 
     def _build_task(
-        self, job: Job, workflow_messages: Optional[List[WorkflowMessage]], lesson: Optional[str]
+        self,
+        job: Job,
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> Task:
         rec_tools, rec_actions = self._toolkit_service.recommend_tools_actions(
             actions=self._config.actions, threshold=self._config.threshold, hops=self._config.hops
         )
 
-        # refine the workflow messages to help the LLM to evaluate the performance and the process
-        workflow_messages_copy: List[WorkflowMessage] = []
-        if workflow_messages:
-            workflow_messages_copy = [msg.copy() for msg in workflow_messages if msg.scratchpad]
-        if len(workflow_messages_copy) == 1:
-            workflow_messages_copy[0].scratchpad = (
-                "[Job execution result] (and the job does not have the [INPUT INFORMATION], so "
-                f"that the evaluation status can not be {WorkflowStatus.INPUT_DATA_ERROR.value}):\n"
-                + workflow_messages_copy[0].scratchpad
+        assert workflow_messages is not None and len(workflow_messages) == 1, (
+            "There should be only one tail operator in the workflow, "
+            "so that the length of the workflow messages should be 1."
+        )
+
+        # refine the workflow messages to help the LLM to evaluate the performance and the process.
+        # if there is no previous expert outputs, the evaluation status must not be
+        # INPUT_DATA_ERROR, because there is no previous expert.
+        # if there are previous expert outputs, it will refine the workflow messages to help the
+        # evaluator to better understand the process and the prompt.
+        merged_workflow_messages: List[WorkflowMessage] = []
+        workflow_message_copy = workflow_messages[0].copy()
+        if not previous_expert_outputs:
+            workflow_message_copy.scratchpad = (
+                f"[JOB EXECUTION RESULT]:\n{workflow_message_copy.scratchpad}\n"
+                "[JOB INPUT INFORMATION] (data/conditions/limitations):\n"
+                "The execution does not need the input information. So the evaluation status must "
+                f"not be `{WorkflowStatus.INPUT_DATA_ERROR.value}` in this special case!!!"
             )
-        elif len(workflow_messages_copy) > 1:
-            workflow_messages_copy[0].scratchpad = (
-                "[JOB EXECUTION RESULT]:\n" + workflow_messages_copy[0].scratchpad
+            merged_workflow_messages = [workflow_message_copy]
+        else:
+            workflow_message_copy.scratchpad = (
+                "[JOB EXECUTION RESULT]:\n" + workflow_message_copy.scratchpad
             )
-            for msg in workflow_messages_copy[1:]:
+            merged_workflow_messages = [workflow_message_copy]
+
+            previous_expert_outputs_copy: List[WorkflowMessage] = [
+                msg.copy() for msg in previous_expert_outputs
+            ]
+            for msg in previous_expert_outputs_copy:
                 msg.scratchpad = (
-                    "\n[INPUT INFORMATION] (data/conditions/limitations):\n" + msg.scratchpad
+                    "\n[JOB INPUT INFORMATION] (data/conditions/limitations):\n" + msg.scratchpad
                 )
-        job.context = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
+            merged_workflow_messages.extend(previous_expert_outputs_copy)
 
         task = Task(
             job=job,
             operator_config=self._config,
-            workflow_messages=workflow_messages_copy,
+            workflow_messages=merged_workflow_messages,
             tools=rec_tools,
             actions=rec_actions,
             knowledge=self.get_knowledge(job),

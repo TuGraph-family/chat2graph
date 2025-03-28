@@ -33,6 +33,7 @@ class TestAgentOperator(Operator):
         reasoner: DualModelReasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         # job1: generate numbers

@@ -29,10 +29,25 @@ class Operator:
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
-        """Execute the operator by LLM client."""
-        task = self._build_task(job, workflow_messages, lesson)
+        """Execute the operator by LLM client.
+
+        Args:
+            reasoner (Reasoner): The reasoner.
+            job (Job): The job assigned to the expert.
+            workflow_messages (Optional[List[WorkflowMessage]]): The outputs of previous operators.
+            previous_expert_outputs (Optional[List[WorkflowMessage]]): The outputs of previous
+                experts in workflow message type.
+            lesson (Optional[str]): The lesson learned (provided by the successor expert).
+        """
+        task = self._build_task(
+            job=job,
+            workflow_messages=workflow_messages,
+            previous_expert_outputs=previous_expert_outputs,
+            lesson=lesson,
+        )
 
         result = run_async_function(reasoner.infer, task=task)
 
@@ -41,18 +56,21 @@ class Operator:
     def _build_task(
         self,
         job: Job,
-        workflow_messages: Optional[List[WorkflowMessage]],
-        lesson: Optional[str],
+        workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> Task:
         rec_tools, rec_actions = self._toolkit_service.recommend_tools_actions(
             actions=self._config.actions,
             threshold=self._config.threshold,
             hops=self._config.hops,
         )
+        merged_workflow_messages: List[WorkflowMessage] = workflow_messages or []
+        merged_workflow_messages.extend(previous_expert_outputs or [])
         task = Task(
             job=job,
             operator_config=self._config,
-            workflow_messages=workflow_messages,
+            workflow_messages=merged_workflow_messages,
             tools=rec_tools,
             actions=rec_actions,
             knowledge=self.get_knowledge(job),

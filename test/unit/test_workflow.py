@@ -68,6 +68,7 @@ class MockOperator(Operator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         self._execution_order.append(self._config.id)
@@ -133,6 +134,7 @@ def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
             reasoner: Reasoner,
             job: Job,
             workflow_messages: Optional[List[WorkflowMessage]] = None,
+            previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
             lesson: Optional[str] = None,
         ) -> WorkflowMessage:
             raise ValueError("Test error")

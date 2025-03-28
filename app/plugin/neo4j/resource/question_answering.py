@@ -1,8 +1,8 @@
 from typing import List, Optional, Tuple
 from uuid import uuid4
 
-from app.core.toolkit.tool import Tool
 from app.core.service.knowledge_base_service import KnowledgeBaseService
+from app.core.toolkit.tool import Tool
 
 
 class KnowledgeBaseRetriever(Tool):
@@ -27,12 +27,14 @@ class KnowledgeBaseRetriever(Tool):
         Returns:
             str: The related content and reference name in knowledge base.
         """
-
-        knowledge = KnowledgeBaseService.instance.get_knowledge(question, session_id)
+        knowledge_service: KnowledgeBaseService = KnowledgeBaseService.instance
+        knowledge = knowledge_service.get_knowledge(question, session_id)
         if len(knowledge.global_chunks) == 0 and len(knowledge.local_chunks) == 0:
-            return "Knowledge base does not have the related knowledge you need, please consider generate the answer by yourself."
-        else:
-            return knowledge.get_payload()
+            return (
+                "Knowledge base does not have the related knowledge you need, "
+                "please consider generate the answer by yourself."
+            )
+        return knowledge.get_payload()
 
 
 class InternetRetriever(Tool):
@@ -57,39 +59,5 @@ class InternetRetriever(Tool):
             Tuple[List[str], List[str]]: The list of related webpage contents and the list of URL
             references.
         """
-
-        # TODO: implement a web search sdk
+        # TODO: implement a web search tool
         return [], []
-
-
-class ReferenceGenerator(Tool):
-    """Tool for generating rich text references."""
-
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id or str(uuid4()),
-            name=self.reference_listing.__name__,
-            description=self.reference_listing.__doc__ or "",
-            function=self.reference_listing,
-        )
-
-    async def reference_listing(
-        self, knowledge_base_references: List[str], internet_references: List[str]
-    ) -> List[str]:
-        """Return a rich text references list for better presentation given the list of references.
-
-        Args:
-            knowledge_base_references (List[str]): references from knowledge base.
-            internet_references (List[str]): references from internet.
-
-        Returns:
-            str: The rich text to demonstrate all references.
-        """
-
-        reference_list: List[str] = []
-        for knowledge_base_ref in knowledge_base_references:
-            reference_list.append(f"[{knowledge_base_ref}]()")
-        for inernet_ref in internet_references:
-            reference_list.append(f"[网页链接]({inernet_ref})")
-
-        return reference_list

@@ -64,7 +64,8 @@ def main():
     result: WorkflowMessage = operator.execute(
         reasoner=reasoner,
         job=job,
-        workflow_messages=[execution_message, input_message_1, input_message_2],
+        workflow_messages=[input_message_1, input_message_2],
+        previous_expert_outputs=[execution_message],
     )
 
     assert result.status == WorkflowStatus.EXECUTION_ERROR

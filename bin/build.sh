@@ -17,6 +17,8 @@ npm run build || { echo "npm run build failed"; }
 cp -rf ./dist/* ../app/server/web || { echo "Failed to copy dist contents"; }
 rm -rf ./dist || { echo "Failed to remove dist directory"; }
 
-# return to root directory
+# drop database
 cd ..
+python app/core/dal/drop_db.py || { echo "Failed to drop database"; }
+
 echo "Build successful!"

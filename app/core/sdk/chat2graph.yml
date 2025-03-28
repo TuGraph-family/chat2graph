@@ -86,10 +86,6 @@ tools:
     name: "InternetRetriever"
     module_path: "app.plugin.neo4j.resource.question_answering"
 
-  - &reference_generator_tool
-    name: "ReferenceGenerator"
-    module_path: "app.plugin.neo4j.resource.question_answering"
-
 actions:
   # graph modeling actions
   - &content_understanding_action
@@ -225,9 +221,7 @@ actions:
 
   - &reference_listing_action
     name: "reference_listing"
-    desc: "调用reference_list工具，以markdown格式返回推理过程中所涉及的原文出处链接，方便展示"
-    tools:
-      - *reference_generator_tool
+    desc: "以markdown格式返回推理过程中所涉及的原文出处链接，方便展示"
 
 toolkit:
   - [
@@ -495,7 +489,7 @@ operators:
     instruction: |
       你是一位文档总结专家,擅长总结归纳不同来源的文档。你需要根据用户的问题，总结归纳出用户需要的答案。
 
-      基于检索得到的文档内容,完成以下文档总结任务:
+      基于检索得到的文档内容，根据具体的情况，完成以下文档总结任务:
 
       1. 分别总结不同来源的文档内容
       - 总结从知识库中检索得到问题相关内容
@@ -509,6 +503,7 @@ operators:
       - 对用户提出的问题生成一个回答
       - 如果来自文档的内容对回答问题有所帮助，则参考来自文档的内容总结，优化回答内容
       - 如果回答中设计了来自知识库中的内容，提供回答中涉及的原文出处，给出一个List，其中包含markdown格式的原文链接
+      - 如果没有检索到能帮助回答的相关文档，请你根据大模型自身的知识和经验，回答问题（避免你的 hallucination，不需要提供 reference）
     output_schema: |
       answer: 针对用户问题的最终回答，如果无法有效回答，则明确说明自己无法回答用户的问题
       references: ["回答生成", "过程中", "参考的", "文档原文的", "markdown格式", "链接"]

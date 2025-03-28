@@ -162,7 +162,7 @@ class DualModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
-            previous_input = "Here is the previous job execution's output:\n" + "\n".join(
+            previous_input = "\n".join(
                 [f"{workflow_message.scratchpad}" for workflow_message in task.workflow_messages]
             )
         else:

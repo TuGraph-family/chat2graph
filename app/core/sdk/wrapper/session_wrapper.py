@@ -129,4 +129,6 @@ class SessionWrapper:
             message_views.append("[User Question]")
             message_views.append(cast(str, current_question_message.get_payload()).strip())
 
+        message_views.append("---- End of Conversation History ----")
+
         return "\n".join(message_views)

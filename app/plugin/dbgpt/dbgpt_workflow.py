@@ -28,20 +28,26 @@ class DbgptWorkflow(Workflow):
         if self._operator_graph.number_of_nodes() == 0:
             raise ValueError("There is no operator in the workflow.")
 
-        def _merge_workflow_messages(*args) -> Tuple[Job, List[WorkflowMessage], Optional[str]]:
-            """Combine the ouputs from the previous MapOPs and the InputOP."""
+        def _merge_workflow_messages(
+            *args,
+        ) -> Tuple[Job, List[WorkflowMessage], List[WorkflowMessage], Optional[str]]:
+            """Combine the outputs from the previous MapOPs and the InputOP."""
             job: Optional[Job] = None
-            workflow_messages: List[WorkflowMessage] = []
+            previous_expert_outputs: List[WorkflowMessage] = []
+            previous_operator_outputs: List[WorkflowMessage] = []
             lesson: Optional[str] = None
 
             for arg in args:
                 if isinstance(arg, tuple):
+                    # the Tuple[Job, List[WorkflowMessage], Optional[str]] comes from
+                    # the job assigned to expert, outputs of previous experts,
+                    # and lesson learned (provided by the successor expert)
                     for item in arg:
                         if isinstance(item, Job):
                             job = item
                         elif isinstance(item, list):
                             if all(isinstance(i, WorkflowMessage) for i in item):
-                                workflow_messages.extend(item)
+                                previous_expert_outputs.extend(item)
                             else:
                                 raise ValueError(
                                     "Unknown data type in workflow message list: "
@@ -52,14 +58,15 @@ class DbgptWorkflow(Workflow):
                         elif item is not None:
                             raise ValueError(f"Unknown data type in tuple: {type(item)}")
                 elif isinstance(arg, WorkflowMessage):
-                    workflow_messages.append(arg)
+                    # the workflow message from the previous operator
+                    previous_operator_outputs.append(arg)
                 else:
                     raise ValueError(f"Unknown data type: {type(arg)}")
 
             if not job:
                 raise ValueError("No job provided in the workflow.")
 
-            return job, workflow_messages, lesson
+            return job, previous_expert_outputs, previous_operator_outputs, lesson
 
         with DAG("dbgpt_workflow"):
             input_op = InputOperator(input_source=SimpleCallDataInputSource())
@@ -120,4 +127,4 @@ class DbgptWorkflow(Workflow):
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         """Execute the workflow."""
-        return run_async_function(workflow.call, call_data=(job, workflow_messages, lesson))
+        return run_async_function(workflow.call, call_data=(job, workflow_messages, [], lesson))

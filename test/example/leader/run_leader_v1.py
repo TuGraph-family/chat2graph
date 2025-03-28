@@ -32,6 +32,7 @@ class BaseTestOperator(Operator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         raise NotImplementedError
@@ -45,6 +46,7 @@ class NumberGeneratorOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         last_line = job.context.strip().split("\n")[-1]
@@ -63,6 +65,7 @@ class MultiplyByTwoOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         assert workflow_messages is not None, "Workflow messages should not be None"
@@ -82,6 +85,7 @@ class AddTenOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         assert workflow_messages is not None, "Workflow messages should not be None"
@@ -101,6 +105,7 @@ class SumOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         assert workflow_messages is not None, "Workflow messages should not be None"
@@ -120,6 +125,7 @@ class FormatResultOperator(BaseTestOperator):
         reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         assert workflow_messages is not None, "Workflow messages should not be None"
