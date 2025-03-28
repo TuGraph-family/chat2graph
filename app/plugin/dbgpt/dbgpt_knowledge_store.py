@@ -94,7 +94,7 @@ class GraphKnowledgeStore(KnowledgeStore):
         )
         self._graph_store = CommunitySummaryKnowledgeGraph(
             config=config,
-            name="Tu_" + name.replace("-", ""),
+            name=SystemEnv.TUGRAPH_NAME_PREFIX + name.replace("-", ""),
             embedding_fn=DefaultEmbeddingFactory.remote(
                 api_url=SystemEnv.EMBEDDING_MODEL_API_URL,
                 api_key=SystemEnv.EMBEDDING_API_KEY,
