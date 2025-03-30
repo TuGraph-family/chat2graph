@@ -207,6 +207,8 @@ class AgenticService(metaclass=Singleton):
                 else:
                     raise ValueError("Operator chain in the workflow cannot be empty.")
 
-            expert_wrapper.evaluator().build()
+            # do not set the evaluator in the workflow
+            # expert_wrapper.evaluator().build()
+            expert_wrapper.build()
 
         return mas

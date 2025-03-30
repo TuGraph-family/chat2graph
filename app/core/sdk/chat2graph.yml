@@ -96,7 +96,7 @@ actions:
 
   - &concept_identification_action
     name: "concept_identification"
-    desc: "识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系"
+    desc: "识别并提取文档中的关键概念和术语（通过文本的形式），对概念进行分类，建立层级关系"
 
   - &relation_pattern_recognition_action
     name: "relation_pattern_recognition"

@@ -7,6 +7,9 @@ dist
 venv
 __pycache__
 
+# ignore db instances
+**/*.db
+
 app/server/web/*
 web/node_modules
 web/.env.local
