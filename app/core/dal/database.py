@@ -6,10 +6,9 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.core.common.system_env import SystemEnv
 
-# check if the instance folder exists
-project_root = Path(__file__).parents[3]
-instance_path = project_root / "instance"
-instance_path.mkdir(exist_ok=True)
+# check if the system folder exists
+system_path = SystemEnv.APP_ROOT + SystemEnv.SYSTEM_PATH
+Path(system_path).mkdir(exist_ok=True)
 
 # engine and session factory
 engine = create_engine(

@@ -7,7 +7,6 @@ dist
 venv
 __pycache__
 
-**/*.db
 app/server/web/*
 web/node_modules
 web/.env.local
