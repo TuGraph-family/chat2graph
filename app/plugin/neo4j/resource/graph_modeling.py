@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
+from app.core.service.file_service import FileService
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.graph_store import get_graph_db
 from app.plugin.neo4j.resource.doc import SIMPLE_DOC_CONTENT
@@ -43,6 +44,7 @@ class VertexLabelGenerator(Tool):
 
     async def create_vertex_label_by_json_schema(
         self,
+        file_service: FileService,
         label: str,
         properties: List[Dict[str, Union[str, bool]]],
         primary: str = "id",
@@ -119,9 +121,9 @@ class VertexLabelGenerator(Tool):
                 session.run(statement)
 
             # update schema file
-            schema = await SchemaManager.read_schema()
+            schema = await SchemaManager.read_schema(file_service=file_service)
             schema["nodes"][label] = {"primary_key": primary, "properties": property_details}
-            await SchemaManager.write_schema(schema)
+            await SchemaManager.write_schema(file_service=file_service, schema=schema)
 
             return f"Successfully created label {label}"
 
@@ -139,6 +141,7 @@ class EdgeLabelGenerator(Tool):
 
     async def create_edge_label_by_json_schema(
         self,
+        file_service: FileService,
         label: str,
         properties: List[Dict[str, Union[str, bool]]],
         primary: str = "id",
@@ -221,9 +224,9 @@ class EdgeLabelGenerator(Tool):
                 session.run(statement)
 
         # update schema file
-        schema = await SchemaManager.read_schema()
+        schema = await SchemaManager.read_schema(file_service=file_service)
         schema["relationships"][label] = {"primary_key": primary, "properties": property_details}
-        await SchemaManager.write_schema(schema)
+        await SchemaManager.write_schema(file_service=file_service, schema=schema)
 
         return f"Successfully configured relationship type {label}"
 

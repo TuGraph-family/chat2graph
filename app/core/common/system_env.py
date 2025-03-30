@@ -32,6 +32,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "DATABASE_POOL_PRE_PING": (bool, True),
     "KNOWLEDGE_STORE_PATH": (str, "/knowledge_bases"),
     "APP_ROOT": (str, f"{os.path.expanduser('~')}/.chat2graph"),
+    "SCHEMA_FILE_ID": (str, "schema_file_id"),
     "EMBEDDING_MODEL_NAME": (str, "text-embedding-3-small"),
     "EMBEDDING_MODEL_API_URL": (str, None),
     "EMBEDDING_API_KEY": (str, None),

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.core.service.file_service import FileService
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.graph_store import get_graph_db
 from app.plugin.neo4j.resource.doc import QUERY_GRAMMER
@@ -18,7 +19,7 @@ class SchemaGetter(Tool):
             function=self.get_schema,
         )
 
-    async def get_schema(self) -> str:
+    async def get_schema(self, file_service: FileService) -> str:
         """Get the schema of the graph database.
 
         Args:
@@ -27,7 +28,7 @@ class SchemaGetter(Tool):
         Returns:
             str: The schema of the graph database in string format
         """
-        schema = await SchemaManager.read_schema()
+        schema = await SchemaManager.read_schema(file_service=file_service)
 
         result = "# Neo4j Graph Schema\n\n"
 

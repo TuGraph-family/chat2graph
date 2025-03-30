@@ -19,7 +19,7 @@ class FileService(metaclass=Singleton):
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
 
-    def calculate_md5(self, file: FileStorage) -> str:
+    def _calculate_md5(self, file: FileStorage) -> str:
         """Calculate the MD5 hash of a file."""
         file_hash = hashlib.md5()
         while chunk := file.read(8192):
@@ -36,7 +36,7 @@ class FileService(metaclass=Singleton):
         Returns:
             str: ID of the file
         """
-        md5_hash = self.calculate_md5(file)
+        md5_hash = self._calculate_md5(file)
         md5_folder = self._upload_folder + f"/{md5_hash}/"
         if not os.path.exists(md5_folder):
             os.makedirs(md5_folder)
@@ -73,6 +73,15 @@ class FileService(metaclass=Singleton):
         else:
             raise ValueError(f"Cannot find file with ID {id}.")
 
+    def read_file(self, file_id: str) -> str:
+        """Read the content of a file with ID and return it as a string."""
+        file_do = self._file_descriptor_dao.get_by_id(id=file_id)
+        if file_do:
+            file_path = os.path.join(file_do.path, file_do.name)
+            with open(file_path, encoding="utf-8") as f:
+                return f.read()
+        raise ValueError(f"Cannot find file with ID {id}.")
+
     def get_file_descriptor(self, file_id: str) -> FileDescriptor:
         """Get the content of a file with ID.
 
@@ -91,3 +100,17 @@ class FileService(metaclass=Singleton):
                 timestamp=int(file_do.timestamp),
             )
         raise ValueError(f"Cannot find file with ID {id}.")
+
+    def write_file_content(self, file_path: str, content: str) -> None:
+        """Write content to a file.
+
+        Args:
+            file_path (str): Path to the file
+            content (str): Content to write
+        """
+        directory = os.path.dirname(file_path)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content)
