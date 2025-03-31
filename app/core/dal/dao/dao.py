@@ -76,13 +76,13 @@ class Dao(Generic[T], metaclass=Singleton):
         result = self.get_by_id(id)
         if result is None:
             raise ValueError(f"{self._model.__name__} with id {id} not found")
+
+        self.session.refresh(result)
         return result
 
-    def delete(self, id: str) -> Optional[T]:
+    def delete(self, id: str):
         """Delete an object."""
-        obj = self.get_by_id(id)
-
         with self.new_session() as s:
             s.query(self._model).filter_by(id=id).delete()
 
-        return obj
+

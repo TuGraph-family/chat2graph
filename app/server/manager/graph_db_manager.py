@@ -20,17 +20,7 @@ class GraphDBManager:
             Tuple[Dict[str, Any], str]: A tuple containing GraphDB details and success message
         """
         graph_db = self._graph_db_service.create_graph_db(graph_db_config=graph_db_config)
-        config_data = {
-            "id": graph_db.id,
-            "ip": graph_db.ip,
-            "port": graph_db.port,
-            "user": graph_db.user,
-            "pwd": graph_db.pwd,
-            "desc": graph_db.desc,
-            "name": graph_db.name,
-            "is_default_db": graph_db.is_default_db,
-        }
-        return config_data, "GraphDB created successfully"
+        return graph_db.to_dict(), "GraphDB created successfully"
 
     def get_graph_db(self, id: str) -> Tuple[Dict[str, Any], str]:
         """Get GraphDB details by ID.
@@ -42,17 +32,7 @@ class GraphDBManager:
             Tuple[Dict[str, Any], str]: A tuple containing GraphDB details and success message
         """
         graph_db = self._graph_db_service.get_graph_db(id=id)
-        data = {
-            "id": graph_db.id,
-            "ip": graph_db.ip,
-            "port": graph_db.port,
-            "user": graph_db.user,
-            "pwd": graph_db.pwd,
-            "desc": graph_db.desc,
-            "name": graph_db.name,
-            "is_default_db": graph_db.is_default_db,
-        }
-        return data, "GraphDB fetched successfully"
+        return graph_db.to_dict(), "GraphDB fetched successfully"
 
     def delete_graph_db(self, id: str) -> Tuple[Dict[str, Any], str]:
         """Delete a GraphDB by ID.
@@ -77,17 +57,7 @@ class GraphDBManager:
                 message
         """
         graph_db = self._graph_db_service.update_graph_db(graph_db_config=graph_db_config)
-        config_data = {
-            "id": graph_db.id,
-            "ip": graph_db.ip,
-            "port": graph_db.port,
-            "user": graph_db.user,
-            "pwd": graph_db.pwd,
-            "desc": graph_db.desc,
-            "name": graph_db.name,
-            "is_default_db": graph_db.is_default_db,
-        }
-        return config_data, "GraphDB updated successfully"
+        return graph_db.to_dict(), "GraphDB updated successfully"
 
     def get_all_graph_db_configs(self) -> Tuple[List[dict], str]:
         """Get all GraphDBs.
@@ -97,16 +67,7 @@ class GraphDBManager:
         """
         graph_db_configs = self._graph_db_service.get_all_graph_dbs()
         graph_db_list = [
-            {
-                "id": graph_db.id,
-                "ip": graph_db.ip,
-                "port": graph_db.port,
-                "user": graph_db.user,
-                "pwd": graph_db.pwd,
-                "desc": graph_db.desc,
-                "name": graph_db.name,
-                "is_default_db": graph_db.is_default_db,
-            }
+            graph_db.to_dict()
             for graph_db in graph_db_configs
         ]
         return graph_db_list, "Get all GraphDBs successfully"

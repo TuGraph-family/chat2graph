@@ -1,13 +1,13 @@
 import os
 
+import pyfiglet  # type: ignore
 from flask import Flask, send_from_directory
 from flask_cors import CORS  # type: ignore
-import pyfiglet  # type: ignore
 
 from app.core.dal.init_db import init_db
 from app.core.sdk.agentic_service import AgenticService
 from app.server.api import register_blueprints
-from app.server.common.util import ApiException, make_error_response
+from app.server.common.util import make_error
 
 
 def create_app():
@@ -40,9 +40,9 @@ def create_app():
 
     register_blueprints(app)
 
-    @app.errorhandler(ApiException)
-    def handle_base_exception(e):
-        return make_error_response(e.status_code, e.message)
+    @app.errorhandler(Exception)
+    def handle_base_exception(e: Exception):
+        return make_error(e)
 
     return app
 

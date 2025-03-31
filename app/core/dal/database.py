@@ -19,5 +19,5 @@ engine = create_engine(
     pool_recycle=SystemEnv.DATABASE_POOL_RECYCLE,
     pool_pre_ping=SystemEnv.DATABASE_POOL_PRE_PING,
 )
-DbSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DbSession = sessionmaker(autocommit=False, autoflush=True, bind=engine)
 Do: DeclarativeMeta = declarative_base()

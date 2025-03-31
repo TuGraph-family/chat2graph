@@ -1,3 +1,5 @@
+import sys
+import traceback
 from typing import Any, Optional
 
 from flask import jsonify
@@ -11,13 +13,18 @@ class ApiException(Exception):
         self.status_code: int = status_code
 
 
-def make_response(success: bool, data: Optional[Any] = None, message: str = "") -> Any:
+def make_response(data: Optional[Any] = None, message: str = "") -> Any:
     """Create a JSON response."""
-    response = {"success": success, "data": data if data is not None else {}, "message": message}
-    return jsonify(response), 200 if success else 400
+    response = {"success": True, "data": data, "message": message}
+    return jsonify(response), 200
 
 
-def make_error_response(status_code, message):
+def make_error(e: Exception):
     """Create a JSON error response."""
-    response = {"success": False, "data": {}, "message": message}
-    return jsonify(response), status_code
+
+    traceback.print_exc()
+
+    exc_type, exc_value, _ = sys.exc_info()
+    return jsonify(
+        {"success": False, "message": f"{exc_type.__name__}: {exc_value}"}
+    ), 200
