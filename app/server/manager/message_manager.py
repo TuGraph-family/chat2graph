@@ -1,11 +1,12 @@
 from typing import Any, Dict, Tuple
 
 from app.core.common.type import ChatMessageRole
-from app.core.model.message import ChatMessage, TextMessage
+from app.core.model.message import ChatMessage, HybridMessage, TextMessage
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
+from app.core.service.session_service import SessionService
 from app.server.manager.view.message_view import MessageViewTransformer
 
 
@@ -14,6 +15,7 @@ class MessageManager:
 
     def __init__(self):
         self._agentic_service: AgenticService = AgenticService.instance
+        self._session_service: SessionService = SessionService.instance
         self._message_service: MessageService = MessageService.instance
         self._job_service: JobService = JobService.instance
         self._agent_service: AgentService = AgentService.instance
@@ -35,6 +37,14 @@ class MessageManager:
             payload="",  # TODO: to be handled
         )
         self._message_service.save_message(message=system_chat_message)
+
+        # update the attributes of the session
+        if isinstance(chat_message, TextMessage):
+            session_wrapper.session.name = chat_message.get_payload()
+        if isinstance(chat_message, HybridMessage):
+            session_wrapper.session.name = chat_message.get_instruction_message().get_payload()
+        session_wrapper.session.latest_job_id = job_wrapper.id
+        self._session_service.save_session(session=session_wrapper.session)
 
         # use MessageView to serialize the message for API response
         system_data = self._message_view.serialize_message(system_chat_message)

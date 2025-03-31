@@ -22,6 +22,8 @@ class SchemaGetter(Tool):
     async def get_schema(self, file_service: FileService) -> str:
         """Get the schema of the graph database."""
         schema = await SchemaManager.read_schema(file_service=file_service)
+        if len(schema) == 0:
+            return "The schema is not defined yet. Please define the schema first."
 
         result = "# Neo4j Graph Schema\n\n"
 

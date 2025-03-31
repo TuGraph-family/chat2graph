@@ -17,6 +17,8 @@ class GraphDbDao(Dao[GraphDbDo]):
         return self.session.query(self._model).filter_by(is_default_db=True).first()
 
     def set_as_default(self, id):
+        """Set a graph db as default. If another db is already default, unset it. It is assumed that
+        there is only one default db at a time."""
         default_db = self.get_by_default()
         if default_db and default_db.id == id:
             return
@@ -28,4 +30,3 @@ class GraphDbDao(Dao[GraphDbDo]):
         with self.new_session() as s:
             s.query(self._model).filter_by(id=default_db.id).update({"is_default_db": False})
             s.query(self._model).filter_by(id=id).update({"is_default_db": True})
-

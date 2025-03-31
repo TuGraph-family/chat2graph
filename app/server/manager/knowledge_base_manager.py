@@ -1,6 +1,5 @@
 from typing import Any, Dict, Tuple
 
-from app.core.common.type import KnowledgeStoreType
 from app.core.knowledge.knowledge_config import KnowledgeConfig
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.session_service import SessionService

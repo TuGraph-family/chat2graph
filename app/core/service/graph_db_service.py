@@ -91,10 +91,10 @@ class GraphDbService(metaclass=Singleton):
             raise ValueError(f"GraphDB with ID {id} not found")
 
         # check default flag
-        if graph_db.is_default_db and not is_default_db:
-            raise ValueError(f"At least one default GraphDB required")
+        if graph_db_do.is_default_db and not graph_db_config.is_default_db:
+            raise ValueError("At least one default GraphDB required")
 
-        if not graph_db.is_default_db and is_default_db:
+        if not graph_db_do.is_default_db and graph_db_config.is_default_db:
             self._graph_db_dao.set_as_default(id=id)
 
         update_fields = {

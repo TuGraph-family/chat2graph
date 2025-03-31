@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Any, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generator, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy.orm import DeclarativeBase, Session as SqlAlchemySession
 
@@ -18,10 +18,12 @@ class Dao(Generic[T], metaclass=Singleton):
 
     @property
     def session(self) -> SqlAlchemySession:
+        """Get the session."""
         return self._session
 
     @contextmanager
-    def new_session(self) -> SqlAlchemySession:
+    def new_session(self) -> Generator[SqlAlchemySession, None, None]:
+        """Create a new session."""
         session = DbSession()
         try:
             yield session
@@ -39,7 +41,13 @@ class Dao(Generic[T], metaclass=Singleton):
             s.add(obj)
             s.commit()
 
-            return self.get_by_id(obj.id)
+            assert hasattr(obj, "id") and obj.id is not None, (
+                "Object ID should not be None after commit"
+            )
+            result = self.get_by_id(obj.id)
+            if result is None:
+                raise ValueError(f"Failed to create {self._model.__name__}")
+            return result
 
     def get_by_id(self, id: str) -> Optional[T]:
         """Get an object by ID."""
@@ -62,9 +70,13 @@ class Dao(Generic[T], metaclass=Singleton):
         kwargs.pop("id", None)
         if len(kwargs) != 0:
             with self.new_session() as s:
-                s.query(self._model).filter_by(id=id).update({**kwargs})
+                # add synchronize_session parameter to satisfy type checker
+                s.query(self._model).filter_by(id=id).update(kwargs, synchronize_session=False)  # type: ignore[arg-type]
 
-        return self.get_by_id(id)
+        result = self.get_by_id(id)
+        if result is None:
+            raise ValueError(f"{self._model.__name__} with id {id} not found")
+        return result
 
     def delete(self, id: str) -> Optional[T]:
         """Delete an object."""
@@ -74,4 +86,3 @@ class Dao(Generic[T], metaclass=Singleton):
             s.query(self._model).filter_by(id=id).delete()
 
         return obj
-

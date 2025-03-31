@@ -27,6 +27,21 @@ class SessionService(metaclass=Singleton):
             id=str(result.id), name=name, timestamp=int(result.timestamp), latest_job_id=None
         )
 
+    def save_session(self, session: Session) -> Session:
+        """Save the session by ID."""
+        session_do: SessionDo = self._session_dao.update(
+            id=session.id,
+            name=session.name,
+            timestamp=session.timestamp,
+            latest_job_id=session.latest_job_id,
+        )
+        return Session(
+            id=str(session_do.id),
+            name=cast(Optional[str], session_do.name),
+            timestamp=cast(Optional[int], session_do.timestamp),
+            latest_job_id=cast(Optional[str], session_do.latest_job_id),
+        )
+
     def get_session(self, session_id: Optional[str] = None) -> Session:
         """Get the session by ID. If ID is not provided, create a new session.
         If the session already exists, return the existing session.
