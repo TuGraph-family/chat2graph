@@ -32,7 +32,7 @@ def create_graph_db():
         name=data.get("name"),
         desc=data.get("desc"),
         host=data.get("host"),
-        port=data.get("port"),
+        port=int(data.get("port")),
         user=data.get("user"),
         pwd=data.get("pwd"),
         default_schema=data.get("default_schema"),
