@@ -10,7 +10,7 @@ class GraphDbConfig:
     """GraphDbConfig class"""
     type: GraphDbType
     name: str
-    ip: str
+    host: str
     port: int
     id: Optional[str] = None
     create_time: Optional[int] = None
@@ -30,7 +30,7 @@ class GraphDbConfig:
             type=GraphDbType(do.type),
             name=do.name,
             desc=do.desc,
-            ip=do.ip,
+            host=do.host,
             port=int(do.port),
             user=do.user,
             pwd=do.pwd,
@@ -51,4 +51,4 @@ class Neo4jDbConfig(GraphDbConfig):
     @property
     def uri(self) -> str:
         """Get the connection URI."""
-        return f"bolt://{self.ip}:{self.port}"
+        return f"bolt://{self.host}:{self.port}"

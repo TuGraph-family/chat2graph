@@ -25,23 +25,20 @@ def create_graph_db():
     data: Dict[str, Any] = cast(Dict[str, Any], request.json)
     required_fields = ["type", "name", "host", "port"]
     if not data or not all(field in data for field in required_fields):
-        raise ApiException(
-            "Missing required fields. Required: type, name, host, port"
-        )
+        raise ApiException(f"Missing required fields: {required_fields}")
 
-    graph_db_config = GraphDbConfig(
+    graph_db = GraphDbConfig(
         type=GraphDbType(data.get("type").upper()),
         name=data.get("name"),
         desc=data.get("desc"),
-        ip=data.get("host"),
+        host=data.get("host"),
         port=data.get("port"),
         user=data.get("user"),
         pwd=data.get("pwd"),
         default_schema=data.get("default_schema"),
         is_default_db=data.get("is_default_db"),
     )
-    new_graph_db, message = manager.create_graph_db(
-        graph_db_config=graph_db_config)
+    new_graph_db, message = manager.create_graph_db(graph_db_config=graph_db)
     return make_response(data=new_graph_db, message=message)
 
 
@@ -67,21 +64,20 @@ def update_graph_db_by_id(graph_db_id: str):
     manager = GraphDBManager()
     data: Dict[str, Any] = cast(Dict[str, Any], request.json)
 
-    graph_db_config = GraphDbConfig(
+    graph_db = GraphDbConfig(
         id=graph_db_id,
         type=GraphDbType(data["type"]) if data["type"] else None,
         name=data["name"],
         desc=data["desc"],
-        ip=data["host"],
+        host=data["host"],
         port=data["port"],
         user=data["user"],
         pwd=data["pwd"],
         is_default_db=data["is_default_db"],
         default_schema=data["default_schema"],
     )
-    updated_graph_db, message = manager.update_graph_db(
-        graph_db_config=graph_db_config)
-    return make_response(data=updated_graph_db, message=message)
+    result, message = manager.update_graph_db(graph_db_config=graph_db)
+    return make_response(data=result, message=message)
 
 
 @graphdbs_bp.route("/validate_connection", methods=["POST"])
@@ -89,15 +85,14 @@ def validate_graph_connection():
     """Validate connection to a GraphDB."""
     manager = GraphDBManager()
     data: Dict[str, Any] = cast(Dict[str, Any], request.json)
-    required_fields = ["ip", "port", "user", "pwd"]
+    required_fields = ["host", "port", "user", "pwd"]
     if not data or not all(field in data for field in required_fields):
-        raise ApiException(
-            "Missing required fields. Required: ip, port, user, pwd")
+        raise ApiException(f"Missing required fields: {required_fields}")
 
     graph_db_config = GraphDbConfig(
         type=GraphDbType(data.get("type").upper()),
         name="",
-        ip=data.get("host"),
+        host=data.get("host"),
         port=data.get("port"),
         user=data.get("user"),
         pwd=data.get("pwd"),

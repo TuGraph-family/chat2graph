@@ -14,7 +14,7 @@ class GraphDbDo(Do):  # type: ignore
     type = Column(String(36), nullable=False)
     name = Column(String(36), nullable=False)
     desc = Column(Text, nullable=True)
-    ip = Column(String(128), nullable=False)
+    host = Column(String(128), nullable=False)
     port = Column(Integer, nullable=False)
     user = Column(String(36), nullable=True)
     pwd = Column(String(36), nullable=True)
