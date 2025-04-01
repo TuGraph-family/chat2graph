@@ -16,7 +16,6 @@ from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, WorkflowMessage
 from app.core.prompt.job import JOB_DECOMPOSITION_PROMPT
-from app.core.service.job_service import JobService
 
 
 class Leader(Agent):
@@ -31,7 +30,6 @@ class Leader(Agent):
         super().__init__(agent_config=agent_config, id=id)
         # self._workflow of the leader is used to decompose the job
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
-        self._job_service: JobService = JobService.instance
 
     def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
         """Decompose the job into subjobs.

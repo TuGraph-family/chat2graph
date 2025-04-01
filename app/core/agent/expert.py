@@ -7,8 +7,6 @@ from app.core.common.type import JobStatus, WorkflowStatus
 from app.core.model.job import SubJob
 from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
-from app.core.service.job_service import JobService
-from app.core.service.message_service import MessageService
 
 
 class Expert(Agent):
@@ -23,22 +21,19 @@ class Expert(Agent):
         Returns:
             Job: The job with the response (WorkflowMessage).
         """
-        message_service: MessageService = MessageService.instance
-        job_service: JobService = JobService.instance
-
         # TODO: convert to a state machine (?)
 
         # get the job from the agent message
         job_id = agent_message.get_job_id()
-        job: SubJob = job_service.get_subjob(subjob_id=job_id)
+        job: SubJob = self._job_service.get_subjob(subjob_id=job_id)
 
         # get the workflow messages from the agent message
         workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
 
         # update the job status to running
-        job_result = job_service.get_job_result(job_id=job.id)
+        job_result = self._job_service.get_job_result(job_id=job.id)
         job_result.status = JobStatus.RUNNING
-        job_service.save_job_result(job_result=job_result)
+        self._job_service.save_job_result(job_result=job_result)
 
         # execute the workflow of the expert
         try:
@@ -60,7 +55,7 @@ class Expert(Agent):
             )
 
         # save the workflow message in the database
-        message_service.save_message(message=workflow_message)
+        self._message_service.save_message(message=workflow_message)
 
         if workflow_message.status == WorkflowStatus.SUCCESS:
             # (1) WorkflowStatus.SUCCESS
@@ -71,7 +66,7 @@ class Expert(Agent):
             try:
                 existed_expert_message: AgentMessage = cast(
                     AgentMessage,
-                    message_service.get_message_by_job_id(
+                    self._message_service.get_message_by_job_id(
                         job_id=job.id, message_type=MessageType.AGENT_MESSAGE
                     )[0],
                 )
@@ -90,12 +85,12 @@ class Expert(Agent):
                     workflow_messages=[workflow_message],
                     payload=workflow_message.scratchpad,
                 )
-            message_service.save_message(message=expert_message)
+            self._message_service.save_message(message=expert_message)
 
             # (1.2) save the job result in the database
-            job_result = job_service.get_job_result(job_id=job.id)
+            job_result = self._job_service.get_job_result(job_id=job.id)
             job_result.status = JobStatus.FINISHED
-            job_service.save_job_result(job_result=job_result)
+            self._job_service.save_job_result(job_result=job_result)
 
             return expert_message
         if workflow_message.status == WorkflowStatus.EXECUTION_ERROR:
@@ -114,11 +109,11 @@ class Expert(Agent):
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
             if retry_count >= max_retry_count:
                 # (2.1) save the expert message in the database
-                message_service.save_message(message=agent_message)
+                self._message_service.save_message(message=agent_message)
 
                 # (2.2) save the expert message in the database
                 try:
-                    job_result = job_service.get_job_result(job_id=job.id)
+                    job_result = self._job_service.get_job_result(job_id=job.id)
                     job_result.status = JobStatus.FAILED
                 except Exception:
                     # if the job result is not found, create a new job result
@@ -128,7 +123,7 @@ class Expert(Agent):
                         duration=0,  # TODO: calculate the duration
                         tokens=0,  # TODO: calculate the tokens
                     )
-                job_service.save_job_result(job_result=job_result)
+                self._job_service.save_job_result(job_result=job_result)
 
                 # TODO: return the error message to the user
                 raise Exception(
@@ -152,7 +147,7 @@ class Expert(Agent):
             try:
                 existed_expert_message = cast(
                     AgentMessage,
-                    message_service.get_message_by_job_id(
+                    self._message_service.get_message_by_job_id(
                         job_id=job.id, message_type=MessageType.AGENT_MESSAGE
                     )[0],
                 )
@@ -170,7 +165,7 @@ class Expert(Agent):
                     lesson=lesson,
                     payload=workflow_message.scratchpad,
                 )
-            message_service.save_message(message=expert_message)
+            self._message_service.save_message(message=expert_message)
 
             return expert_message
         if workflow_message.status == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR:
@@ -187,7 +182,7 @@ class Expert(Agent):
             try:
                 existed_expert_message = cast(
                     AgentMessage,
-                    message_service.get_message_by_job_id(
+                    self._message_service.get_message_by_job_id(
                         job_id=job.id, message_type=MessageType.AGENT_MESSAGE
                     )[0],
                 )
@@ -205,7 +200,7 @@ class Expert(Agent):
                     lesson=lesson,
                     payload=workflow_message.scratchpad,
                 )
-            message_service.save_message(message=expert_message)
+            self._message_service.save_message(message=expert_message)
 
             return expert_message
         raise Exception("The workflow status is not defined.")

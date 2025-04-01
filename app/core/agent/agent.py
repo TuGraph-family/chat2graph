@@ -4,6 +4,8 @@ from typing import Any, Optional
 
 from app.core.model.message import AgentMessage
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.job_service import JobService
+from app.core.service.message_service import MessageService
 from app.core.workflow.workflow import Workflow
 
 
@@ -57,6 +59,9 @@ class Agent(ABC):
         self._profile: Profile = agent_config.profile
         self._workflow: Workflow = agent_config.workflow
         self._reasoner: Reasoner = agent_config.reasoner
+
+        self._message_service: MessageService = MessageService.instance
+        self._job_service: JobService = JobService.instance
 
     def get_id(self) -> str:
         """Get the unique identifier of the agent."""

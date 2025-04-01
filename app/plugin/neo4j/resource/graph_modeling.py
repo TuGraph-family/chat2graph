@@ -4,7 +4,6 @@ from uuid import uuid4
 from app.core.service.file_service import FileService
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.graph_store import get_graph_db
-from app.plugin.neo4j.resource.doc import SIMPLE_DOC_CONTENT
 from app.plugin.neo4j.resource.read_doc import SchemaManager
 
 
@@ -28,11 +27,7 @@ class DocumentReader(Tool):
         Returns:
             The content of the document.
         """
-        try:
-            return file_service.read_file(file_id=file_id)
-        except Exception:
-            # TODO: move the mocked content
-            return SIMPLE_DOC_CONTENT
+        return file_service.read_file(file_id=file_id)
 
 
 class VertexLabelGenerator(Tool):
