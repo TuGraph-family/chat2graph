@@ -33,7 +33,7 @@ class MessageService(metaclass=Singleton):
         results: List[TextMessageDo] = self._message_dao.get_text_message_by_job_id_and_role(
             job_id=job_id, role=role
         )
-        assert len(results) == 1, f"Job {job_id} has multiple or not text messages by system."
+        assert len(results) == 1, f"Job {job_id} has multiple or not text messages by {role.value}."
 
         result = results[0]
         return cast(TextMessage, self._message_dao.parse_into_message(message_do=result))

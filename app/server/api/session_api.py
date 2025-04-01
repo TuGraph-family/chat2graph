@@ -24,6 +24,7 @@ def get_sessions():
     sessions, message = manager.get_all_sessions(size=size, page=page)
     return make_response(data=sessions, message=message)
 
+
 @sessions_bp.route("/", methods=["POST"])
 def create_session():
     """Create a new session."""
@@ -129,7 +130,6 @@ def get_conversion_view(session_id: str):
     """
     manager = SessionManager()
 
-    message_view_datas, message = manager.get_conversation_views(
-        session_id=session_id)
+    message_view_datas, message = manager.get_conversation_views(session_id=session_id)
 
     return make_response(data=message_view_datas, message=message)

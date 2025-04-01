@@ -22,9 +22,9 @@ class Task:
         tools (List[Action]): The tools recommended by the toolkit for the operator.
         actions (List[Action]): The actions recommended by the toolkit for the operator.
         knowledge (Optional[Knowledge]): The knowledge from the knowledge base.
-        insights (List[Insight]): The insights from the environment.
-        lesson (str): The lesson learned from the job execution.
-        file_descriptors (List[FileDescriptor]): The file descriptors.
+        insights (Optional[List[Insight]]): The insights from the environment.
+        lesson (Optional[str]): The lesson learned from the job execution.
+        file_descriptors (Optional[List[FileDescriptor]]): The file descriptors.
     """
 
     job: Job

@@ -25,6 +25,7 @@ def make_error(e: Exception):
     traceback.print_exc()
 
     exc_type, exc_value, _ = sys.exc_info()
-    return jsonify(
-        {"success": False, "message": f"{exc_type.__name__}: {exc_value}"}
-    ), 200
+    error_type = exc_type.__name__ if exc_type is not None else type(e).__name__
+    error_value = str(exc_value) if exc_value is not None else str(e)
+
+    return jsonify({"success": False, "message": f"{error_type}: {error_value}"}), 200

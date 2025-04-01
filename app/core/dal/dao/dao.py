@@ -84,5 +84,3 @@ class Dao(Generic[T], metaclass=Singleton):
         """Delete an object."""
         with self.new_session() as s:
             s.query(self._model).filter_by(id=id).delete()
-
-

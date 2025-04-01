@@ -28,11 +28,12 @@ def get_graph_db(config: Optional[Neo4jDbConfig] = None) -> GraphStore:
     """Initialize neo4j store with configuration."""
     try:
         config = config or Neo4jDbConfig(
+            type=SystemEnv.GRAPH_DB_TYPE,
+            name=SystemEnv.GRAPH_DB_NAME,
             host=SystemEnv.GRAPH_DB_HOST,
             port=SystemEnv.GRAPH_DB_PORT,
             user=SystemEnv.GRAPH_DB_USERNAME,
             pwd=SystemEnv.GRAPH_DB_PASSWORD,
-            name=SystemEnv.GRAPH_DB_NAME,
         )
         store = GraphStore(config)
         print(f"[log] get graph: {config.name}")

@@ -106,11 +106,11 @@ class FileStorageType(Enum):
     """File storage type."""
 
     LOCAL = "LOCAL"
+    REMOTE = "REMOTE"
+
 
 class GraphDbType(Enum):
     """Graph Database type."""
 
     NEO4J = "NEO4J"
     TUGRAPH = "TUGRAPH"
-
-

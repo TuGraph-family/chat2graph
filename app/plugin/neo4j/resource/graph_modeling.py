@@ -19,16 +19,20 @@ class DocumentReader(Tool):
             function=self.read_document,
         )
 
-    async def read_document(self) -> str:
+    async def read_document(self, file_service: FileService, file_id: str) -> str:
         """Read the document content given the document name and chapter name.
 
         Args:
-            None
+            file_id (str): The ID of the file to be used to fetch the doc content.
 
         Returns:
             The content of the document.
         """
-        return SIMPLE_DOC_CONTENT
+        try:
+            return file_service.read_file(file_id=file_id)
+        except Exception:
+            # TODO: move the mocked content
+            return SIMPLE_DOC_CONTENT
 
 
 class VertexLabelGenerator(Tool):

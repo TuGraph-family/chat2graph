@@ -38,12 +38,11 @@ class MessageManager:
         )
         self._message_service.save_message(message=system_chat_message)
 
-        # update the attributes of the session
+        # update the name of the session
         if isinstance(chat_message, TextMessage):
             session_wrapper.session.name = chat_message.get_payload()
         if isinstance(chat_message, HybridMessage):
             session_wrapper.session.name = chat_message.get_instruction_message().get_payload()
-        session_wrapper.session.latest_job_id = job_wrapper.id
         self._session_service.save_session(session=session_wrapper.session)
 
         # use MessageView to serialize the message for API response

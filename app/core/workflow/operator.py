@@ -1,13 +1,17 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from app.core.common.async_func import run_async_function
 from app.core.env.insight.insight import Insight
-from app.core.model.job import Job
+from app.core.model.file_descriptor import FileDescriptor
+from app.core.model.job import Job, SubJob
 from app.core.model.knowledge import Knowledge
-from app.core.model.message import WorkflowMessage
+from app.core.model.message import FileMessage, HybridMessage, MessageType, WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.file_service import FileService
+from app.core.service.job_service import JobService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
+from app.core.service.message_service import MessageService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator_config import OperatorConfig
 
@@ -23,6 +27,9 @@ class Operator:
     def __init__(self, config: OperatorConfig):
         self._config: OperatorConfig = config
         self._toolkit_service: ToolkitService = ToolkitService.instance
+        self._file_service: FileService = FileService.instance
+        self._message_service: MessageService = MessageService.instance
+        self._job_service: JobService = JobService.instance
 
     def execute(
         self,
@@ -67,6 +74,28 @@ class Operator:
         )
         merged_workflow_messages: List[WorkflowMessage] = workflow_messages or []
         merged_workflow_messages.extend(previous_expert_outputs or [])
+
+        # get the file descriptors, to provide some way of an access to the content of the files
+        file_descriptors: List[FileDescriptor] = []
+        if isinstance(job, SubJob):
+            original_job_id: Optional[str] = job.original_job_id
+            assert original_job_id is not None, "SubJob must have an original job id"
+            hybrid_messages: List[HybridMessage] = cast(
+                List[HybridMessage],
+                self._message_service.get_message_by_job_id(
+                    job_id=original_job_id, message_type=MessageType.HYBRID_MESSAGE
+                ),
+            )
+            for hybrid_message in hybrid_messages:
+                # get the file descriptors from the hybrid message
+                attached_messages = hybrid_message.get_attached_messages()
+                for attached_message in attached_messages:
+                    if isinstance(attached_message, FileMessage):
+                        file_descriptor = self._file_service.get_file_descriptor(
+                            file_id=attached_message.get_file_id()
+                        )
+                        file_descriptors.append(file_descriptor)
+
         task = Task(
             job=job,
             operator_config=self._config,
@@ -76,6 +105,7 @@ class Operator:
             knowledge=self.get_knowledge(job),
             insights=self.get_env_insights(),
             lesson=lesson,
+            file_descriptors=file_descriptors,
         )
         return task
 

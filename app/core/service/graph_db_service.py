@@ -93,20 +93,17 @@ class GraphDbService(metaclass=Singleton):
         }
 
         if fields_to_update:
+            assert graph_db_config.id is not None, "ID must be provided for update"
             result = self._graph_db_dao.update(id=graph_db_config.id, **fields_to_update)
             return GraphDbConfig.from_do(result)
 
         return GraphDbConfig.from_do(graph_db_do)
 
-
     def get_all_graph_dbs(self) -> List[GraphDbConfig]:
         """Get all GraphDBs."""
 
         results = self._graph_db_dao.get_all()
-        return [
-            GraphDbConfig.from_do(result)
-            for result in results
-        ]
+        return [GraphDbConfig.from_do(result) for result in results]
 
     def validate_graph_db_connection(self, graph_db_config: GraphDbConfig) -> bool:
         """Validate connection to a graph database."""

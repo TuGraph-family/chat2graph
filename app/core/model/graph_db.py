@@ -1,5 +1,5 @@
-from dataclasses import dataclass, asdict
-from typing import Optional
+from dataclasses import asdict, dataclass
+from typing import Optional, cast
 
 from app.core.common.type import GraphDbType
 from app.core.dal.do.graph_db_do import GraphDbDo
@@ -8,6 +8,7 @@ from app.core.dal.do.graph_db_do import GraphDbDo
 @dataclass
 class GraphDbConfig:
     """GraphDbConfig class"""
+
     type: GraphDbType
     name: str
     host: str
@@ -23,18 +24,19 @@ class GraphDbConfig:
 
     @staticmethod
     def from_do(do: GraphDbDo):
+        """Create a GraphDbConfig instance from a GraphDbDo object."""
         return GraphDbConfig(
-            id=do.id,
-            create_time=do.create_time,
-            update_time=do.update_time,
+            id=str(do.id),
+            create_time=int(do.create_time),
+            update_time=int(do.update_time),
             type=GraphDbType(do.type),
-            name=do.name,
-            desc=do.desc,
-            host=do.host,
+            name=str(do.name),
+            desc=cast(str, do.desc),
+            host=str(do.host),
             port=int(do.port),
-            user=do.user,
-            pwd=do.pwd,
-            default_schema=do.default_schema,
+            user=cast(str, do.user),
+            pwd=cast(str, do.pwd),
+            default_schema=cast(str, do.default_schema),
             is_default_db=bool(do.is_default_db),
         )
 

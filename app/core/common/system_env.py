@@ -5,6 +5,7 @@ from typing import Any, Dict, Tuple, Type
 from dotenv import load_dotenv
 
 from app.core.common.type import (
+    GraphDbType,
     KnowledgeStoreType,
     ModelPlatformType,
     WorkflowPlatformType,
@@ -31,7 +32,6 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "DATABASE_POOL_RECYCLE": (int, 3600),
     "DATABASE_POOL_PRE_PING": (bool, True),
     "APP_ROOT": (str, f"{os.path.expanduser('~')}/.chat2graph"),
-    "SCHEMA_FILE_ID": (str, "schema_file_id"),
     "SYSTEM_PATH": (str, "/system"),
     "FILE_PATH": (str, "/files"),
     "KNOWLEDGE_STORE_PATH": (str, "/knowledge_bases"),
@@ -45,11 +45,14 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "GRAPH_KNOWLEDGE_STORE_PASSWORD": (str, "73@TuGraph"),
     "GRAPH_KNOWLEDGE_STORE_HOST": (str, "127.0.0.1"),
     "GRAPH_KNOWLEDGE_STORE_PORT": (str, "7687"),
+    "GRAPH_DB_TYPE": (GraphDbType, GraphDbType.NEO4J),
     "GRAPH_DB_HOST": (str, "localhost"),
     "GRAPH_DB_PORT": (int, 7687),
     "GRAPH_DB_USERNAME": (str, None),
     "GRAPH_DB_PASSWORD": (str, None),
     "GRAPH_DB_NAME": (str, None),
+    "SCHEMA_FILE_NAME": (str, "graph.db.schema.json"),
+    "SCHEMA_FILE_ID": (str, "schema_file_id"),
 }
 
 # system environment variable value cache.

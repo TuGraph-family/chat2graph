@@ -66,7 +66,7 @@ def update_graph_db_by_id(graph_db_id: str):
 
     graph_db = GraphDbConfig(
         id=graph_db_id,
-        type=GraphDbType(data["type"]) if data["type"] else None,
+        type=GraphDbType(data.get("type", GraphDbType.NEO4J.value)),
         name=data["name"],
         desc=data["desc"],
         host=data["host"],
@@ -97,6 +97,5 @@ def validate_graph_connection():
         user=data.get("user"),
         pwd=data.get("pwd"),
     )
-    is_valid, message = manager.validate_graph_db_connection(
-        graph_db_config=graph_db_config)
+    is_valid, message = manager.validate_graph_db_connection(graph_db_config=graph_db_config)
     return make_response(data={"is_valid": is_valid}, message=message)

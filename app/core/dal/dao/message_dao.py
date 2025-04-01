@@ -166,6 +166,41 @@ class MessageDao(Dao[MessageDo]):
                 timestamp=int(message_do.timestamp),
                 assigned_expert_name=str(message_do.assigned_expert_name),
             )
+        if message_type == MessageType.FILE_MESSAGE:
+            assert len(list(message_do.related_message_ids)) == 1, (
+                f"File message {message_do.id} should have only one file id. File id(s) :{list(message_do.related_message_ids)}"
+            )
+            return FileMessage(
+                id=str(message_do.id),
+                file_id=str(list(message_do.related_message_ids)[0]),
+                session_id=str(message_do.session_id),
+                timestamp=int(message_do.timestamp),
+            )
+
+        if message_type == MessageType.HYBRID_MESSAGE:
+            instruction_results: List[TextMessageDo] = self.get_text_message_by_job_id_and_role(
+                job_id=str(message_do.job_id), role=ChatMessageRole.USER
+            )
+            assert len(instruction_results) == 1, (
+                f"Job {message_do} has multiple or not text messages by {ChatMessageRole.USER.value}."
+            )
+            instruction_message: TextMessage = cast(
+                TextMessage,
+                self.parse_into_message(message_do=instruction_results[0]),
+            )
+
+            return HybridMessage(
+                id=str(message_do.id),
+                instruction_message=instruction_message,
+                job_id=str(message_do.job_id),
+                session_id=str(message_do.session_id),
+                # load the attached messages from the database
+                attached_messages=[
+                    cast(FileMessage, self.get_message(id=str(attached_id)))
+                    for attached_id in list(message_do.related_message_ids)
+                ],
+                timestamp=int(message_do.timestamp),
+            )
 
         # TODO: support more message types
         raise ValueError(f"Unsupported message type: {message_type}")

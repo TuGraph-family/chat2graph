@@ -1,8 +1,8 @@
 import os
 
-import pyfiglet  # type: ignore
 from flask import Flask, send_from_directory
 from flask_cors import CORS  # type: ignore
+import pyfiglet  # type: ignore
 
 from app.core.dal.init_db import init_db
 from app.core.sdk.agentic_service import AgenticService

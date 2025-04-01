@@ -18,11 +18,11 @@ def upload_file(session_id: str):
     if file.filename == "":
         raise ApiException("No selected file")
 
-    result, message = manager.upload_file(file=file, session_id=session_id)
+    result, message = manager.upload_file(file=file)
     return make_response(data=result, message=message)
 
 
-@files_bp.route("/<string:file_id>/", methods=["DELETE"])
+@files_bp.route("/<string:file_id>", methods=["DELETE"])
 def delete_file(file_id: str):
     """Delete a file from the server."""
 

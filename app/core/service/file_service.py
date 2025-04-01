@@ -1,5 +1,6 @@
 import hashlib
 import os
+from typing import Optional
 
 from werkzeug.datastructures import FileStorage
 
@@ -15,7 +16,7 @@ class FileService(metaclass=Singleton):
 
     def __init__(self):
         self._file_descriptor_dao: FileDescriptorDao = FileDescriptorDao.instance
-        self._upload_folder = SystemEnv.APP_ROOT + SystemEnv.FILE_PATH
+        self._upload_folder: str = SystemEnv.APP_ROOT + SystemEnv.FILE_PATH
         if not os.path.exists(self._upload_folder):
             os.makedirs(self._upload_folder)
 
@@ -26,12 +27,14 @@ class FileService(metaclass=Singleton):
             file_hash.update(chunk)
         return file_hash.hexdigest()
 
-    def upload_file(self, file: FileStorage, session_id: str) -> str:
-        """Upload a new file.
+    def upload_or_update_file(self, file: FileStorage, file_id: Optional[str] = None) -> str:
+        """Upload a new file or update an existing file with the file id.
 
         Args:
             file (FileStorage): file
-            session_id (str): ID of the session
+            file_id (Optional[str]): ID of the file to update. If provided and exists,
+                the file with this ID will be updated.
+                If not provided or not found, a new file will be created.
 
         Returns:
             str: ID of the file
@@ -40,15 +43,52 @@ class FileService(metaclass=Singleton):
         md5_folder = self._upload_folder + f"/{md5_hash}/"
         if not os.path.exists(md5_folder):
             os.makedirs(md5_folder)
-            file_path = os.path.join(md5_folder, file.filename)
-            file.seek(0)
-            file.save(file_path)
-        file_path = os.path.join(md5_folder, os.listdir(md5_folder)[0])
+
+        # save the file
+        file_path = os.path.join(md5_folder, file.filename)
+        file.seek(0)
+        file.save(file_path)
+
+        if file_id:
+            existing_file_do = self._file_descriptor_dao.get_by_id(id=file_id)
+            if existing_file_do:
+                # remove the old file
+                old_path = existing_file_do.path
+                old_file_path = os.path.join(old_path, existing_file_do.name)
+
+                # check if there is any other record using the same flolder
+                other_records = self._file_descriptor_dao.filter_by(path=old_path)
+                other_records = [r for r in other_records if r.id != file_id]
+
+                # if the old path is different from the new one and no other records using it
+                if old_path != md5_folder and len(other_records) == 0:
+                    try:
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                        if os.path.exists(old_path) and len(os.listdir(old_path)) == 0:
+                            os.rmdir(old_path)
+                    except Exception:
+                        print(
+                            "Warning: Failed to update the file storage, "
+                            f"when removing the {old_file_path}. "
+                        )
+
+                # update existing file record
+                self._file_descriptor_dao.update(
+                    id=file_id,
+                    name=file.filename,
+                    path=md5_folder,
+                    type=FileStorageType.LOCAL.value,
+                    size=os.path.getsize(file_path),
+                )
+                return file_id
+
+        # create new file record
         result = self._file_descriptor_dao.create(
+            id=file_id,  # allow id to be None for new records
             name=file.filename,
             path=md5_folder,
             type=FileStorageType.LOCAL.value,
-            session_id=session_id,
             size=os.path.getsize(file_path),
         )
         return str(result.id)
@@ -58,11 +98,10 @@ class FileService(metaclass=Singleton):
 
         Args:
             file (FileStorage): file
-            session_id (str): ID of the session
         """
-        file_do = self._file_descriptor_dao.get_by_id(id=id)
-        if file_do:
-            path = file_do.path
+        file_descriptor_do = self._file_descriptor_dao.get_by_id(id=id)
+        if file_descriptor_do:
+            path = file_descriptor_do.path
             self._file_descriptor_dao.delete(id=id)
             results = self._file_descriptor_dao.filter_by(path=path)
             if len(results) == 0:
@@ -88,16 +127,16 @@ class FileService(metaclass=Singleton):
         Args:
             file_id (str): ID of the file
         """
-        file_do = self._file_descriptor_dao.get_by_id(id=file_id)
-        if file_do:
+        file_descriptor_do = self._file_descriptor_dao.get_by_id(id=file_id)
+        if file_descriptor_do:
             return FileDescriptor(
                 id=file_id,
-                path=str(file_do.path),
-                name=str(file_do.name),
-                type=FileStorageType(file_do.path),
-                size=str(file_do.size),
+                path=str(file_descriptor_do.path),
+                name=str(file_descriptor_do.name),
+                type=FileStorageType(str(file_descriptor_do.type)),
+                size=str(file_descriptor_do.size),
                 status=KnowledgeStoreFileStatus.SUCCESS,
-                timestamp=int(file_do.timestamp),
+                timestamp=int(file_descriptor_do.timestamp),
             )
         raise ValueError(f"Cannot find file with ID {id}.")
 

@@ -11,7 +11,7 @@ class FileManager:
     def __init__(self):
         self._file_service: FileService = FileService.instance
 
-    def upload_file(self, file: FileStorage, session_id: str) -> Tuple[Dict[str, Any], str]:
+    def upload_file(self, file: FileStorage) -> Tuple[Dict[str, Any], str]:
         """Upload a file.
 
         Args:
@@ -21,7 +21,7 @@ class FileManager:
             Tuple[Dict[str, Any], str]: A tuple containing upload status and success message
         """
 
-        file_id = self._file_service.upload_file(file, session_id)
+        file_id = self._file_service.upload_or_update_file(file)
         data = {"file_id": file_id}
         return data, "File uploaded successfully"
 

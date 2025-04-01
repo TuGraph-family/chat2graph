@@ -14,6 +14,5 @@ class FileDescriptorDo(Do):  # type: ignore
     name = Column(String(36), nullable=False)
     path = Column(String(256), nullable=False)
     type = Column(String(36), nullable=False)
-    session_id = Column(String(36), nullable=False)  # FK constraint
     timestamp = Column(BigInteger, server_default=func.strftime("%s", "now"))
     size = Column(String(36), nullable=False)
