@@ -90,7 +90,6 @@ const Graphdb: React.FC = () => {
       onClose={() => setState((draft) => { draft.open = false; draft.editId = null })}
       onFinish={onRefresh}
       formatMessage={formatMessage}
-      is_default_db={!databaseEntity?.databaseList?.length}
     />
   </div>
 }

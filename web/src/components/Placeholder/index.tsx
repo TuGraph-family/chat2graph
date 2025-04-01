@@ -4,6 +4,7 @@ import { Space } from 'antd';
 import { GetProp } from 'antd/lib';
 import React from 'react';
 import logoSrc from '@/assets/logo.png';
+import styles from './index.less';
 
 interface Props {
   placeholderPromptsItems: GetProp<typeof Prompts, 'items'>;
@@ -13,25 +14,23 @@ interface Props {
 const Placeholder: React.FC<Props> = (props) => {
   const { placeholderPromptsItems, onPromptsItemClick } = props;
   const { formatMessage } = useIntlConfig();
-  return <Space direction="vertical" size={16}>
-    <Welcome
-      variant="borderless"
-      title={<img src={logoSrc} width={240} />}
-      description={formatMessage('home.description')}
-    />
-    <Prompts
-      items={placeholderPromptsItems}
-      styles={{
-        list: {
-          width: '100%',
-        },
-        item: {
-          flex: 1,
-        },
-      }}
-      onItemClick={onPromptsItemClick}
-    />
-  </Space>
+  return <div className={styles.placeholder}>
+    <img src={logoSrc} width={40} style={{ marginRight: 8 }} />
+    <Space direction="vertical" size={16} style={{ marginBottom: 120 }}>
+      <Welcome
+        title={formatMessage('home.title')}
+        description={formatMessage('home.description')}
+      />
+      <Prompts
+        items={placeholderPromptsItems}
+        title="💡试试这样问："
+        vertical
+
+        onItemClick={onPromptsItemClick}
+      />
+    </Space>
+  </div>
+
 };
 
 export default Placeholder

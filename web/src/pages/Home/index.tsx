@@ -1,5 +1,5 @@
 import styles from './index.less';
-import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, FloatButton, Badge } from 'antd';
+import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, Badge } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled, UploadOutlined } from '@ant-design/icons';
 import {
   Attachments,
@@ -89,15 +89,16 @@ const HomePage: React.FC = () => {
 
   const transformMessage = (answer: any) => {
     if (!answer) return null;
-    const { message, thinking } = answer || {};
+    const { message, thinking, metrics } = answer || {};
 
     const thinkingList = thinking?.map((item: any) => {
-      const { message: thinkMsg, metrics } = item
+      const { message: thinkMsg, metrics, job } = item
 
       return {
         payload: thinkMsg?.payload,
         message_type: thinkMsg?.message_type,
         status: metrics?.status,
+        job
       }
     })
     return {
@@ -106,6 +107,7 @@ const HomePage: React.FC = () => {
       job_id: message?.job_id,
       role: message?.role,
       thinking: thinkingList,
+      status: metrics?.status
     }
   }
 
@@ -114,7 +116,7 @@ const HomePage: React.FC = () => {
     setLocalStorage('MESSAGE_TOP', '')
   }
 
-  const getMessage = useCallback((job_id: string, onSuccess: (message: any) => void) => {
+  const getMessage = useCallback((job_id: string, onSuccess: (message: any) => void, onUpdate: (message: any) => void) => {
     timer = setTimeout(() => {
       runGetJobResults({
         job_id,
@@ -127,13 +129,15 @@ const HomePage: React.FC = () => {
             session_id: res?.data?.answer?.message?.session_id,
             job_id,
             role: res?.data?.answer?.message?.role,
+            thinking: []
           });
           onStop()
           return;
         }
 
         if (['RUNNING', 'CREATED'].includes(status)) {
-          getMessage(job_id, onSuccess);
+          onUpdate(transformMessage(res?.data?.answer))
+          getMessage(job_id, onSuccess, onUpdate);
           return;
         }
         clearTimeout(timer);
@@ -171,7 +175,7 @@ const HomePage: React.FC = () => {
         }, attached_messages
       }).then((res: API.Result_Chat_) => {
         const { job_id = '' } = res?.data || {};
-        getMessage(job_id, onSuccess);
+        getMessage(job_id, onSuccess, onUpdate);
         onUpdate(res?.data || {})
         setState((draft) => {
           draft.uplodaFileIds = []
@@ -256,9 +260,10 @@ const HomePage: React.FC = () => {
   const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
     // @ts-ignore
     const { message, id, status, } = item;
+    console.log(parsedMessages)
     return {
       key: id,
-      loading: status === 'loading',
+      loading: message?.role === 'SYSTEM' && !message?.thinking,
       role: message?.role === 'SYSTEM' ? 'ai' : 'local',
       content: message?.payload || formatMessage('home.noResult'),
       avatar: message?.role === 'SYSTEM' ? {
@@ -266,7 +271,7 @@ const HomePage: React.FC = () => {
       } : undefined,
       typing: (message?.role === 'SYSTEM' && !isInit) ? { step: 3, interval: 50 } : false,
       messageRender: (text) => {
-        return message?.role === 'SYSTEM' ? <BubbleContent status={status} message={message} content={text} /> : <pre>{text}</pre>
+        return message?.role === 'SYSTEM' ? <BubbleContent status={message?.status} message={message} content={text} /> : <pre>{text}</pre>
       }
     }
   });
@@ -471,7 +476,25 @@ const HomePage: React.FC = () => {
             menu={menuConfig}
           />
         </Spin>
+
         <p className={styles.tips}>{formatMessage('home.tips')}</p>
+
+        <Tooltip title={collapse ? formatMessage('home.manager') : ''}>
+          <Button
+            onClick={() => {
+              window.open('/manager', '_blank')
+            }}
+            type={'text'}
+            className={`${styles['go-manager']} ${collapse ? styles['go-manager-collapsed'] : ''}`}
+            style={collapse ? { bottom: 52 } : {}}
+            icon={<LayoutFilled />}
+            size='large'
+            block
+            ghost={collapse ? true : false}
+          >
+            {collapse ? '' : formatMessage('home.manager')}
+          </Button>
+        </Tooltip>
         {
           collapse ? <Tooltip
             title={formatMessage('home.collapse')}
@@ -507,21 +530,6 @@ const HomePage: React.FC = () => {
         />
 
         <footer className={styles.footer}>
-          {/* 框架 */}
-          <Flex wrap gap={12}>
-            {FRAMEWORK_CONFIG.map(item => <Button
-              key={item.key}
-              type={state.selectedFramework === item.key ? 'primary' : 'default'}
-              onClick={() => {
-                setState((draft) => {
-                  draft.selectedFramework = draft.selectedFramework === item.key ? undefined : item.key;
-                })
-              }}
-            >
-              {formatMessage(item.textId)}
-            </Button>)}
-          </Flex>
-
           {/* 输入框 */}
           <Sender
             value={content}
@@ -538,37 +546,58 @@ const HomePage: React.FC = () => {
               sessionId={activeKey} />}
             onSubmit={onSubmit}
             onChange={updateContent}
-            prefix={<Badge dot={attachedFiles.length > 0 && !headerOpen}>
-              <Button
-                type="text"
-                icon={<UploadOutlined />}
-                onClick={() => {
-                  setState((draft) => {
-                    draft.headerOpen = !draft.headerOpen;
-                  })
-                }}
-                style={{
-                  fontSize: '20px'
-                }}
-              />
-            </Badge>
-            }
-            loading={agent.isRequesting()}
+            actions={false}
+            placeholder={formatMessage('home.placeholder')}
             className={styles.sender}
             onCancel={() => setLocalStorage('MESSAGE_TOP', true)}
-          />
-          <FloatButton
-            tooltip={<div>{formatMessage('home.manager')}</div>}
-            shape="circle"
-            type="primary"
-            icon={<LayoutFilled />}
-            onClick={() => {
-              window.open('/manager', '_blank')
+            footer={({ components }) => {
+              const { SendButton, LoadingButton } = components;
+              return (
+                <Flex justify="space-between" align="center">
+                  <Flex gap="small" align="center">
+                    <Badge dot={attachedFiles.length > 0 && !headerOpen}>
+                      <Button
+                        type="text"
+                        icon={<UploadOutlined />}
+                        onClick={() => {
+                          setState((draft) => {
+                            draft.headerOpen = !draft.headerOpen;
+                          })
+                        }}
+                        style={{
+                          fontSize: '20px'
+                        }}
+                      />
+
+                    </Badge>
+                    {FRAMEWORK_CONFIG.map(item => <Button
+                      key={item.key}
+                      type={state.selectedFramework === item.key ? 'primary' : 'default'}
+                      onClick={() => {
+                        setState((draft) => {
+                          draft.selectedFramework = draft.selectedFramework === item.key ? undefined : item.key;
+                        })
+                      }}
+                    >
+                      {formatMessage(item.textId)}
+                    </Button>)}
+
+                  </Flex>
+                  <Flex align="center">
+                    {agent.isRequesting() ? (
+                      <LoadingButton type="default" />
+                    ) : (
+                      <SendButton type="primary" disabled={false} />
+                    )}
+                  </Flex>
+                </Flex>
+              );
             }}
           />
+
         </footer>
       </div>
-    </div>
+    </div >
   );
 };
 

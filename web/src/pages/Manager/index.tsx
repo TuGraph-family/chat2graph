@@ -9,6 +9,8 @@ import { historyPushLinkAt } from '@/utils/link';
 import Graphdb from '@/pages/Graphdb';
 import Language from '@/components/Language';
 import { FolderOutlined, ReadOutlined } from '@ant-design/icons';
+import logoSrc from '@/assets/logo.png';
+
 const { Sider, Content } = Layout
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -38,12 +40,13 @@ const Manage = () => {
   ]
 
   return <div className={styles['manager-container']}>
+    <Language />
     <div className={styles['manager-content']}>
       <Layout>
         <Sider width={200} className={styles['manager-sider']}>
           <div className={styles['manager-logo-container']}>
-            <img src="https://mdn.alipayobjects.com/huamei_aw9spf/afts/img/A*NYPKQrkHc3IAAAAAAAAAAAAAeiKXAQ/original" alt="" className={styles['manager-logo']} />
-            <Language />
+            <img src={logoSrc} />
+            <span>Chat2Graph</span>
           </div>
           <Menu
             mode="inline"

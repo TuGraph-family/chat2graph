@@ -48,7 +48,7 @@ const SenderHeader: React.FC<Props> = (props) => {
 
 
   return <Sender.Header
-    title="附件"
+    title={formatMessage('home.attachment')}
     open={open}
     onOpenChange={onOpenChange}
     styles={{
@@ -68,8 +68,8 @@ const SenderHeader: React.FC<Props> = (props) => {
           ? { title: 'Drop file here' }
           : {
             icon: <CloudUploadOutlined />,
-            title: '上传文件',
-            description: '点击或拖拽文件到此区域',
+            title: formatMessage('knowledgebase.detail.upload.title'),
+            description: formatMessage('knowledgebase.detail.upload.description'),
           }
       }
     />

@@ -1,3 +1,4 @@
+import Placeholder from "@/components/Placeholder";
 
 export default {
     knowledgebase: {
@@ -27,7 +28,7 @@ export default {
             step1: "上传本地文件",
             step2: "数据处理配置",
             upload: {
-                title: "点击上传或拖拽文档到这里",
+                title: "点击上传或拖拽文件到这里",
                 description: "支持PDF、TXT、DOC、DOCX、MD，文件大小不超过20MB",
                 required: "请上传文件",
                 errorSize: "文件大小不能超过20MB",
@@ -53,6 +54,7 @@ export default {
             updateTime: '更新时间',
             operation: '操作',
             defaultTag: '默认',
+            host: '图数据库地址',
         },
 
         deleteConfirm: '请确定是否删除图数据库{name}？',
@@ -61,16 +63,18 @@ export default {
             title2: '编辑图数据库',
             label0: '图数据库名称',
             placeholder0: '请输入图数据库名称',
-            label1: 'IP地址',
-            placeholder1: '请输入IP地址',
-            label2: 'Port',
-            placeholder2: '请输入 Port',
-            label3: '用户名',
-            placeholder3: '请输入用户名',
-            label4: '密码',
-            placeholder4: '请输入密码',
-            label5: '默认图项目',
-            placeholder5: '请选则默认图项目名',
+            label1: '数据库类型',
+            placeholder1: '请选择数据库类型',
+            label2: 'Host地址',
+            placeholder2: '请输入Host地址',
+            label3: 'Port',
+            placeholder3: '请输入 Port',
+            label4: '用户名',
+            placeholder4: '请输入用户名',
+            label5: '密码',
+            placeholder5: '请输入密码',
+            label6: '默认图项目',
+            placeholder6: '请输入默认图项目名',
         },
     },
     actions: {
@@ -94,7 +98,8 @@ export default {
         query: '查询框架',
         placeholderPromptsItems1: '图是什么？',
         placeholderPromptsItems2: '怎么用 ISOGQL 查询一个点？',
-        description: '你好，我是小图，你可以对我说',
+        title: 'HI，我是小图',
+        description: '很高兴见面，把你想讨论的图数据内容发给我吧',
         rename: '重命名',
         delete: '删除',
         deleteConversation: '删除对话',
@@ -103,6 +108,8 @@ export default {
         confirm: '确认',
         cancel: '取消',
         noResult: '暂未搜索到',
-        stop: '思考已停止'
+        stop: '思考已停止',
+        attachment: '附件',
+        placeholder: '请输入问题'
     }
 }

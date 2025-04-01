@@ -1,7 +1,13 @@
-import { MODAL_FORMS } from "@/constants"
+import { MODAL_FORMS, REQUIRED_MODAL_FORMS } from "@/constants"
 import { useDatabaseEntity } from "@/domains/entities/database-manager"
-import { Form, Input, message, Modal } from "antd"
+import { Form, Input, message, Modal, Select } from "antd"
+import neo4j from "@/assets/neo4j.png"
+import tugraph from "@/assets/tugraph.png"
 import { useEffect } from "react"
+
+
+
+const { Option } = Select
 
 
 interface IGraphDataModalProps {
@@ -10,7 +16,6 @@ interface IGraphDataModalProps {
     editId: string | null
     onFinish: () => void
     formatMessage: (key: string) => string
-    is_default_db?: boolean
 }
 const GraphDataModal: React.FC<IGraphDataModalProps> = ({
     open,
@@ -18,7 +23,6 @@ const GraphDataModal: React.FC<IGraphDataModalProps> = ({
     editId,
     onFinish,
     formatMessage,
-    is_default_db = false
 }) => {
     const [form] = Form.useForm()
     const { getDatabaseDetail, databaseEntity, loadingGetGraphdbById, runCreateGraphdbs, loadingCreateGraphdbs, runUpdateGraphdbs, loadingUpdateGraphdbs } = useDatabaseEntity();
@@ -55,7 +59,6 @@ const GraphDataModal: React.FC<IGraphDataModalProps> = ({
             } else {
                 res = await runCreateGraphdbs({
                     ...values,
-                    is_default_db
                 })
             }
 
@@ -69,11 +72,25 @@ const GraphDataModal: React.FC<IGraphDataModalProps> = ({
         })
     }
 
+
+    const renderDom = (item: string, idx: number) => {
+        switch (item) {
+            case 'type':
+                return <Select placeholder={formatMessage(`database.modal.placeholder${idx}`)} style={{ height: 35 }}>
+                    <Option value="NEO4J">
+                        <img src={neo4j} style={{ height: 30 }} />
+                    </Option>
+                    <Option value="TUGRAPH">
+                        <img src={tugraph} style={{ height: 25 }} /></Option>
+                </Select>;
+            case 'pwd': return <Input.Password maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} />;
+            default: return <Input maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} />;
+        }
+    }
+
     const renderItem = (item: string, idx: number) => {
-        return <Form.Item label={formatMessage(`database.modal.label${idx}`)} name={item} rules={item !== 'desc' ? [{ required: true, message: formatMessage(`database.modal.placeholder${idx}`) }] : []}>
-            {
-                item !== 'pwd' ? <Input maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} /> : <Input.Password maxLength={50} placeholder={formatMessage(`database.modal.placeholder${idx}`)} />
-            }
+        return <Form.Item label={formatMessage(`database.modal.label${idx}`)} name={item} rules={REQUIRED_MODAL_FORMS.includes(item) ? [{ required: true, message: formatMessage(`database.modal.placeholder${idx}`) }] : []}>
+            {renderDom(item, idx)}
         </Form.Item>
     }
 

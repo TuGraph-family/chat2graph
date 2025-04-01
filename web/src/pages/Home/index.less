@@ -1,29 +1,43 @@
 .wrapper {
   display: flex;
   height: 100vh;
-  padding: 20px;
 }
 
 .sider {
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 16px;
   width: 300px;
-  background-color: rgba(5, 145, 255, 0.1);
+  background: #f7f9fc;
   transition: all 0.3s;
-  border-radius: 12px;
+  position: relative;
 
   .create-conversation {
-    background: #484848;
+    background: #1650ff0f;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1650ff;
+    line-height: 22px;
+    font-weight: 500;
+
 
     &:hover {
-      background: #272626 !important;
+      color: #1650ff !important;
+      background: #1650ff0f !important;
+      border: 1px solid #1650ff40;
     }
+  }
+
+  .go-manager {
+    width: calc(100% - 40px) !important;
+    position: absolute;
+    bottom: 20px;
+    font-size: 14px;
   }
 
   &-collapsed {
     width: 80px;
-    position: relative;
 
     .create-conversation {
       font-size: 24px;
@@ -34,6 +48,12 @@
       &:hover {
         background: rgba(0, 0, 0, 0.04) !important;
       }
+    }
+
+    .go-manager {
+      width: 40px !important;
+      font-size: 24px;
+      bottom: 52px;
     }
 
     &-icon {
@@ -103,11 +123,13 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 24px;
-  font-size: 24px;
-  line-height: 32px;
   font-style: italic;
   align-items: center;
-  color: #484848;
+  font-family: AlimamaAgileVF-Bold;
+  font-size: 18px;
+  color: #102953;
+  line-height: 22px;
+  font-weight: 700;
 }
 
 .tips {
@@ -119,33 +141,29 @@
 }
 
 .chat {
-  padding: 24px;
+  padding: 40px 24px 24px;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+
+  height: 100vh;
 
   .messages {
     width: 800px;
     flex: 1;
-    text-align: center;
+    // text-align: center;
     transition: all 0.5s;
     padding: 24px;
 
     :global {
       .ant-welcome {
-        margin-bottom: 120px;
+        // margin-bottom: 120px;
       }
 
-      .ant-prompts-item {
-        flex: none !important;
-        width: 370px;
-      }
 
-      .ant-prompts .ant-prompts-item .ant-prompts-content {
-        align-items: center;
-      }
+
 
       .ant-bubble-end .ant-bubble-content {
         background: aliceblue;

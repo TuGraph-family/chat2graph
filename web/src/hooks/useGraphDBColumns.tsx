@@ -1,5 +1,6 @@
 import useIntlConfig from "@/hooks/useIntlConfig";
 import { Button, Popconfirm, Tag } from "antd";
+import dayjs from "dayjs";
 
 
 interface IUseGraphDBClumuns {
@@ -31,23 +32,30 @@ export const useGraphDBColumns = ({
       }
     },
     {
-      title: formatMessage('database.columns.ip'),
-      dataIndex: 'ip',
-    },
-    {
-      title: formatMessage('database.columns.default'),
-      dataIndex: 'desc',
-    },
-    {
-      title: formatMessage('database.columns.status'),
-      dataIndex: 'stauts',
-      render: (text: boolean) => {
-        return text ? <Tag color="cyan" bordered={false}>可用</Tag> : <Tag color="error" bordered={false}>不可用</Tag>
+      title: formatMessage('database.columns.host'),
+      dataIndex: 'host',
+      render: (text: string, record: any) => {
+        return `${text}:${record.port}`
       }
     },
     {
+      title: formatMessage('database.columns.default'),
+      dataIndex: 'default_schema',
+    },
+    // 暂时不需要
+    // {
+    //   title: formatMessage('database.columns.status'),
+    //   dataIndex: 'stauts',
+    //   render: (text: boolean) => {
+    //     return text ? <Tag color="cyan" bordered={false}>可用</Tag> : <Tag color="error" bordered={false}>不可用</Tag>
+    //   }
+    // },
+    {
       title: formatMessage('database.columns.updateTime'),
-      dataIndex: 'updateTime',
+      dataIndex: 'update_time',
+      render: (time: number) => {
+        return <span>{dayjs(time * 1000).format('YYYY-MM-DD HH:mm:ss')}</span>
+      }
     },
     {
       title: formatMessage('database.columns.operation'),
