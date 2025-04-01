@@ -277,22 +277,24 @@ const HomePage: React.FC = () => {
   });
 
 
-
+  // 新增会话
   const onAddConversation = () => {
-    runCreateSession({
-      name: formatMessage('home.newConversation'),
-    }).then((res: API.Result_Session_) => {
-      if (res.success) {
-        getSessionList();
-        setState((draft) => {
-          draft.activeKey = res?.data?.id || '';
-        });
-        updateContent('');
-      }
-    });
     setMessages([]);
-    onRefreshUpload()
   };
+
+  const onBeforeUpload = async () => {
+    const res = await runCreateSession({
+      name: formatMessage('home.newConversation'),
+    })
+    if (res.success) {
+      getSessionList();
+      setState((draft) => {
+        draft.activeKey = res?.data?.id || '';
+      });
+    }
+
+    return res?.data?.id || '';
+  }
 
 
   const menuConfig: ConversationsProps['menu'] = (conversation) => ({
@@ -322,12 +324,7 @@ const HomePage: React.FC = () => {
               session_id: conversation.key,
             }).then((res: API.Result_Session_) => {
               if (res?.success) {
-                getSessionList((list: any) => {
-                  if (list.length) {
-                    onConversationClick(list[0]?.id)
-                  }
-
-                });
+                getSessionList();
                 message.success(formatMessage('home.deleteConversationSuccess'));
               }
             })
@@ -362,6 +359,27 @@ const HomePage: React.FC = () => {
     setState((draft) => {
       draft.isInit = false;
     });
+
+    // 新建对话
+    if (!items.length) {
+      runCreateSession({
+        name: nextContent,
+      }).then((res: API.Result_Session_) => {
+        if (res.success) {
+          getSessionList();
+          setState((draft) => {
+            draft.activeKey = res?.data?.id || '';
+          });
+          onRequest({
+            payload: nextContent,
+            session_id: res?.data?.id,
+            attached_messages: getAttached()
+          });
+          updateContent('');
+        }
+      });
+      return;
+    }
 
     // 已有对话更新
     onRequest({
@@ -400,14 +418,7 @@ const HomePage: React.FC = () => {
 
   // 初始化请求对话列表
   useEffect(() => {
-    getSessionList((list: any) => {
-      if (!list?.length || list[0]?.latest_job_id) {
-        onAddConversation()
-      } else {
-        onConversationClick(list[0]?.id)
-      }
-    });
-
+    getSessionList();
   }, []);
 
   const onAddUploadId = (fileId: { file_id: string, uid: string }) => {
@@ -455,7 +466,7 @@ const HomePage: React.FC = () => {
 
         <Tooltip title={collapse ? formatMessage('home.openNewConversation') : ''}>
           <Button
-            onClick={() => items?.length ? onAddConversation() : null}
+            onClick={onAddConversation}
             type={collapse ? 'text' : 'primary'}
             className={styles['create-conversation']}
             icon={<PlusOutlined />}
@@ -543,6 +554,7 @@ const HomePage: React.FC = () => {
                   draft.headerOpen = open;
                 });
               }}
+              onBeforeUpload={onBeforeUpload}
               sessionId={activeKey} />}
             onSubmit={onSubmit}
             onChange={updateContent}

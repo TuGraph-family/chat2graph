@@ -73,6 +73,8 @@ export default {
             placeholder5: 'Enter the password',
             label6: 'Default graph project',
             placeholder6: 'Enter the default graph project name',
+            label7: "Description",
+            placeholder7: 'Enter the description',
         },
     },
     actions: {

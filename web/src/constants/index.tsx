@@ -45,7 +45,7 @@ export const ROLES: GetProp<typeof Bubble.List, 'roles'> = {
   },
 };
 
-export const MODAL_FORMS = ['name', 'type', 'host', 'port', 'user', 'pwd', 'default_schema']
+export const MODAL_FORMS = ['name', 'type', 'host', 'port', 'user', 'pwd', 'default_schema', 'desc']
 
 export const REQUIRED_MODAL_FORMS = ['name', 'type', 'host', 'port']
 

@@ -13,8 +13,7 @@ interface BubbleContentProps {
 
 const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message }) => {
   const { formatMessage } = useIntlConfig();
-  const [lines, setLines] = useState<string[]>([]);
-  const [job, setJob] = useState<any>([]);
+  const [thinks, setThinks] = useState<any>([]);
   const getStatusIcon = (status: ThoughtChainItem['status']) => {
     switch (status) {
       case 'success':
@@ -28,42 +27,32 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
     }
   }
 
-  function mockReadableStream(streams: string[]) {
 
-    return new ReadableStream({
-      async start(controller) {
-        for (const chunk of streams) {
-          await new Promise((resolve) => { setTimeout(resolve, 500) });
-          controller.enqueue(new TextEncoder().encode(chunk));
-        }
-        controller.close();
-      },
+  const updateCachedData = (cachedData, newData) => {
+    const cachedMap = new Map(cachedData.map(item => [item.jobId, item]));
+
+    newData.forEach(newItem => {
+      const cachedItem = cachedMap.get(newItem.jobId);
+      if (cachedItem) {
+        cachedItem.goal = newItem.goal ?? cachedItem.goal;
+        cachedItem.payload = newItem.payload ?? cachedItem.payload;
+      } else {
+        cachedMap.set(newItem.jobId, { ...newItem });
+      }
     });
-  }
-
-  async function readStream(streams: string[]) {
-    // 🌟 Read the stream
-    for await (const chunk of XStream({
-      readableStream: mockReadableStream(streams),
-      transformStream: new TransformStream<string, string>({
-        transform(chunk, controller) {
-          controller.enqueue(chunk);
-        },
-      }),
-    })) {
-      setLines((pre) => Array.from(new Set([...pre, chunk])));
-    }
+    return Array.from(cachedMap.values());
   }
 
   const getThink = throttle(() => {
-    const finishedThinks: any[] = []
-    message?.thinking?.filter(item => !job?.includes(item?.job?.id) && item?.status === 'FINISHED')?.forEach(item => {
-      setJob((pre) => [...pre, item?.job?.id])
-      finishedThinks.push(item?.job?.goal, item?.payload)
+    const newThinks = message?.thinking?.map(item => {
+      return {
+        jobId: item?.job?.id,
+        status: item?.status,
+        goal: item?.job?.goal,
+        payload: item?.status === 'FINISHED' ? item?.payload : ''
+      }
     })
-    if (finishedThinks?.length) {
-      readStream(finishedThinks)
-    }
+    setThinks(updateCachedData(thinks, newThinks))
   }, 2000);
 
   useEffect(() => {
@@ -83,8 +72,15 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         title: "分析",
         status: (thinkingStatus) as ThoughtChainItem['status'],
         description: <ol>
-          {lines.map((line, index) => (
-            <div key={index}><pre style={{ background: 'rgba(201, 201, 201, 0.1)' }}>{line}</pre></div>
+          {thinks.map((think: any) => (
+            <>
+              <div key={`${think?.jobId}_goal`}><pre style={{ background: 'rgba(201, 201, 201, 0.1)' }}>{think?.goal}</pre></div>
+              {
+                think?.payload && <div key={`${think?.jobId}_payload`}>
+                  <pre style={{ background: 'rgba(201, 201, 201, 0.1)' }}>{think?.payload}</pre>
+                </div>
+              }
+            </>
           ))}
         </ol>,
         icon: getStatusIcon(thinkingStatus),
@@ -100,7 +96,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
       })
     }
     return steps;
-  }, [message, lines, status])
+  }, [message, thinks, status])
 
   return <div style={{ textAlign: 'left' }}>
     {
