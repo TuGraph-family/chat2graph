@@ -115,6 +115,27 @@ class KnowledgeBaseService(metaclass=Singleton):
             )
         raise ValueError(f"Cannot find knowledge base with ID {id}")
 
+    def get_session_knowledge_base(self, session_id: str) -> Optional[KnowledgeBase]:
+        """Get a knowledge base by Session ID."""
+
+        # fetch the knowledge base
+        results = self._knowledge_base_dao.filter_by(session_id=session_id)
+        result = results[0] if results else None
+
+        if result:
+            return KnowledgeBase(
+                id=str(result.id),
+                name=str(result.name),
+                knowledge_type=str(result.knowledge_type),
+                session_id=str(result.session_id),
+                file_descriptors=[],
+                description=str(result.description),
+                category=str(result.category),
+                timestamp=int(result.timestamp),
+            )
+
+        return None
+
     def update_knowledge_base(self, id: str, name: str, description: str) -> None:
         """Update a knowledge base by ID.
         Args:
@@ -137,14 +158,14 @@ class KnowledgeBaseService(metaclass=Singleton):
         knowledge_base = self._knowledge_base_dao.get_by_id(id=id)
         if not knowledge_base:
             raise ValueError(f"Knowledge base with ID {id} not found")
-        # delte all related file and file_kb_mapping from db
+        # delete all related file and file_kb_mapping from db
         mappings = self._file_kb_mapping_dao.filter_by(kb_id=id)
         for mapping in mappings:
             self._file_kb_mapping_dao.delete(id=str(mapping.id))
             FileService.instance.delete_file(id=str(mapping.id))
         # delete kb from db
         self._knowledge_base_dao.delete(id=id)
-        # delete knolwledge base folder
+        # delete knowledge base folder
         KnowledgeStoreFactory.get_or_create(id).drop()
 
     def get_all_knowledge_bases(self) -> Tuple[KnowledgeBase, List[KnowledgeBase]]:

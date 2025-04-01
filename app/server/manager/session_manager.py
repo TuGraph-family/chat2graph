@@ -67,6 +67,10 @@ class SessionManager:
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing deletion status and success message
         """
+        kb = self._knowledgebase_service.get_session_knowledge_base(session_id=id)
+        if kb:
+            self._knowledgebase_service.delete_knowledge_base(id=kb.id)
+
         self._session_service.delete_session(id=id)
         return {}, f"Session with ID {id} deleted successfully"
 
