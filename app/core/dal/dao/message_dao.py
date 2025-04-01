@@ -168,7 +168,8 @@ class MessageDao(Dao[MessageDo]):
             )
         if message_type == MessageType.FILE_MESSAGE:
             assert len(list(message_do.related_message_ids)) == 1, (
-                f"File message {message_do.id} should have only one file id. File id(s) :{list(message_do.related_message_ids)}"
+                f"File message {message_do.id} should have only one file id. "
+                f"File id(s) :{list(message_do.related_message_ids)}"
             )
             return FileMessage(
                 id=str(message_do.id),
@@ -182,7 +183,8 @@ class MessageDao(Dao[MessageDo]):
                 job_id=str(message_do.job_id), role=ChatMessageRole.USER
             )
             assert len(instruction_results) == 1, (
-                f"Job {message_do} has multiple or not text messages by {ChatMessageRole.USER.value}."
+                f"Hybrid message {message_do.id} should have exactly one instruction message, "
+                f"found {len(instruction_results)}. "
             )
             instruction_message: TextMessage = cast(
                 TextMessage,

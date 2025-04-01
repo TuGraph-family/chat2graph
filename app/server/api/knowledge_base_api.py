@@ -5,8 +5,7 @@ from flask import Blueprint, request
 
 from app.server.common.util import ApiException, make_response
 from app.server.manager.knowledge_base_manager import KnowledgeBaseManager
-from app.server.manager.view.knowledge_base_view import \
-    KnowledgeBaseViewTransformer
+from app.server.manager.view.knowledge_base_view import KnowledgeBaseViewTransformer
 
 knowledgebases_bp = Blueprint("knowledgebases", __name__)
 
@@ -37,8 +36,7 @@ def update_knowledge_base_by_id(knowledge_base_id: str):
 
     required_fields = ["name", "description"]
     if not data or not all(field in data for field in required_fields):
-        raise ApiException(
-            "Missing required fields. Required: name, description")
+        raise ApiException("Missing required fields. Required: name, description")
 
     result, message = manager.update_knowledge_base(
         id=knowledge_base_id, name=data["name"], description=data["description"]
