@@ -97,7 +97,7 @@ class Leader(Agent):
             workflow_message = self._workflow.execute(
                 job=decompsed_job,
                 reasoner=self._reasoner,
-                lesson="LLM output format (json format for example) specification is crucial for "
+                lesson="LLM output format (json format) specification is crucial for "
                 "reliable parsing. And do not forget ```json prefix and ``` suffix when "
                 "you generate the json block in <deliverable>...</deliverable>. Error info: "
                 + str(e),

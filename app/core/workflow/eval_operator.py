@@ -58,7 +58,7 @@ class EvalOperator(Operator):
             # color: red
             print(f"\033[38;5;196m[JSON]: {str(e)}\033[0m")
             task.lesson = lesson or "" + (
-                "LLM output format (json format for example) specification is crucial for "
+                "LLM output format (json format) specification is crucial for "
                 "reliable parsing. And do not forget ```json prefix and ``` suffix when "
                 "you generate the json block in <deliverable>...</deliverable>. Error info: "
                 + str(e)

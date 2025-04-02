@@ -1,4 +1,3 @@
-import time
 from typing import List, Optional, Set, Tuple, cast
 
 import networkx as nx  # type: ignore
@@ -119,10 +118,9 @@ class JobService(metaclass=Singleton):
         if job_result.has_result():
             return job_result
 
-        while job_result.status == JobStatus.CREATED:
-            # wait for the job to be decomposed into subjobs by the leader agent
-            job_result = self.get_job_result(original_job_id)
-            time.sleep(0.5)
+        if job_result.status == JobStatus.CREATED:
+            # return the current job result, it will be processed later
+            return job_result
 
         # wait for creating the subjob by leader
         job_graph = self.get_job_graph(original_job_id)
