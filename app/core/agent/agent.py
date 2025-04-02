@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
-from app.core.model.message import AgentMessage
+from app.core.model.job import Job
+from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
@@ -74,3 +75,35 @@ class Agent(ABC):
     @abstractmethod
     def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> Any:
         """Execute the agent."""
+
+    def save_output_agent_message(
+        self, job: Job, workflow_message: WorkflowMessage, lesson: Optional[str] = None
+    ) -> AgentMessage:
+        """Save the agent message of the expert as an output message."""
+
+        try:
+            existed_expert_message: AgentMessage = cast(
+                AgentMessage,
+                self._message_service.get_message_by_job_id(
+                    job_id=job.id, message_type=MessageType.AGENT_MESSAGE
+                )[0],
+            )
+            expert_message: AgentMessage = AgentMessage(
+                id=existed_expert_message.get_id(),
+                job_id=job.id,
+                workflow_messages=[workflow_message],
+                payload=workflow_message.scratchpad,
+                timestamp=existed_expert_message.get_timestamp(),
+                lesson=lesson or existed_expert_message.get_lesson(),
+            )
+        except Exception:
+            # if the agent message is not found, create a new agent message
+            expert_message = AgentMessage(
+                job_id=job.id,
+                workflow_messages=[workflow_message],
+                payload=workflow_message.scratchpad,
+                lesson=lesson,
+            )
+        self._message_service.save_message(message=expert_message)
+
+        return expert_message
