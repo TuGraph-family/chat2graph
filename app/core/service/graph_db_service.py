@@ -1,8 +1,11 @@
 from typing import List
 
 from app.core.common.singleton import Singleton
+from app.core.common.system_env import SystemEnv
 from app.core.dal.dao.graph_db_dao import GraphDbDao
-from app.core.model.graph_db import GraphDbConfig
+from app.core.graph_db.graph_db import GraphDb
+from app.core.graph_db.graph_db_config import GraphDbConfig
+from app.core.graph_db.graph_db_factory import GraphDbFactory
 
 
 class GraphDbService(metaclass=Singleton):
@@ -10,6 +13,18 @@ class GraphDbService(metaclass=Singleton):
 
     def __init__(self):
         self._graph_db_dao: GraphDbDao = GraphDbDao.instance
+
+        # init default graph db
+        self.create_graph_db(
+            graph_db_config=GraphDbConfig(
+                type=SystemEnv.GRAPH_DB_TYPE,
+                name=SystemEnv.GRAPH_DB_NAME,
+                host=SystemEnv.GRAPH_DB_HOST,
+                port=SystemEnv.GRAPH_DB_PORT,
+                user=SystemEnv.GRAPH_DB_USERNAME,
+                pwd=SystemEnv.GRAPH_DB_PASSWORD,
+            )
+        )
 
     def create_graph_db(self, graph_db_config: GraphDbConfig) -> GraphDbConfig:
         """Create a new GraphDB."""
@@ -31,28 +46,33 @@ class GraphDbService(metaclass=Singleton):
 
         return GraphDbConfig.from_do(result)
 
-    def get_default_graph_db(self) -> GraphDbConfig:
+    def get_default_graph_db(self) -> GraphDb:
+        """Get the default GraphDB."""
+        config = self.get_default_graph_db_config()
+        return GraphDbFactory.get_graph_db(graph_db_type=config.type, config=config)
+
+    def get_default_graph_db_config(self) -> GraphDbConfig:
         """Get the default GraphDB."""
         graph_db_do = self._graph_db_dao.get_by_default()
         if not graph_db_do:
             raise ValueError("Default GraphDB not found")
         return GraphDbConfig.from_do(graph_db_do)
 
-    def get_graph_db(self, id: str) -> GraphDbConfig:
+    def get_graph_db_config(self, id: str) -> GraphDbConfig:
         """Get a GraphDB by ID."""
         graph_db_do = self._graph_db_dao.get_by_id(id=id)
         if not graph_db_do:
             raise ValueError(f"GraphDB with ID {id} not found")
         return GraphDbConfig.from_do(graph_db_do)
 
-    def delete_graph_db(self, id: str):
+    def delete_graph_db(self, id: str) -> None:
         """Delete a GraphDB by ID."""
         graph_db = self._graph_db_dao.get_by_id(id=id)
         if not graph_db:
             raise ValueError(f"GraphDB with ID {id} not found")
         self._graph_db_dao.delete(id=id)
 
-    def update_graph_db(self, graph_db_config: GraphDbConfig) -> GraphDbConfig:
+    def update_graph_db_config(self, graph_db_config: GraphDbConfig) -> GraphDbConfig:
         """Update a GraphDB by ID.
 
         Args:
@@ -99,7 +119,7 @@ class GraphDbService(metaclass=Singleton):
 
         return GraphDbConfig.from_do(graph_db_do)
 
-    def get_all_graph_dbs(self) -> List[GraphDbConfig]:
+    def get_all_graph_db_configs(self) -> List[GraphDbConfig]:
         """Get all GraphDBs."""
 
         results = self._graph_db_dao.get_all()

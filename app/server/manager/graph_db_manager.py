@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple
 
-from app.core.model.graph_db import GraphDbConfig
+from app.core.graph_db.graph_db_config import GraphDbConfig
 from app.core.service.graph_db_service import GraphDbService
 
 
@@ -31,7 +31,7 @@ class GraphDBManager:
         Returns:
             Tuple[Dict[str, Any], str]: A tuple containing GraphDB details and success message
         """
-        graph_db = self._graph_db_service.get_graph_db(id=id)
+        graph_db = self._graph_db_service.get_graph_db_config(id=id)
         return graph_db.to_dict(), "GraphDB fetched successfully"
 
     def delete_graph_db(self, id: str) -> Tuple[Dict[str, Any], str]:
@@ -56,7 +56,7 @@ class GraphDBManager:
             Tuple[Dict[str, Any], str]: A tuple containing updated GraphDB details and success
                 message
         """
-        graph_db = self._graph_db_service.update_graph_db(graph_db_config=graph_db_config)
+        graph_db = self._graph_db_service.update_graph_db_config(graph_db_config=graph_db_config)
         return graph_db.to_dict(), "GraphDB updated successfully"
 
     def get_all_graph_db_configs(self) -> Tuple[List[dict], str]:
@@ -65,11 +65,8 @@ class GraphDBManager:
         Returns:
             Tuple[List[dict], str]: A tuple containing a list of GraphDB details and success message
         """
-        graph_db_configs = self._graph_db_service.get_all_graph_dbs()
-        graph_db_list = [
-            graph_db.to_dict()
-            for graph_db in graph_db_configs
-        ]
+        graph_db_configs = self._graph_db_service.get_all_graph_db_configs()
+        graph_db_list = [graph_db.to_dict() for graph_db in graph_db_configs]
         return graph_db_list, "Get all GraphDBs successfully"
 
     def validate_graph_db_connection(self, graph_db_config: GraphDbConfig) -> Tuple[bool, str]:

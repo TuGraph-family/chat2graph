@@ -23,8 +23,23 @@ class GraphDbConfig:
     is_default_db: bool = False
 
     @staticmethod
-    def from_do(do: GraphDbDo):
+    def from_do(do: GraphDbDo) -> "GraphDbConfig":
         """Create a GraphDbConfig instance from a GraphDbDo object."""
+        if str(do.type) == GraphDbType.NEO4J.value:
+            return Neo4jDbConfig(
+                id=str(do.id),
+                create_time=int(do.create_time),
+                update_time=int(do.update_time),
+                type=GraphDbType(do.type),
+                name=str(do.name),
+                desc=cast(str, do.desc),
+                host=str(do.host),
+                port=int(do.port),
+                user=cast(str, do.user),
+                pwd=cast(str, do.pwd),
+                default_schema=cast(str, do.default_schema),
+                is_default_db=bool(do.is_default_db),
+            )
         return GraphDbConfig(
             id=str(do.id),
             create_time=int(do.create_time),

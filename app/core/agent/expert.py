@@ -5,7 +5,6 @@ from app.core.agent.agent import Agent
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import JobStatus, WorkflowStatus
 from app.core.model.job import SubJob
-from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 
 
@@ -112,23 +111,14 @@ class Expert(Agent):
                 self._message_service.save_message(message=agent_message)
 
                 # (2.2) save the expert message in the database
-                try:
-                    job_result = self._job_service.get_job_result(job_id=job.id)
-                    job_result.status = JobStatus.FAILED
-                except Exception:
-                    # if the job result is not found, create a new job result
-                    job_result = JobResult(
-                        job_id=job.id,
-                        status=JobStatus.FAILED,
-                        duration=0,  # TODO: calculate the duration
-                        tokens=0,  # TODO: calculate the tokens
-                    )
+                job_result = self._job_service.get_job_result(job_id=job.id)
+                job_result.status = JobStatus.FAILED
                 self._job_service.save_job_result(job_result=job_result)
 
-                # TODO: return the error message to the user
-                raise Exception(
-                    "The job cannot be executed successfully "
-                    "after retrying {max_retry_count} times."
+                self._job_service.terminate_job_graph(
+                    job=job,
+                    error_info=f"Failed after retrying {max_retry_count} times.\n"
+                    f"{workflow_message.evaluation}\n{workflow_message.lesson}",
                 )
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:

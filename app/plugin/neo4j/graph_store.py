@@ -3,16 +3,16 @@ from typing import Optional
 from neo4j import GraphDatabase
 
 from app.core.common.system_env import SystemEnv
-from app.core.model.graph_db import Neo4jDbConfig  # type: ignore
+from app.core.graph_db.graph_db import GraphDb
+from app.core.graph_db.graph_db_config import Neo4jDbConfig  # type: ignore
 
 
-class GraphStore:
+class Neo4jDb(GraphDb):
     """Graph store implementation."""
 
     def __init__(self, config: Neo4jDbConfig):
         """Initialize Neo4j store with configuration."""
-        self.config = config
-        self._driver = None
+        super().__init__(config=config)
 
     @property
     def conn(self):
@@ -24,7 +24,7 @@ class GraphStore:
         return self._driver
 
 
-def get_graph_db(config: Optional[Neo4jDbConfig] = None) -> GraphStore:
+def get_graph_db(config: Optional[Neo4jDbConfig] = None) -> Neo4jDb:
     """Initialize neo4j store with configuration."""
     try:
         config = config or Neo4jDbConfig(
@@ -35,7 +35,7 @@ def get_graph_db(config: Optional[Neo4jDbConfig] = None) -> GraphStore:
             user=SystemEnv.GRAPH_DB_USERNAME,
             pwd=SystemEnv.GRAPH_DB_PASSWORD,
         )
-        store = GraphStore(config)
+        store = Neo4jDb(config)
         print(f"[log] get graph: {config.name}")
 
         return store

@@ -343,6 +343,7 @@ class FileMessage(ChatMessage):
             id=id,
             session_id=session_id,
         )
+        assert file_id and file_id != "", "File ID cannot be empty."
         self._file_id: str = file_id
 
     def get_payload(self) -> None:

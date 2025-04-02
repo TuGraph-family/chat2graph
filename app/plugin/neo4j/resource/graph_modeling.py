@@ -2,8 +2,8 @@ from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 from app.core.service.file_service import FileService
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.graph_store import get_graph_db
 from app.plugin.neo4j.resource.read_doc import SchemaManager
 
 
@@ -44,6 +44,7 @@ class VertexLabelGenerator(Tool):
     async def create_vertex_label_by_json_schema(
         self,
         file_service: FileService,
+        graph_db_service: GraphDbService,
         label: str,
         properties: List[Dict[str, Union[str, bool]]],
         primary: str = "id",
@@ -113,7 +114,8 @@ class VertexLabelGenerator(Tool):
                 }
             )
 
-        store = get_graph_db()
+        # store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         with store.conn.session() as session:
             for statement in statements:
                 print(f"Executing statement: {statement}")
@@ -141,6 +143,7 @@ class EdgeLabelGenerator(Tool):
     async def create_edge_label_by_json_schema(
         self,
         file_service: FileService,
+        graph_db_service: GraphDbService,
         label: str,
         properties: List[Dict[str, Union[str, bool]]],
         primary: str = "id",
@@ -216,7 +219,7 @@ class EdgeLabelGenerator(Tool):
                 }
             )
 
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         with store.conn.session() as session:
             for statement in statements:
                 print(f"Executing statement: {statement}")
@@ -241,7 +244,7 @@ class GraphReachabilityGetter(Tool):
             function=self.get_graph_reachability,
         )
 
-    async def get_graph_reachability(self) -> str:
+    async def get_graph_reachability(self, graph_db_service: GraphDbService) -> str:
         """Get the reachability information of the graph database which can help to understand the
         graph structure.
 
@@ -251,7 +254,7 @@ class GraphReachabilityGetter(Tool):
         Returns:
             str: The reachability of the graph database in string format
         """
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         vertex_labels: List = []
         relationship_types: List = []
         with store.conn.session() as session:

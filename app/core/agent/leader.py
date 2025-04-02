@@ -10,7 +10,7 @@ from app.core.agent.builtin_leader_state import BuiltinLeaderState
 from app.core.agent.expert import Expert
 from app.core.agent.leader_state import LeaderState
 from app.core.common.system_env import SystemEnv
-from app.core.common.type import WorkflowStatus
+from app.core.common.type import JobStatus, WorkflowStatus
 from app.core.common.util import parse_json
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
@@ -102,8 +102,16 @@ class Leader(Agent):
                 "you generate the json block in <deliverable>...</deliverable>. Error info: "
                 + str(e),
             )
-            # extract the subjobs from the json block
-            job_dict = parse_json(text=workflow_message.scratchpad)
+            try:
+                # extract the subjobs from the json block
+                job_dict = parse_json(text=workflow_message.scratchpad)
+                assert job_dict is not None
+            except (ValueError, json.JSONDecodeError):
+                self._job_service.terminate_job_graph(
+                    job=job,
+                    error_info="LLM output format is not correct (json format), or "
+                    "the job is not decomposed. Retry it again please.",
+                )
 
         # init the decomposed job graph
         job_graph = JobGraph()
@@ -148,6 +156,12 @@ class Leader(Agent):
         """Execute the job."""
         # decompose the job into decomposed job graph
         decomposed_job_graph: JobGraph = self.execute(agent_message=AgentMessage(job_id=job.id))
+
+        # update the job status to running
+        job_result = self._job_service.get_job_result(job_id=job.id)
+        if job_result.status == JobStatus.CREATED:
+            job_result.status = JobStatus.RUNNING
+            self._job_service.save_job_result(job_result=job_result)
 
         # update the decomposed job graph in the job service
         self._job_service.replace_subgraph(

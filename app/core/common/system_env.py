@@ -50,7 +50,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "GRAPH_DB_PORT": (int, 7687),
     "GRAPH_DB_USERNAME": (str, None),
     "GRAPH_DB_PASSWORD": (str, None),
-    "GRAPH_DB_NAME": (str, None),
+    "GRAPH_DB_NAME": (str, "Default Graph DB"),
     "SCHEMA_FILE_NAME": (str, "graph.db.schema.json"),
     "SCHEMA_FILE_ID": (str, "schema_file_id"),
 }

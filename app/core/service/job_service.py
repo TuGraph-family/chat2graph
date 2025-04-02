@@ -20,6 +20,7 @@ class JobService(metaclass=Singleton):
 
     def __init__(self):
         self._job_dao: JobDao = JobDao.instance
+        self._message_service: MessageService = MessageService.instance
 
     def save_job(self, job: Job) -> Job:
         """Save a new job."""
@@ -89,24 +90,46 @@ class JobService(metaclass=Singleton):
         """Update the job result."""
         self._job_dao.save_job_result(job_result=job_result)
 
-    def query_job_result(self, job_id: str) -> JobResult:
-        """Query the result of the multi-agent system by original job id."""
-        message_service: MessageService = MessageService.instance
+    def query_job_result(self, original_job_id: str) -> JobResult:
+        """Query and process the original job result of the multi-agent system.
 
+        This method retrieves or assembles the result for an original job by:
+            1. Checking if the job already has a completed result
+            2. Waiting for the leader agent to decompose the job if needed
+            3. Collecting and combining results from all terminal subjobs (tail vertices in the job
+                graph)
+            4. Saving the combined result as a system message
+            5. Marking the original job as finished
+
+        The method handles multi-agent coordination by waiting for all subjobs to complete
+        before assembling the final result.
+
+        Args:
+            original_job_id (str): The ID of the original job to query results for
+
+        Returns:
+            JobResult: The job result object with status, duration, and token information
+
+        Note:
+            If any tail vertex subjob is not finished yet, the method returns the
+            current incomplete job result instead of waiting.
+        """
         # check if the original job already has gotten the job result
-        job_result: JobResult = self.get_job_result(job_id)
+        job_result: JobResult = self.get_job_result(original_job_id)
         if job_result.has_result():
             return job_result
 
+        while job_result.status == JobStatus.CREATED:
+            # wait for the job to be decomposed into subjobs by the leader agent
+            job_result = self.get_job_result(original_job_id)
+            time.sleep(0.5)
+
+        # wait for creating the subjob by leader
+        job_graph = self.get_job_graph(original_job_id)
         # get the tail vertices of the job graph (DAG)
-        tail_vertices: List[str] = []
-        while len(tail_vertices) == 0:
-            # wait for creating the subjob by leader
-            job_graph = self.get_job_graph(job_id)
-            tail_vertices = [
-                vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
-            ]
-            time.sleep(1)
+        tail_vertices: List[str] = [
+            vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
+        ]
 
         # collect and combine the content of the job results from the tail vertices
         mutli_agent_payload = ""
@@ -114,16 +137,11 @@ class JobService(metaclass=Singleton):
             subjob_result: JobResult = self.get_job_result(tail_vertex)
             if not subjob_result.has_result():
                 # not all the subjobs have been finished, so return the job result itself
-                self.save_job_result(job_result=job_result)
                 return job_result
-            if job_result.status == JobStatus.CREATED:
-                # if at least one subjob is finished, and the original job is created,
-                # now the original job is running
-                job_result.status = JobStatus.RUNNING
 
             agent_messages: List[AgentMessage] = cast(
                 List[AgentMessage],
-                message_service.get_message_by_job_id(
+                self._message_service.get_message_by_job_id(
                     job_id=subjob_result.job_id, message_type=MessageType.AGENT_MESSAGE
                 ),
             )
@@ -136,21 +154,21 @@ class JobService(metaclass=Singleton):
             mutli_agent_payload += cast(str, agent_messages[0].get_payload()) + "\n"
 
         # save the multi-agent result to the database
-        original_job: Job = self.get_orignal_job(job_id)
+        original_job: Job = self.get_orignal_job(original_job_id)
         try:
-            multi_agent_message = message_service.get_text_message_by_job_id_and_role(
-                job_id, ChatMessageRole.SYSTEM
+            multi_agent_message = self._message_service.get_text_message_by_job_id_and_role(
+                original_job_id, ChatMessageRole.SYSTEM
             )
             multi_agent_message.set_payload(mutli_agent_payload)
         except ValueError:
             multi_agent_message = TextMessage(
                 payload=mutli_agent_payload,
-                job_id=job_id,
+                job_id=original_job_id,
                 session_id=original_job.session_id,
                 assigned_expert_name=original_job.assigned_expert_name,
                 role=ChatMessageRole.SYSTEM,
             )
-        message_service.save_message(message=multi_agent_message)
+        self._message_service.save_message(message=multi_agent_message)
 
         # save the original job result
         job_result.status = JobStatus.FINISHED
@@ -159,9 +177,6 @@ class JobService(metaclass=Singleton):
 
     def get_conversation_view(self, job_id: str) -> MessageView:
         """Get conversation view (including thinking chain) for a specific job."""
-        # get the message service
-        message_service: MessageService = MessageService.instance
-
         # get job details
         original_job = self.get_orignal_job(job_id)
 
@@ -169,12 +184,12 @@ class JobService(metaclass=Singleton):
         orignial_job_result = self.query_job_result(job_id)
 
         # get the user question message
-        question_message = message_service.get_text_message_by_job_id_and_role(
+        question_message = self._message_service.get_text_message_by_job_id_and_role(
             job_id, ChatMessageRole.USER
         )
 
         # get the AI answer message
-        answer_message = message_service.get_text_message_by_job_id_and_role(
+        answer_message = self._message_service.get_text_message_by_job_id_and_role(
             job_id, ChatMessageRole.SYSTEM
         )
         # get thinking chain messages
@@ -193,7 +208,7 @@ class JobService(metaclass=Singleton):
                 # get the agent message
                 agent_messages = cast(
                     List[AgentMessage],
-                    message_service.get_message_by_job_id(
+                    self._message_service.get_message_by_job_id(
                         job_id=subjob_id, message_type=MessageType.AGENT_MESSAGE
                     ),
                 )
@@ -230,6 +245,57 @@ class JobService(metaclass=Singleton):
             thinking_messages=thinking_messages,
             thinking_subjobs=subjobs,
             thinking_metrics=subjob_results,
+        )
+
+    def terminate_job_graph(self, job: Job, error_info: str) -> None:
+        """Raise an error message, and terminate the whole job execution."""
+        # color: red
+        print(f"\033[38;5;196m[ERROR]: {error_info}\033[0m")
+
+        if isinstance(job, SubJob):
+            assert job.original_job_id is not None, "The subjob must have an original job ID."
+            original_job: Job = self.get_orignal_job(original_job_id=job.original_job_id)
+        else:
+            original_job = job
+
+        job_result = self.get_job_result(job_id=original_job.id)
+        if not job_result.has_result():
+            # if the original job does not have a result, mark it as failed
+            job_result.status = JobStatus.FAILED
+            self.save_job_result(job_result=job_result)
+
+        # update all the subjobs which have not the result to FAILED
+        subjob_ids = self.get_subjob_ids(original_job_id=original_job.id)
+        for subjob_id in subjob_ids:
+            # mark all the subjobs as legacy
+            subjob_result = self.get_job_result(job_id=subjob_id)
+            if not subjob_result.has_result():
+                subjob_result.status = JobStatus.FAILED  # mark the subjob as failed
+                self.save_job_result(job_result=subjob_result)
+
+        # save the final system message with the error information
+        error_payload = (
+            f"An error occurred during the execution of the job: {error_info}\n"
+            f"Please check the job `{original_job.id}` for more details."
+        )
+        try:
+            error_message = self._message_service.get_text_message_by_job_id_and_role(
+                original_job.id, ChatMessageRole.SYSTEM
+            )
+            error_message.set_payload(error_payload)
+        except ValueError:
+            error_message = TextMessage(
+                payload=error_payload,
+                job_id=original_job.id,
+                session_id=original_job.session_id,
+                assigned_expert_name=original_job.assigned_expert_name,
+                role=ChatMessageRole.SYSTEM,
+            )
+        self._message_service.save_message(message=error_message)
+
+        raise Exception(
+            f"An error occurred during the execution of the job: {error_info}\n"
+            f"Please check the job `{original_job.id}` for more details."
         )
 
     def get_job_graph(self, job_id: str) -> JobGraph:
