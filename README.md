@@ -42,29 +42,49 @@ a deep integration of graph computing technology and artificial intelligence tec
 Chat2Graph currently provides basic capabilities of intelligent agent systems, but there are 
 still many features that need to be improved together with the community.
 
-- [x] One-active-Many-Passive mixed multi-agent architecture.
-- [x] Dual-LLM reasoning machine combining fast and slow thinking.
-- [x] Task decomposition and graph planner oriented towards intelligent agent chains.
-- [x] Hierarchical memory system.
-- [x] Toolkit knowledge graph.
-- [x] Vector and graph knowledge base.
-- [x] Concise intelligent agent SDK.
-- [x] Service-oriented and web interaction.
-- [x] One-click configuration of agents.
-- [ ] Structured agent role management.
-- [ ] Workflow auto-generation.
-- [ ] Operator layer action recommendation.
-- [ ] Toolkit graph optimizer.
-- [ ] Environmental information management.
-- [ ] Agent task compiler.
-- [ ] Unified resource manager.
-- [ ] Tracking and control capabilities.
-- [ ] Rich toolkit/MCP integration.
-- [ ] Benchmark.
-- [ ] Access to mainstream open-source ecosystems.
-- [ ] Multimodal capabilities.
-- [ ] Production enhancement.
+&#9745;  One-active-Many-Passive mixed multi-agent architecture.
+ 
+&#9745; Dual-LLM reasoning machine combining fast and slow thinking.
 
+&#9745; Task decomposition and graph planner oriented towards intelligent agent chains.
+ 
+&#9745; Hierarchical memory system.
+ 
+&#9745; Toolkit knowledge graph.
+ 
+&#9745; Vector and graph knowledge base.
+ 
+&#9745; Concise intelligent agent SDK.
+ 
+&#9745; Service-oriented and web interaction.
+ 
+&#9745; One-click configuration of agents.
+ 
+&#9745;	Structured agent role management.
+ 
+&#9744;	 Workflow auto-generation.
+
+&#9744;	 Operator layer action recommendation.
+
+&#9744;	 Toolkit graph optimizer.
+
+&#9744;	 Environmental information management.
+
+&#9744;	 Agent task compiler.
+
+&#9744;	 Unified resource manager.
+
+&#9744;	 Tracking and control capabilities.
+
+&#9744;	 Rich toolkit/MCP integration.
+
+&#9744;	 Benchmark.
+
+&#9744;	 Access to mainstream open-source ecosystems.
+
+&#9744;	 Multimodal capabilities.
+
+&#9744;	 Production enhancement.
 
 ## Quick Start
 
