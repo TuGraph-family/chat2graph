@@ -69,6 +69,7 @@ export const useSessionEntity = () => {
   const {
     run: runGetJobResults,
     loading: loadingGetJobResults,
+    cancel: cancelGetJobResults,
   } = useRequest(services.getJobResults, {
     manual: true,
   });
@@ -110,5 +111,6 @@ export const useSessionEntity = () => {
     runGetJobResults,
     loadingGetJobResults,
     runGetMessagesBySessionId,
+    cancelGetJobResults
   };
 };

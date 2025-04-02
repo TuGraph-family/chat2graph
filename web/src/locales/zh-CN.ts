@@ -75,6 +75,8 @@ export default {
             placeholder5: '请输入密码',
             label6: '默认图项目',
             placeholder6: '请输入默认图项目名',
+            label7: '描述',
+            placeholder7: '请输入描述'
         },
     },
     actions: {
