@@ -45,11 +45,14 @@ def update_knowledge_base_by_id(knowledge_base_id: str):
 
 
 @knowledgebases_bp.route("/<string:knowledge_base_id>", methods=["DELETE"])
-def delete_knowledge_base_by_id(knowledge_base_id: str):
+def clean_knowledge_base_by_id(knowledge_base_id: str):
     """Delete a knowledge base by ID."""
     manager = KnowledgeBaseManager()
+    data: Dict[str, Any] = cast(Dict[str, Any], request.json)
 
-    result, message = manager.delete_knowledge_base(id=knowledge_base_id)
+    drop: bool = data.get("drop", True)
+
+    result, message = manager.clean_knowledge_base(id=knowledge_base_id, drop=drop)
     return make_response(data=result, message=message)
 
 
