@@ -35,7 +35,8 @@ class Expert(Agent):
             # if the job result already has a final status, do not execute again
             # color: orange
             print(
-                f"\033[38;5;208m[Warning]: Job {job.id} already has a final status: {job_result.status.value}.\033[0m"
+                f"\033[38;5;208m[Warning]: Job {job.id} already has a final status: "
+                f"{job_result.status.value}.\033[0m"
             )
             if self._workflow.evaluator:
                 return self.save_output_agent_message(
