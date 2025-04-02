@@ -114,7 +114,6 @@ class VertexLabelGenerator(Tool):
                 }
             )
 
-        # store = get_graph_db()
         store = graph_db_service.get_default_graph_db()
         with store.conn.session() as session:
             for statement in statements:
