@@ -283,17 +283,20 @@ const HomePage: React.FC = () => {
   };
 
   const onBeforeUpload = async () => {
-    const res = await runCreateSession({
-      name: formatMessage('home.newConversation'),
-    })
-    if (res.success) {
+    try {
+      const { data: { id = '' } } = await runCreateSession({
+        name: formatMessage('home.newConversation'),
+      })
       getSessionList();
       setState((draft) => {
-        draft.activeKey = res?.data?.id || '';
+        draft.activeKey = id;
       });
+
+      return id;
+    } catch (error) {
+      console.log('onBeforeUpload' + error)
     }
 
-    return res?.data?.id || '';
   }
 
 
