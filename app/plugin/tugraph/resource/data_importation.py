@@ -6,8 +6,8 @@ from uuid import uuid4
 from app.core.common.system_env import SystemEnv
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.tugraph.tugraph_store import get_tugraph
 
 DOC_CONTENT = """
 # 罗密欧与朱丽叶：故事梗概与人物关系
@@ -204,7 +204,7 @@ class SchemaGetter(Tool):
             function=self.get_schema,
         )
 
-    async def get_schema(self) -> str:
+    async def get_schema(self, graph_db_service: GraphDbService) -> str:
         """Get the schema of a graph database.
 
         Args:
@@ -217,8 +217,9 @@ class SchemaGetter(Tool):
             schema_str = get_schema()
         """
         query = "CALL dbms.graph.getGraphSchema()"
-        sstore = get_tugraph()
-        schema = sstore.conn.run(query=query)
+
+        store = graph_db_service.get_default_graph_db()
+        schema = store.conn.run(query=query)
 
         result = f"{SCHEMA_BOOK}\n\n查询成功，得到当下的图 schema：\n" + json.dumps(
             json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False
@@ -238,7 +239,9 @@ class CypherExecutor(Tool):
             function=self.validate_and_execute_cypher,
         )
 
-    async def validate_and_execute_cypher(self, cyphers: List[str], **kargs) -> str:
+    async def validate_and_execute_cypher(
+        self, graph_db_service: GraphDbService, cyphers: List[str], **kargs
+    ) -> str:
         """Validate the TuGraph Cypher and execute it in the TuGraph Database.
         Make sure the input cypher is only the code without any other information including ```Cypher``` or ```TuGraph Cypher```.
         This function can only execute one cypher schema at a time.
@@ -253,7 +256,7 @@ class CypherExecutor(Tool):
 
         print("\n".join(cyphers))
         try:
-            store = get_tugraph()
+            store = graph_db_service.get_default_graph_db()
             for cypher in cyphers:
                 print(f"result: {(store.conn.run(cypher)[0])}")
             return f"TuGraph 导入数据成功，成功运行如下指令：\n{'  '.join(cyphers)}"
@@ -299,6 +302,7 @@ class DataImport(Tool):
 
     async def import_data(
         self,
+        graph_db_service: GraphDbService,
         source_label: str,
         source_primary_key: str,
         source_properties: Dict[str, Any],
@@ -425,7 +429,8 @@ class DataImport(Tool):
 
         cypher_executor = CypherExecutor()
         return await cypher_executor.validate_and_execute_cypher(
-            [source_statement, target_statement, rel_statement],
+            graph_db_service=graph_db_service,
+            cyphers=[source_statement, target_statement, rel_statement],
             source_label=source_label,
             source_primary_key=source_primary_key,
             source_properties=source_properties,

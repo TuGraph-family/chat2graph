@@ -28,7 +28,7 @@ class ServiceFactory:
         for module_info in pkgutil.iter_modules([str(current_dir)]):
             module_full_name = f"{service_package_name}.{module_info.name}"
             module = importlib.import_module(module_full_name)
-            for name, obj in inspect.getmembers(module):
+            for _, obj in inspect.getmembers(module):
                 if (
                     inspect.isclass(obj)
                     and obj.__module__ == module_full_name

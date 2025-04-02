@@ -71,10 +71,10 @@ class Neo4jDbConfig(GraphDbConfig):
         return f"bolt://{self.host}:{self.port}"
 
 
-class TuGraph(GraphDbConfig):
+class TuGraphDbConfig(GraphDbConfig):
     """TuGraphDbConfig class"""
 
     @property
     def uri(self) -> str:
         """Get the connection URI for TuGraph."""
-        return f"{self.host}:{self.port}"
+        return f"bolt://{self.host}:{self.port}"

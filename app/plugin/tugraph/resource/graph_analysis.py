@@ -2,8 +2,8 @@ import json
 from typing import Dict, List, Optional
 from uuid import uuid4
 
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.tugraph.tugraph_store import get_tugraph
 
 
 class AlgorithmsGetter(Tool):
@@ -17,7 +17,7 @@ class AlgorithmsGetter(Tool):
             function=self.get_algorithms,
         )
 
-    async def get_algorithms(self) -> str:
+    async def get_algorithms(self, grapb_db_service: GraphDbService) -> str:
         """Retrieve all algorithm plugins of a specified type and version supported by the graph
         database.
 
@@ -31,7 +31,7 @@ class AlgorithmsGetter(Tool):
         plugins: List[Dict[str, str]] = []
         query_v1 = "CALL db.plugin.listPlugin('CPP','v1')"
         query_v2 = "CALL db.plugin.listPlugin('CPP','v2')"
-        db = get_tugraph()
+        db = grapb_db_service.get_default_graph_db()
         records_1 = db.conn.run(query=query_v1)
         records_2 = db.conn.run(query=query_v2)
         for record in records_1:
@@ -67,7 +67,9 @@ class AlgorithmsExecutor(Tool):
             function=self.execute_algorithms,
         )
 
-    async def execute_algorithms(self, algorithms_name: str) -> str:
+    async def execute_algorithms(
+        self, graph_db_service: GraphDbService, algorithms_name: str
+    ) -> str:
         """Execute the specified algorithm on the graph database.
 
         This function calls the specified algorithm plugin on the graph database and returns the
@@ -88,7 +90,7 @@ class AlgorithmsExecutor(Tool):
             false
         )"""
 
-        db = get_tugraph()
-        result = db.conn.run(query=query)
+        store = graph_db_service.get_default_graph_db()
+        result = store.conn.run(query=query)
 
         return str(result)

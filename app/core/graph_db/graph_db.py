@@ -1,9 +1,15 @@
-class GraphDb:
+from typing import Generic, TypeVar
+
+from app.core.graph_db.graph_db_config import GraphDbConfig
+
+T = TypeVar("T", bound=GraphDbConfig)
+
+
+class GraphDb(Generic[T]):
     """Graph store implementation."""
 
-    def __init__(self, config):
-        """Initialize graph store with configuration."""
-        self.config = config
+    def __init__(self, config: T):
+        self._config: T = config
         self._driver = None
 
     @property

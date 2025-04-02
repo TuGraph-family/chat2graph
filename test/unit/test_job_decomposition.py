@@ -226,9 +226,11 @@ Analyzing the task...
 
     job_service: JobService = JobService.instance
 
-    original_job = Job(goal="")
+    original_job = Job(goal="test_job_for_error_handling")
     job_service.save_job(original_job)
-    subjob = SubJob(goal="", original_job_id=original_job.id, expert_id=leader._id)
+    subjob = SubJob(
+        goal="test_subjob_for_error_handling", original_job_id=original_job.id, expert_id=leader._id
+    )
     job_service.save_job(subjob)
 
     job_service.add_job(
@@ -244,4 +246,4 @@ Analyzing the task...
         job_graph = leader.execute(AgentMessage(job_id=subjob.id))
         job_service.replace_subgraph(new_subgraph=job_graph)
 
-    assert "json' not found in scratchpad" in str(exc_info.value)
+    assert "LLM output format is not correct (json format)" in str(exc_info.value)

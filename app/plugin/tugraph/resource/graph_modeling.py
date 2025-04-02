@@ -5,8 +5,8 @@ from uuid import uuid4
 from app.core.common.system_env import SystemEnv
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.tugraph.tugraph_store import get_tugraph
 
 CYPHER_GRAMMER = """
 ===== TuGraph Cypher 语法书 =====
@@ -383,6 +383,7 @@ class VertexLabelGenerator(Tool):
 
     async def create_vertex_label_by_json_schema(
         self,
+        graph_db_service: GraphDbService,
         label: str,
         primary: str,
         properties: List[Dict[str, Union[str, bool]]],
@@ -444,7 +445,8 @@ class VertexLabelGenerator(Tool):
         # Generate the Cypher statement
         cypher_exec = CypherExecutor()
         return await cypher_exec.validate_and_execute_cypher(
-            f"CALL db.createVertexLabelByJson('{json.dumps(label_json)}')"
+            graph_db_service=graph_db_service,
+            cypher_schema=f"CALL db.createVertexLabelByJson('{json.dumps(label_json)}')",
         )
 
 
@@ -461,6 +463,7 @@ class EdgeLabelGenerator(Tool):
 
     async def create_edge_label_by_json_schema(
         self,
+        graph_db_service: GraphDbService,
         label: str,
         primary: str,
         properties: List[Dict[str, Union[str, bool]]],
@@ -526,7 +529,8 @@ class EdgeLabelGenerator(Tool):
 
         cypher_exec = CypherExecutor()
         return await cypher_exec.validate_and_execute_cypher(
-            f"CALL db.createEdgeLabelByJson('{json.dumps(label_json)}')"
+            graph_db_service=graph_db_service,
+            cypher_schema=f"CALL db.createEdgeLabelByJson('{json.dumps(label_json)}')",
         )
 
 
@@ -541,7 +545,9 @@ class CypherExecutor(Tool):
             function=self.validate_and_execute_cypher,
         )
 
-    async def validate_and_execute_cypher(self, cypher_schema: str) -> str:
+    async def validate_and_execute_cypher(
+        self, graph_db_service: GraphDbService, cypher_schema: str
+    ) -> str:
         """Validate the TuGraph Cypher and execute it in the TuGraph Database.
         Make sure the input cypher is only the code without any other information including
         ```Cypher``` or ```TuGraph Cypher```.
@@ -556,7 +562,7 @@ class CypherExecutor(Tool):
         """
 
         try:
-            store = get_tugraph()
+            store = graph_db_service.get_default_graph_db()
             store.conn.run(cypher_schema)
             return f"TuGraph 成功运行如下 schema：\n{cypher_schema}"
         except Exception as e:
@@ -590,7 +596,7 @@ class GraphReachabilityGetter(Tool):
             function=self.get_graph_reachability,
         )
 
-    async def get_graph_reachability(self) -> str:
+    async def get_graph_reachability(self, graph_db_service: GraphDbService) -> str:
         """Get the reachability information of the graph database which can help to understand the
         graph structure.
 
@@ -604,7 +610,7 @@ class GraphReachabilityGetter(Tool):
             reachability_str = get_graph_reachability()
         """
         query = "CALL dbms.graph.getGraphSchema()"
-        store = get_tugraph()
+        store = graph_db_service.get_default_graph_db()
         schema = store.conn.run(query=query)
 
         edges: List = []

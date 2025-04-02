@@ -2,8 +2,8 @@ import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.tugraph.tugraph_store import get_tugraph
 
 QUERY_GRAMMER = """
 ===== 图vertex查询语法书 =====
@@ -25,7 +25,7 @@ class SchemaGetter(Tool):
             function=self.get_schema,
         )
 
-    async def get_schema(self) -> str:
+    async def get_schema(self, graph_db_service: GraphDbService) -> str:
         """Get the schema of the graph database.
 
         Args:
@@ -38,7 +38,7 @@ class SchemaGetter(Tool):
             schema_str = get_schema()
         """
         query = "CALL dbms.graph.getGraphSchema()"
-        store = get_tugraph()
+        store = graph_db_service.get_default_graph_db()
         schema = store.conn.run(query=query)
 
         return json.dumps(json.loads(schema[0][0])["schema"], indent=4, ensure_ascii=False)
@@ -95,7 +95,11 @@ class VertexQuerier(Tool):
         return f"'{value}'"
 
     async def query_vertex(
-        self, vertex_type: str, conditions: List[Dict[str, str]], distinct: bool = False
+        self,
+        graph_db_service: GraphDbService,
+        vertex_type: str,
+        conditions: List[Dict[str, str]],
+        distinct: bool = False,
     ) -> str:
         """Query vertices with conditions. The input must have been matched with the schema of the
         graph database.
@@ -180,6 +184,6 @@ WHERE {where_clause}
 RETURN {distinct_keyword}n
         """
 
-        store = get_tugraph()
+        store = graph_db_service.get_default_graph_db()
         result = "\n".join([str(record.get("n", "")) for record in store.conn.run(query=query)])
         return f"查询图数据库成功。\n查询语句：\n{query}：\n查询结果：\n{result}"
