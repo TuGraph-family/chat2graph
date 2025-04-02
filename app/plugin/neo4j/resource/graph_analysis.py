@@ -2,8 +2,8 @@ import json
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.graph_store import get_graph_db
 
 
 class AlgorithmsGetter(Tool):
@@ -90,6 +90,7 @@ class PageRankExecutor(Tool):
 
     async def execute_page_rank_algorithm(
         self,
+        graph_db_service: GraphDbService,
         vertex_label: str = "*",
         relationship_type: str = "*",
         iterations: int = 20,
@@ -110,7 +111,7 @@ class PageRankExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"pagerank_graph_{uuid4().hex[:8]}"
 
@@ -213,6 +214,7 @@ class BetweennessCentralityExecutor(Tool):
 
     async def execute_betweenness_centrality_algorithm(
         self,
+        graph_db_service: GraphDbService,
         vertex_label: str = "*",
         relationship_type: str = "*",
         sample_size: int = 100,
@@ -250,7 +252,7 @@ class BetweennessCentralityExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"betweenness_graph_{uuid4().hex[:8]}"
 
@@ -346,6 +348,7 @@ class LouvainExecutor(Tool):
 
     async def execute_louvain_algorithm(
         self,
+        graph_db_service: GraphDbService,
         vertex_label: str = "*",
         relationship_type: str = "*",
         include_intermediate_communities: bool = False,
@@ -394,7 +397,7 @@ class LouvainExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"louvain_graph_{uuid4().hex[:8]}"
 
@@ -525,6 +528,7 @@ class LabelPropagationExecutor(Tool):
 
     async def execute_label_propagation_algorithm(
         self,
+        graph_db_service: GraphDbService,
         vertex_label: str = "*",
         relationship_type: str = "*",
         max_iterations: int = 10,
@@ -568,7 +572,7 @@ class LabelPropagationExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"labelprop_graph_{uuid4().hex[:8]}"
 
@@ -708,6 +712,7 @@ class ShortestPathExecutor(Tool):
 
     async def execute_shortest_path_algorithm(
         self,
+        graph_db_service: GraphDbService,
         start_node_id: str,
         end_node_id: Union[str, List[str]],
         vertex_label: str = "*",
@@ -771,7 +776,7 @@ class ShortestPathExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"shortestpath_graph_{uuid4().hex[:8]}"
 
@@ -937,6 +942,7 @@ class NodeSimilarityExecutor(Tool):
 
     async def execute_node_similarity_algorithm(
         self,
+        graph_db_service: GraphDbService,
         vertex_label: str = "*",
         relationship_type: str = "*",
         top_k: int = 10,
@@ -991,7 +997,7 @@ class NodeSimilarityExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"similarity_graph_{uuid4().hex[:8]}"
 
@@ -1110,6 +1116,7 @@ class CommonNeighborsExecutor(Tool):
 
     async def execute_common_neighbors_algorithm(
         self,
+        graph_db_service: GraphDbService,
         node1_id: str,
         node2_id: str,
         vertex_label: str = "*",
@@ -1144,7 +1151,7 @@ class CommonNeighborsExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         result: Dict[str, Any] = {}
 
         try:
@@ -1235,6 +1242,7 @@ class KMeansExecutor(Tool):
 
     async def execute_kmeans_algorithm(
         self,
+        graph_db_service: GraphDbService,
         vertex_label: str = "*",
         node_properties: Optional[List[str]] = None,
         k: int = 3,
@@ -1288,7 +1296,7 @@ class KMeansExecutor(Tool):
         Returns:
             str: The result of the algorithm execution in JSON format.
         """  # noqa: E501
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         # generate a unique name for the graph projection
         graph_name = f"kmeans_graph_{uuid4().hex[:8]}"
 

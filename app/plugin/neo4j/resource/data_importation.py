@@ -3,8 +3,8 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from app.core.service.file_service import FileService
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.graph_store import get_graph_db
 from app.plugin.neo4j.resource.read_doc import SchemaManager
 
 
@@ -71,6 +71,7 @@ class DataImport(Tool):
 
     async def import_data(
         self,
+        graph_db_service: GraphDbService,
         source_label: str,
         source_primary_key: str,
         source_properties: Dict[str, Any],
@@ -176,7 +177,7 @@ class DataImport(Tool):
             RETURN source, target, r
             """  # noqa: E501
 
-            store = get_graph_db()
+            store = graph_db_service.get_default_graph_db()
             with store.conn.session() as session:
                 # 执行导入操作
                 print(f"Executing statement: {cypher}")

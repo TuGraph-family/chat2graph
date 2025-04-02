@@ -2,8 +2,8 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.core.service.file_service import FileService
+from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.graph_store import get_graph_db
 from app.plugin.neo4j.resource.doc import QUERY_GRAMMER
 from app.plugin.neo4j.resource.read_doc import SchemaManager
 
@@ -114,7 +114,11 @@ class VertexQuerier(Tool):
         return f"'{value}'"
 
     async def query_vertex(
-        self, vertex_type: str, conditions: List[Dict[str, str]], distinct: bool = False
+        self,
+        graph_db_service: GraphDbService,
+        vertex_type: str,
+        conditions: List[Dict[str, str]],
+        distinct: bool = False,
     ) -> str:
         """Query vertices with conditions. The input must have been matched with the schema of the
         graph database.
@@ -199,7 +203,7 @@ WHERE {where_clause}
 RETURN {distinct_keyword}n
         """
 
-        store = get_graph_db()
+        store = graph_db_service.get_default_graph_db()
         results = []
 
         with store.conn.session() as session:
