@@ -1,5 +1,5 @@
 import traceback
-from typing import List, cast
+from typing import List
 
 from app.core.agent.agent import Agent
 from app.core.common.system_env import SystemEnv
@@ -37,7 +37,30 @@ class Expert(Agent):
             print(
                 f"\033[38;5;208m[Warning]: Job {job.id} already has a final status: {job_result.status.value}.\033[0m"
             )
-            return cast(AgentMessage, self._message_service.get_message(id=job_result.message_id))
+            if self._workflow.evaluator:
+                return self.save_output_agent_message(
+                    job=job,
+                    workflow_message=WorkflowMessage(
+                        payload={
+                            "scratchpad": f"Job {job.id} already has a final status: "
+                            f"{job_result.status.value}.",
+                            "evaluation": "No further execution needed.",
+                            "lesson": "",  # no lesson to add since it already has a final status
+                        },
+                        job_id=job.id,
+                    ),
+                )
+            # if there is no evaluator, return the existing job result
+            return self.save_output_agent_message(
+                job=job,
+                workflow_message=WorkflowMessage(
+                    payload={
+                        "scratchpad": f"Job {job.id} already has a final status: "
+                        f"{job_result.status.value}.",
+                    },
+                    job_id=job.id,
+                ),
+            )
         job_result.status = JobStatus.RUNNING
         self._job_service.save_job_result(job_result=job_result)
 
