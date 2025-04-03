@@ -57,7 +57,10 @@ class KnowledgeBaseManager:
             Tuple[Dict[str, Any], str]: A tuple containing clean status and success message
         """
         self._knowledge_base_service.clean_knowledge_base(id=id, drop=drop)
-        return {}, f"Knowledge base with ID {id} cleaned successfully"
+        if drop:
+            return {}, f"Knowledge base with ID {id} deleted successfully"
+        else:
+            return {}, f"Knowledge base with ID {id} cleaned successfully"
 
     def get_all_knowledge_bases(self) -> Tuple[dict, str]:
         """
