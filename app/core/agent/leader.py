@@ -107,7 +107,7 @@ class Leader(Agent):
                 job_dict = parse_json(text=workflow_message.scratchpad)
                 assert job_dict is not None
             except (ValueError, json.JSONDecodeError):
-                self._job_service.terminate_job_graph(
+                self._job_service.stop_job_graph(
                     job=job,
                     error_info="LLM output format is not correct (json format), or "
                     "the job is not decomposed. Retry it again please.",

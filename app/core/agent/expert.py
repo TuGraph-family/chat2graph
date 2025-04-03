@@ -126,7 +126,7 @@ class Expert(Agent):
                 job_result.status = JobStatus.FAILED
                 self._job_service.save_job_result(job_result=job_result)
 
-                self._job_service.terminate_job_graph(
+                self._job_service.stop_job_graph(
                     job=job,
                     error_info=f"Failed after retrying {max_retry_count} times.\n"
                     f"{workflow_message.evaluation}\n{workflow_message.lesson}",

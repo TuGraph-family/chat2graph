@@ -245,21 +245,32 @@ class JobService(metaclass=Singleton):
             thinking_metrics=subjob_results,
         )
 
-    def terminate_job_graph(self, job: Job, error_info: str) -> None:
-        """Raise an error message, and terminate the whole job execution."""
+    def stop_job_graph(self, job: Job, error_info: str) -> None:
+        """Stop the job graph.
+
+        When a specific job (subjob, original job) fails and it is necessary to stop the execution
+        of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
+        other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
+        """
         # color: red
         print(f"\033[38;5;196m[ERROR]: {error_info}\033[0m")
 
+        # mark the current job as failed
+        job_result = self.get_job_result(job_id=job.id)
+        job_result.status = JobStatus.FAILED
+        self.save_job_result(job_result=job_result)
+
+        # get the original job
         if isinstance(job, SubJob):
             assert job.original_job_id is not None, "The subjob must have an original job ID."
             original_job: Job = self.get_orignal_job(original_job_id=job.original_job_id)
         else:
             original_job = job
 
+        # if the original job does not have a result, mark it as failed
         job_result = self.get_job_result(job_id=original_job.id)
         if not job_result.has_result():
-            # if the original job does not have a result, mark it as failed
-            job_result.status = JobStatus.FAILED
+            job_result.status = JobStatus.STOPPED
             self.save_job_result(job_result=job_result)
 
         # update all the subjobs which have not the result to FAILED
@@ -268,7 +279,7 @@ class JobService(metaclass=Singleton):
             # mark all the subjobs as legacy
             subjob_result = self.get_job_result(job_id=subjob_id)
             if not subjob_result.has_result():
-                subjob_result.status = JobStatus.FAILED  # mark the subjob as failed
+                subjob_result.status = JobStatus.STOPPED  # mark the subjob as STOPPED
                 self.save_job_result(job_result=subjob_result)
 
         # save the final system message with the error information
