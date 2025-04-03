@@ -112,6 +112,7 @@ class Leader(Agent):
                     error_info="LLM output format is not correct (json format), or "
                     "the job is not decomposed. Retry it again please.",
                 )
+                job_dict = {}  # fallback to empty dict to avoid further execution
 
         # init the decomposed job graph
         job_graph = JobGraph()

@@ -291,11 +291,6 @@ class JobService(metaclass=Singleton):
             )
         self._message_service.save_message(message=error_message)
 
-        raise Exception(
-            f"An error occurred during the execution of the job: {error_info}\n"
-            f"Please check the job `{original_job.id}` for more details."
-        )
-
     def get_job_graph(self, job_id: str) -> JobGraph:
         """Get the job graph by the inital job id. If the job graph does not exist,
         create a new one and save it to the database."""
