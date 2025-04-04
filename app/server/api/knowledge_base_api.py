@@ -50,7 +50,7 @@ def clean_knowledge_base_by_id(knowledge_base_id: str):
     manager = KnowledgeBaseManager()
     data: Dict[str, Any] = cast(Dict[str, Any], request.json)
 
-    drop: bool = data.get("drop", True)
+    drop: bool = data.get("drop", False)
 
     result, message = manager.clean_knowledge_base(id=knowledge_base_id, drop=drop)
     return make_response(data=result, message=message)
