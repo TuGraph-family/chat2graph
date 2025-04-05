@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.core.service.file_service import FileService
@@ -56,6 +56,190 @@ class SchemaGetter(Tool):
             result += "\n"
 
         return result
+
+
+class DataStatusCheck(Tool):
+    """Tool for checking the current status of data in the graph database."""
+
+    def __init__(self, id: Optional[str] = None):
+        super().__init__(
+            id=id or str(uuid4()),
+            name=self.check_data_status.__name__,
+            description=self.check_data_status.__doc__ or "",
+            function=self.check_data_status,
+        )
+
+    async def check_data_status(
+        self,
+        graph_db_service: GraphDbService,
+        node_labels: Optional[List[str]] = None,
+        relationship_labels: Optional[List[str]] = None,
+        sample_limit: int = 3,
+    ) -> str:
+        """Check the current status of data in the graph database.
+
+        This function provides an overview of the current state of the graph database,
+        including counts of nodes by label, relationships by type, and optionally
+        samples of node and relationship data.
+
+        Args:
+            node_labels (Optional[List[str]]): Specific node labels to check. If None, all labels will be checked.
+            relationship_labels (Optional[List[str]]): Specific relationship types to check. If None, all types will be checked.
+            sample_limit (int): Maximum number of sample records to return for each label/type. Default is 3.
+
+        Returns:
+            str: A formatted string containing database status information.
+        """  # noqa: E501
+        try:
+            store = graph_db_service.get_default_graph_db()
+            results = {}
+
+            with store.conn.session() as session:
+                # 1. 获取总体统计信息
+                total_stats = session.run("""
+                    MATCH (n) 
+                    OPTIONAL MATCH (n)-[r]->() 
+                    RETURN 
+                        count(DISTINCT n) as total_nodes,
+                        count(DISTINCT r) as total_relationships
+                """).single()
+
+                results["总体统计"] = {
+                    "总节点数": total_stats["total_nodes"],
+                    "总关系数": total_stats["total_relationships"],
+                }
+
+                # 2. 获取所有节点标签列表（如果未指定）
+                if node_labels is None:
+                    labels_result = session.run(
+                        "CALL db.labels() YIELD label RETURN collect(label) as labels"
+                    )
+                    all_labels = labels_result.single()["labels"]
+                    node_labels = all_labels
+
+                # 3. 获取所有关系类型列表（如果未指定）
+                if relationship_labels is None:
+                    rel_types_result = session.run(
+                        "CALL db.relationshipTypes() YIELD relationshipType RETURN collect(relationshipType) as types"
+                    )
+                    all_rel_types = rel_types_result.single()["types"]
+                    relationship_labels = all_rel_types
+
+                # 4. 获取节点标签统计和样例
+                results["节点统计"] = {}
+                results["节点样例"] = {}
+
+                for label in node_labels:
+                    # 统计每个标签的节点数量
+                    count_query = f"MATCH (n:{label}) RETURN count(n) as count"
+                    count_result = session.run(count_query).single()
+                    results["节点统计"][label] = count_result["count"]
+
+                    # 获取每个标签的样例数据
+                    if count_result["count"] > 0:
+                        sample_query = f"MATCH (n:{label}) RETURN n LIMIT {sample_limit}"
+                        sample_results = list(session.run(sample_query))
+                        samples = []
+
+                        for record in sample_results:
+                            node = record["n"]
+                            samples.append(
+                                {"id": dict(node).get("id", "N/A"), "properties": dict(node)}
+                            )
+
+                        results["节点样例"][label] = samples
+
+                # 5. 获取关系类型统计和样例
+                results["关系统计"] = {}
+                results["关系样例"] = {}
+
+                for rel_type in relationship_labels:
+                    # 统计每个类型的关系数量
+                    count_query = f"MATCH ()-[r:{rel_type}]->() RETURN count(r) as count"
+                    count_result = session.run(count_query).single()
+                    results["关系统计"][rel_type] = count_result["count"]
+
+                    # 获取每个类型的样例数据
+                    if count_result["count"] > 0:
+                        sample_query = f"""
+                            MATCH (a)-[r:{rel_type}]->(b)
+                            RETURN type(r) as type, properties(r) as props,
+                                   labels(a)[0] as source_label, a.id as source_id,
+                                   labels(b)[0] as target_label, b.id as target_id
+                            LIMIT {sample_limit}
+                        """
+                        sample_results = list(session.run(sample_query))
+                        samples = []
+
+                        for record in sample_results:
+                            samples.append(
+                                {
+                                    "type": record["type"],
+                                    "properties": record["props"],
+                                    "source": f"{record['source_label']}(id: {record['source_id']})",
+                                    "target": f"{record['target_label']}(id: {record['target_id']})",
+                                }
+                            )
+
+                        results["关系样例"][rel_type] = samples
+
+            # 格式化输出结果
+            output = []
+
+            # 总体统计
+            output.append("# 图数据库当前状态")
+            output.append("\n## 总体统计")
+            output.append(f"- 总节点数: {results['总体统计']['总节点数']}")
+            output.append(f"- 总关系数: {results['总体统计']['总关系数']}")
+
+            # 节点统计
+            output.append("\n## 节点统计")
+            if not results["节点统计"]:
+                output.append("- 数据库中暂无节点")
+            else:
+                for label, count in results["节点统计"].items():
+                    output.append(f"- {label}: {count} 个")
+
+            # 关系统计
+            output.append("\n## 关系统计")
+            if not results["关系统计"]:
+                output.append("- 数据库中暂无关系")
+            else:
+                for rel_type, count in results["关系统计"].items():
+                    output.append(f"- {rel_type}: {count} 个")
+
+            # 节点样例
+            if any(results["节点样例"].values()):
+                output.append("\n## 节点样例")
+                for label, samples in results["节点样例"].items():
+                    if samples:
+                        output.append(f"\n### {label} 节点样例")
+                        for i, sample in enumerate(samples, 1):
+                            output.append(f"样例 {i}:")
+                            output.append(f"- ID: {sample['id']}")
+                            output.append("- 属性:")
+                            for prop_key, prop_value in sample["properties"].items():
+                                output.append(f"  - {prop_key}: {prop_value}")
+
+            # 关系样例
+            if any(results["关系样例"].values()):
+                output.append("\n## 关系样例")
+                for rel_type, samples in results["关系样例"].items():
+                    if samples:
+                        output.append(f"\n### {rel_type} 关系样例")
+                        for i, sample in enumerate(samples, 1):
+                            output.append(f"样例 {i}:")
+                            output.append(f"- 源节点: {sample['source']}")
+                            output.append(f"- 目标节点: {sample['target']}")
+                            if sample["properties"]:
+                                output.append("- 关系属性:")
+                                for prop_key, prop_value in sample["properties"].items():
+                                    output.append(f"  - {prop_key}: {prop_value}")
+
+            return "\n".join(output)
+
+        except Exception as e:
+            raise Exception(f"检查数据状态失败: {str(e)}") from e
 
 
 class DataImport(Tool):
