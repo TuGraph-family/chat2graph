@@ -3,16 +3,21 @@ JOB_DECOMPOSITION_PROMPT = """
 ## Role: Decompose the main TASK into multi subtasks/single subtask for multi/single domain expert(s).
 
 ## Capabilities:
- - Focus on expert strengths, and provide the contextual information for each of them.
- - **First, evaluate if the `Given Task` is simple enough to be handled entirely by a single expert without decomposition.** Simple informational requests (e.g., "introduce X", "Define Y", "Compare A and B", "Help me correct the grammar syntax errors") often require only the one or two experts.
- - Critically evaluate the `Given Task` to determine the *minimum necessary* steps and experts required to make progress. **If decomposition *is* truly needed, aim for the fewest logical steps.** Avoid creating multiple subtasks if one expert can fulfill the entire `Given Task`.
- - **Only assign subtasks to experts whose capabilities, as strictly defined in their profiles, are directly and immediately needed.** Do not assign database modeling, importation, querying, or analysis tasks if the `Given Task` is purely informational and doesn't require interaction with a specific, data-filled graph instance.
+ - **1. Actively Infer Intent (Mandatory First Step):** **Crucially, you MUST analyze the `Given Task` *in conjunction with the entire `Conversation History` (if provided)*** to infer the user's **true underlying intent and desired next logical step**. Ask yourself: "Given our past interactions and the user's latest input (even if not a command), what is the user *really* trying to achieve next in the overall task?"
+ - **2. Determine Target Expert(s) & Action:** Based *solely* on the **inferred intent**, identify the Expert(s) whose capabilities are required for this next logical step.
+ - **3. Mandatory Task Decomposition:** **Your *only* output is task decomposition.** You MUST formulate one or more subtasks directed at the identified Expert(s) to fulfill the inferred intent.
+    - **Proceed even with incomplete information:** Even if the `Given Task` or history suggests prerequisites are missing (e.g., a user mentioning they forgot a file), you must still formulate the subtask for the relevant expert. Assume the necessary conditions will be met or that the expert must handle the situation.
+    - **Package Context Carefully:** Include all available context from the `Given Task` and `Conversation History` in the subtask description. If you identified potential issues (like the missing file based on user's statement), **briefly note this within the subtask's context** for the expert's awareness (e.g., "Context: User previously failed due to missing file and stated they forgot it. Assume file will be available for this import task.").
+    - Simple tasks or those requiring only one expert (based on inferred intent) should be handled as a single subtask.
+ - **Minimum Necessary Steps (During Decomposition):** Aim for the fewest logical subtasks required to fulfill the inferred intent.
+ - **Targeted Expert Assignment (During Decomposition):** Assign subtasks only to the expert(s) identified in Step 2.
 ## Self-contained: Each subtask includes all necessary information.
 ## Role-neutral: Avoid mentioning specific roles unless in TASK.
 ## Boundary-aware: Stay the subtasks within original TASK scope.
-## You must complete the task decomposition in one round. **If the task requires only one step/expert, present it as a single subtask.**
+## **If the task requires only one step/expert, present it as a single subtask.**
 
 ==== Given Task ====
+If the given task is very colloquial, you should distill an accurate task description based on the context and existing conversation history. Here is the given task to be decomposed:
 {task}
 
 ===== Expert Names & Descriptions =====
@@ -47,24 +52,24 @@ Here is the Subtasks Template
 // Must use ```json``` to mark the beginning of the json content.
 ```json
 {
-    "specific_task_id": 
-    {
+    "specific_task_id": {
         "goal": "subtask_description",
         "context": "Input data, resources, etc.",
         "completion_criteria": "Acceptance Criteria, etc.",
         "dependencies": ["specific_task_id_*", "specific_task_id_*", ...],
-        "assigned_expert": "Name of an expert (in English.)",
-    }
-    "specific_task_id":
-    {
+        "assigned_expert": "Name of an expert (in English)",
+        "thinking": "Sincerely explain the part about goals in the first person, showcasing your thoughts (without mentioning any role/expert/agent).",
+    },
+    "specific_task_id": {
         "goal": "subtask_description",
         "context": "Input data, resources, etc.",
         "completion_criteria": "Acceptance Criteria, etc.",
         "dependencies": ["specific_task_id_*", "specific_task_id_*", ...],
         "language of the assigned_expert": "Engilish",
-        "assigned_expert": "Name of an expert (in English.)",
+        "assigned_expert": "Name of an expert (in English)",
+        "thinking": "Sincerely explain the part about goals in the first person, showcasing your thoughts (without mentioning any role/expert/agent).",
     }
     ... // make sure the json format is correct
 }
 ```
-"""
+"""  # noqa: E501

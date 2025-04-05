@@ -134,10 +134,25 @@ class DualModelReasoner(Reasoner):
         # find deliverable content
         match = re.search(r"<deliverable>\s*(.*?)\s*</deliverable>", content, re.DOTALL)
 
-        # If match found, process and return the content
+        # if match found, process and return the content
         if match:
-            deliverablee_content = match.group(1)
-            reasoner_output = deliverablee_content.replace("TASK_DONE", "")
+            deliverable_content = match.group(1)
+            # handle indentation preservation
+            deliverable_segments = deliverable_content.splitlines()
+            if deliverable_segments and deliverable_segments[0].startswith("\t"):
+                # count leading tabs in first line
+                tab_indentation_depth = len(deliverable_segments[0]) - len(
+                    deliverable_segments[0].lstrip("\t")
+                )
+                # ensure all lines have the same indentation removed
+                normalized_segments = []
+                for segment in deliverable_segments:
+                    if segment.startswith("\t" * tab_indentation_depth):
+                        normalized_segments.append(segment[tab_indentation_depth:])
+                    else:
+                        normalized_segments.append(segment)
+                deliverable_content = "\n".join(normalized_segments)
+            reasoner_output = deliverable_content.replace("TASK_DONE", "")
         else:
             reasoner_output = (
                 content.replace("<shallow_thinking>", "")

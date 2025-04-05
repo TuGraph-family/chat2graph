@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional, Set, Tuple, cast
 
 import networkx as nx  # type: ignore
@@ -149,7 +150,16 @@ class JobService(metaclass=Singleton):
             assert agent_messages[0].get_payload() is not None, (
                 "The agent message payload is empty."
             )
-            mutli_agent_payload += cast(str, agent_messages[0].get_payload()) + "\n"
+            payload = cast(str, agent_messages[0].get_payload())
+            final_output_match = re.search(
+                r"<final_output>(.*?)</final_output>", payload, re.DOTALL
+            )
+            if final_output_match:
+                processed_payload = final_output_match.group(1).strip()
+            else:
+                # fallback to the original payload if no final_output tag found
+                processed_payload = payload.strip()
+            mutli_agent_payload += processed_payload + "\n"
 
         # save the multi-agent result to the database
         original_job: Job = self.get_orignal_job(original_job_id)

@@ -53,6 +53,7 @@ We share a common interest in collaborating to successfully complete the task by
 <instruction> // Must follow this structure, rather than the JSON format
     <YOUR_INSTRUCTION>  // Cannot be None
 </instruction>
+
 <input> // Must follow this structure, rather than the JSON format neither <function_call>...</function_call>
     <YOUR_INPUT>  // Allowed to use None if no input
 </input>
@@ -88,24 +89,30 @@ Here are the functions you can call to help you complete the task. The third par
 <shallow_thinking>
     <YOUR_THINKING>  // Can not be None. The consideration, which is specific, decisive, comprehensive, and direct, to the instruction.
 </shallow_thinking>
+
 <action>
     <YOUR_ACTION>  // Can not be None. You can use <function_call>...</function_call> here to call the functions.
 </action>
 
 <deliverable>
-// When I provided you TASK_DONE, you must use <deliverable> and TASK_DONE in your response to indicate task completion.
-// If I did not provide you TASK_DONE, you should never use <deliverable> in your response.
-1. Task Objective:
-    [should be the same as the TASK]
-2. Task Context and Background
+    // When I provided you TASK_DONE, you must use <deliverable> and TASK_DONE in your response to indicate task completion.
+    // If I did not provide you TASK_DONE, you should never use <deliverable> in your response.
+    <task_objective>
+    [should be the same as the TASK, but avoiding mentioning specific roles]
+    </task_objective>
+    <task_context>
     [should be the paragraphs]
-3. Key Points in the Reasoning Process:
-- Point 1: [Specific content/data/info and conclusion ...]
-- Point 2: [Specific content/data/info and conclusion ...]
-...
-4. Final Delivery: // should be the long and verbose
-{output_schema}
-TASK_DONE
+    </task_context>
+    <key_reasoning_points>
+    - Point 1: [Specific content/data/info and conclusion ...]
+    - Point 2: [Specific content/data/info and conclusion ...]
+    ...
+    </key_reasoning_points>
+    <final_output>
+    [should be the long and verbose]
+    {output_schema}
+    </final_output>
+    TASK_DONE
 </deliverable>
 """  # noqa: E501
 
@@ -135,8 +142,8 @@ We share a common interest in collaborating to successfully complete the task by
 
 1. You are here to assist me in completing the TASK. Never forget our TASK!
 2. Your answer MUST strictly adhere to the structure of ANSWER TEMPLATE.
-3. The "<shallow_thinking>" refers the consideration of yours (not mine, meaning the content is different to my thoughts), which is specific, decisive, comprehensive, and direct, presents your cognitive process that builds upon my instructions. Also, it is the place where you can store the information.
-4. After the part of "<shallow_thinking>" in your answer, you should perform your <action> in straightforward manner. <action> is the place where you complete/act/execute what you have thought in <shallow_thinking>.
+3. The "<deep_thinking>" refers the consideration of yours (not mine, meaning the content is different to my thoughts), which is specific, decisive, comprehensive, and direct, presents your cognitive process that builds upon my instructions. Also, it is the place where you can store the information.
+4. After the part of "<deep_thinking>" in your answer, you should perform your <action> in straightforward manner. <action> is the place where you complete/act/execute what you have thought in <deep_thinking>.
 5. (Optional) The instruction can be wrong that I provided to you, so you can doubt the instruction by providing reasons, during the process of the conversation. 
 6. IMPORTANT: When providing the final deliverable, you MUST include ALL relevant information from our previous conversation, as the previous context will NOT be available for later processing. Your deliverable should be completely self-contained and independently understandable.
 
@@ -158,22 +165,31 @@ We share a common interest in collaborating to successfully complete the task by
     ∴ Providing the following thinking, action:
 </deep_thinking>
 
-<shallow_thinking>
+<deep_thinking>
     <YOUR_THINKING>  // If you are not satisfied with my answer, you can say 'I am not satisfied with the answer, please provide me with another one.'
-</shallow_thinking>
+</deep_thinking>
+
 <action>
     <YOUR_ACTION>  // Can not be None. You can use <function_call>...</function_call> here to call the functions.
 </action>
+
 <deliverable>
-1. Task Objective:
-    [should be the same as the TASK]
-2. Task Context and Background
+    // When I provided you TASK_DONE, you must use <deliverable> and TASK_DONE in your response to indicate task completion.
+    // If I did not provide you TASK_DONE, you should never use <deliverable> in your response.
+    <task_objective>
+    [should be the same as the TASK, but avoiding mentioning specific roles]
+    </task_objective>
+    <task_context>
     [should be the paragraphs]
-3. Key Points in the Reasoning Process:
-- Point 1: [Specific content/data/info and conclusion ...]
-- Point 2: [Specific content/data/info and conclusion ...]
-...
-4. Final Delivery: // should be the long and verbose
-{output_schema}
+    </task_context>
+    <key_reasoning_points>
+    - Point 1: [Specific content/data/info and conclusion ...]
+    - Point 2: [Specific content/data/info and conclusion ...]
+    ...
+    </key_reasoning_points>
+    <final_output>
+    [should be the long and verbose]
+    {output_schema}
+    </final_output>
 </deliverable>
 """  # noqa: E501
