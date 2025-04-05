@@ -46,17 +46,21 @@ class KnowledgeBaseManager:
         )
         return {}, f"Knowledge base with ID {id} edited successfully"
 
-    def delete_knowledge_base(self, id: str) -> Tuple[Dict[str, Any], str]:
-        """Delete a knowledge base by ID.
+    def clean_knowledge_base(self, id: str, drop: bool) -> Tuple[Dict[str, Any], str]:
+        """Clean a knowledge base by ID.
 
         Args:
             id (str): ID of the knowledge base
+            drop (bool): D  rop the entire knowledge base after cleaning or not.
 
         Returns:
-            Tuple[Dict[str, Any], str]: A tuple containing deletion status and success message
+            Tuple[Dict[str, Any], str]: A tuple containing clean status and success message
         """
-        self._knowledge_base_service.delete_knowledge_base(id=id)
-        return {}, f"Knowledge base with ID {id} deleted successfully"
+        self._knowledge_base_service.clean_knowledge_base(id=id, drop=drop)
+        if drop:
+            return {}, f"Knowledge base with ID {id} deleted successfully"
+        else:
+            return {}, f"Knowledge base with ID {id} cleaned successfully"
 
     def get_all_knowledge_bases(self) -> Tuple[dict, str]:
         """

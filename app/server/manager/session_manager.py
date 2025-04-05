@@ -69,7 +69,7 @@ class SessionManager:
         """
         kb = self._knowledgebase_service.get_session_knowledge_base(session_id=id)
         if kb:
-            self._knowledgebase_service.delete_knowledge_base(id=kb.id)
+            self._knowledgebase_service.clean_knowledge_base(id=kb.id, drop=True)
 
         self._session_service.delete_session(id=id)
         return {}, f"Session with ID {id} deleted successfully"
