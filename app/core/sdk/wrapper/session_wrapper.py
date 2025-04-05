@@ -108,13 +108,13 @@ class SessionWrapper:
             return ""
 
         message_views = [
-            "---- Conversation History of the Job Goal ----",
+            "---- Conversation History of the Given Task ----",
             "Please select the useful information from the history to assist in accurately "
             "interpreting the user's intent and decomposing the task appropriately.",
         ]
         for view in conversation_views:
             # 1. user question
-            message_views.append("[User Question]")
+            message_views.append("[User Message]")
             message_views.append(cast(str, view.question.get_payload()).strip())
 
             # 2. agent thinking steps (if available)
@@ -127,11 +127,11 @@ class SessionWrapper:
                     message_views.append(thinking_msg_payload.strip())
 
             # 3. ai answer
-            message_views.append("[AI Answer]")
+            message_views.append("[AI Message]")
             message_views.append(cast(str, view.answer.get_payload()).strip())
 
         if current_question_message:
-            message_views.append("[User Question]")
+            message_views.append("[User Message]")
             message_views.append(cast(str, current_question_message.get_payload()).strip())
 
         message_views.append("---- End of Conversation History ----")
