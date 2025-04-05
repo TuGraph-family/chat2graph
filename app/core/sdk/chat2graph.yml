@@ -30,6 +30,10 @@ tools:
     name: "SchemaGetter"
     module_path: "app.plugin.neo4j.resource.data_importation"
 
+  - &data_status_check_tool
+    name: "DataStatusCheck"
+    module_path: "app.plugin.neo4j.resource.data_importation"
+
   - &data_import_tool
     name: "DataImport"
     module_path: "app.plugin.neo4j.resource.data_importation"
@@ -139,6 +143,12 @@ actions:
     tools:
       - *schema_getter_tool
 
+  - &data_status_check_action
+    name: "data_status_check"
+    desc: "检查图数据库中当前数据的状态，了解现有数据情况，确保后续数据导入的一致性"
+    tools:
+      - *data_status_check_tool
+
   - &content_understanding_action_2
     name: "content_understanding_2"
     desc: "调用相关工具获取原始文本内容，并结合图模型进行分析和理解"
@@ -147,7 +157,7 @@ actions:
 
   - &triplet_data_generation_action
     name: "triplet_data_generation"
-    desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库"
+    desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库(如果需要的话，可以多次抽取并导入数据库，以确保完成给定的任务)"
     tools:
       - *data_import_tool
 
@@ -240,6 +250,7 @@ toolkit:
     ]
   - [
       *schema_understanding_action,
+      *data_status_check_action,
       *content_understanding_action_2,
       *triplet_data_generation_action,
       *output_result_action,
@@ -281,24 +292,41 @@ operators:
 
       请确保你的分析全面、细致，并为每一个结论提供充分的理由。
     output_schema: |
-      {
-          "domain": "文档所属领域的详细描述，解释该领域的主要业务和数据特点",
-          "data_full_view": "对文档数据全貌的详细推测，包括数据结构、规模、实体关系等，并提供思考链路和理由",
-          "concepts": [
-              {"concept": "概念名称", "description": "概念的详细描述", "importance": "概念在文档中的重要性"},
-              ...
-          ],
-          "properties": [
-              {"concept": "所属概念", "property": "属性名称", "description": "属性的详细描述", "data_type": "属性的数据类型"},
-              ...
-          ],
-          "potential_relations": [
-              {"relation": "关系类型", "entities_involved": ["实体1", "实体2", ...], "description": "关系的详细描述", "strength": "关系的强度或重要性"},
-              ...
-          ],
-          "document_insights": "其他重要（多条）信息或（多个）发现，它们独属于本文档的特殊内容，请用分号隔开。",
-          "document_snippets": "文档中的关键片段，用于支撑你的分析结论，提供上下文信息。",
-      }
+      domain：文档所属领域的描述，帮助后续建模和数据抽取
+      data_full_view：对文档数据全貌的详细推测，包括数据结构、规模、实体关系等，并提供思考链路和理由
+      concepts：识别出的关键概念列表，每个概念包括名称、描述和重要性
+        比如：
+          concepts:
+            - concept: "Person"
+              description: "指文档中提及的历史人物"
+              importance: ……
+            - concept: "Event"
+              description: "指文档中描述的历史事件"
+              importance: ……
+      properties：识别出的概念属性列表，每个属性包括所属概念、名称、描述和数据类型
+        比如：
+          properties:
+            - concept: "Person"
+              property: "birth_date"
+              description: "出生日期"
+              data_type: "date"
+            - concept: "Event"
+              property: "location"
+              description: "事件发生地点"
+              data_type: "string"
+      potential_relations：识别出的潜在关系列表，每个关系包括类型、涉及的实体和描述
+        比如：
+          potential_relations:
+            - relation: "participated_in"
+              entities_involved: ["Person", "Event"]
+              description: "指某人参与了某事件"
+              strength: "strong"
+            - relation: "located_in"
+              entities_involved: ["Event", "Location"]
+              description: "指事件发生在某地点"
+              strength: "medium"
+      document_insights：其他重要信息或发现，它们独属于本文档的特殊内容，请用分号隔开。比如，文档中提及的某些特定事件或概念的独特解释。
+      document_snippets：文档中的关键片段，用于支撑你的分析结论，提供上下文信息。可以是原文摘录或重要段落。
     actions:
       - *content_understanding_action
       - *concept_identification_action
@@ -348,12 +376,11 @@ operators:
       - 可达性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不可达，将无法在构建一个完整的知识图谱。
       - 通过查询图数据库，获取图的结构信息，验证实体和关系的可达性。
     output_schema: |
-      {
-          "reachability": "说明实体和关系之间的可达性，是否存在有效的连接路径",
-          "stauts": "模型状态，是否通过验证等",
-          "entity_label": "成功创建的实体标签",
-          "relation_label": "成功创建的关系标签",
-      }
+      reachability: 可达性分析结果，描述图中实体和关系之间的连接路径
+      status: schema 状态，是否通过验证
+      entity_label: 成功创建的实体标签列表，例如：'Person', 'Organization'
+      relation_label: 成功创建的关系标签列表，例如：'WorksAt', 'LocatedIn'
+    tools:
     actions:
       - *entity_type_definition_action
       - *relation_type_definition_action
@@ -377,11 +404,10 @@ operators:
       3. 根据对图模型理解和文本内容理解的结果，进行三元组数据的抽取（多次抽取），并存入图数据库中
       4. 输出数据导入结果
     output_schema: |
-      {
-          "result": "成功导入实体的数量、成功导入关系的数量；（如果错误，原因是什么）"
-      }
+      输出结果：成功导入实体的数量、成功导入关系的数量；导入数据明细；（如果错误，原因是什么）
     actions:
       - *schema_understanding_action
+      - *data_status_check_action
       - *content_understanding_action_2
       - *triplet_data_generation_action
       - *output_result_action
@@ -433,9 +459,8 @@ operators:
       2. 查询结果交付
       - 在最后，根据查询意图，交付查询的结果。
     output_schema: |
-      ## Query Results
-      - Query Command: [The graph query instruction used]
-      - Query Result: [The result of executing the query on the corresponding graph]
+      - 查询的内容：[用自然语言描述查询的内容]
+      - 查询的结果：[如果查询成功，返回查询结果；如果查询失败，返回错误信息]
     actions:
       - *grammar_study_action
       - *query_execution_action
@@ -478,11 +503,10 @@ operators:
       2. 文档整理
       - 将知识库中检索得到各个文档分别总结为一段内容
     output_schema: |
-      {
-          "original_question": "输入的原始提问",
-          "knowledge_base_result": "知识库中检索得到的相关内容总结",
-          "knowledge_base_references": ["知识库中", “检索得到的", "相关内容", "对应的", "章节名称"],
-      }
+
+      original_question: 输入的原始问题
+      knowledge_base_result: 知识库中检索得到的相关内容总结
+      knowledge_base_references: 知识库中检索得到的相关内容对应的章节或链接列表[1] ... [2] ...
     actions:
       - *knowledge_base_retrieving_action
 
@@ -506,8 +530,8 @@ operators:
       - 如果回答中设计了来自知识库中的内容，提供回答中涉及的原文出处，给出一个List，其中包含markdown格式的原文链接
       - 如果没有检索到能帮助回答的相关文档，请你根据大模型自身的知识和经验，回答问题（避免你的 hallucination，不需要提供 reference）
     output_schema: |
-      answer: 针对用户问题的最终回答，如果无法有效回答，则明确说明自己无法回答用户的问题
-      references: ["回答生成", "过程中", "参考的", "文档原文的", "markdown格式", "链接"]
+      针对用户问题的最终回答，如果无法有效回答，则明确说明自己无法回答用户的问题
+      references: 回答生成过程中参考的文档原文的markdown格式链接，比如 [1] ... [2] ...
     actions:
       - *reference_listing_action
 
@@ -515,10 +539,10 @@ experts:
   - profile:
       name: "Graph Modeling Expert"
       desc: |
-        他是一位知识图谱建模专家。
+        他是一位知识图谱建模(schema)专家。
         **仅当需要为某个特定的图数据库实例创建或修改数据结构（Schema）时，他才会被调用。**
         他的任务是根据具体的数据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。
-        他的输出是一个用于后续数据导入的清晰 Schema 定义。**他本身不处理具体数据，也绝不回答关于图数据库产品或技术本身的一般性介绍或询问。**
+        他的输出是一个用于后续数据导入的清晰 Schema 定义。**他本身不处理具体数据（CURD），也绝不回答关于图数据库产品或技术本身的一般性介绍或询问。**
     reasoner:
       actor_name: "Graph Modeling Expert"
       thinker_name: "Graph Modeling Expert"
@@ -528,8 +552,8 @@ experts:
   - profile:
       name: "Data Importation Expert"
       desc: |
-        他是一位图数据抽取与导入专家。
-        假设图 Schema 已定义完成，且有明确的原始数据源（如文档、文件、数据库表）需要处理和导入到一个特定的图数据库实例时。
+        他是一位原始数据抽取与数据导入图数据专家。
+        假设图 Schema 已定义完成，且有明确的原始数据源（如文档、文件、数据库表，由用户上传）需要处理和导入到一个特定的图数据库实例时。
         他的任务是：1. 根据已定义的 Schema 从原始数据中抽取结构化信息。 2. 将抽取的信息导入到目标图数据库中。
         他会输出数据导入过程的总结或状态报告。**他不负责设计 Schema、执行查询分析，也绝不提供关于图数据库技术或产品的一般性介绍。**
     reasoner:
@@ -568,7 +592,7 @@ experts:
       name: "Question Answering Expert"
       desc: |
         他是一位通用问答与信息检索专家。
-        **当任务是请求关于某个概念、技术、产品（例如，“介绍一下 TuGraph”）的一般性信息、定义、解释、比较或总结时，他是首选且通常是唯一的专家，** 尤其是当问题不涉及操作或查询一个具体的、已存在数据的图数据库实例时。
+        **当任务是请求关于某个概念、技术、产品（例如，“介绍一下 Graph”）的一般性信息、定义、解释、比较或总结时，他是首选且通常是唯一的专家，** 尤其是当问题不涉及操作或查询一个具体的、已存在数据的图数据库实例时。
         他的任务是：1. 理解问题。 2. 从通用知识库、互联网或提供的文档中检索最相关的信息。 3. 综合信息并生成一个全面、清晰的回答。
         他会输出对问题的直接回答。**他完全不与任何项目特定的图数据库交互，不执行图查询或图算法，也不进行数据建模或导入。他专注于提供信息和解释，而非操作数据。** (类似于 RAG)
     reasoner:
