@@ -49,7 +49,7 @@ def clean_knowledge_base_by_id(knowledge_base_id: str):
     """Delete a knowledge base by ID."""
     manager = KnowledgeBaseManager()
 
-    drop: bool = request.args.get('drop', False)
+    drop: bool = request.args.get("drop", "False").lower() == "true"
     print(drop)
 
     result, message = manager.clean_knowledge_base(id=knowledge_base_id, drop=drop)
