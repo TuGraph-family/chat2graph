@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
@@ -14,9 +14,11 @@ class GraphDbService(metaclass=Singleton):
     def __init__(self):
         self._graph_db_dao: GraphDbDao = GraphDbDao.instance
 
-        # init default graph db
-        self.create_graph_db(
-            graph_db_config=GraphDbConfig(
+    def create_graph_db(self, graph_db_config: Optional[GraphDbConfig]) -> GraphDbConfig:
+        """Create a new GraphDB."""
+
+        if not graph_db_config:
+            graph_db_config = GraphDbConfig(
                 type=SystemEnv.GRAPH_DB_TYPE,
                 name=SystemEnv.GRAPH_DB_NAME,
                 host=SystemEnv.GRAPH_DB_HOST,
@@ -24,10 +26,6 @@ class GraphDbService(metaclass=Singleton):
                 user=SystemEnv.GRAPH_DB_USERNAME,
                 pwd=SystemEnv.GRAPH_DB_PASSWORD,
             )
-        )
-
-    def create_graph_db(self, graph_db_config: GraphDbConfig) -> GraphDbConfig:
-        """Create a new GraphDB."""
 
         # determinate default flag
         graph_db_config.is_default_db = self._graph_db_dao.count() == 0

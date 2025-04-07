@@ -48,6 +48,7 @@ class AgenticService(metaclass=Singleton):
 
     @property
     def name(self) -> str:
+        """Get the name of the agentic service."""
         return self._service_name
 
     def session(self, session_id: Optional[str] = None) -> SessionWrapper:
@@ -121,6 +122,9 @@ class AgenticService(metaclass=Singleton):
         # create an instance of AgenticService
         print(f"Init application: {agentic_service_config.app.name}")
         mas = AgenticService(agentic_service_config.app.name)
+
+        # reasoner initialization
+        mas.reasoner(reasoner_type=agentic_service_config.reasoner.type)
 
         # tools and actions
         tools_dict: Dict[str, Tool] = {}  # name -> Tool

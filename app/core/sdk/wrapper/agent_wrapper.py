@@ -8,11 +8,11 @@ from app.core.prompt.eval_operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
 from app.core.service.agent_service import AgentService
+from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.workflow.workflow import Workflow
@@ -46,6 +46,11 @@ class AgentWrapper:
     def profile(self, name: str, description: Optional[str] = None) -> "AgentWrapper":
         """Set the profile of the agent."""
         self._profile = Profile(name=name, description=description or "")
+        return self
+
+    def reasoner(self, reasoner: Reasoner) -> "AgentWrapper":
+        """Set the reasoner of the agent."""
+        self._reasoner = reasoner
         return self
 
     def workflow(
@@ -82,6 +87,9 @@ class AgentWrapper:
         """Build the agent."""
         if not self._profile:
             raise ValueError("Profile is required.")
+        if not self._reasoner:
+            reasoner_service: ReasonerService = ReasonerService.instance
+            self._reasoner = reasoner_service.get_reasoner()
         if not self._workflow:
             raise ValueError("Workflow is required.")
         if not self._type:
@@ -89,7 +97,7 @@ class AgentWrapper:
 
         agent_config = AgentConfig(
             profile=self._profile,
-            reasoner=self._reasoner or DualModelReasoner(),
+            reasoner=self._reasoner,
             workflow=self._workflow,
         )
 

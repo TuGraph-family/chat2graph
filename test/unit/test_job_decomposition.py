@@ -194,7 +194,7 @@ Final Delivery:
     job_service.save_job(sub_job)
 
     # configure the initial job graph
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id=job.id,
         job=sub_job,
         expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
@@ -204,7 +204,9 @@ Final Delivery:
     initial_job_graph: JobGraph = job_service.get_job_graph(job.id)
 
     job_graph = leader.execute(AgentMessage(job_id=job.id))
-    job_service.replace_subgraph(job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph)
+    job_service.replace_subgraph(
+        original_job_id=job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph
+    )
 
     assert isinstance(job_graph, JobGraph)
 
@@ -233,7 +235,7 @@ Analyzing the task...
     )
     job_service.save_job(subjob)
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id=original_job.id,
         job=subjob,
         expert_id=leader._id,  # it is not a good idea to use the private attribute,
@@ -242,8 +244,9 @@ Analyzing the task...
         successors=[],
     )
 
-    with pytest.raises(Exception) as exc_info:
-        job_graph = leader.execute(AgentMessage(job_id=subjob.id))
-        job_service.replace_subgraph(new_subgraph=job_graph)
+    job_graph = leader.execute(AgentMessage(job_id=subjob.id))
 
-    assert "LLM output format is not correct (json format)" in str(exc_info.value)
+    # no vertices should be returned since no subtasks were found
+    assert job_graph.vertices() == []
+    # no edges should be present since there are no vertices
+    assert len(job_graph.edges()) == 0

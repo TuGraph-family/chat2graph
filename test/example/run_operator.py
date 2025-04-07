@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from app.core.model.job import SubJob
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.reasoner_service import ReasonerService
 from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
@@ -81,7 +81,9 @@ Answer in Chinese.
     """
 
     # itialize reasoner
-    reasoner = DualModelReasoner()
+    reasoner_service: ReasonerService = ReasonerService.instance
+    reasoner = reasoner_service.get_reasoner()
+
     operator_config = OperatorConfig(
         instruction=instruction,
         actions=[action1],

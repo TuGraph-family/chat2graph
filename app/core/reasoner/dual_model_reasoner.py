@@ -50,8 +50,8 @@ class DualModelReasoner(Reasoner):
             str: The conclusion and the final resultes of the inference.
         """
         # prepare the variables from the SystemEnv
-        reasoning_rounds = SystemEnv.REASONING_ROUNDS
-        print_messages = SystemEnv.PRINT_REASONER_MESSAGES
+        reasoning_rounds: int = SystemEnv.REASONING_ROUNDS
+        print_messages: bool = SystemEnv.PRINT_REASONER_MESSAGES
 
         # set the system prompt
         actor_sys_prompt = self._format_actor_sys_prompt(task=task)

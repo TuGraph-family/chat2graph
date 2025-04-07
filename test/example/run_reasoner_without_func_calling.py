@@ -2,7 +2,7 @@ import asyncio
 
 from app.core.model.job import SubJob
 from app.core.model.task import Task
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.operator import OperatorConfig
 
 
@@ -42,7 +42,8 @@ Scratchpad:
 城中人马皆惊恐，备曰：“吾有诈，可破之。”遂开门，大呼而出，操兵大败。备乘胜追击，操军大溃，曹操自走脱。备收其军器，仓库，军民无不欢喜。
 """
 
-    reasoner = DualModelReasoner()
+    reasoner_service: ReasonerService = ReasonerService.instance
+    reasoner = reasoner_service.get_reasoner()
 
     job = SubJob(
         id="test_job_id",

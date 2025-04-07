@@ -11,9 +11,9 @@ from app.core.prompt.eval_operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
+from app.core.service.reasoner_service import ReasonerService
 from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator import Operator
@@ -27,7 +27,8 @@ ServiceFactory.initialize()
 def main():
     """Main function for testing leader execute with academic paper analysis."""
     # initialize components
-    reasoner = DualModelReasoner()
+    reasoner_service: ReasonerService = ReasonerService.instance
+    reasoner = reasoner_service.get_reasoner()
     agent_config = AgentConfig(
         profile=Profile(name="Academic_reviewer"),
         reasoner=reasoner,
@@ -213,7 +214,7 @@ paper content:
 
     job_service: JobService = JobService.instance
     job_service.save_job(job=job)
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_1,
         expert_id=leader.state.get_expert_by_name("Information Extractor").get_id(),
@@ -221,7 +222,7 @@ paper content:
         successors=[job_2, job_3],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_2,
         expert_id=leader.state.get_expert_by_name("Methodology Expert").get_id(),
@@ -229,7 +230,7 @@ paper content:
         successors=[job_4],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_3,
         expert_id=leader.state.get_expert_by_name("Results Analyst").get_id(),
@@ -237,7 +238,7 @@ paper content:
         successors=[job_5],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_4,
         expert_id=leader.state.get_expert_by_name("Technical Reviewer").get_id(),
@@ -245,7 +246,7 @@ paper content:
         successors=[job_5],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_5,
         expert_id=leader.state.get_expert_by_name("Research Synthesizer").get_id(),
@@ -262,7 +263,7 @@ paper content:
 
     for tail_vertex in tail_vertices:
         job = job_service.get_subjob(tail_vertex)
-        job_result = job_service.query_job_result(tail_vertex)
+        job_result = job_service.query_original_job_result(tail_vertex)
         if not job_result:
             print(f"Job {tail_vertex} is not completed yet.")
             continue

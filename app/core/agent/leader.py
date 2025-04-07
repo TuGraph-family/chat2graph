@@ -32,7 +32,7 @@ class Leader(Agent):
         self._leader_state: LeaderState = leader_state or BuiltinLeaderState()
 
     def execute(self, agent_message: AgentMessage, retry_count: int = 0) -> JobGraph:
-        """Decompose the job into subjobs.
+        """Decompose the original job into subjobs.
 
         Args:
             agent_message (AgentMessage): The agent message including the job to be decomposed.
@@ -41,8 +41,6 @@ class Leader(Agent):
         Returns:
             JobGraph: The job graph of the subjobs.
         """
-        # TODO: add a judgment to check if the job needs to be decomposed (to modify the prompt)
-
         life_cycle: Optional[int] = None
         job_id = agent_message.get_job_id()
         try:
@@ -104,7 +102,7 @@ class Leader(Agent):
             )
             try:
                 # extract the subjobs from the json block
-                job_dict = parse_json(text=workflow_message.scratchpad)
+                job_dict = parse_json(text=workflow_message.scratchpad + "error")
                 assert job_dict is not None
             except (ValueError, json.JSONDecodeError):
                 self._job_service.stop_job_graph(
@@ -259,7 +257,7 @@ class Leader(Agent):
                                 if pred_id in expert_results:
                                     del expert_results[pred_id]
                                     # update the result in the job service
-                                    self._job_service.remove_job(
+                                    self._job_service.remove_subjob(
                                         original_job_id=original_job_id, job_id=pred_id
                                     )
 

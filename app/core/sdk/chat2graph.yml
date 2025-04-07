@@ -7,7 +7,7 @@ plugin:
   workflow_platform: "DBGPT"
 
 reasoner:
-  type: "MONO"
+  type: "DUAL"
 
 tools:
   - &document_reader_tool
@@ -459,8 +459,8 @@ operators:
       2. 查询结果交付
       - 在最后，根据查询意图，交付查询的结果。
     output_schema: |
-      - 查询的内容：[用自然语言描述查询的内容]
-      - 查询的结果：[如果查询成功，返回查询结果；如果查询失败，返回错误信息]
+      查询的内容：[用自然语言描述查询的内容]
+      查询的结果：[如果查询成功，返回查询结果；如果查询失败，返回错误信息；r如果没有查询结果，用自然语言说明原因]
     actions:
       - *grammar_study_action
       - *query_execution_action
@@ -503,7 +503,6 @@ operators:
       2. 文档整理
       - 将知识库中检索得到各个文档分别总结为一段内容
     output_schema: |
-
       original_question: 输入的原始问题
       knowledge_base_result: 知识库中检索得到的相关内容总结
       knowledge_base_references: 知识库中检索得到的相关内容对应的章节或链接列表[1] ... [2] ...
