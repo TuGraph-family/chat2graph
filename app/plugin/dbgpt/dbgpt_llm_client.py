@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from dbgpt.core import (  # type: ignore
+    AIMessage,
     BaseMessage,
     HumanMessage,
     ModelMessage as DbgptModelMessage,
@@ -107,7 +108,10 @@ class DbgptLlmClient(ModelService):
                 )
 
             # Chat2Graph <-> DB-GPT msg: actor <-> ai & thinker <-> human
-            base_messages.append(HumanMessage(content=base_message_content))
+            if message.get_source_type() == MessageSourceType.ACTOR:
+                base_messages.append(AIMessage(content=base_message_content))
+            else:
+                base_messages.append(HumanMessage(content=base_message_content))
 
         model_messages = DbgptModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(
