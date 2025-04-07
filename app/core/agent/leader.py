@@ -102,7 +102,7 @@ class Leader(Agent):
             )
             try:
                 # extract the subjobs from the json block
-                job_dict = parse_json(text=workflow_message.scratchpad + "error")
+                job_dict = parse_json(text=workflow_message.scratchpad)
                 assert job_dict is not None
             except (ValueError, json.JSONDecodeError):
                 self._job_service.stop_job_graph(
