@@ -132,23 +132,23 @@ class DualModelReasoner(Reasoner):
         content = reasoner_memory.get_message_by_index(-1).get_payload()
 
         # find deliverable content
-        match = re.search(r"<deliverable>\s*(.*?)\s*</deliverable>", content, re.DOTALL)
+        match = re.search(r"<deliverable>\n(.*?)\s*</deliverable>", content, re.DOTALL)
 
         # if match found, process and return the content
         if match:
             deliverable_content = match.group(1)
             # handle indentation preservation
             deliverable_segments = deliverable_content.splitlines()
-            if deliverable_segments and deliverable_segments[0].startswith("\t"):
-                # count leading tabs in first line
-                tab_indentation_depth = len(deliverable_segments[0]) - len(
-                    deliverable_segments[0].lstrip("\t")
+            if deliverable_segments and deliverable_segments[0].startswith(" "):
+                # count leading spaces in first line
+                space_indentation_depth = len(deliverable_segments[0]) - len(
+                    deliverable_segments[0].lstrip(" ")
                 )
                 # ensure all lines have the same indentation removed
                 normalized_segments = []
                 for segment in deliverable_segments:
-                    if segment.startswith("\t" * tab_indentation_depth):
-                        normalized_segments.append(segment[tab_indentation_depth:])
+                    if segment.startswith(" " * space_indentation_depth):
+                        normalized_segments.append(segment[space_indentation_depth:])
                     else:
                         normalized_segments.append(segment)
                 deliverable_content = "\n".join(normalized_segments)
@@ -249,9 +249,15 @@ class DualModelReasoner(Reasoner):
             )
         else:
             previous_input = "No scratchpad provided in this round."
-        action_rels = "\n".join(
-            [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
-        )
+        if task.actions:
+            action_rels = "Available actions:\n" + "\n".join(
+                [
+                    f"• Action {i + 1}: {action.name} - {action.description}"
+                    for i, action in enumerate(task.actions)
+                ]
+            )
+        else:
+            action_rels = "No actions available."
         file_desc = (
             "\n".join(
                 f"File name: {f.name} - File id: {f.id}" for f in (task.file_descriptors or [])

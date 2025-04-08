@@ -1,14 +1,17 @@
 from app.core.common.type import ModelPlatformType, ReasonerType, WorkflowPlatformType
 from app.core.model.message import TextMessage
-from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA, JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job_decomposition import (
+    JOB_DECOMPOSITION_OUTPUT_SCHEMA,
+    JOB_DECOMPOSITION_PROMPT,
+)
 from app.core.sdk.agentic_service import AgenticService
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.toolkit.toolkit import Action
 from app.plugin.neo4j.resource.graph_modeling import (
     DocumentReader,
-    EdgeLabelGenerator,
+    EdgeLabelAdder,
     GraphReachabilityGetter,
-    VertexLabelGenerator,
+    VertexLabelAdder,
 )
 
 
@@ -32,7 +35,7 @@ def main():
             entity_type_definition_action,
             relation_type_definition_action,
             self_reflection_schema_action,
-            schema_design_action,
+            schema_design_and_import_action,
             graph_validation_action,
         ),
     )
@@ -61,7 +64,7 @@ def main():
                 entity_type_definition_action,
                 relation_type_definition_action,
                 self_reflection_schema_action,
-                schema_design_action,
+                schema_design_and_import_action,
                 graph_validation_action,
             ]
         )
@@ -97,8 +100,8 @@ def main():
 
 # tools
 read_document = DocumentReader(id="read_document_tool")
-vertex_label_generator = VertexLabelGenerator(id="vertex_label_generator_tool")
-edge_label_generator = EdgeLabelGenerator(id="edge_label_generator_tool")
+vertex_label_generator = VertexLabelAdder(id="vertex_label_adder_tool")
+edge_label_generator = EdgeLabelAdder(id="edge_label_adder_tool")
 graph_reachability_getter = GraphReachabilityGetter(id="graph_reachability_getter_tool")
 
 # actions
@@ -138,10 +141,10 @@ self_reflection_schema_action = Action(
     name="自我反思目前阶段的概念建模",
     description="不断检查和反思当前概念模型的设计，确保模型的完整性和准确性，并发现潜在概念和关系。最后确保实体关系之间是存在联系的，禁止出现孤立的实体概念（这很重要）。",
 )
-schema_design_action = Action(
-    id="concept_modeling.schema_design",
+schema_design_and_import_action = Action(
+    id="concept_modeling.schema_design_and_import",
     name="Schema设计创建 TuGraph labels",
-    description="将概念模型转化为图数据库 label，并在 TuGraph 中创建 labels",
+    description="将概念模型转化为图数据库 labels，并在图数据中创建 labels",
     tools=[vertex_label_generator, edge_label_generator],
 )
 graph_validation_action = Action(

@@ -1,7 +1,7 @@
-from typing import List, Optional
+from typing import List, cast
 
 from app.core.common.singleton import Singleton
-from app.core.common.system_env import SystemEnv
+from app.core.common.type import GraphDbType
 from app.core.dal.dao.graph_db_dao import GraphDbDao
 from app.core.graph_db.graph_db import GraphDb
 from app.core.graph_db.graph_db_config import GraphDbConfig
@@ -14,19 +14,8 @@ class GraphDbService(metaclass=Singleton):
     def __init__(self):
         self._graph_db_dao: GraphDbDao = GraphDbDao.instance
 
-    def create_graph_db(self, graph_db_config: Optional[GraphDbConfig]) -> GraphDbConfig:
+    def create_graph_db(self, graph_db_config: GraphDbConfig) -> GraphDbConfig:
         """Create a new GraphDB."""
-
-        if not graph_db_config:
-            graph_db_config = GraphDbConfig(
-                type=SystemEnv.GRAPH_DB_TYPE,
-                name=SystemEnv.GRAPH_DB_NAME,
-                host=SystemEnv.GRAPH_DB_HOST,
-                port=SystemEnv.GRAPH_DB_PORT,
-                user=SystemEnv.GRAPH_DB_USERNAME,
-                pwd=SystemEnv.GRAPH_DB_PASSWORD,
-            )
-
         # determinate default flag
         graph_db_config.is_default_db = self._graph_db_dao.count() == 0
 
@@ -125,4 +114,29 @@ class GraphDbService(metaclass=Singleton):
 
     def validate_graph_db_connection(self, graph_db_config: GraphDbConfig) -> bool:
         """Validate connection to a graph database."""
-        raise NotImplementedError("Method not implemented")
+        try:
+            graph_db_type: GraphDbType = graph_db_config.type
+
+            if graph_db_type == GraphDbType.NEO4J:
+                from app.plugin.neo4j.graph_db import Neo4jDb
+
+                graph_db: Neo4jDb = cast(
+                    Neo4jDb,
+                    GraphDbFactory.get_graph_db(
+                        graph_db_type=graph_db_config.type, config=graph_db_config
+                    ),
+                )
+                with graph_db.conn.session() as session:
+                    result = session.run("RETURN 'Hello, Neo4j!' as message")
+                    message = result.single()["message"]
+                    assert message == "Hello, Neo4j!"
+
+                return True
+
+            # TODO: add support for TuGraph
+            raise ValueError(f"Unsupported graph database type: {graph_db_type}")
+        except Exception:
+            return False
+        finally:
+            if "graph_db" in locals():
+                graph_db.conn.close()

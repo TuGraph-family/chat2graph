@@ -64,7 +64,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
     const steps: ThoughtChainItem[] = [
       {
         title: "策划",
-        description: '基于通用框架生成回答',
+        description: 'Graph专家们将合作解决您的问题',
         status: 'success' as ThoughtChainItem['status'],
         icon: getStatusIcon('success'),
       },

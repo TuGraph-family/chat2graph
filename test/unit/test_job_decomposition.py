@@ -11,7 +11,7 @@ from app.core.common.singleton import AbcSingleton
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, WorkflowMessage
-from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.sdk.agentic_service import AgenticService

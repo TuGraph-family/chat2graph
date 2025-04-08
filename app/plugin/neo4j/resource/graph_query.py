@@ -1,66 +1,9 @@
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.resource.doc import QUERY_GRAMMER
-from app.plugin.neo4j.resource.read_doc import SchemaManager
-
-
-class SchemaGetter(Tool):
-    """Tool for getting the schema of the graph database."""
-
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id or str(uuid4()),
-            name=self.get_schema.__name__,
-            description=self.get_schema.__doc__ or "",
-            function=self.get_schema,
-        )
-
-    async def get_schema(self, file_service: FileService) -> str:
-        """Get the schema of the graph database.
-
-        Args:
-            None args required
-
-        Returns:
-            str: The schema of the graph database in string format
-        """
-        schema = await SchemaManager.read_schema(file_service=file_service)
-
-        result = "# Neo4j Graph Schema\n\n"
-
-        # vertices information
-        result += "## Node Labels\n\n"
-        for label, info in schema["nodes"].items():
-            result += f"### {label}\n"
-            result += f"- Primary Key: `{info['primary_key']}`\n"
-            result += "- Properties:\n"
-            for prop in info["properties"]:
-                index_info = ""
-                if prop["has_index"]:
-                    index_info = f" (Indexed: {prop['index_name']})"
-                else:
-                    index_info = " (Indexed: not indexed)"
-                result += f"  - `{prop['name']}` ({prop['type']}){index_info}\n"
-            result += "\n"
-
-        # edges information
-        result += "## Relationship Types\n\n"
-        for label, info in schema["relationships"].items():
-            result += f"### {label}\n"
-            result += f"- Primary Key: `{info['primary_key']}`\n"
-            result += "- Properties:\n"
-            for prop in info["properties"]:
-                index_info = ""
-                if prop["has_index"]:
-                    index_info = f" (Indexed: {prop['index_name']})"
-                result += f"  - `{prop['name']}` ({prop['type']}){index_info}\n"
-            result += "\n"
-
-        return result
 
 
 class GrammerReader(Tool):

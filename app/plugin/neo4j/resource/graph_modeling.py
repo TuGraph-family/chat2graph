@@ -4,7 +4,7 @@ from uuid import uuid4
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.read_doc import SchemaManager
+from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class DocumentReader(Tool):
@@ -30,7 +30,7 @@ class DocumentReader(Tool):
         return file_service.read_file(file_id=file_id)
 
 
-class VertexLabelGenerator(Tool):
+class VertexLabelAdder(Tool):
     """Tool for generating Cypher statements to create vertex labels in Neo4j."""
 
     def __init__(self, id: Optional[str] = None):
@@ -128,7 +128,7 @@ class VertexLabelGenerator(Tool):
             return f"Successfully created label {label}"
 
 
-class EdgeLabelGenerator(Tool):
+class EdgeLabelAdder(Tool):
     """Tool for generating Cypher statements to create edge labels in TuGraph."""
 
     def __init__(self, id: Optional[str] = None):

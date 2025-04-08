@@ -59,7 +59,15 @@ class MessageViewTransformer:
                 "id": message.get_id(),
                 "job_id": message.get_job_id(),
                 "timestamp": message.get_timestamp(),
-                "payload": message.get_payload() or "",
+                "payload": (message.get_payload() or "")
+                .replace("<task_objective>", "")
+                .replace("</task_objective>", "")
+                .replace("<task_context>", "")
+                .replace("</task_context>", "")
+                .replace("<key_reasoning_points>", "")
+                .replace("</key_reasoning_points>", "")
+                .replace("<final_output>", "")
+                .replace("</final_output>", ""),
                 "lesson": message.get_lesson(),
             }
 

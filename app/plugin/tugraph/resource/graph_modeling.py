@@ -370,7 +370,7 @@ class DocumentReader(Tool):
         return DOC_CONTENT
 
 
-class VertexLabelGenerator(Tool):
+class VertexLabelAdder(Tool):
     """Tool for generating Cypher statements to create vertex labels in TuGraph."""
 
     def __init__(self, id: Optional[str] = None):
@@ -450,7 +450,7 @@ class VertexLabelGenerator(Tool):
         )
 
 
-class EdgeLabelGenerator(Tool):
+class EdgeLabelAdder(Tool):
     """Tool for generating Cypher statements to create edge labels in TuGraph."""
 
     def __init__(self, id: Optional[str] = None):
