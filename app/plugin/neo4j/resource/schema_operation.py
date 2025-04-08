@@ -28,7 +28,8 @@ class SchemaManager:
                     return json.loads(file_content)
 
                 return {"nodes": {}, "relationships": {}}
-            except Exception:
+            except Exception as e:
+                print(f"Error reading schema: {e}")
                 return {"nodes": {}, "relationships": {}}
 
     @staticmethod

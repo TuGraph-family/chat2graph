@@ -15,7 +15,7 @@ from app.core.common.util import parse_json
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, WorkflowMessage
-from app.core.prompt.job import JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_PROMPT
 
 
 class Leader(Agent):
@@ -91,6 +91,9 @@ class Leader(Agent):
             job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
             assert job_dict is not None
         except (ValueError, json.JSONDecodeError) as e:
+            # color: red
+            print(f"\033[38;5;196m[WARNNING]: {e}\033[0m")
+
             # retry to decompose the job with the new lesson
             workflow_message = self._workflow.execute(
                 job=decompsed_job,
@@ -131,6 +134,7 @@ class Leader(Agent):
                     subjob_dict.get("assigned_expert", "")
                 ).get_id(),
                 life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
+                thinking=subjob_dict.get("thinking", None),
             )
             temp_to_unique_id_map[subjob_id] = subjob.id
 
@@ -151,24 +155,26 @@ class Leader(Agent):
 
         return job_graph
 
-    def execute_job(self, job: Job) -> None:
+    def execute_original_job(self, original_job: Job) -> None:
         """Execute the job."""
         # decompose the job into decomposed job graph
-        decomposed_job_graph: JobGraph = self.execute(agent_message=AgentMessage(job_id=job.id))
+        decomposed_job_graph: JobGraph = self.execute(
+            agent_message=AgentMessage(job_id=original_job.id)
+        )
 
         # update the job status to running
-        job_result = self._job_service.get_job_result(job_id=job.id)
-        if job_result.status == JobStatus.CREATED:
-            job_result.status = JobStatus.RUNNING
-            self._job_service.save_job_result(job_result=job_result)
+        original_job_result = self._job_service.get_job_result(job_id=original_job.id)
+        if original_job_result.status == JobStatus.CREATED:
+            original_job_result.status = JobStatus.RUNNING
+            self._job_service.save_job_result(job_result=original_job_result)
 
         # update the decomposed job graph in the job service
         self._job_service.replace_subgraph(
-            original_job_id=job.id, new_subgraph=decomposed_job_graph
+            original_job_id=original_job.id, new_subgraph=decomposed_job_graph
         )
 
         # execute the decomposed job graph
-        self.execute_job_graph(original_job_id=job.id)
+        self.execute_job_graph(original_job_id=original_job.id)
 
     def execute_job_graph(self, original_job_id: str) -> None:
         """Execute the job graph with dependency-based parallel execution.

@@ -14,12 +14,12 @@ tools:
     name: "DocumentReader"
     module_path: "app.plugin.neo4j.resource.graph_modeling"
 
-  - &vertex_label_generator_tool
-    name: "VertexLabelGenerator"
+  - &vertex_label_adder_tool
+    name: "VertexLabelAdder"
     module_path: "app.plugin.neo4j.resource.graph_modeling"
 
-  - &edge_label_generator_tool
-    name: "EdgeLabelGenerator"
+  - &edge_label_adder_tool
+    name: "EdgeLabelAdder"
     module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &graph_reachability_getter_tool
@@ -90,6 +90,10 @@ tools:
     name: "InternetRetriever"
     module_path: "app.plugin.neo4j.resource.question_answering"
 
+  - &system_status_checker_tool
+    name: "SystemStatusChecker"
+    module_path: "app.plugin.neo4j.resource.system_checking"
+
 actions:
   # graph modeling actions
   - &content_understanding_action
@@ -122,13 +126,13 @@ actions:
     name: "self_reflection_schema"
     desc: "不断检查和反思当前概念模型的设计"
 
-  - &schema_design_action
-    name: "schema_design"
-    desc: "将概念模型转化为图数据库 label"
+  - &schema_design_and_import_action
+    name: "schema_design_and_import"
+    desc: "将概念模型转化为图数据库 labels，并在图数据库中创建 labels"
     tools:
       - *schema_getter_tool
-      - *vertex_label_generator_tool
-      - *edge_label_generator_tool
+      - *vertex_label_adder_tool
+      - *edge_label_adder_tool
 
   - &graph_validation_action
     name: "graph_validation"
@@ -234,6 +238,17 @@ actions:
     name: "reference_listing"
     desc: "以markdown格式返回推理过程中所涉及的原文出处链接，方便展示"
 
+  # job decomposition actions
+  - &query_system_status_action
+    name: "query_system_status"
+    desc: "调用相关工具查询系统状态获取系统状态信息。大模型需要了解系统的状态，以便更好地进行推理和决策"
+    tools:
+      - *system_status_checker_tool
+
+  - &job_decomposition_action
+    name: "job_decomposition"
+    desc: "按照相关的要求将任务分解为多个子任务"
+
 toolkit:
   - [
       *content_understanding_action,
@@ -245,7 +260,7 @@ toolkit:
       *entity_type_definition_action,
       *relation_type_definition_action,
       *self_reflection_schema_action,
-      *schema_design_action,
+      *schema_design_and_import_action,
       *graph_validation_action,
     ]
   - [
@@ -269,6 +284,7 @@ toolkit:
     ]
   - [*knowledge_base_retrieving_action]
   - [*reference_listing_action]
+  - [*query_system_status_action, *job_decomposition_action]
 
 operators:
   # graph modeling operators
@@ -376,16 +392,16 @@ operators:
       - 可达性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不可达，将无法在构建一个完整的知识图谱。
       - 通过查询图数据库，获取图的结构信息，验证实体和关系的可达性。
     output_schema: |
-      reachability: 可达性分析结果，描述图中实体和关系之间的连接路径
-      status: schema 状态，是否通过验证
-      entity_label: 成功创建的实体标签列表，例如：'Person', 'Organization'
-      relation_label: 成功创建的关系标签列表，例如：'WorksAt', 'LocatedIn'
+      图 schema 可达性: 可达性分析结果，描述图中实体和关系之间的连接路径
+      状态: schema 状态，是否通过验证
+      实体标签: 成功创建的实体标签列表，例如：'Person', 'Organization'
+      关系标签: 成功创建的关系标签列表，例如：'WorksAt', 'LocatedIn'
     tools:
     actions:
       - *entity_type_definition_action
       - *relation_type_definition_action
       - *self_reflection_schema_action
-      - *schema_design_action
+      - *schema_design_and_import_action
       - *graph_validation_action
 
   # data importation operators
@@ -477,11 +493,10 @@ operators:
       - 验证算法的可执行性（包括图数据库中是否支持该算法）
       - 按照算法的输入
     output_schema: |
-      called_algorithm：调用的算法和参数
-      status：算法执行的状态
-      algorithms_result：算法执行的结果。如果失败，返回失败原因
-      called_algorithm：调用的算法和参数（如果有多个算法）
-      ...
+      调用算法：调用的算法和参数（如果有多个算法）
+      状态：算法执行的状态
+      算法结果：算法执行的结果。如果失败，返回失败原因
+      ...（格式自由）
     actions:
       - *content_understanding_action_3
       - *algorithms_intention_identification_action
@@ -539,8 +554,8 @@ experts:
       name: "Graph Modeling Expert"
       desc: |
         他是一位知识图谱建模(schema)专家。
-        **仅当需要为某个特定的图数据库实例创建或修改数据结构（Schema）时，他才会被调用。**
-        他的任务是根据具体的数据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。
+        他的任务是根据具体的数据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。同时在图数据中创建/更新 Schema。
+        他只能为某个特定的图数据库实例创建或修改数据结构（Schema）。
         他的输出是一个用于后续数据导入的清晰 Schema 定义。**他本身不处理具体数据（CURD），也绝不回答关于图数据库产品或技术本身的一般性介绍或询问。**
     reasoner:
       actor_name: "Graph Modeling Expert"
@@ -552,7 +567,7 @@ experts:
       name: "Data Importation Expert"
       desc: |
         他是一位原始数据抽取与数据导入图数据专家。
-        假设图 Schema 已定义完成，且有明确的原始数据源（如文档、文件、数据库表，由用户上传）需要处理和导入到一个特定的图数据库实例时。
+        他的前置要求是图 schema 在图数据库（不论是不是弱 schema 的数据库）中必须存在且已经定义了节点标签和边标签（否则专家将无法完成相关任务），且有明确的原始数据源（如文档、文件、数据库表、待处理文本，由用户上传）需要处理和导入到一个特定的图数据库实例。
         他的任务是：1. 根据已定义的 Schema 从原始数据中抽取结构化信息。 2. 将抽取的信息导入到目标图数据库中。
         他会输出数据导入过程的总结或状态报告。**他不负责设计 Schema、执行查询分析，也绝不提供关于图数据库技术或产品的一般性介绍。**
     reasoner:
@@ -599,6 +614,11 @@ experts:
       thinker_name: "Question Answering Expert"
     workflow:
       - [*retrieving_operator, *summarizing_operator]
+
+leader:
+  actions:
+    - *query_system_status_action
+    - *job_decomposition_action
 
 knowledgebase: {}
 memory: {}

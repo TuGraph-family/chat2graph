@@ -52,6 +52,13 @@ class ProfileConfig:
 
 
 @dataclass
+class LeaderConfig:
+    """Leader configuration data class"""
+
+    actions: List[ActionConfig] = field(default_factory=list)
+
+
+@dataclass
 class ExpertConfig:
     """Expert configuration data class"""
 
@@ -89,6 +96,7 @@ class AgenticConfig:
     plugin: PluginConfig = field(default_factory=PluginConfig)
     reasoner: ReasonerConfig = field(default_factory=ReasonerConfig)
     toolkit: List[List[ActionConfig]] = field(default_factory=list)
+    leader: LeaderConfig = field(default_factory=LeaderConfig)
     experts: List[ExpertConfig] = field(default_factory=list)
     knowledgebase: Dict[str, Any] = field(default_factory=dict)
     memory: Dict[str, Any] = field(default_factory=dict)
@@ -178,6 +186,14 @@ class AgenticConfig:
             if chain:
                 toolkit.append(chain)
 
+        # leader configuration
+        leader_dict = config_dict.get("leader", {})
+        leader_actions: List[ActionConfig] = []
+        for action_ref in leader_dict.get("actions", []):
+            if isinstance(action_ref, dict) and action_ref["name"] in actions_dict:
+                leader_actions.append(actions_dict[action_ref["name"]])
+        leader_config = LeaderConfig(actions=leader_actions)
+
         # expert configuration
         experts: List[ExpertConfig] = []
         for expert_dict in config_dict.get("experts", []):
@@ -225,6 +241,7 @@ class AgenticConfig:
             plugin=plugin_config,
             reasoner=reasoner_config,
             toolkit=toolkit,
+            leader=leader_config,
             experts=experts,
             knowledgebase=config_dict.get("knowledgebase", {}),
             memory=config_dict.get("memory", {}),
@@ -295,6 +312,17 @@ class AgenticConfig:
                     chain_action_dicts.append(chain_action_dict)
             if chain_action_dicts:
                 result["toolkit"].append(chain_action_dicts)
+
+        # leader exportation
+        result["leader"] = {"actions": []}
+        for action in self.leader.actions:
+            if action.name in all_actions:
+                action_dict = {
+                    "name": action.name,
+                    "desc": action.desc,
+                    "id": all_actions[action.name].id,
+                }
+                result["leader"]["actions"].append(action_dict)
 
         # experts exportation
         result["experts"] = []

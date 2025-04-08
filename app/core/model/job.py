@@ -34,6 +34,11 @@ class Job:
     assigned_expert_name: Optional[str] = None
     dag: Optional[str] = None
 
+    def __post_init__(self):
+        """Post initialization to ensure the id and session_id are set correctly."""
+        if not self.context:
+            self.context = ""
+
 
 @dataclass
 class SubJob(Job):
@@ -55,5 +60,16 @@ class SubJob(Job):
     output_schema: str = "Output schema is not determined."
     life_cycle: int = SystemEnv.LIFE_CYCLE
     is_legacy: bool = False
+    thinking: Optional[str] = None
     assigned_expert_name: None = field(default=None, init=False)
     dag: None = field(default=None, init=False)
+
+    def __post_init__(self):
+        """
+        Post initialization to ensure the id and session_id are set correctly.
+        For sub jobs, we will not set the assigned_expert_name or dag.
+        """
+        super().__post_init__()
+        if not self.output_schema:
+            # ensure output_schema is always a string
+            self.output_schema = "Output schema is not determined."

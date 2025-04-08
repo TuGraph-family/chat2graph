@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.read_doc import SchemaManager
+from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class SchemaGetter(Tool):

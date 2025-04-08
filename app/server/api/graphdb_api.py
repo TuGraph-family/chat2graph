@@ -3,7 +3,7 @@ from typing import Any, Dict, cast
 from flask import Blueprint, request
 
 from app.core.common.type import GraphDbType
-from app.core.graph_db.graph_db_config import GraphDbConfig
+from app.core.model.graph_db_config import GraphDbConfig
 from app.server.common.util import ApiException, make_response
 from app.server.manager.graph_db_manager import GraphDBManager
 
