@@ -91,6 +91,9 @@ class Leader(Agent):
             job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
             assert job_dict is not None
         except (ValueError, json.JSONDecodeError) as e:
+            # color: red
+            print(f"\033[38;5;196m[WARNNING]: {e}\033[0m")
+
             # retry to decompose the job with the new lesson
             workflow_message = self._workflow.execute(
                 job=decompsed_job,

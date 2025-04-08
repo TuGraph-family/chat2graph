@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import uuid4
 
-from app.core.graph_db.graph_db_config import GraphDbConfig
+from app.core.model.graph_db_config import GraphDbConfig
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool

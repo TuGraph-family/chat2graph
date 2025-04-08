@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase
 
-from app.core.toolkit.graph_db.graph_db import GraphDb
 from app.core.model.graph_db_config import Neo4jDbConfig  # type: ignore
+from app.core.toolkit.graph_db.graph_db import GraphDb
 
 
 class Neo4jDb(GraphDb[Neo4jDbConfig]):
