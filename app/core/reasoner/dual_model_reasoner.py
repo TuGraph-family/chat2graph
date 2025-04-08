@@ -249,15 +249,9 @@ class DualModelReasoner(Reasoner):
             )
         else:
             previous_input = "No scratchpad provided in this round."
-        if task.actions:
-            action_rels = "Available actions:\n" + "\n".join(
-                [
-                    f"• Action {i + 1}: {action.name} - {action.description}"
-                    for i, action in enumerate(task.actions)
-                ]
-            )
-        else:
-            action_rels = "No actions available."
+        action_rels = "\n".join(
+            [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
+        )
         file_desc = (
             "\n".join(
                 f"File name: {f.name} - File id: {f.id}" for f in (task.file_descriptors or [])
