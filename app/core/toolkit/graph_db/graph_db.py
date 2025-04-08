@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar
 
-from app.core.graph_db.graph_db_config import GraphDbConfig
+from app.core.model.graph_db_config import GraphDbConfig
 
 T = TypeVar("T", bound=GraphDbConfig)
 

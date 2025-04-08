@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase
 
-from app.core.graph_db.graph_db import GraphDb
-from app.core.graph_db.graph_db_config import TuGraphDbConfig
+from app.core.toolkit.graph_db.graph_db import GraphDb
+from app.core.model.graph_db_config import TuGraphDbConfig
 
 
 class TuGraphDb(GraphDb[TuGraphDbConfig]):
