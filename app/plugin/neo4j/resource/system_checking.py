@@ -70,7 +70,7 @@ class SystemStatusChecker(Tool):
                 )
                 has_schema = True
         if not has_schema:
-            response += "- The graph database currently does not have a schema.\n"
+            response += "- The graph database currently does not define a schema.\n"
 
         response += "System status check completed."
         return response

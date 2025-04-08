@@ -183,7 +183,7 @@ class DualModelReasoner(Reasoner):
         else:
             previous_input = "No previous input provided in this round."
         action_rels = "\n".join(
-            [f"[{action.name}: {action.description}] -next-> " for action in task.actions]
+            [f"[action {action.name}: {action.description}] -next-> " for action in task.actions]
         )
         file_desc = (
             "\n".join(
