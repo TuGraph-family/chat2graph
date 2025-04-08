@@ -112,7 +112,7 @@ export default {
     stop: 'Thinking Stopped',
     attachment: 'Attachment',
     placeholder: "Please enter the question",
-    cotStep1: 'Plan',
+    cotStep1: 'Planning',
     cotStep1Desc: 'Graph experts will be working on your instruction',
     cotStep2: 'Analysis',
     cotStep3: 'Answer',
