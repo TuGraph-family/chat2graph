@@ -63,13 +63,13 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
     const thinkingStatus = status !== 'FINISHED' ? 'pending' : 'success'
     const steps: ThoughtChainItem[] = [
       {
-        title: "策划",
-        description: '基于通用框架生成回答',
+        title: formatMessage('home.cotStep1'),
+        description: formatMessage('home.cotStep1Desc'),
         status: 'success' as ThoughtChainItem['status'],
         icon: getStatusIcon('success'),
       },
       {
-        title: "分析",
+        title: formatMessage('home.cotStep2'),
         status: (thinkingStatus) as ThoughtChainItem['status'],
         description: <ol>
           {thinks.map((think: any) => (
@@ -89,7 +89,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
 
     if (status === 'FINISHED') {
       steps.push({
-        title: "回答",
+        title: formatMessage('home.cotStep3'),
         status: 'success' as const,
         icon: getStatusIcon('success'),
         description: '',
