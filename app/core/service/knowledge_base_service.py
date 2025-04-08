@@ -67,6 +67,7 @@ class KnowledgeBaseService(metaclass=Singleton):
             session_id=session_id,
             category=KnowledgeStoreCategory.LOCAL.value,
         )
+        KnowledgeStoreFactory.get_or_create(str(result.id))
         return KnowledgeBase(
             id=str(result.id),
             name=str(result.name),
