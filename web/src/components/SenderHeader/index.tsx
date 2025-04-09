@@ -55,7 +55,7 @@ const SenderHeader: React.FC<Props> = (props) => {
   return <Sender.Header
     title={<>
       <i className='iconfont  icon-Chat2graphwenjianshangchuanbiaoshi' style={{
-        fontSize: 16, lineHeight: 22
+        fontSize: 16, lineHeight: '22px'
       }} />
       {formatMessage('home.attachment')}
     </>}
