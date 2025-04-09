@@ -53,7 +53,12 @@ const SenderHeader: React.FC<Props> = (props) => {
 
 
   return <Sender.Header
-    title={formatMessage('home.attachment')}
+    title={<>
+      <i className='iconfont  icon-Chat2graphwenjianshangchuanbiaoshi' style={{
+        fontSize: 16, lineHeight: '22px'
+      }} />
+      {formatMessage('home.attachment')}
+    </>}
     open={open}
     onOpenChange={onOpenChange}
     styles={{
@@ -65,7 +70,7 @@ const SenderHeader: React.FC<Props> = (props) => {
     <Attachments
       beforeUpload={beforeUpload}
       name='file'
-      accept='.pdf,.txt,.doc,.docx,.md'
+      accept='.pdf,.xlsx,.doc,.docx,.md'
       items={attachedFiles}
       onChange={handleFileChange}
       placeholder={(type) =>

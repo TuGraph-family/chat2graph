@@ -1,4 +1,3 @@
-import Placeholder from "@/components/Placeholder";
 
 export default {
   knowledgebase: {
@@ -111,12 +110,20 @@ export default {
     confirm: '确认',
     cancel: '取消',
     noResult: '暂未搜索到',
-    stop: '思考已停止',
     attachment: '附件',
     placeholder: '请输入问题',
-    cotStep1: '策划',
-    cotStep1Desc: 'Graph 专家们将合作解决您的问题',
-    cotStep2: '分析',
-    cotStep3: '回答',
+    stop: '思考已停止',
+    send: '发送 ⏎',
+    thinks: {
+      thinking: '思考中...',
+      finished: '思考完成',
+      planning: '策划',
+      planningDesc: 'Graph 专家们将合作解决您的问题',
+      answer: '回答',
+      minutes: '分',
+      seconds: '秒',
+      analyze: '分析'
+    }
   }
 }
+

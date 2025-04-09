@@ -1,6 +1,6 @@
 import styles from './index.less';
 import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, Badge } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled, UploadOutlined, LinkOutlined } from '@ant-design/icons';
 import {
   Attachments,
   Bubble,
@@ -149,7 +149,14 @@ const HomePage: React.FC = () => {
   const getAttached = () => {
     const uid_list = attachedFiles?.map(item => item?.uid);
     const attached_list: { file_id: string, message_type: string }[] = []
-
+    const originalAttached = attachedFiles?.map(item => {
+      return {
+        uid: item?.uid,
+        name: item?.name,
+        size: item?.size,
+        percent: item?.percent
+      }
+    })
     uplodaFileIds?.forEach(item => {
       if (uid_list.includes(item?.uid)) {
         attached_list.push({
@@ -159,12 +166,12 @@ const HomePage: React.FC = () => {
       }
     })
 
-    return attached_list
+    return { attached_list, originalAttached }
   }
 
   const [agent] = useXAgent<API.ChatVO>({
     request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { payload = '', session_id = '', attached_messages = [] } = msg || {};
+      const { payload = '', session_id = '', attached_messages = {} } = msg || {};
 
       runGetJobIdsBySessionId({
         session_id,
@@ -172,7 +179,8 @@ const HomePage: React.FC = () => {
         instruction_message: {
           payload,
           message_type: 'TEXT',
-        }, attached_messages
+        },
+        attached_messages: attached_messages?.attached_list || [],
       }).then((res: API.Result_Chat_) => {
         const { job_id = '' } = res?.data || {};
         getMessage(job_id, onSuccess, onUpdate);
@@ -194,14 +202,6 @@ const HomePage: React.FC = () => {
     }
   });
 
-  const onRefreshUpload = () => {
-    setState((draft) => {
-      draft.activeKey = '';
-      draft.uplodaFileIds = []
-      draft.attachedFiles = []
-      draft.headerOpen = false;
-    });
-  }
 
   // 更新输入内容
   const updateContent = (newContent: string = '') => {
@@ -271,7 +271,16 @@ const HomePage: React.FC = () => {
       } : undefined,
       typing: (message?.role === 'SYSTEM' && !isInit) ? { step: 3, interval: 50 } : false,
       messageRender: (text) => {
-        return message?.role === 'SYSTEM' ? <BubbleContent status={message?.status} message={message} content={text} /> : <pre>{text}</pre>
+        return message?.role === 'SYSTEM' ? <BubbleContent key={id} status={message?.status} message={message} content={text} /> : <div className={styles['user-conversation']}>
+          <pre className={styles['user-conversation-question']}>{text}</pre>
+          {
+            <Flex vertical gap="middle">
+              {(message?.attached_messages?.originalAttached as any[])?.map((item) => (
+                <Attachments.FileCard key={item.uid} item={item} />
+              ))}
+            </Flex>
+          }
+        </div>
       }
     }
   });
@@ -358,7 +367,7 @@ const HomePage: React.FC = () => {
   });
 
   const onSubmit = (nextContent: string) => {
-    if (!nextContent) return;
+    if (!nextContent || agent.isRequesting()) return;
     setState((draft) => {
       draft.isInit = false;
     });
@@ -570,21 +579,6 @@ const HomePage: React.FC = () => {
               return (
                 <Flex justify="space-between" align="center">
                   <Flex gap="small" align="center">
-                    <Badge dot={attachedFiles.length > 0 && !headerOpen}>
-                      <Button
-                        type="text"
-                        icon={<UploadOutlined />}
-                        onClick={() => {
-                          setState((draft) => {
-                            draft.headerOpen = !draft.headerOpen;
-                          })
-                        }}
-                        style={{
-                          fontSize: '20px'
-                        }}
-                      />
-
-                    </Badge>
                     {FRAMEWORK_CONFIG.map(item => <Button
                       key={item.key}
                       type={state.selectedFramework === item.key ? 'primary' : 'default'}
@@ -594,15 +588,40 @@ const HomePage: React.FC = () => {
                         })
                       }}
                     >
-                      {formatMessage(item.textId)}
+                      <i className={`iconfont  ${item.icon}`} style={{
+                        fontSize: '20px', color: '#6a6b71;'
+                      }} />{formatMessage(item.textId)}
                     </Button>)}
 
                   </Flex>
                   <Flex align="center">
+                    <Tooltip title={formatMessage('knowledgebase.detail.upload.description')}>
+                      <Button
+                        type="text"
+                        icon={<i className='iconfont  icon-Chat2graphshangchuan' style={{
+                          fontSize: '20px', color: '#6a6b71;'
+                        }} />}
+                        onClick={() => {
+                          setState((draft) => {
+                            draft.headerOpen = !draft.headerOpen;
+                          })
+                        }}
+                        style={{
+                          fontSize: '20px'
+                        }}
+                      />
+                    </Tooltip>
+
+
+
                     {agent.isRequesting() ? (
+                      // <Tooltip title={'点击停止生成'}>
                       <LoadingButton type="default" />
+                      // </Tooltip>
                     ) : (
-                      <SendButton type="primary" disabled={false} />
+                      <Tooltip title={formatMessage(`home.${content ? 'send' : 'placeholder'}`)}>
+                        <SendButton type="primary" disabled={!content} />
+                      </Tooltip>
                     )}
                   </Flex>
                 </Flex>

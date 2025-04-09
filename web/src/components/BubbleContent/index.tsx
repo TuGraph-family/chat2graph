@@ -1,9 +1,12 @@
 import useIntlConfig from "@/hooks/useIntlConfig";
-import { CheckOutlined, CloseCircleTwoTone, LoadingOutlined } from "@ant-design/icons";
-import { ThoughtChain, ThoughtChainItem, XStream } from "@ant-design/x";
-import { Card } from "antd";
+import { Card, Skeleton, Spin, Steps } from "antd";
 import { throttle } from "lodash";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
+import logoSrc from '@/assets/logo.png';
+import styles from './index.less';
+import { useImmer } from "use-immer";
+import { getTimeDifference } from "@/utils/getTimeDifference";
+import { MESSAGE_TYPE } from "@/constants";
 
 interface BubbleContentProps {
   status?: string,
@@ -14,18 +17,18 @@ interface BubbleContentProps {
 const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message }) => {
   const { formatMessage } = useIntlConfig();
   const [thinks, setThinks] = useState<any>([]);
-  const getStatusIcon = (status: ThoughtChainItem['status']) => {
-    switch (status) {
-      case 'success':
-        return <CheckOutlined />;
-      case 'error':
-        return <CloseCircleTwoTone />;
-      case 'pending':
-        return <LoadingOutlined spin />;
-      default:
-        return undefined;
-    }
-  }
+  const [state, setState] = useImmer<{
+    thinks: any[],
+    startTime: number,
+    diffTime: number
+  }>({
+    thinks: [],
+    startTime: new Date().getTime(),
+    diffTime: 0
+  })
+
+  const { startTime, diffTime } = state;
+
 
 
   const updateCachedData = (cachedData, newData) => {
@@ -49,64 +52,101 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         jobId: item?.job?.id,
         status: item?.status,
         goal: item?.job?.goal,
-        payload: item?.status === 'FINISHED' ? item?.payload : ''
+        payload: item?.status === MESSAGE_TYPE.FINISHED ? item?.payload : ''
       }
     })
     setThinks(updateCachedData(thinks, newThinks))
+    setState(draft => {
+      if (status === MESSAGE_TYPE.CREATED || status === MESSAGE_TYPE.RUNNING) {
+        draft.diffTime = new Date().getTime() - startTime
+      }
+    })
+
   }, 2000);
+
 
   useEffect(() => {
     getThink()
   }, [message])
 
-  const items: ThoughtChainItem[] = useMemo(() => {
-    const thinkingStatus = status !== 'FINISHED' ? 'pending' : 'success'
-    const steps: ThoughtChainItem[] = [
+  const renderTime = () => {
+    if (!diffTime) {
+      return null
+    }
+    const { minutes, seconds } = getTimeDifference(diffTime)
+
+    return `${minutes ? minutes + formatMessage('home.thinks.minutes') : ''}${seconds + formatMessage('home.thinks.seconds')}`
+  }
+
+
+  const items = useMemo(() => {
+    const steps = [
       {
-        title: formatMessage('home.cotStep1'),
-        description: formatMessage('home.cotStep1Desc'),
-        status: 'success' as ThoughtChainItem['status'],
-        icon: getStatusIcon('success'),
+        title: <div className={styles['title']}>
+          <div className={styles['title-content']}>{formatMessage('home.thinks.planning')}</div>
+          {
+            diffTime ? <div className={styles['title-extra']}>{2 + formatMessage('home.thinks.seconds')}</div> : null
+          }
+
+        </div>,
+        description: <div>{formatMessage('home.thinks.planningDesc')}</div>,
+        icon: <img src={logoSrc} className={styles['step-icon']} />,
       },
       {
-        title: formatMessage('home.cotStep2'),
-        status: (thinkingStatus) as ThoughtChainItem['status'],
-        description: <ol>
-          {thinks.map((think: any) => (
+        title: <div className={styles['title']}>
+          <div className={styles['title-content']}>{formatMessage('home.thinks.analyze')}</div>
+          <div className={styles['title-extra']}>{
+            renderTime()
+          }
+          </div>
+        </div>,
+        description: <div className={styles['step-thinks']}>
+          {thinks.map((think: any, idx: number) => (
             <>
-              <div key={`${think?.jobId}_goal`}><pre style={{ background: 'rgba(201, 201, 201, 0.1)' }}>{think?.goal}</pre></div>
+              <div key={`${think?.jobId}_goal`} className={styles['step-thinks-title']}>
+                {`${idx + 1}.${think?.goal}`}
+              </div>
               {
-                think?.payload && <div key={`${think?.jobId}_payload`}>
-                  <pre style={{ background: 'rgba(201, 201, 201, 0.1)' }}>{think?.payload}</pre>
-                </div>
+                think?.payload ? <div key={`${think?.jobId}_payload`} className={styles['step-thinks-message']}>
+                  <pre>{think?.payload}</pre>
+                </div> : <Skeleton paragraph={{ rows: 1 }} active />
               }
             </>
           ))}
-        </ol>,
-        icon: getStatusIcon(thinkingStatus),
+          {
+            status !== MESSAGE_TYPE.FINISHED && thinks?.length === 0 && <Skeleton paragraph={{ rows: 2 }} active />
+          }
+        </div>,
+        icon: <img src={logoSrc} className={styles['step-icon']} />,
       }
     ]
 
-    if (status === 'FINISHED') {
+    if (status === MESSAGE_TYPE.FINISHED) {
       steps.push({
-        title: formatMessage('home.cotStep3'),
-        status: 'success' as const,
-        icon: getStatusIcon('success'),
-        description: '',
+        title: <div className={styles['title']}>
+          <div className={styles['title-content']}>{formatMessage('home.thinks.answer')}</div>
+        </div>,
+        icon: <img src={logoSrc} className={styles['step-icon']} />,
+        description: <></>,
       })
     }
     return steps;
   }, [message, thinks, status])
 
-  return <div style={{ textAlign: 'left' }}>
+  return <div className={styles['bubble-content']}>
     {
-      content !== 'STOP' && <Card style={{ border: 'unset' }}>
-        <ThoughtChain items={items} />
+      content !== 'STOP' && status !== MESSAGE_TYPE.FAILED && <Card style={{ border: 'unset' }}>
+        <div className={styles['bubble-content-status']}>
+          <Spin percent={status === MESSAGE_TYPE.FINISHED ? 100 : 50} />
+          <span className={styles['bubble-content-status-text']}>{status === MESSAGE_TYPE.FINISHED ? formatMessage('home.thinks.finished') : formatMessage('home.thinks.thinking')}</span>
+        </div>
+        <Steps items={items} direction="vertical" />
       </Card>
     }
     {
-      content && (status === 'FINISHED' || content === 'STOP') && <pre style={{ padding: 20 }}>{content === 'STOP' ? formatMessage('home.stop') : content}</pre>
+      content && (status === MESSAGE_TYPE.FINISHED || content === MESSAGE_TYPE.STOP || status === MESSAGE_TYPE.FAILED) && <pre className={styles['bubble-content-message']}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</pre>
     }
+
   </div>
 }
 

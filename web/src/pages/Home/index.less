@@ -8,7 +8,7 @@
   flex-direction: column;
   padding: 16px;
   width: 300px;
-  background: #f7f9fc;
+  background: #fff;
   transition: all 0.3s;
   position: relative;
 
@@ -147,31 +147,25 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-
   height: 100vh;
+  background: #f7f8fc;
 
   .messages {
     width: 800px;
     flex: 1;
-    // text-align: center;
     transition: all 0.5s;
     padding: 24px;
+    margin-bottom: 156px;
 
     :global {
-      .ant-welcome {
-        // margin-bottom: 120px;
-      }
-
-
-
-
       .ant-bubble-end .ant-bubble-content {
-        background: aliceblue;
         border-radius: 16px 16px 0 16px;
         box-shadow: unset;
       }
 
       .ant-bubble-start .ant-bubble-content {
+        background-color: #fff;
+        width: 100%;
         border-radius: 16px;
         border: 1px solid #f0f0f0;
         overflow: hidden;
@@ -187,22 +181,15 @@
         white-space: pre-wrap;
       }
 
-      .ant-bubble-start .ant-bubble-content pre {
-        padding: 12px;
-        background: #fff;
-        border: unset;
-        border-radius: 8px;
-        margin-top: 8px;
-      }
-
-
       .ant-bubble-content-shadow pre {
         text-align: left;
       }
 
       .ant-bubble-avatar .ant-avatar.ant-avatar-circle.ant-avatar-icon {
-        background: rgba(5, 145, 255, 0.1);
-        border: 3px solid rgba(5, 145, 255, 0.4);
+        width: 40px;
+        height: 40px;
+        background: #f7f8fc;
+        // border: 3px solid rgba(5, 145, 255, 0.4);
       }
 
       .ant-card-body {
@@ -230,6 +217,15 @@
         margin-bottom: 0;
       }
     }
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    -ms-overflow-style: none;
+    /* IE #D Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
   .welcome {
@@ -237,14 +233,25 @@
   }
 
   .footer {
+    background: #fff;
+    position: fixed;
+    bottom: 40px;
     width: 800px;
     margin: 32px auto;
+    border-radius: 12px;
 
     :global {
-      .ant-sender {
-        margin-top: 16px;
+
+      .ant-sender-header {
+        .ant-sender-header-content {
+          overflow-y: scroll;
+          max-height: 200px;
+        }
+
       }
     }
+
+
   }
 }
 
@@ -252,9 +259,34 @@
 .chat-emty>.messages {
   :global {
     .ant-bubble-start .ant-bubble-content {
-      border-color: transparent;
+      border: none;
       border-radius: 0;
       overflow: visible;
     }
   }
+}
+
+.user-conversation {
+
+  &-question {
+    background: #1650ff44;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #363740;
+    line-height: 24px;
+    padding: 16px;
+    margin-bottom: 8px !important;
+  }
+
+  :global {
+    .ant-flex>.ant-attachment-list-card {
+      background-color: #ffffff !important;
+      border-radius: 12px !important;
+    }
+
+    .ant-flex-align-stretch {
+      align-items: end;
+    }
+  }
+
 }

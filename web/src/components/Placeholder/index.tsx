@@ -25,7 +25,6 @@ const Placeholder: React.FC<Props> = (props) => {
         items={placeholderPromptsItems}
         title={`💡${formatMessage('home.placeholderPromptsTitle')}：`}
         vertical
-
         onItemClick={onPromptsItemClick}
       />
     </Space>

@@ -109,12 +109,20 @@ export default {
     confirm: 'Confirm',
     cancel: 'Cancel',
     noResult: 'No Result',
+    attachment: 'upload files',
+    placeholder: 'Please enter content',
     stop: 'Thinking Stopped',
-    attachment: 'Attachment',
-    placeholder: "Please enter the question",
-    cotStep1: 'Planning',
-    cotStep1Desc: 'Graph experts will be working on your instruction',
-    cotStep2: 'Analysis',
-    cotStep3: 'Answer',
+    send: 'Send ⏎',
+    thinks: {
+      thinking: 'Thinking...',
+      finished: 'Thinking finished',
+      planning: 'Planning',
+      planningDesc: 'Graph experts will be working on your instruction',
+      answer: 'Answer',
+      minutes: 'm',
+      seconds: 's',
+      analyze: 'Analyze'
+    }
   }
 }
+
