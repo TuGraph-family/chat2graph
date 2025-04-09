@@ -5,6 +5,8 @@ import { useMemo, useEffect, useState } from "react";
 import logoSrc from '@/assets/logo.png';
 import styles from './index.less';
 import { useImmer } from "use-immer";
+import { getTimeDifference } from "@/utils/getTimeDifference";
+import { MESSAGE_TYPE } from "@/constants";
 
 interface BubbleContentProps {
   status?: string,
@@ -21,7 +23,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
     diffTime: number
   }>({
     thinks: [],
-    startTime: 0,
+    startTime: new Date().getTime(),
     diffTime: 0
   })
 
@@ -50,23 +52,18 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         jobId: item?.job?.id,
         status: item?.status,
         goal: item?.job?.goal,
-        payload: item?.status === 'FINISHED' ? item?.payload : ''
+        payload: item?.status === MESSAGE_TYPE.FINISHED ? item?.payload : ''
       }
     })
     setThinks(updateCachedData(thinks, newThinks))
     setState(draft => {
-      if (status === 'CREATED' || status === 'RUNNING') {
+      if (status === MESSAGE_TYPE.CREATED || status === MESSAGE_TYPE.RUNNING) {
         draft.diffTime = new Date().getTime() - startTime
       }
     })
 
   }, 2000);
 
-  useEffect(() => {
-    setState(draft => {
-      draft.startTime = new Date().getTime()
-    })
-  }, [])
 
   useEffect(() => {
     getThink()
@@ -76,8 +73,8 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
     if (!diffTime) {
       return null
     }
-    const minutes = Math.floor(diffTime / 60000);
-    const seconds = Math.floor((diffTime % 60000) / 1000);
+    const { minutes, seconds } = getTimeDifference(diffTime)
+
     return `${minutes ? minutes + formatMessage('home.thinks.minutes') : ''}${seconds + formatMessage('home.thinks.seconds')}`
   }
 
@@ -117,14 +114,14 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
             </>
           ))}
           {
-            status !== 'FINISHED' && thinks?.length === 0 && <Skeleton paragraph={{ rows: 2 }} active />
+            status !== MESSAGE_TYPE.FINISHED && thinks?.length === 0 && <Skeleton paragraph={{ rows: 2 }} active />
           }
         </div>,
         icon: <img src={logoSrc} className={styles['step-icon']} />,
       }
     ]
 
-    if (status === 'FINISHED') {
+    if (status === MESSAGE_TYPE.FINISHED) {
       steps.push({
         title: <div className={styles['title']}>
           <div className={styles['title-content']}>{formatMessage('home.thinks.answer')}</div>
@@ -138,17 +135,18 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
 
   return <div className={styles['bubble-content']}>
     {
-      content !== 'STOP' && <Card style={{ border: 'unset' }}>
+      content !== 'STOP' && status !== MESSAGE_TYPE.FAILED && <Card style={{ border: 'unset' }}>
         <div className={styles['bubble-content-status']}>
-          <Spin percent={status === 'FINISHED' ? 100 : 50} />
-          <span className={styles['bubble-content-status-text']}>{status === 'FINISHED' ? formatMessage('home.thinks.finished') : formatMessage('home.thinks.thinking')}</span>
+          <Spin percent={status === MESSAGE_TYPE.FINISHED ? 100 : 50} />
+          <span className={styles['bubble-content-status-text']}>{status === MESSAGE_TYPE.FINISHED ? formatMessage('home.thinks.finished') : formatMessage('home.thinks.thinking')}</span>
         </div>
         <Steps items={items} direction="vertical" />
       </Card>
     }
     {
-      content && (status === 'FINISHED' || content === 'STOP') && <pre className={styles['bubble-content-message']}>{content === 'STOP' ? formatMessage('home.stop') : content}</pre>
+      content && (status === MESSAGE_TYPE.FINISHED || content === MESSAGE_TYPE.STOP || status === MESSAGE_TYPE.FAILED) && <pre className={styles['bubble-content-message']}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</pre>
     }
+
   </div>
 }
 

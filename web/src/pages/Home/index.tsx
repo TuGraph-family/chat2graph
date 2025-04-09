@@ -260,6 +260,7 @@ const HomePage: React.FC = () => {
   const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
     // @ts-ignore
     const { message, id, status, } = item;
+    console.log(parsedMessages)
     return {
       key: id,
       loading: message?.role === 'SYSTEM' && !message?.thinking,

@@ -49,6 +49,21 @@ export const MODAL_FORMS = ['name', 'type', 'host', 'port', 'user', 'pwd', 'defa
 
 export const REQUIRED_MODAL_FORMS = ['name', 'type', 'host', 'port']
 
+export const MESSAGE_TYPE = {
+  // 任务已创建
+  CREATED: 'CREATED',
+  // 任务正在处理中
+  RUNNING: 'RUNNING',
+  // 任务已完成
+  FINISHED: 'FINISHED',
+  // 任务处理失败
+  FAILED: 'FAILED',
+  // 被终止
+  STOPPED: 'STOPPED',
+  // 停止
+  STOP: 'STOP',
+}
+
 
 
 
