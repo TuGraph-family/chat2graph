@@ -588,7 +588,9 @@ const HomePage: React.FC = () => {
                         })
                       }}
                     >
-                      {formatMessage(item.textId)}
+                      <i className={`iconfont  ${item.icon}`} style={{
+                        fontSize: '20px', color: '#6a6b71;'
+                      }} />{formatMessage(item.textId)}
                     </Button>)}
 
                   </Flex>
@@ -596,7 +598,9 @@ const HomePage: React.FC = () => {
                     <Tooltip title={formatMessage('knowledgebase.detail.upload.description')}>
                       <Button
                         type="text"
-                        icon={<LinkOutlined />}
+                        icon={<i className='iconfont  icon-Chat2graphshangchuan' style={{
+                          fontSize: '20px', color: '#6a6b71;'
+                        }} />}
                         onClick={() => {
                           setState((draft) => {
                             draft.headerOpen = !draft.headerOpen;

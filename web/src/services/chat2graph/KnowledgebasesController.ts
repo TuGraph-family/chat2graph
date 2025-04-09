@@ -60,6 +60,9 @@ export async function deleteKnowledgebases(
 ) {
     return request<API.Result_Knowledgebase_>(`/api/knowledgebases/${params?.knowledgebases_id}`, {
         method: 'DELETE',
+        data: {
+            "drop": true
+        },
         ...(options || {}),
     });
 }

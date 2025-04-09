@@ -53,7 +53,12 @@ const SenderHeader: React.FC<Props> = (props) => {
 
 
   return <Sender.Header
-    title={formatMessage('home.attachment')}
+    title={<>
+      <i className='iconfont  icon-Chat2graphwenjianshangchuanbiaoshi' style={{
+        fontSize: 16, lineHeight: 22
+      }} />
+      {formatMessage('home.attachment')}
+    </>}
     open={open}
     onOpenChange={onOpenChange}
     styles={{

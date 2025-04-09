@@ -15,12 +15,15 @@ export const ENGLISH_LANG_PARAM = 'en';
 export const FRAMEWORK_CONFIG = [{
   key: FRAMEWORK.MODEL,
   textId: 'home.model',
+  icon: 'icon-Chat2graphjianmokuangjia'
 }, {
   key: FRAMEWORK.EXPORT_DATA,
   textId: 'home.exportData',
+  icon: 'icon-Chat2graphbianzu'
 }, {
   key: FRAMEWORK.QUERY,
   textId: 'home.query',
+  icon: 'icon-Chat2graphchaxunkuangjia'
 }];
 
 export const MOCK_placeholderPromptsItems = [

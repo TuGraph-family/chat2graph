@@ -45,5 +45,11 @@ export default defineConfig({
     default: 'zh-CN',
     baseSeparator: '-',
   },
+  links: [
+    {
+      rel: 'stylesheet',
+      href: 'https://at.alicdn.com/t/a/font_4885401_neq0o2zljl.css',
+    },
+  ],
 });
 
