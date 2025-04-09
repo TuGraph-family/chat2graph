@@ -44,7 +44,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "GRAPH_KNOWLEDGE_STORE_USERNAME": (str, "admin"),
     "GRAPH_KNOWLEDGE_STORE_PASSWORD": (str, "73@TuGraph"),
     "GRAPH_KNOWLEDGE_STORE_HOST": (str, "127.0.0.1"),
-    "GRAPH_KNOWLEDGE_STORE_PORT": (str, "7687"),
+    "GRAPH_KNOWLEDGE_STORE_PORT": (int, 17687),
     "GRAPH_DB_TYPE": (GraphDbType, GraphDbType.NEO4J),
     "GRAPH_DB_HOST": (str, "localhost"),
     "GRAPH_DB_PORT": (int, 7687),

@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from app.core.common.type import FunctionCallStatus
 from app.core.model.message import ModelMessage
+from app.core.prompt.model_service import FUNC_CALLING_JSON_GUIDE
 from app.core.reasoner.injection_mapping import (
     injection_services_mapping,
     setup_injection_services_mapping,
@@ -45,18 +46,30 @@ class ModelService(ABC):
         Returns:
             ModelMessage: Response message containing function results
         """
-        func_calls, err = self._parse_function_calls(model_response_text)
-        if err:
-            return [FunctionCallResult.error(err)]
+        func_calls = self._parse_function_calls(model_response_text)
 
         if not func_calls:
             # do not call any functions
             return None
 
         func_call_results: List[FunctionCallResult] = []
-        for func_name, call_objective, func_args in func_calls:
+        for func_tuple, err in func_calls:
+            if err:
+                # handle parsing error
+                func_call_results.append(FunctionCallResult.error(err))
+                continue
+
+            assert isinstance(func_tuple, tuple)
+            func_name, call_objective, func_args = func_tuple
             func = self._find_function(func_name, tools)
             if not func:
+                if len(tools) == 0:
+                    available_funcs_desc = "No function calling available now."
+                else:
+                    available_funcs_desc = (
+                        "The available functions: ["
+                        f"{', '.join([tool.function.__name__ for tool in tools])}]"
+                    )
                 func_call_results.append(
                     FunctionCallResult(
                         func_name=func_name,
@@ -65,7 +78,7 @@ class ModelService(ABC):
                         status=FunctionCallStatus.FAILED,
                         output=f"Error: Function {func_name} does not exist in the current scope. "
                         "You have called a function that does not exist in the system, "
-                        "and have made a mistake of function calling.",
+                        f"and have made a mistake of function calling. {available_funcs_desc}",
                     )
                 )
                 continue
@@ -128,18 +141,29 @@ class ModelService(ABC):
 
     def _parse_function_calls(
         self, text: str
-    ) -> Tuple[List[Tuple[str, str, Dict[str, Any]]], Optional[str]]:
-        """Parse function calls from message ctextontent."""
+    ) -> List[Tuple[Optional[Tuple[str, str, Dict[str, Any]]], Optional[str]]]:
+        """Parse function calls from message ctextontent.
+
+        Args:
+            text (str): The text content to parse for function calls.
+
+        Returns:
+            Tuple[List[Tuple[Optional[Tuple[str, str, Dict[str, Any]]], Optional[str]]]:
+                - A list of tuples where each tuple contains, which can be None if error occurs:
+                    - func_name (str): The name of the function to call
+                    - call_objective (str): The objective of the function call
+                    - func_args (Dict[str, Any]): The arguments for the function call
+                - Optional error message if parsing fails.
+        """
         # calling format: <function_call>name(arg1=value1, arg2=value2)</function_call>
         pattern = r"<function_call>(.*?)</function_call>"
         matches = re.finditer(pattern, text, re.DOTALL)
 
         if not matches:
             # did not call any functions
-            return [], None
+            return []
 
-        func_calls: List[Tuple[str, str, Dict[str, Any]]] = []
-        err: Optional[str] = None
+        func_calls: List[Tuple[Optional[Tuple[str, str, Dict[str, Any]]], Optional[str]]] = []
         for match in matches:
             try:
                 func_str: str = match.group(1)
@@ -147,19 +171,26 @@ class ModelService(ABC):
                 func_name: str = func_data.get("name", "")
                 call_objective: str = func_data.get("call_objective", "")
                 func_args: Dict[str, Any] = func_data.get("args", {})
-                func_calls.append((func_name, call_objective, func_args))
+                func_calls.append(((func_name, call_objective, func_args), None))
             except json.JSONDecodeError as e:
                 print(
-                    f"Error json parsing, the json format for the function calling is not "
-                    f"validated: {str(e)}\nPlease check the format of the function calling."
+                    "The system is attempting to match the JSON format within the <funciton_call> "
+                    "section through string matching, but a matching error has occurred. "
+                    "Please ensure that the content inside <funciton_call> can be parsed as JSON.\n"
+                    f"{str(e)}\nPlease check the format of the function calling.\n"
+                    f"{FUNC_CALLING_JSON_GUIDE}"
                 )
                 err = (
-                    f"Error json parsing, the json format for the function calling is not "
-                    f"validated: {str(e)}\nPlease check the format of the function calling."
+                    "The system is attempting to match the JSON format within the <funciton_call> "
+                    "section through string matching, but a matching error has occurred. "
+                    "Please ensure that the content inside <funciton_call> can be parsed as JSON.\n"
+                    f"{str(e)}\nPlease check the format of the function calling.\n"
+                    f"{FUNC_CALLING_JSON_GUIDE}"
                 )
+                func_calls.append((None, err))  # append None to indicate this match failed to parse
                 continue
 
-        return func_calls, err
+        return func_calls
 
     def _find_function(self, func_name: str, tools: List[Tool]) -> Optional[Callable[..., Any]]:
         """Find matching function from the provided list."""

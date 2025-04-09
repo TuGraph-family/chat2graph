@@ -75,7 +75,7 @@ class JobService(metaclass=Singleton):
         return cast(SubJob, self._job_dao.get_job_by_id(subjob_id))
 
     def get_job_result(self, job_id: str) -> JobResult:
-        """return the job result by job id."""
+        """return the job (original job / subjob) result by job id."""
         job_do: Optional[JobDo] = self._job_dao.get_by_id(id=job_id)
         if not job_do:
             raise ValueError(f"Job with id {job_id} not found in the job registry.")
@@ -87,10 +87,10 @@ class JobService(metaclass=Singleton):
         )
 
     def save_job_result(self, job_result: JobResult) -> None:
-        """Update the job result."""
+        """Update the job (original job / subjob) result."""
         self._job_dao.save_job_result(job_result=job_result)
 
-    def query_job_result(self, original_job_id: str) -> JobResult:
+    def query_original_job_result(self, original_job_id: str) -> JobResult:
         """Query and process the original job result of the multi-agent system.
 
         This method retrieves or assembles the result for an original job by:
@@ -115,13 +115,13 @@ class JobService(metaclass=Singleton):
             current incomplete job result instead of waiting.
         """
         # check if the original job already has gotten the job result
-        job_result: JobResult = self.get_job_result(original_job_id)
-        if job_result.has_result():
-            return job_result
+        original_job_result: JobResult = self.get_job_result(original_job_id)
+        if original_job_result.has_result():
+            return original_job_result
 
-        if job_result.status == JobStatus.CREATED:
+        if original_job_result.status == JobStatus.CREATED:
             # return the current job result, it will be processed later
-            return job_result
+            return original_job_result
 
         # wait for creating the subjob by leader
         job_graph = self.get_job_graph(original_job_id)
@@ -136,7 +136,7 @@ class JobService(metaclass=Singleton):
             subjob_result: JobResult = self.get_job_result(tail_vertex)
             if not subjob_result.has_result():
                 # not all the subjobs have been finished, so return the job result itself
-                return job_result
+                return original_job_result
 
             agent_messages: List[AgentMessage] = cast(
                 List[AgentMessage],
@@ -179,9 +179,9 @@ class JobService(metaclass=Singleton):
         self._message_service.save_message(message=multi_agent_message)
 
         # save the original job result
-        job_result.status = JobStatus.FINISHED
-        self.save_job_result(job_result=job_result)
-        return job_result
+        original_job_result.status = JobStatus.FINISHED
+        self.save_job_result(job_result=original_job_result)
+        return original_job_result
 
     def get_conversation_view(self, job_id: str) -> MessageView:
         """Get conversation view (including thinking chain) for a specific job."""
@@ -189,7 +189,7 @@ class JobService(metaclass=Singleton):
         original_job = self.get_orignal_job(job_id)
 
         # get original job result
-        orignial_job_result = self.query_job_result(job_id)
+        orignial_job_result = self.query_original_job_result(job_id)
 
         # get the user question message
         question_message = self._message_service.get_text_message_by_job_id_and_role(
@@ -258,7 +258,7 @@ class JobService(metaclass=Singleton):
     def stop_job_graph(self, job: Job, error_info: str) -> None:
         """Stop the job graph.
 
-        When a specific job (subjob, original job) fails and it is necessary to stop the execution
+        When a specific job (original job / subjob) fails and it is necessary to stop the execution
         of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
         other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
         """
@@ -278,10 +278,10 @@ class JobService(metaclass=Singleton):
             original_job = job
 
         # if the original job does not have a result, mark it as failed
-        job_result = self.get_job_result(job_id=original_job.id)
-        if not job_result.has_result():
-            job_result.status = JobStatus.STOPPED
-            self.save_job_result(job_result=job_result)
+        original_job_result = self.get_job_result(job_id=original_job.id)
+        if not original_job_result.has_result():
+            original_job_result.status = JobStatus.STOPPED
+            self.save_job_result(job_result=original_job_result)
 
         # update all the subjobs which have not the result to FAILED
         subjob_ids = self.get_subjob_ids(original_job_id=original_job.id)
@@ -312,30 +312,30 @@ class JobService(metaclass=Singleton):
             )
         self._message_service.save_message(message=error_message)
 
-    def get_job_graph(self, job_id: str) -> JobGraph:
-        """Get the job graph by the inital job id. If the job graph does not exist,
+    def get_job_graph(self, original_job_id: str) -> JobGraph:
+        """Get the job graph by the original job id. If the job graph does not exist,
         create a new one and save it to the database."""
-        job_do = self._job_dao.get_by_id(job_id)
+        job_do = self._job_dao.get_by_id(original_job_id)
         if not job_do:
-            raise ValueError(f"Job with ID {job_id} not found in the job registry")
+            raise ValueError(f"Job with ID {original_job_id} not found in the job registry")
 
         if not job_do.dag:
             job_graph: JobGraph = JobGraph()
-            self._job_dao.update(id=job_id, dag=job_graph.to_json_str())
+            self._job_dao.update(id=original_job_id, dag=job_graph.to_json_str())
         else:
             job_graph = JobGraph.from_json_str(str(job_do.dag))
         return job_graph
 
-    def set_job_graph(self, job_id: str, job_graph: JobGraph) -> None:
-        """Set the job graph by the inital job id."""
+    def set_job_graph(self, original_job_id: str, job_graph: JobGraph) -> None:
+        """Set the job graph by the original job id."""
         # save the jobs to the databases
-        original_job: Job = self.get_orignal_job(job_id)
+        original_job: Job = self.get_orignal_job(original_job_id)
         original_job.dag = job_graph.to_json_str()
         self.save_job(original_job)
         for subjob_id in job_graph.vertices():
             self.save_job(job=self.get_subjob(subjob_id))
 
-    def add_job(
+    def add_subjob(
         self,
         original_job_id: str,
         job: SubJob,
@@ -343,7 +343,7 @@ class JobService(metaclass=Singleton):
         predecessors: Optional[List[SubJob]] = None,
         successors: Optional[List[SubJob]] = None,
     ) -> None:
-        """Assign a job to an expert and return the expert instance."""
+        """Assign a subjob to an expert and return the expert instance."""
         # add job to the jobs graph
         job_graph = self.get_job_graph(original_job_id)
         job_graph.add_vertex(job.id)
@@ -367,8 +367,8 @@ class JobService(metaclass=Singleton):
 
         self.set_job_graph(original_job_id, job_graph)
 
-    def remove_job(self, original_job_id: str, job_id: str) -> None:
-        """Remove a job from the job registry."""
+    def remove_subjob(self, original_job_id: str, job_id: str) -> None:
+        """Remove a subjob from the job registry."""
         # remove the job from the database
         # and mark the job as a legacy job
         subjob = self.get_subjob(job_id)
@@ -378,7 +378,7 @@ class JobService(metaclass=Singleton):
         # update the state of the job service
         job_graph = self.get_job_graph(original_job_id)
         job_graph.remove_vertex(job_id)
-        self.set_job_graph(job_id=original_job_id, job_graph=job_graph)
+        self.set_job_graph(original_job_id=original_job_id, job_graph=job_graph)
 
     def replace_subgraph(
         self,
@@ -429,6 +429,13 @@ class JobService(metaclass=Singleton):
             job_graph.update(new_subgraph)
 
             # save the updated jobs to the database
+            self.set_job_graph(original_job_id, job_graph)
+            return
+
+        if new_subgraph.vertices_count() == 0:
+            # if the new subgraph is empty, we can simply remove the old subgraph and return.
+            # this will effectively remove the subgraph from the job graph.
+            job_graph.remove_vertices(set(old_subgraph.vertices()))
             self.set_job_graph(original_job_id, job_graph)
             return
 

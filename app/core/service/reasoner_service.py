@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, cast
 
 from app.core.common.singleton import Singleton
 from app.core.common.type import MessageSourceType, ReasonerType
@@ -16,8 +16,8 @@ class ReasonerService(metaclass=Singleton):
     def get_reasoner(self) -> Reasoner:
         """Get the reasoner."""
         if not self._reasoners:
-            raise ValueError("Reasoner is not set.")
-        return self._reasoners
+            self.init_reasoner(reasoner_type=ReasonerType.DUAL)
+        return cast(Reasoner, self._reasoners)
 
     def init_reasoner(
         self,

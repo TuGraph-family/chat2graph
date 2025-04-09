@@ -13,6 +13,7 @@ from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.sdk.agentic_service import AgenticService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
+from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
@@ -80,7 +81,9 @@ def test_agent_job_graph():
               Task3 (+10) → Task4 (Sum) [Terminal]
     """
     # init components
-    reasoner = DualModelReasoner()
+    reasoner_service: ReasonerService = ReasonerService.instance
+    reasoner = reasoner_service.get_reasoner()
+
     agent_config = AgentConfig(
         profile=Profile(name="Leader"), reasoner=reasoner, workflow=DbgptWorkflow()
     )
@@ -132,7 +135,7 @@ def test_agent_job_graph():
     # build job graph
     original_job: Job = Job(id="test_original_job_id" + str(uuid4()), goal="Test Job Graph")
     job_service.save_job(job=original_job)
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id=original_job.id,
         job=jobs[0],
         expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
@@ -140,7 +143,7 @@ def test_agent_job_graph():
         successors=[jobs[1], jobs[2]],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id=original_job.id,
         job=jobs[1],
         expert_id=leader.state.get_expert_by_name("Expert 2").get_id(),
@@ -148,7 +151,7 @@ def test_agent_job_graph():
         successors=[jobs[4]],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id=original_job.id,
         job=jobs[2],
         expert_id=leader.state.get_expert_by_name("Expert 3").get_id(),
@@ -156,7 +159,7 @@ def test_agent_job_graph():
         successors=[jobs[3]],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id=original_job.id,
         job=jobs[3],
         expert_id=leader.state.get_expert_by_name("Expert 4").get_id(),
@@ -164,7 +167,7 @@ def test_agent_job_graph():
         successors=[],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id=original_job.id,
         job=jobs[4],
         expert_id=leader.state.get_expert_by_name("Expert 5").get_id(),
@@ -174,10 +177,10 @@ def test_agent_job_graph():
 
     # execute job graph
     leader.execute_job_graph(original_job_id=original_job.id)
-    job_graph: JobGraph = job_service.get_job_graph(job_id=original_job.id)
+    job_graph: JobGraph = job_service.get_job_graph(original_job_id=original_job.id)
     tail_vertices = [vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0]
     terminal_job_results: List[JobResult] = [
-        job_service.query_job_result(vertex) for vertex in tail_vertices
+        job_service.query_original_job_result(vertex) for vertex in tail_vertices
     ]
 
     # verify we only get messages from terminal vertices (job4 and job5)

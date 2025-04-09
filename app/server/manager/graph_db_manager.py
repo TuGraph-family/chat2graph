@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple
 
-from app.core.graph_db.graph_db_config import GraphDbConfig
+from app.core.model.graph_db_config import GraphDbConfig
 from app.core.service.graph_db_service import GraphDbService
 
 

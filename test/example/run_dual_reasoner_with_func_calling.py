@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from app.core.model.job import SubJob
 from app.core.model.task import Task
-from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.toolkit.tool import Tool
 
 
@@ -76,7 +76,7 @@ d) 三年总收益率（用百分比表示）
 2. 展示调用合适的计算工具的过程
 """
 
-    reasoner = MonoModelReasoner()
+    reasoner = DualModelReasoner()
 
     job = SubJob(goal="goal", context=calulation_task + calculation_context)
     task = Task(job=job, tools=[Calculator()])

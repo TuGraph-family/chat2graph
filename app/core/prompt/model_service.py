@@ -53,7 +53,7 @@ Here are the LESSONS LEARNED:
 FUNC_CALLING_PROMPT = """
 // When you need to call the function(s), use the following format in the <action>...</action>. Or else you can skip this part.
 Notes:
-1. The format must be valid JSON
+1. The internal format that located in <function_call>...</function_call> must be valid JSON
 2. Function name goes in the "name" field
 3. All arguments go in the "args" object
 4. Multiple function calls should be separated by newlines. All callable functions are listed in the FUNCTION CALLING LIST (I informed you to abvoid this kind of hallucination).
@@ -100,4 +100,32 @@ Function calling examples:
     ... ...
     </function_call>
 </action>
+"""  # noqa: E501
+
+
+FUNC_CALLING_JSON_GUIDE = """
+===== LLM Guide for Generating Valid JSON within `<function_call>` =====
+1.  **Structure:** Use `{ }` for objects, `[]` for arrays.
+2.  **Keys:** Object keys MUST be strings in DOUBLE QUOTES (`"`). Example: `{ "key": ... }`
+3.  **Values:** Values MUST be ONE of these literal types:
+    *   `"string"` (in DOUBLE QUOTES)
+    *   `number` (e.g., `123`, `-4.5`, `0`)
+    *   `true` (lowercase)
+    *   `false` (lowercase)
+    *   `null` (lowercase)
+    *   Another valid JSON `{object}`
+    *   Another valid JSON `[array]`
+4.  **CRITICAL: NO CALCULATIONS INSIDE JSON!**
+    *   **NEVER** put expressions like `10*5`, `sqrt(25)`, `variable` directly as a value.
+    *   **ALWAYS** calculate the final value *first*, then put the *literal result* (e.g., `50`, `5`) into the JSON.
+    *   Incorrect: `"value": 10 * 5`
+    *   Correct: `"value": 50`
+5.  **Syntax:**
+    *   Use `:` between key and value in objects.
+    *   Use `,` between elements in arrays and pairs in objects.
+    *   **NO trailing comma** after the last item.
+6.  **Quotes:** Use DOUBLE QUOTES (`"`) ONLY for keys and string values. NO single quotes (`'`).
+
+**Focus:** Generate literal values. Pre-calculate everything. Follow syntax strictly.
+=====
 """  # noqa: E501

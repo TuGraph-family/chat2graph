@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.read_doc import SchemaManager
+from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class SchemaGetter(Tool):
@@ -120,7 +120,7 @@ class DataStatusCheck(Tool):
                 # 3. 获取所有关系类型列表（如果未指定）
                 if relationship_labels is None:
                     rel_types_result = session.run(
-                        "CALL db.relationshipTypes() YIELD relationshipType RETURN collect(relationshipType) as types"
+                        "CALL db.relationshipTypes() YIELD relationshipType RETURN collect(relationshipType) as types"  # noqa: E501
                     )
                     all_rel_types = rel_types_result.single()["types"]
                     relationship_labels = all_rel_types
@@ -176,8 +176,8 @@ class DataStatusCheck(Tool):
                                 {
                                     "type": record["type"],
                                     "properties": record["props"],
-                                    "source": f"{record['source_label']}(id: {record['source_id']})",
-                                    "target": f"{record['target_label']}(id: {record['target_id']})",
+                                    "source": f"{record['source_label']}(id: {record['source_id']})",  # noqa: E501
+                                    "target": f"{record['target_label']}(id: {record['target_id']})",  # noqa: E501
                                 }
                             )
 

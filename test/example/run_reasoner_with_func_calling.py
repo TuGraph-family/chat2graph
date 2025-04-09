@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from app.core.model.job import SubJob
 from app.core.model.task import Task
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.service.reasoner_service import ReasonerService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 from app.core.workflow.operator_config import OperatorConfig
@@ -26,12 +26,12 @@ class Calculator(Tool):
         """Perform basic math operations.
 
         Args:
-            operation (str): The operation type (add/subtract/multiply/divide/power/sqrt).
+            operation (str): The operation type (available value: "add/subtract/multiply/divide/power/sqrt").
             numbers (List[float]): The list of numbers, for example, [1.0, 2.0, 3.0].
 
         Returns:
             Dict[str, Any]: The calculation result.
-        """
+        """  # noqa: E501
         result = 0.0
         if operation == "add":
             result = sum(numbers)
@@ -80,7 +80,8 @@ d) 三年总收益率（用百分比表示）
 4. 提供最终答案
 """
 
-    reasoner = DualModelReasoner()
+    reasoner_service: ReasonerService = ReasonerService.instance
+    reasoner = reasoner_service.get_reasoner()
 
     job = SubJob(
         id="test_job_id",

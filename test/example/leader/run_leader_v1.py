@@ -7,10 +7,10 @@ from app.core.dal.database import DbSession
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
+from app.core.service.reasoner_service import ReasonerService
 from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
@@ -142,7 +142,8 @@ class FormatResultOperator(BaseTestOperator):
 def main():
     """Main function for testing leader execute functionality."""
     # initialize components
-    reasoner = DualModelReasoner()
+    reasoner_service: ReasonerService = ReasonerService.instance
+    reasoner = reasoner_service.get_reasoner()
     agent_config = AgentConfig(
         profile=Profile(name="Academic_reviewer"), reasoner=reasoner, workflow=DbgptWorkflow()
     )
@@ -236,7 +237,7 @@ def main():
     job_service: JobService = JobService.instance
     job_service.save_job(job=job)
     # Create job graph structure
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_1,
         expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
@@ -244,7 +245,7 @@ def main():
         successors=[job_2, job_3],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_2,
         expert_id=leader.state.get_expert_by_name("Expert 2").get_id(),
@@ -252,7 +253,7 @@ def main():
         successors=[job_5],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_3,
         expert_id=leader.state.get_expert_by_name("Expert 3").get_id(),
@@ -260,7 +261,7 @@ def main():
         successors=[job_4],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_4,
         expert_id=leader.state.get_expert_by_name("Expert 4").get_id(),
@@ -268,7 +269,7 @@ def main():
         successors=[],
     )
 
-    job_service.add_job(
+    job_service.add_subjob(
         original_job_id="test_original_job_id",
         job=job_5,
         expert_id=leader.state.get_expert_by_name("Expert 5").get_id(),
@@ -287,7 +288,7 @@ def main():
     print("\n=== Execution Results ===")
     for tail_vertex in tail_vertices:
         job = job_service.get_subjob(tail_vertex)
-        job_result = job_service.query_job_result(tail_vertex)
+        job_result = job_service.query_original_job_result(tail_vertex)
         if not job_result:
             print(f"Job {tail_vertex} is not completed yet.")
             continue

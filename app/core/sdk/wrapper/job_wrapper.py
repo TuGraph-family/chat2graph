@@ -28,7 +28,7 @@ class JobWrapper:
     def execute(self):
         """Submit the job."""
         agent_service: AgentService = AgentService.instance
-        agent_service.leader.execute_job(job=self._job)
+        agent_service.leader.execute_original_job(original_job=self._job)
 
     def get_stream(self):
         """Get the stream of the job."""
@@ -38,7 +38,7 @@ class JobWrapper:
     def query_result(self) -> JobResult:
         """Get the result of the job."""
         job_service: JobService = JobService.instance
-        return job_service.query_job_result(original_job_id=self._job.id)
+        return job_service.query_original_job_result(original_job_id=self._job.id)
 
     def wait(self, interval: int = 5) -> ChatMessage:
         """Wait for the result."""

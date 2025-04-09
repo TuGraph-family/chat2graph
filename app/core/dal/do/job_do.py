@@ -32,6 +32,7 @@ class JobDo(Do):  # type: ignore
     output_schema = Column(Text, nullable=True)
     life_cycle = Column(Integer, default=SystemEnv.LIFE_CYCLE)
     is_legacy = Column(Boolean, default=False)
+    thinking = Column(Text, nullable=True)
 
     # job result
     status = Column(String(36), default=JobStatus.CREATED.value)
