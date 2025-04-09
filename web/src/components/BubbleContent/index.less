@@ -1,0 +1,70 @@
+.bubble-content {
+
+    &-message {
+        padding: 4px 16px 16px;
+    }
+
+    &-status {
+        margin-left: 6px;
+
+        &-text {
+            font-size: 14px;
+            color: #363740;
+            line-height: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+    }
+
+    :global {
+        .ant-steps-item-title {
+            width: 100%;
+        }
+
+        .ant-steps-item-description {
+            font-size: 14px;
+            color: #363740 !important;
+            line-height: 22px;
+        }
+
+        .ant-steps-item-wait>.ant-steps-item-container>.ant-steps-item-tail::after {
+            // width: 2px;
+            background-color: #dddddf;
+        }
+    }
+}
+
+.title {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 8px 0 4px;
+
+
+
+    &-content {
+        font-size: 16px;
+        color: #363740;
+        line-height: 24px;
+        font-weight: 500;
+    }
+
+    &-extra {
+        font-size: 12px;
+        color: #6a6b71;
+        line-height: 20px;
+        text-align: right;
+    }
+}
+
+.step-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.step-thinks {
+    &-title {
+        font-weight: 500;
+    }
+}

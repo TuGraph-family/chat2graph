@@ -41,7 +41,7 @@ export const ROLES: GetProp<typeof Bubble.List, 'roles'> = {
   },
   local: {
     placement: 'end',
-    variant: 'shadow',
+    variant: 'borderless',
   },
 };
 

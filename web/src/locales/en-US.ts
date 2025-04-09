@@ -109,8 +109,19 @@ export default {
         cancel: 'Cancel',
         noResult: 'No Result',
         stop: 'Thinking Stopped',
-        attachment: 'Attachment',
-        placeholder: "Please enter the question"
-
+        attachment: 'upload files',
+        placeholder: 'Please enter content',
+        subTitle: '💡Try asking like this:',
+        send: 'Send ⏎',
+        thinks: {
+            thinking: 'Thinking...',
+            finished: 'Thinking finished',
+            planning: 'Planning',
+            planningDesc: 'Generate answers based on a generic framework',
+            answer: 'Answer',
+            minutes: 'm',
+            seconds: 's',
+            analyze: 'Analyze'
+        }
     }
 }

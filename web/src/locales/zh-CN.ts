@@ -1,4 +1,3 @@
-import Placeholder from "@/components/Placeholder";
 
 export default {
     knowledgebase: {
@@ -111,7 +110,19 @@ export default {
         cancel: '取消',
         noResult: '暂未搜索到',
         stop: '思考已停止',
-        attachment: '附件',
-        placeholder: '请输入问题'
+        attachment: '文件上传',
+        placeholder: '请输入内容',
+        subTitle: '💡试试这样问：',
+        send: '发送 ⏎',
+        thinks: {
+            thinking: '思考中...',
+            finished: '思考完成',
+            planning: '策划',
+            planningDesc: '基于通用框架生成回答',
+            answer: '回答',
+            minutes: '分',
+            seconds: '秒',
+            analyze: '分析'
+        }
     }
 }
