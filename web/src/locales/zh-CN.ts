@@ -5,8 +5,8 @@ export default {
     home: {
       title: '知识库管理',
       subTitle1: '全局知识库',
-      subTitle2: '用户知识库',
-      subTitle3: '人工智能常识',
+      subTitle2: '会话知识库',
+      subTitle3: 'AI常识',
       remove: '清空知识库',
       removeConfirm: '将会清空知识库的全部内容，影响对应会话的输出，请确定是否清空？',
       edit: '编辑知识库',

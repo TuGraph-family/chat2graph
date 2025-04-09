@@ -3,8 +3,8 @@ export default {
     home: {
       title: 'Knowledge Base Management',
       subTitle1: 'Global Knowledge Base',
-      subTitle2: 'User Knowledge Base',
-      subTitle3: 'Artificial intelligence common sense',
+      subTitle2: 'Session Knowledge Base',
+      subTitle3: 'AI Consensus',
       docs: 'Document Count',
       remove: 'Clear Knowledge Base',
       removeConfirm: "Will clear all the content of the knowledge base, affecting the output of the corresponding session, please confirm whether to clear?",
