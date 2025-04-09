@@ -110,10 +110,9 @@ export default {
     confirm: '确认',
     cancel: '取消',
     noResult: '暂未搜索到',
-    stop: '思考已停止',
     attachment: '附件',
     placeholder: '请输入问题',
-    subTitle: '试试这样问',
+    stop: '思考已停止',
     send: '发送 ⏎',
     thinks: {
       thinking: '思考中...',

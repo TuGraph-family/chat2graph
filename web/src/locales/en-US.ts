@@ -110,10 +110,9 @@ export default {
     confirm: 'Confirm',
     cancel: 'Cancel',
     noResult: 'No Result',
-    stop: 'Thinking Stopped',
     attachment: 'upload files',
     placeholder: 'Please enter content',
-    subTitle: '💡Try asking like this:',
+    stop: 'Thinking Stopped',
     send: 'Send ⏎',
     thinks: {
       thinking: 'Thinking...',
