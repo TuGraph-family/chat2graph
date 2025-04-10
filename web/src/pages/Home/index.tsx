@@ -260,7 +260,6 @@ const HomePage: React.FC = () => {
   const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
     // @ts-ignore
     const { message, id, status, } = item;
-    console.log(parsedMessages)
     return {
       key: id,
       loading: message?.role === 'SYSTEM' && !message?.thinking,
@@ -589,7 +588,7 @@ const HomePage: React.FC = () => {
                       }}
                     >
                       <i className={`iconfont  ${item.icon}`} style={{
-                        fontSize: '20px', color: '#6a6b71;'
+                        fontSize: '20px', color: '#6a6b71'
                       }} />{formatMessage(item.textId)}
                     </Button>)}
 
@@ -599,7 +598,7 @@ const HomePage: React.FC = () => {
                       <Button
                         type="text"
                         icon={<i className='iconfont  icon-Chat2graphshangchuan' style={{
-                          fontSize: '20px', color: '#6a6b71;'
+                          fontSize: '20px', color: '#6a6b71'
                         }} />}
                         onClick={() => {
                           setState((draft) => {
