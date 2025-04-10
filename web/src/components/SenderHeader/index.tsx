@@ -77,7 +77,7 @@ const SenderHeader: React.FC<Props> = (props) => {
         type === 'drop'
           ? { title: 'Drop file here' }
           : {
-            icon: <CloudUploadOutlined />,
+            icon: <i className='iconfont icon-Chat2graphtuofangwenjian' style={{ fontSize: 32, }} />,
             title: formatMessage('knowledgebase.detail.upload.title'),
             description: formatMessage('knowledgebase.detail.upload.description'),
           }
