@@ -41,6 +41,7 @@ const HomePage: React.FC = () => {
     isInit: boolean;
     uplodaFileIds: { file_id: string, uid: string }[];
     closeTag: boolean;
+    editing: boolean;
   }>({
     conversationsItems: [],
     headerOpen: false,
@@ -51,11 +52,12 @@ const HomePage: React.FC = () => {
     attachedFiles: [],
     isInit: false,
     uplodaFileIds: [],
-    closeTag: false
+    closeTag: false,
+    editing: false,
   });
 
 
-  const { isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen, uplodaFileIds, closeTag } = state;
+  const { editing, isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen, uplodaFileIds, closeTag } = state;
 
   const { formatMessage } = useIntlConfig();
 
@@ -310,22 +312,31 @@ const HomePage: React.FC = () => {
 
 
   const menuConfig: ConversationsProps['menu'] = (conversation) => ({
-    trigger: (props) => {
+    trigger: () => {
       return <div id='conversation-extra'>
         <Space>
-          <Tooltip title={formatMessage('home.rename')}>
-            <div className={styles['conversation-extra-icon']} onClick={() => {
+          <Tooltip title={formatMessage('home.rename')} placement='left'>
+            <div className={styles['conversation-extra-icon']} onClick={(e) => {
+              e.stopPropagation();
+              if (editing) return
+
+              setState((draft) => {
+                draft.editing = true;
+              })
               setState((draft) => {
                 draft.conversationsItems = (draft.conversationsItems || []).map(item => {
                   if (item.key !== conversation.key) {
                     return item;
                   }
-
                   return {
                     ...item,
                     label: <NameEditor
                       name={item.label}
-                      editing={true}
+                      onEdited={() => {
+                        setState((draft) => {
+                          draft.editing = false;
+                        })
+                      }}
                       onConfirm={(name: React.ReactNode) => {
                         onConversationRename(name, conversation.key);
                       }}
@@ -341,7 +352,6 @@ const HomePage: React.FC = () => {
 
           <Popconfirm
             title={formatMessage('home.deleteConversation')}
-            description={formatMessage('home.deleteConversationConfirm')}
             okText={formatMessage('home.confirm')}
             cancelText={formatMessage('home.cancel')}
             onConfirm={() => {
@@ -355,8 +365,8 @@ const HomePage: React.FC = () => {
               })
             }}
           >
-            <Tooltip title={formatMessage('home.delete')}>
-              <div className={styles['conversation-extra-icon']}>
+            <Tooltip title={formatMessage('home.delete')} placement='right'>
+              <div className={styles['conversation-extra-icon']} onClick={(e) => { e.stopPropagation(); }}>
                 <DeleteOutlined />
               </div>
             </Tooltip>
@@ -364,22 +374,7 @@ const HomePage: React.FC = () => {
         </Space>
       </div>
     },
-    items: [
-      // {
-      //   label: formatMessage('home.rename'),
-      //   key: 'rename',
-      //   icon: <EditOutlined />,
-      // },
-      // {
-      //   label: formatMessage('home.delete'),
-      //   key: 'delete',
-      //   icon: <DeleteOutlined />,
-      //   danger: true,
-      // },
-    ],
-    onClick: () => {
-
-    },
+    items: [],
   });
 
   const onSubmit = (nextContent: string) => {
@@ -433,12 +428,12 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     setState((draft) => {
+      draft.editing = false;
       draft.conversationsItems = sessions?.map(item => {
-        console.log(item, 'item', activeKey)
         return {
           ...item,
           label: `${item?.key === activeKey ? '[当前会话]' : ''}${item?.label}`,
-          group: formatTimestamp(item?.timestamp)
+          group: formatTimestamp(formatMessage, item?.timestamp)
         }
       })
     })
@@ -475,9 +470,7 @@ const HomePage: React.FC = () => {
               !collapse && <span>Chat2Graph</span>
             }
           </span>
-
           <Language />
-
           <div className={styles['sider-collapsed-icon']} onClick={() => { setState((draft) => { draft.collapse = !draft.collapse; }) }}>
             {
               collapse ? <RightOutlined /> : <LeftOutlined />
@@ -574,7 +567,8 @@ const HomePage: React.FC = () => {
               const { SendButton, LoadingButton } = components;
               return (
                 <Flex justify="space-between" align="center">
-                  <Flex gap="small" align="center">
+
+                  <Flex gap="small" align="center" className={styles['framework']}>
                     {FRAMEWORK_CONFIG.map(item => <Button
                       key={item.key}
                       type={state.selectedFramework === item.key ? 'primary' : 'default'}
@@ -585,17 +579,17 @@ const HomePage: React.FC = () => {
                       }}
                     >
                       <i className={`iconfont  ${item.icon}`} style={{
-                        fontSize: '20px', color: '#6a6b71'
+                        fontSize: '20px'
                       }} />{formatMessage(item.textId)}
                     </Button>)}
 
                   </Flex>
-                  <Flex align="center">
+                  <Flex align="center" gap={12}>
                     <Tooltip title={formatMessage('knowledgebase.detail.upload.description')}>
                       <Button
                         type="text"
                         icon={<i className='iconfont  icon-Chat2graphshangchuan' style={{
-                          fontSize: '32px', color: '#6a6b71;'
+                          fontSize: 30, color: '#6a6b71;'
                         }} />}
                         onClick={() => {
                           setState((draft) => {

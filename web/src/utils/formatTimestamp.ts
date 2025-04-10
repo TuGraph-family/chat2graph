@@ -1,4 +1,4 @@
-export const formatTimestamp = (timestamp?: number) => {
+export const formatTimestamp = (formatMessage: (id: string, values?: any) => void, timestamp?: number) => {
     if (!timestamp) {
         return '';
     }
@@ -10,13 +10,13 @@ export const formatTimestamp = (timestamp?: number) => {
     const formatNumber = (n) => n < 10 ? '0' + n : n;
 
     if (date.toDateString() === today.toDateString()) {
-        return '今天';
+        return formatMessage('home.today');
     } else if (date.toDateString() === yesterday.toDateString()) {
-        return '昨天';
+        return formatMessage('home.yesterday');
     } else {
         const month = formatNumber(date.getMonth() + 1);
         const day = formatNumber(date.getDate());
-        return `${month}月${day}日`;
+        return formatMessage('home.date', { month, day });
     }
 }
 

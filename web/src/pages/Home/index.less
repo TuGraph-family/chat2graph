@@ -139,12 +139,16 @@
       background-color: #1a1b2505;
 
       #conversation-extra {
-        display: block;
+        visibility: visible;
       }
     }
 
     .ant-conversations .ant-conversations-item-active {
       background-color: #1a1b2505;
+
+      #conversation-extra {
+        visibility: visible;
+      }
     }
 
 
@@ -312,6 +316,26 @@
     margin: 32px auto;
     border-radius: 12px;
 
+    .framework {
+
+      :global {
+        .ant-btn {
+          gap: 2px;
+          padding: 0px 12px;
+          border-radius: 8px;
+          color: #6a6b71;
+        }
+
+        .ant-btn-variant-solid {
+          background: #1650ff0f;
+          border: 1px solid #1650ff40;
+          border-radius: 8px;
+          color: #1650ff;
+        }
+      }
+
+    }
+
     :global {
 
       .ant-sender-header {
@@ -321,6 +345,8 @@
         }
 
       }
+
+
     }
 
 

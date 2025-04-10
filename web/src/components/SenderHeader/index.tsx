@@ -3,8 +3,9 @@ import useIntlConfig from '@/hooks/useIntlConfig';
 import { CloudUploadOutlined } from '@ant-design/icons';
 import { Attachments, Sender } from '@ant-design/x';
 import { RcFile, UploadChangeParam } from 'antd/es/upload';
-import { GetProp, message, UploadFile, UploadProps } from 'antd/lib';
+import { GetProp, message, UploadFile } from 'antd/lib';
 import React from 'react';
+import styles from './index.less';
 
 interface Props {
   open: boolean;
@@ -52,38 +53,40 @@ const SenderHeader: React.FC<Props> = (props) => {
 
 
 
-  return <Sender.Header
-    title={<>
-      <i className='iconfont  icon-Chat2graphwenjianshangchuanbiaoshi' style={{
-        fontSize: 16, lineHeight: '22px'
-      }} />
-      {formatMessage('home.attachment')}
-    </>}
-    open={open}
-    onOpenChange={onOpenChange}
-    styles={{
-      content: {
-        padding: 0,
-      },
-    }}
-  >
-    <Attachments
-      beforeUpload={beforeUpload}
-      name='file'
-      accept='.pdf,.xlsx,.doc,.docx,.md'
-      items={attachedFiles}
-      onChange={handleFileChange}
-      placeholder={(type) =>
-        type === 'drop'
-          ? { title: 'Drop file here' }
-          : {
-            icon: <i className='iconfont icon-Chat2graphtuofangwenjian' style={{ fontSize: 32, }} />,
-            title: formatMessage('knowledgebase.detail.upload.title'),
-            description: formatMessage('knowledgebase.detail.upload.description'),
-          }
-      }
-    />
-  </Sender.Header>
+  return <div className={styles['sender-header']}>
+    <Sender.Header
+      title={<>
+        <i className={`iconfont  icon-Chat2graphwenjianshangchuanbiaoshi ${styles['icon-file']}`} />
+        {formatMessage('home.attachment')}
+      </>}
+      open={open}
+      onOpenChange={onOpenChange}
+      styles={{
+        content: {
+          padding: 0,
+        },
+      }}
+    >
+      <Attachments
+        beforeUpload={beforeUpload}
+        name='file'
+        accept='.pdf,.xlsx,.doc,.docx,.md'
+        items={attachedFiles}
+        onChange={handleFileChange}
+        placeholder={(type) =>
+          type === 'drop'
+            ? { title: 'Drop file here' }
+            : {
+              icon: <i className='iconfont icon-Chat2graphtuofangwenjian' style={{ fontSize: 30, color: '#98989d' }} />,
+              title: formatMessage('knowledgebase.detail.upload.title'),
+              description: formatMessage('knowledgebase.detail.upload.description'),
+
+            }
+        }
+      />
+    </Sender.Header>
+  </div>
+
 };
 
 export default SenderHeader

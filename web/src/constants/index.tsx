@@ -67,6 +67,14 @@ export const MESSAGE_TYPE = {
   STOP: 'STOP',
 }
 
+export const MESSAGE_TYPE_TIPS = {
+  [MESSAGE_TYPE.CREATED]: 'home.status.created',
+  [MESSAGE_TYPE.RUNNING]: 'home.status.running',
+  [MESSAGE_TYPE.FINISHED]: 'home.status.finished',
+  [MESSAGE_TYPE.FAILED]: 'home.status.failed',
+  [MESSAGE_TYPE.STOPPED]: 'home.status.stopped',
+}
+
 
 
 
