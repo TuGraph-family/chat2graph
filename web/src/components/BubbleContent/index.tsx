@@ -7,6 +7,8 @@ import styles from './index.less';
 import { useImmer } from "use-immer";
 import { getTimeDifference } from "@/utils/getTimeDifference";
 import { MESSAGE_TYPE } from "@/constants";
+import ReactMarkdown from 'react-markdown';
+import gfm from 'remark-gfm';
 
 interface BubbleContentProps {
   status?: string,
@@ -108,7 +110,8 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
               </div>
               {
                 think?.payload ? <div key={`${think?.jobId}_payload`} className={styles['step-thinks-message']}>
-                  <pre>{think?.payload}</pre>
+                  {/* <pre>{think?.payload}</pre> */}
+                  <ReactMarkdown remarkPlugins={[gfm]}>{think?.payload}</ReactMarkdown>
                 </div> : <Skeleton paragraph={{ rows: 1 }} active />
               }
             </>
@@ -144,7 +147,12 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
       </Card>
     }
     {
-      content && (status === MESSAGE_TYPE.FINISHED || content === MESSAGE_TYPE.STOP || status === MESSAGE_TYPE.FAILED) && <pre className={styles['bubble-content-message']}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</pre>
+      content
+      && (status === MESSAGE_TYPE.FINISHED || content === MESSAGE_TYPE.STOP || status === MESSAGE_TYPE.FAILED)
+      && <div className={styles['bubble-content-message']}>
+        {/* <pre className={styles['bubble-content-message']}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</pre> */}
+        <ReactMarkdown remarkPlugins={[gfm]}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</ReactMarkdown>
+      </div>
     }
 
   </div>

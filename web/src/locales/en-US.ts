@@ -1,7 +1,6 @@
 export default {
   knowledgebase: {
     home: {
-
       title: 'Knowledge Base Management',
       subTitle1: 'Global Knowledge Base',
       subTitle2: 'Session Knowledge Base',
