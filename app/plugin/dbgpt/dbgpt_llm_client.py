@@ -87,8 +87,7 @@ class DbgptLlmClient(ModelService):
             sys_message = SystemMessage(content=sys_prompt)
         base_messages: List[BaseMessage] = [sys_message]
 
-        # convert the conversation messages for DB-GPT LLM
-        for message in messages:
+        for i, message in enumerate(messages):
             # handle the func call information in the agent message
             base_message_content = message.get_payload()
             func_call_results = message.get_function_calls()
@@ -107,11 +106,11 @@ class DbgptLlmClient(ModelService):
                     + "\n</function_call_result>"
                 )
 
-            # Chat2Graph <-> DB-GPT msg: actor <-> ai & thinker <-> human
-            if message.get_source_type() == MessageSourceType.ACTOR:
-                base_messages.append(AIMessage(content=base_message_content))
-            else:
+            # make sure the last message is a human message
+            if (len(base_messages) + i) % 2 == 1:
                 base_messages.append(HumanMessage(content=base_message_content))
+            else:
+                base_messages.append(AIMessage(content=base_message_content))
 
         model_messages = DbgptModelMessage.from_base_messages(base_messages)
         model_request = ModelRequest.build_request(

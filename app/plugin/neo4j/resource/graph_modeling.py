@@ -36,12 +36,12 @@ class VertexLabelAdder(Tool):
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id or str(uuid4()),
-            name=self.create_vertex_label_by_json_schema.__name__,
-            description=self.create_vertex_label_by_json_schema.__doc__ or "",
-            function=self.create_vertex_label_by_json_schema,
+            name=self.create_and_import_vertex_label_schema.__name__,
+            description=self.create_and_import_vertex_label_schema.__doc__ or "",
+            function=self.create_and_import_vertex_label_schema,
         )
 
-    async def create_vertex_label_by_json_schema(
+    async def create_and_import_vertex_label_schema(
         self,
         file_service: FileService,
         graph_db_service: GraphDbService,
@@ -49,7 +49,7 @@ class VertexLabelAdder(Tool):
         properties: List[Dict[str, Union[str, bool]]],
         primary: str = "id",
     ) -> str:
-        """Create a vertex label in Neo4j with specified properties.
+        """Create and import a vertex label in Neo4j with specified properties.
 
         This function defines a new vertex label (node type) in the Neo4j graph database,
         establishing its property schema and primary key.
@@ -129,45 +129,48 @@ class VertexLabelAdder(Tool):
 
 
 class EdgeLabelAdder(Tool):
-    """Tool for generating Cypher statements to create edge labels in TuGraph."""
+    """Tool for generating Cypher statements to create edge labels in GraphDB."""
 
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id or str(uuid4()),
-            name=self.create_edge_label_by_json_schema.__name__,
-            description=self.create_edge_label_by_json_schema.__doc__ or "",
-            function=self.create_edge_label_by_json_schema,
+            name=self.create_and_import_edge_label_schema.__name__,
+            description=self.create_and_import_edge_label_schema.__doc__ or "",
+            function=self.create_and_import_edge_label_schema,
         )
 
-    async def create_edge_label_by_json_schema(
+    async def create_and_import_edge_label_schema(
         self,
         file_service: FileService,
         graph_db_service: GraphDbService,
         label: str,
         properties: List[Dict[str, Union[str, bool]]],
+        source_vertex_labels: List[str],
+        target_vertex_labels: List[str],
         primary: str = "id",
     ) -> str:
-        """Create a relationship type in Neo4j with specified properties.
+        """Create and import a relationship type in Neo4j using specified properties and endpoint constraints.
 
         This function defines a new relationship type in the Neo4j graph database,
-        establishing its property schema, and valid node label pairs
+        establishing its property schema, primary key, and valid node label pairs
         for the relationship endpoints.
 
         Args:
-            label (str): The label name for the relationship type. Will be automatically
-                converted to uppercase as per Neo4j conventions.
+            label (str): The label name of the relationship type. It will be automatically
+                converted to uppercase according to Neo4j conventions.
             properties (List[Dict[str, Union[str, bool]]]): Property definitions for the
                 relationship type. Each property is defined as a dictionary containing:
                     - name (str): Property name
-                    - type (str): Data type (e.g., 'STRING', 'INTEGER', 'FLOAT', 'BOOLEAN',
-                        'DATE', 'DATETIME')
-                    - index (bool): Whether to create an index for the property (default: True)
-            primary (str): The property name to be used as the unique identifier. Must be
-                unique within the relationship type (default: 'id').
+                    - type (str): Data type (e.g., 'STRING', 'INTEGER', 'FLOAT', 'BOOLEAN', 'DATE', 'DATETIME')
+                    - index (bool): Whether to create an index for this property (default: True)
+            source_vertex_labels (List[str]): List of allowed source node labels.
+            target_vertex_labels (List[str]): List of allowed target node labels.
+            primary (str): The property name used as a unique identifier. Must be unique within the relationship type (default: 'id').
 
         Returns:
-            str: Status message indicating successful relationship type creation with
-                constraint and index details.
+            str: A status message indicating successful creation of the relationship type,
+                including details about constraints and indexes,
+                as well as endpoint label restrictions stored in the schema.
 
         Example:
             ```python
@@ -184,10 +187,17 @@ class EdgeLabelAdder(Tool):
                 }
             ]
             result = await create_edge_label_by_json_schema(
-                "WORKS_FOR", properties, "id"
+                "WORKS_AT",
+                properties,
+                source_vertex_labels=["Person"],
+                target_vertex_labels=["Company", "Organization"],
+                "id"
             )
+            # Expected result: Schema updated with WORKS_AT relationship allowing
+            # (Person)-[:WORKS_AT]->(Company) and (Person)-[:WORKS_AT]->(Organization)
+            # and constraints/indexes created for properties 'id' and 'role'.
             ```
-        """
+        """  # noqa: E501
         label = label.upper()
         statements = []
 
@@ -218,6 +228,11 @@ class EdgeLabelAdder(Tool):
                 }
             )
 
+        # execute Cypher statements in Neo4j
+        # note: Neo4j does not support directly restricting the node label types at both ends of a
+        # relationship through Cypher DDL. Such restrictions are typically expressed and enforced
+        # at the application level or through schema definitions.
+        # here, we will store this restriction information in the schema file.
         store = graph_db_service.get_default_graph_db()
         with store.conn.session() as session:
             for statement in statements:
@@ -226,10 +241,23 @@ class EdgeLabelAdder(Tool):
 
         # update schema file
         schema = await SchemaManager.read_schema(file_service=file_service)
-        schema["relationships"][label] = {"primary_key": primary, "properties": property_details}
+        if "relationships" not in schema:
+            schema["relationships"] = {}
+
+        # store relationship type information in the schema, including endpoint label constraints.
+        schema["relationships"][label] = {
+            "primary_key": primary,
+            "properties": property_details,
+            "source_vertex_labels": source_vertex_labels,
+            "target_vertex_labels": target_vertex_labels,
+        }
         await SchemaManager.write_schema(file_service=file_service, schema=schema)
 
-        return f"Successfully configured relationship type {label}"
+        return (
+            f"Successfully configured relationship type {label} in schema "
+            f"(Source: {source_vertex_labels}, Target: {target_vertex_labels}) "
+            f"and created constraints/indexes in Neo4j."
+        )
 
 
 class GraphReachabilityGetter(Tool):
@@ -238,14 +266,14 @@ class GraphReachabilityGetter(Tool):
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id or str(uuid4()),
-            name=self.get_graph_reachability.__name__,
-            description=self.get_graph_reachability.__doc__ or "",
-            function=self.get_graph_reachability,
+            name=self.calculate_and_get_graph_reachability.__name__,
+            description=self.calculate_and_get_graph_reachability.__doc__ or "",
+            function=self.calculate_and_get_graph_reachability,
         )
 
-    async def get_graph_reachability(self, graph_db_service: GraphDbService) -> str:
-        """Get the reachability information of the graph database which can help to understand the
-        graph structure.
+    async def calculate_and_get_graph_reachability(self, graph_db_service: GraphDbService) -> str:
+        """Calculate and get the reachability information of the graph database which can help to
+            understand the graph schema structure.
 
         Args:
             None args required

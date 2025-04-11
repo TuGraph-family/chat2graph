@@ -74,7 +74,7 @@ class AlgorithmsGetter(Tool):
             },
         ]
 
-        return json.dumps({"algorithms": algorithms}, indent=2)
+        return json.dumps({"algorithms": algorithms}, indent=2, ensure_ascii=False)
 
 
 class PageRankExecutor(Tool):
@@ -198,7 +198,7 @@ class PageRankExecutor(Tool):
             result["error"] = str(e)
 
         # return results as JSON string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 class BetweennessCentralityExecutor(Tool):
@@ -332,7 +332,7 @@ class BetweennessCentralityExecutor(Tool):
             result["error"] = str(e)
 
         # return results as json string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 class LouvainExecutor(Tool):
@@ -512,7 +512,7 @@ class LouvainExecutor(Tool):
             result["error"] = str(e)
 
         # return results as json string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 class LabelPropagationExecutor(Tool):
@@ -696,7 +696,7 @@ class LabelPropagationExecutor(Tool):
             result["error"] = str(e)
 
         # return results as json string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 class ShortestPathExecutor(Tool):
@@ -926,7 +926,7 @@ class ShortestPathExecutor(Tool):
             result["error"] = str(e)
 
         # return results as json string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 class NodeSimilarityExecutor(Tool):
@@ -1100,7 +1100,7 @@ class NodeSimilarityExecutor(Tool):
             result["error"] = str(e)
 
         # return results as json string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 class CommonNeighborsExecutor(Tool):
@@ -1226,7 +1226,7 @@ class CommonNeighborsExecutor(Tool):
             result["error"] = str(e)
 
         # return results as json string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 class KMeansExecutor(Tool):
@@ -1449,4 +1449,4 @@ class KMeansExecutor(Tool):
             result["error"] = str(e)
 
         # return results as json string
-        return json.dumps(result, indent=2)
+        return json.dumps(result, indent=2, ensure_ascii=False)
