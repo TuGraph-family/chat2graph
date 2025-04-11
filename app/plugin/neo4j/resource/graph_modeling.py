@@ -1,6 +1,14 @@
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
+from app.core.model.artifact import (
+    Artifact,
+    ArtifactMetadata,
+    ArtifactStatus,
+    ContentType,
+    SourceReference,
+)
+from app.core.service.artifact_service import ArtifactService
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
@@ -45,6 +53,9 @@ class VertexLabelAdder(Tool):
         self,
         file_service: FileService,
         graph_db_service: GraphDbService,
+        artifact_service: ArtifactService,
+        session_id: str,
+        job_id: str,
         label: str,
         properties: List[Dict[str, Union[str, bool]]],
         primary: str = "id",
@@ -55,6 +66,8 @@ class VertexLabelAdder(Tool):
         establishing its property schema and primary key.
 
         Args:
+            session_id (str): The session ID for the current session.
+            job_id (str): The job ID for the current job.
             label (str): The label name for the vertex type. Must be a valid Neo4j label name.
             properties (List[Dict[str, Union[str, bool]]]): Property definitions for the label.
                 Each property is defined as a dictionary containing:
@@ -125,6 +138,28 @@ class VertexLabelAdder(Tool):
             schema["nodes"][label] = {"primary_key": primary, "properties": property_details}
             await SchemaManager.write_schema(file_service=file_service, schema=schema)
 
+            schema_graph_dict: Dict[str, Any] = SchemaManager.schema_to_graph_dict(schema)
+            # save the graph artifact
+            artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
+                job_id=job_id, content_type=ContentType.GRAPH
+            )
+
+            if len(artifacts) == 0:
+                artifact = Artifact(
+                    content_type=ContentType.GRAPH,
+                    content=schema_graph_dict,
+                    source_reference=SourceReference(job_id=job_id, session_id=session_id),
+                    status=ArtifactStatus.FINISHED,
+                    metadata=ArtifactMetadata(
+                        version=1, description="It is the database schema graph."
+                    ),
+                )
+                artifact_service.save_artifact(artifact=artifact)
+            else:
+                artifact_service.increment_and_save(
+                    artifact=artifacts[0], new_content=schema_graph_dict
+                )
+
             return f"Successfully created label {label}"
 
 
@@ -143,6 +178,9 @@ class EdgeLabelAdder(Tool):
         self,
         file_service: FileService,
         graph_db_service: GraphDbService,
+        artifact_service: ArtifactService,
+        session_id: str,
+        job_id: str,
         label: str,
         properties: List[Dict[str, Union[str, bool]]],
         source_vertex_labels: List[str],
@@ -156,6 +194,8 @@ class EdgeLabelAdder(Tool):
         for the relationship endpoints.
 
         Args:
+            session_id (str): The session ID for the current session.
+            job_id (str): The job ID for the current job.
             label (str): The label name of the relationship type. It will be automatically
                 converted to uppercase according to Neo4j conventions.
             properties (List[Dict[str, Union[str, bool]]]): Property definitions for the
@@ -252,6 +292,27 @@ class EdgeLabelAdder(Tool):
             "target_vertex_labels": target_vertex_labels,
         }
         await SchemaManager.write_schema(file_service=file_service, schema=schema)
+
+        # save the graph artifact
+        schema_graph_dict: Dict[str, Any] = SchemaManager.schema_to_graph_dict(schema)
+        artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
+            job_id=job_id, content_type=ContentType.GRAPH
+        )
+        if len(artifacts) == 0:
+            artifact = Artifact(
+                content_type=ContentType.GRAPH,
+                content=schema_graph_dict,
+                source_reference=SourceReference(job_id=job_id, session_id=session_id),
+                status=ArtifactStatus.FINISHED,
+                metadata=ArtifactMetadata(
+                    version=1, description="It is the database schema graph."
+                ),
+            )
+            artifact_service.save_artifact(artifact=artifact)
+        else:
+            artifact_service.increment_and_save(
+                artifact=artifacts[0], new_content=schema_graph_dict
+            )
 
         return (
             f"Successfully configured relationship type {label} in schema "

@@ -218,7 +218,8 @@ class ArtifactService(metaclass=Singleton):
                 if not isinstance(input_vertices, list) or not isinstance(input_edges, list):
                     # TODO: use logger warning
                     print(
-                        "Warning: New graph content 'vertices' or 'edges' is not a list. Cannot merge."
+                        "Warning: New graph content 'vertices' or 'edges' is not a list. "
+                        "Cannot merge."
                     )
                     # return original content as merge is not possible
                     return current_content

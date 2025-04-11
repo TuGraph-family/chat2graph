@@ -447,7 +447,7 @@ class DataImport(Tool):
                     for relationship in [record.get("r")]
                 ]
 
-                graph_message_payload = {"vertices": vertices, "edges": edges}
+                data_graph_dict = {"vertices": vertices, "edges": edges}
 
                 # 保存 graph type artifact
                 artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
@@ -457,7 +457,7 @@ class DataImport(Tool):
                 if len(artifacts) == 0:
                     artifact = Artifact(
                         content_type=ContentType.GRAPH,
-                        content=graph_message_payload,
+                        content=data_graph_dict,
                         source_reference=SourceReference(job_id=job_id, session_id=session_id),
                         status=ArtifactStatus.FINISHED,
                         metadata=ArtifactMetadata(version=1, description="It is the data graph."),
@@ -465,7 +465,7 @@ class DataImport(Tool):
                     artifact_service.save_artifact(artifact=artifact)
                 else:
                     artifact_service.increment_and_save(
-                        artifact=artifacts[0], new_content=graph_message_payload
+                        artifact=artifacts[0], new_content=data_graph_dict
                     )
 
                 return f"""数据导入成功！
