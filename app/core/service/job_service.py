@@ -223,21 +223,21 @@ class JobService(metaclass=Singleton):
     def get_conversation_view(self, original_job_id: str) -> MessageView:
         """Get conversation view (including thinking chain) for a specific job."""
         # get original job
-        original_job = self.get_orignal_job(original_job_id)
+        original_job = self.get_orignal_job(original_job_id=original_job_id)
 
         # get original job result
-        orignial_job_result = self.query_original_job_result(original_job_id)
+        original_job_result = self.query_original_job_result(original_job_id=original_job_id)
 
         # get the user question message
         question_message = self._message_service.get_hybrid_message_by_job_id_and_role(
-            original_job_id,
-            ChatMessageRole.USER,
+            original_job=original_job_id,
+            role=ChatMessageRole.USER,
         )
 
         # get the AI answer message
         answer_message = self._message_service.get_hybrid_message_by_job_id_and_role(
-            original_job_id,
-            ChatMessageRole.SYSTEM,
+            original_job=original_job_id,
+            role=ChatMessageRole.SYSTEM,
         )
 
         # get thinking chain messages
@@ -289,7 +289,7 @@ class JobService(metaclass=Singleton):
         return MessageView(
             question=question_message,
             answer=answer_message,
-            answer_metrics=orignial_job_result,
+            answer_metrics=original_job_result,
             thinking_messages=thinking_messages,
             thinking_subjobs=subjobs,
             thinking_metrics=subjob_results,

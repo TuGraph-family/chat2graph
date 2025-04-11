@@ -127,7 +127,7 @@ class ArtifactService(metaclass=Singleton):
             return current_content
 
         # apply incremental update based on content type
-        if content_type in [ContentType.TEXT, ContentType.HTML, ContentType.MARKDOWN]:
+        if content_type in [ContentType.TEXT, ContentType.MARKDOWN]:
             base = str(current_content) if current_content is not None else ""
             addition = str(new_content)
             result_text = base + addition
@@ -275,19 +275,9 @@ class ArtifactService(metaclass=Singleton):
             ContentType.IMAGE_PNG,
             ContentType.IMAGE_JPEG,
             ContentType.PDF,
-            ContentType.BINARY,
         ]:
             # replacement is the only meaningful operation
             result = new_content
             return result
-
-        if content_type == ContentType.XML:
-            # simple string concatenation (robust XML merging is complex)
-            base = str(current_content) if current_content is not None else ""
-            addition = str(new_content)
-            # basic check: avoid concatenating XML declarations? (Optional)
-            # if addition.strip().startswith("<?xml") and base.strip().endswith(">"): ...
-            result_xml = base + addition
-            return result_xml
 
         raise ValueError(f"Unsupported content type: {content_type}")

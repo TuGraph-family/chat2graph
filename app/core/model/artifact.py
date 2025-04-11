@@ -20,16 +20,13 @@ class ContentType(Enum):
     """Enum representing the possible content types of an artifact."""
 
     TEXT = "text/plain"
-    HTML = "text/html"
     JSON = "application/json"
-    XML = "application/xml"
     MARKDOWN = "text/markdown"
     CSV = "text/csv"
     PDF = "application/pdf"
     IMAGE_PNG = "image/png"
     IMAGE_JPEG = "image/jpeg"
     IMAGE_SVG = "image/svg+xml"
-    BINARY = "application/octet-stream"
     GRAPH = "application/graph"
 
 
@@ -110,9 +107,7 @@ class Artifact:
 
             elif self.content_type in [
                 ContentType.TEXT,
-                ContentType.HTML,
                 ContentType.MARKDOWN,
-                ContentType.XML,
                 ContentType.CSV,
             ]:
                 # ensure text content is a string
@@ -125,7 +120,6 @@ class Artifact:
                 ContentType.IMAGE_PNG,
                 ContentType.IMAGE_JPEG,
                 ContentType.PDF,
-                ContentType.BINARY,
             ]:
                 # for binary data, use base64 encoding
                 if isinstance(self.content, bytes):
@@ -182,9 +176,7 @@ class Artifact:
 
             elif content_type in [
                 ContentType.TEXT,
-                ContentType.HTML,
                 ContentType.MARKDOWN,
-                ContentType.XML,
                 ContentType.CSV,
             ]:
                 # text formats are returned as is
@@ -194,7 +186,6 @@ class Artifact:
                 ContentType.IMAGE_PNG,
                 ContentType.IMAGE_JPEG,
                 ContentType.PDF,
-                ContentType.BINARY,
             ]:
                 # binary data is base64 decoded
                 return base64.b64decode(content_str)

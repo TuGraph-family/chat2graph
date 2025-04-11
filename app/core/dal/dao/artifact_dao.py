@@ -112,9 +112,9 @@ class ArtifactDao(Dao[ArtifactDo]):
         content_type_value = str(artifact_do.content_type)
         try:
             content_type = ContentType(content_type_value)
-        except ValueError:
+        except ValueError as e:
             # fallback to binary if content type is not recognized
-            content_type = ContentType.BINARY
+            raise ValueError(f"Invalid content type: {content_type_value}") from e
 
         return Artifact(
             id=str(artifact_do.id),
