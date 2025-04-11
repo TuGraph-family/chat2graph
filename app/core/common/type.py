@@ -43,6 +43,7 @@ class ChatMessageType(Enum):
     FILE = "FILE"
     IMAGE = "IMAGE"
     AUDIO = "AUDIO"
+    GRAPH = "GRAPH"
 
 
 class InsightType(Enum):

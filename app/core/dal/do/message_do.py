@@ -42,6 +42,7 @@ class MessageDo(Do):  # type: ignore
     # agent message fields
     lesson = Column(Text, nullable=True)
     related_message_ids = Column(JSON, nullable=True)
+    artifact_ids = Column(JSON, nullable=True)
 
     # chat/text message fields
     role = Column(String(36), nullable=True)
@@ -97,6 +98,14 @@ class FileMessageDo(ChatMessageDo):
 
     __mapper_args__ = {
         "polymorphic_identity": MessageType.FILE_MESSAGE.value,  # type: ignore
+    }
+
+
+class GraphMessageDo(ChatMessageDo):
+    """Graph message"""
+
+    __mapper_args__ = {
+        "polymorphic_identity": MessageType.GRAPH_MESSAGE.value,  # type: ignore
     }
 
 

@@ -2,6 +2,7 @@ TASK_DESCRIPTOR_PROMPT_TEMPLATE = """
 ===== ACTIONS =====
 LLMs need explicit action spaces and valid transitions. This isn't just a list - it's a state machine definition showing valid transitions (-next->) between actions.
 It prevents invalid action sequences and ensures operational coherence. However the sequences of the actions are recommended, not mandatory.
+However, this state machine defines the boundaries of the possibilities and legality of action transitions; in actual execution, while the specific order of action selection needs to adhere to these boundaries, there may be multiple legitimate paths. The "order" provided by the system at this time is more inclined towards a suggestion or guidance rather than a unique and mandatory execution path.
 Here are the ACTIONS:
 
 {action_rels}
@@ -18,7 +19,11 @@ The CONVERSATION INFORMATION provides the information in the LLM multi-agent sys
 
 current session_id: {session_id}
 
-2. file_descriptors: Identifies accessible file resources, allowing agents to read and manipulate specified files
+2. job_id: 1. session_id: Uniquely identifies the current job, used to track job status and progress
+
+current job_id: {job_id}
+
+3. file_descriptors: Identifies accessible file resources, allowing agents to read and manipulate specified files
 
 {file_descriptors}
 
@@ -125,6 +130,7 @@ FUNC_CALLING_JSON_GUIDE = """
     *   Use `,` between elements in arrays and pairs in objects.
     *   **NO trailing comma** after the last item.
 6.  **Quotes:** Use DOUBLE QUOTES (`"`) ONLY for keys and string values. NO single quotes (`'`).
+7.  *The `json` marker like <function_call>```json\n...```</function_call> is not validated, use <function_call>...</function_call> instead.*
 
 **Focus:** Generate literal values. Pre-calculate everything. Follow syntax strictly.
 =====
