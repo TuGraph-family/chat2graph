@@ -147,7 +147,7 @@ actions:
 
   - &content_understanding_action_2
     name: "content_understanding_2"
-    desc: "调用相关工具获取原始文本内容，并结合图模型进行分析和理解"
+    desc: "调用相关工具获取原始文本内容，并结合图模型（schema）进行分析和理解"
     tools:
       - *document_reader_tool
 
