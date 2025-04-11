@@ -1,4 +1,3 @@
-import base64
 from dataclasses import dataclass, field
 from enum import Enum
 import json
@@ -21,11 +20,7 @@ class ContentType(Enum):
 
     TEXT = "text/plain"
     JSON = "application/json"
-    MARKDOWN = "text/markdown"
     CSV = "text/csv"
-    PDF = "application/pdf"
-    IMAGE_PNG = "image/png"
-    IMAGE_JPEG = "image/jpeg"
     IMAGE_SVG = "image/svg+xml"
     GRAPH = "application/graph"
 
@@ -107,7 +102,6 @@ class Artifact:
 
             elif self.content_type in [
                 ContentType.TEXT,
-                ContentType.MARKDOWN,
                 ContentType.CSV,
             ]:
                 # ensure text content is a string
@@ -115,19 +109,6 @@ class Artifact:
                     return self.content
                 else:
                     return str(self.content)
-
-            elif self.content_type in [
-                ContentType.IMAGE_PNG,
-                ContentType.IMAGE_JPEG,
-                ContentType.PDF,
-            ]:
-                # for binary data, use base64 encoding
-                if isinstance(self.content, bytes):
-                    return base64.b64encode(self.content).decode("utf-8")
-                elif hasattr(self.content, "read"):  # file-like object
-                    return base64.b64encode(self.content.read()).decode("utf-8")
-                else:
-                    return base64.b64encode(str(self.content).encode("utf-8")).decode("utf-8")
 
             elif self.content_type == ContentType.GRAPH:
                 # graph data should be serialized as JSON
@@ -174,30 +155,20 @@ class Artifact:
             if content_type == ContentType.JSON:
                 return json.loads(content_str)
 
-            elif content_type in [
+            if content_type in [
                 ContentType.TEXT,
-                ContentType.MARKDOWN,
                 ContentType.CSV,
             ]:
                 # text formats are returned as is
                 return content_str
 
-            elif content_type in [
-                ContentType.IMAGE_PNG,
-                ContentType.IMAGE_JPEG,
-                ContentType.PDF,
-            ]:
-                # binary data is base64 decoded
-                return base64.b64decode(content_str)
-
-            elif content_type == ContentType.GRAPH:
+            if content_type == ContentType.GRAPH:
                 # graph data is deserialized from JSON
                 graph_dict = json.loads(content_str)
                 return graph_dict
 
-            else:
-                # default to returning the string as is
-                return content_str
+            # default to returning the string as is
+            return content_str
 
         except Exception as e:
             raise ValueError(

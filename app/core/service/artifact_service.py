@@ -127,7 +127,7 @@ class ArtifactService(metaclass=Singleton):
             return current_content
 
         # apply incremental update based on content type
-        if content_type in [ContentType.TEXT, ContentType.MARKDOWN]:
+        if content_type == ContentType.TEXT:
             base = str(current_content) if current_content is not None else ""
             addition = str(new_content)
             result_text = base + addition
@@ -270,14 +270,5 @@ class ArtifactService(metaclass=Singleton):
                 )
                 # fallback: Replace, return a copy if mutable
                 return deepcopy(new_content) if isinstance(new_content, dict) else current_content
-
-        if content_type in [
-            ContentType.IMAGE_PNG,
-            ContentType.IMAGE_JPEG,
-            ContentType.PDF,
-        ]:
-            # replacement is the only meaningful operation
-            result = new_content
-            return result
 
         raise ValueError(f"Unsupported content type: {content_type}")

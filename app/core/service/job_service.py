@@ -230,13 +230,13 @@ class JobService(metaclass=Singleton):
 
         # get the user question message
         question_message = self._message_service.get_hybrid_message_by_job_id_and_role(
-            original_job=original_job_id,
+            job_id=original_job_id,
             role=ChatMessageRole.USER,
         )
 
         # get the AI answer message
         answer_message = self._message_service.get_hybrid_message_by_job_id_and_role(
-            original_job=original_job_id,
+            job_id=original_job_id,
             role=ChatMessageRole.SYSTEM,
         )
 
