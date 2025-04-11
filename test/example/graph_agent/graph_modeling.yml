@@ -14,12 +14,12 @@ tools:
     name: "DocumentReader"
     module_path: "app.core.resource.graph_modeling"
 
-  - &vertex_label_generator_tool
-    name: "VertexLabelGenerator"
+  - &vertex_label_adder_tool
+    name: "VertexLabelAdder"
     module_path: "app.core.resource.graph_modeling"
 
-  - &edge_label_generator_tool
-    name: "EdgeLabelGenerator"
+  - &edge_label_adder_tool
+    name: "EdgeLabelAdder"
     module_path: "app.core.resource.graph_modeling"
 
   - &graph_reachability_getter_tool
@@ -58,12 +58,12 @@ actions:
     name: "self_reflection_schema"
     desc: "不断检查和反思当前概念模型的设计"
 
-  - &schema_design_action
-    name: "schema_design"
+  - &schema_design_and_import_action
+    name: "schema_design_and_import"
     desc: "将概念模型转化为图数据库 label"
     tools:
-      - *vertex_label_generator_tool
-      - *edge_label_generator_tool
+      - *vertex_label_adder_tool
+      - *edge_label_adder_tool
 
   - &graph_validation_action
     name: "graph_validation"
@@ -82,7 +82,7 @@ toolkit:
       *entity_type_definition_action,
       *relation_type_definition_action,
       *self_reflection_schema_action,
-      *schema_design_action,
+      *schema_design_and_import_action,
       *graph_validation_action,
     ]
 
@@ -185,7 +185,7 @@ operators:
       - *entity_type_definition_action
       - *relation_type_definition_action
       - *self_reflection_schema_action
-      - *schema_design_action
+      - *schema_design_and_import_action
       - *graph_validation_action
 
 experts:

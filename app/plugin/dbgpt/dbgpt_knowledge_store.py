@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional
 
 from dbgpt.rag.embedding import DefaultEmbeddingFactory  # type: ignore
@@ -27,9 +28,8 @@ class VectorKnowledgeStore(KnowledgeStore):
     """Knowledge base for storing vectors."""
 
     def __init__(self, name: str):
-        config = ChromaVectorConfig(
-            persist_path=SystemEnv.APP_ROOT + SystemEnv.KNOWLEDGE_STORE_PATH
-        )
+        self._persist_path = f"{SystemEnv.APP_ROOT}{SystemEnv.KNOWLEDGE_STORE_PATH}/{name}"
+        config = ChromaVectorConfig(persist_path=self._persist_path)
         self._vector_store = ChromaStore(
             config,
             name=name,
@@ -77,6 +77,7 @@ class VectorKnowledgeStore(KnowledgeStore):
 
     def drop(self) -> None:
         self._vector_store._clean_persist_folder()
+        os.rmdir(self._persist_path)
 
 
 class GraphKnowledgeStore(KnowledgeStore):

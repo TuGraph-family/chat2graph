@@ -23,9 +23,8 @@ const Placeholder: React.FC<Props> = (props) => {
       />
       <Prompts
         items={placeholderPromptsItems}
-        title="💡试试这样问："
+        title={`💡${formatMessage('home.placeholderPromptsTitle')}：`}
         vertical
-
         onItemClick={onPromptsItemClick}
       />
     </Space>

@@ -154,7 +154,9 @@ class Artifact:
                 return str(self.content)
 
         except Exception as e:
-            raise ValueError(f"Failed to serialize content of type {self.content_type}: {str(e)}")
+            raise ValueError(
+                f"Failed to serialize content of type {self.content_type}: {str(e)}"
+            ) from e
 
     @classmethod
     def deserialize_content(cls, content_str: str, content_type: ContentType) -> Any:
@@ -207,4 +209,6 @@ class Artifact:
                 return content_str
 
         except Exception as e:
-            raise ValueError(f"Failed to deserialize content of type {content_type}: {str(e)}")
+            raise ValueError(
+                f"Failed to deserialize content of type {content_type}: {str(e)}"
+            ) from e

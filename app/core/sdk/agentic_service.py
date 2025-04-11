@@ -11,7 +11,7 @@ from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
 from app.core.model.job import Job
 from app.core.model.message import ChatMessage, MessageType, TextMessage
-from app.core.prompt.job import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
@@ -156,19 +156,29 @@ class AgenticService(metaclass=Singleton):
             else:
                 raise ValueError("Toolkit chain cannot be empty.")
 
-        # configure the leader
-        job_decomposition_operator = (
-            OperatorWrapper()
-            .instruction("Please decompose the task.")
-            .output_schema(JOB_DECOMPOSITION_OUTPUT_SCHEMA)
-            .build()
-        )
-
+        # get workflow platform type
         workflow_platform_type: Optional[WorkflowPlatformType] = (
             agentic_service_config.plugin.get_workflow_platform_type()
         )
 
+        # configure the leader
         print("Init the Leader agent")
+        leader_actions: List[Action] = []
+        leader_actions.extend(
+            [
+                actions_dict[action_config.name]
+                for action_config in agentic_service_config.leader.actions
+            ]
+        )
+        job_decomposition_operator = (
+            OperatorWrapper()
+            .instruction(
+                "Please check the current status of the system, and then decompose the task."
+            )
+            .output_schema(JOB_DECOMPOSITION_OUTPUT_SCHEMA)
+            .actions(leader_actions)
+            .build()
+        )
         mas.leader(name="Leader").workflow(
             job_decomposition_operator, platform_type=workflow_platform_type
         ).build()

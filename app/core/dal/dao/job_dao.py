@@ -32,6 +32,7 @@ class JobDao(Dao[JobDo]):
                     output_schema=job.output_schema,
                     life_cycle=job.life_cycle,
                     is_legacy=job.is_legacy,
+                    thinking=job.thinking,
                 )
             return self.create(
                 category=JobType.JOB.value,
@@ -55,6 +56,7 @@ class JobDao(Dao[JobDo]):
                 output_schema=job.output_schema,
                 life_cycle=job.life_cycle,
                 is_legacy=job.is_legacy,
+                thinking=job.thinking,
             )
         return self.update(
             id=job.id,
@@ -98,4 +100,5 @@ class JobDao(Dao[JobDo]):
             output_schema=cast(str, result.output_schema),
             life_cycle=cast(int, result.life_cycle),
             is_legacy=cast(bool, result.is_legacy),
+            thinking=cast(Optional[str], result.thinking),
         )

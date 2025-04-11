@@ -78,7 +78,7 @@ class ModelService(ABC):
                         status=FunctionCallStatus.FAILED,
                         output=f"Error: Function {func_name} does not exist in the current scope. "
                         "You have called a function that does not exist in the system, "
-                        "and have made a mistake of function calling.",
+                        f"and have made a mistake of function calling. {available_funcs_desc}",
                     )
                 )
                 continue

@@ -28,7 +28,7 @@ class JobWrapper:
     def execute(self):
         """Submit the job."""
         agent_service: AgentService = AgentService.instance
-        agent_service.leader.execute_job(job=self._job)
+        agent_service.leader.execute_original_job(original_job=self._job)
 
     def get_stream(self):
         """Get the stream of the job."""

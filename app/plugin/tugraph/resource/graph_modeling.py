@@ -370,7 +370,7 @@ class DocumentReader(Tool):
         return DOC_CONTENT
 
 
-class VertexLabelGenerator(Tool):
+class VertexLabelAdder(Tool):
     """Tool for generating Cypher statements to create vertex labels in TuGraph."""
 
     def __init__(self, id: Optional[str] = None):
@@ -446,11 +446,11 @@ class VertexLabelGenerator(Tool):
         cypher_exec = CypherExecutor()
         return await cypher_exec.validate_and_execute_cypher(
             graph_db_service=graph_db_service,
-            cypher_schema=f"CALL db.createVertexLabelByJson('{json.dumps(label_json)}')",
+            cypher_schema=f"CALL db.createVertexLabelByJson('{json.dumps(label_json, ensure_ascii=False)}')",  # noqa: E501
         )
 
 
-class EdgeLabelGenerator(Tool):
+class EdgeLabelAdder(Tool):
     """Tool for generating Cypher statements to create edge labels in TuGraph."""
 
     def __init__(self, id: Optional[str] = None):
@@ -530,7 +530,7 @@ class EdgeLabelGenerator(Tool):
         cypher_exec = CypherExecutor()
         return await cypher_exec.validate_and_execute_cypher(
             graph_db_service=graph_db_service,
-            cypher_schema=f"CALL db.createEdgeLabelByJson('{json.dumps(label_json)}')",
+            cypher_schema=f"CALL db.createEdgeLabelByJson('{json.dumps(label_json, ensure_ascii=False)}')",  # noqa: E501
         )
 
 

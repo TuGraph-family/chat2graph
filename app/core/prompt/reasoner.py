@@ -74,14 +74,15 @@ We share a common interest in collaborating to successfully complete the task th
 5. After the part of <shallow_thinking> in your answer, you should perform your <action> in straightforward manner. <action> is the place where you complete/act/execute what you have thought in <shallow_thinking>.
 6. Do not use the <deep_thinking>, <instruction>, <input>, <function_call_result> in your response.
 7. (Optional) The instruction can be wrong that I provided to you, so you can doubt the instruction by providing reasons, during the process of the conversation. 
-8. IMPORTANT: When providing the final deliverable, you MUST include ALL relevant information from our previous conversation, as the previous context will NOT be available for later processing. Your deliverable should be completely self-contained and independently understandable.
+8. IMPORTANT: When providing the final deliverable, you MUST include ALL relevant information from our previous conversation, as the previous context will NOT be available for later processing. Your deliverable should be completely self-contained and independently understandable. When <deliverable> appears in the response, the current conversation will be closed by system, indicating that this task is complete.
+9. IMPORTANT: When I provided you TASK_DONE, you must use <deliverable> and TASK_DONE in your response to indicate task completion. If I did not provide you TASK_DONE, you should never use <deliverable> in your response.
 
 (Answer in Chinese)
 ===== TASK =====
 {task}
 
 ===== FUNCTION CALLING LIST =====
-Here are the functions you can call to help you complete the task. The third party will execute the functions and paste the results in <function_call_result>...</function_call_result> in the next conversation turn.
+Here are some available tools (functions) that you can use and enhance your abilities to interact with the external system. If you determine that a certain tool is needed, please generate text containing <function_call>...</function_call> (defined and specified format). Then, the external system will be responsible for running these tool(s) and embedding the result(s) through the <function_call_result>...</function_call_result> tag (although you may only see the function's result(s) in the chat history during your next chat turn), for both of us to read later.
 {functions}
 
 ===== ANSWER TEMPLATE =====
@@ -154,13 +155,15 @@ You complete the task through role-playing, selfishly using role-playing to do s
 8.  If you called the function failed, you should correct it to call it correctly.
 9.  Use "TASK_DONE" (in English only) to terminate task and our conversation. Or, if you always reply with repetitive answers in the conversation (you are doing bad), you should use "TASK_DONE" to terminate the conversation. Do not forget it!
 10. (Optional) The instruction can be wrong that the system provided to you, so you can doubt the instruction by providing reasons, during the process of the conversation.
-11. IMPORTANT: When providing the final deliverable, you MUST include ALL relevant information from your previous conversation, as the previous context will NOT be available for later processing. Your deliverable should be completely self-contained and independently understandable.
+11. IMPORTANT: When providing the final deliverable, you MUST include ALL relevant information from our previous conversation, as the previous context will NOT be available for later processing. Your deliverable should be completely self-contained and independently understandable. When <deliverable> appears in the response, the current conversation will be closed by system, indicating that this task is complete.
+12. IMPORTANT: When You think the task is done, you must use <deliverable> and TASK_DONE in your response to indicate task completion. If not completed, you should never use <deliverable> in your response.
 
 (Answer in Chinese)
 ===== TASK =====
 {task}
 
 ===== FUNCTION CALLING LIST =====
+Here are some available tools (functions) that you can use and enhance your abilities to interact with the external system. If you determine that a certain tool is needed, please generate text containing <function_call>...</function_call> (defined and specified format). Then, the external system will be responsible for running these tool(s) and embedding the result(s) through the <function_call_result>...</function_call_result> tag (although you may only see the function's result(s) in the chat history during your next chat turn), for both of us to read later.
 {functions}
 
 ===== ANSWER TEMPLATE =====

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session as SqlAlchemySession
 
 from app.core.common.type import ChatMessageRole
 from app.core.dal.dao.dao import Dao
+from app.core.dal.dao.file_descriptor_dao import FileDescriptorDao
 from app.core.dal.do.message_do import (
     AgentMessageDo,
     FileMessageDo,
@@ -190,14 +191,27 @@ class MessageDao(Dao[MessageDo]):
             )
 
         if message_type == MessageType.FILE_MESSAGE:
+            file_descriptor_dao: FileDescriptorDao = FileDescriptorDao.instance
             assert len(list(message_do.related_message_ids)) == 1, (
                 f"File message {message_do.id} should have only one file id. "
                 f"File id(s) :{list(message_do.related_message_ids)}"
             )
+            file_id: str = list(message_do.related_message_ids)[0]
+            file_descriptor = file_descriptor_dao.get_file_descriptor_by_id(id=file_id)
             return FileMessage(
                 id=str(message_do.id),
                 file_id=str(list(message_do.related_message_ids)[0]),
                 session_id=str(message_do.session_id),
+                timestamp=int(message_do.timestamp),
+                descriptor=file_descriptor,
+            )
+
+        if message_type == MessageType.GRAPH_MESSAGE:
+            return GraphMessage(
+                id=str(message_do.id),
+                job_id=str(message_do.job_id),
+                session_id=str(message_do.session_id),
+                payload=GraphMessage.deserialize_payload(str(message_do.payload)),
                 timestamp=int(message_do.timestamp),
             )
 

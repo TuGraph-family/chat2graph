@@ -13,5 +13,5 @@ class JobManager:
     def get_conversation_view(self, job_id: str) -> Tuple[Dict[str, Any], str]:
         """Get message view (including thinking chain) for a specific job."""
         return MessageViewTransformer.serialize_conversation_view(
-            self._job_service.get_conversation_view(job_id=job_id)
+            self._job_service.get_conversation_view(original_job_id=job_id)
         ), "Message view retrieved successfully"

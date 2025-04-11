@@ -83,7 +83,7 @@ class ArtifactDao(Dao[ArtifactDo]):
         """Delete all artifacts for a given job ID."""
         artifact_dos = self.session.query(self._model).filter(self._model.job_id == job_id)
         for artifact_do in artifact_dos:
-            self.delete(artifact_do.id)
+            self.delete(str(artifact_do.id))
 
     def parse_into_artifact_do(self, artifact: Artifact) -> ArtifactDo:
         """Convert a domain artifact object to a database object."""

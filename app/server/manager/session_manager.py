@@ -154,7 +154,7 @@ class SessionManager:
         # get message view data for the job
         conversation_views: List[Dict[str, Any]] = []
         for job_id in job_ids:
-            conversation_view = self._job_service.get_conversation_view(job_id=job_id)
+            conversation_view = self._job_service.get_conversation_view(original_job_id=job_id)
             conversation_views.append(
                 MessageViewTransformer.serialize_conversation_view(conversation_view)
             )
