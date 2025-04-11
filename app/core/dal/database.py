@@ -8,7 +8,7 @@ from app.core.common.system_env import SystemEnv
 
 # check if the system folder exists
 system_path = SystemEnv.APP_ROOT + SystemEnv.SYSTEM_PATH
-Path(system_path).mkdir(exist_ok=True)
+Path(system_path).mkdir(parents=True, exist_ok=True)
 
 # engine and session factory
 engine = create_engine(

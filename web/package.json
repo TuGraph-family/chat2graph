@@ -18,6 +18,9 @@
     "antd": "^5.4.0",
     "dayjs": "^1.11.13",
     "lodash": "^4.17.21",
+    "markdown-navbar": "^1.4.3",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "use-immer": "^0.11.0"
   },
   "devDependencies": {

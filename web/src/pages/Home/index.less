@@ -6,20 +6,21 @@
 .sider {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  width: 300px;
-  background: #f7f9fc;
+  padding: 20px 16px;
+  width: 280px;
+  background: #fff;
   transition: all 0.3s;
   position: relative;
 
   .create-conversation {
     background: #1650ff0f;
-    border: 1px solid transparent;
+    border: 1px solid #1650ff40;
     border-radius: 8px;
     font-size: 14px;
     color: #1650ff;
     line-height: 22px;
     font-weight: 500;
+
 
 
     &:hover {
@@ -37,13 +38,15 @@
   }
 
   &-collapsed {
-    width: 80px;
+    width: 72px;
 
     .create-conversation {
       font-size: 24px;
       line-height: 32px;
       color: #484848;
       background: transparent !important;
+      border: 1px solid #1650ff40;
+      border-radius: 8px;
 
       &:hover {
         background: rgba(0, 0, 0, 0.04) !important;
@@ -71,50 +74,106 @@
       transition: all 0.3s;
     }
 
-    .sider-collapsed-icon {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      margin: auto;
+    :global {
+      .ant-btn-icon {
+        height: 13px;
+        line-height: 0;
+      }
     }
+
+
   }
 
   .title-text {
     display: flex;
     gap: 2px;
     align-items: center;
+
+    span {
+      margin-top: 2px;
+    }
   }
 
-  .title-right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
+
 
   .title-logo {
     width: 40px;
+    margin-right: 8px;
   }
 
+  .conversation-extra-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    text-align: center;
+
+
+    svg {
+      color: #333333;
+      font-size: 13px;
+      line-height: 20px;
+    }
+
+
+    &:hover {
+      background: #1a1b250f;
+    }
+  }
 
   :global {
     .ant-conversations {
       padding: 0;
       margin: 16px 0;
+      color: #363740;
     }
 
     .ant-conversations-icon {
       font-size: 12px;
     }
 
-    .ant-conversations .ant-conversations-item-active .ant-conversations-label,
-    .ant-conversations .ant-conversations-item-active .ant-conversations-menu-icon,
-    .ant-conversations .ant-conversations-item-active .ant-conversations-icon {
-      color: #484848;
+    .ant-conversations-item {
+      padding-inline-start: 8px !important;
+    }
+
+    .ant-conversations-item:hover {
+      background-color: #1a1b2505;
+
+      #conversation-extra {
+        visibility: visible;
+      }
+    }
+
+    .ant-conversations .ant-conversations-item-active {
+      background-color: #1a1b2505;
+
+      #conversation-extra {
+        visibility: visible;
+      }
+    }
+
+
+    .ant-conversations .ant-conversations-item-active .ant-conversations-label {
+      color: #363740;
+      font-weight: 500;
     }
 
     .ant-btn-variant-text:not(:disabled):not(.ant-btn-disabled):hover {
       color: #6a6b71;
+    }
+
+    .ant-conversations .ant-conversations-list .ant-conversations-label {
+      color: #363740;
+    }
+
+    .ant-conversations .ant-conversations-list {
+      padding: 0;
+    }
+
+    .ant-conversations-group-title>.ant-typography {
+      font-family: PingFangSC-Regular;
+      font-size: 14px;
+      color: #98989d;
+      line-height: 22px;
     }
   }
 }
@@ -122,14 +181,31 @@
 .title {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 24px;
-  font-style: italic;
+  margin-bottom: 20px;
   align-items: center;
-  font-family: AlimamaAgileVF-Bold;
+  font-family: 'AlimamaAgileVF';
   font-size: 18px;
   color: #102953;
   line-height: 22px;
   font-weight: 700;
+
+  .sider-collapsed-icon {
+    position: absolute;
+    top: 143px;
+    right: -6px;
+    width: 12px;
+    height: 36px;
+    text-align: center;
+    background: #f2f2f2;
+    border-radius: 8px;
+    box-shadow: 0px 2px 8px 0px #bfcded33;
+    cursor: pointer;
+
+    svg {
+      font-size: 12px;
+      color: #c6c6c8;
+    }
+  }
 }
 
 .tips {
@@ -147,31 +223,25 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-
   height: 100vh;
+  background: #f7f8fc;
 
   .messages {
     width: 800px;
     flex: 1;
-    // text-align: center;
     transition: all 0.5s;
     padding: 24px;
+    margin-bottom: 156px;
 
     :global {
-      .ant-welcome {
-        // margin-bottom: 120px;
-      }
-
-
-
-
       .ant-bubble-end .ant-bubble-content {
-        background: aliceblue;
         border-radius: 16px 16px 0 16px;
         box-shadow: unset;
       }
 
       .ant-bubble-start .ant-bubble-content {
+        background-color: #fff;
+        width: 100%;
         border-radius: 16px;
         border: 1px solid #f0f0f0;
         overflow: hidden;
@@ -187,22 +257,15 @@
         white-space: pre-wrap;
       }
 
-      .ant-bubble-start .ant-bubble-content pre {
-        padding: 12px;
-        background: #fff;
-        border: unset;
-        border-radius: 8px;
-        margin-top: 8px;
-      }
-
-
       .ant-bubble-content-shadow pre {
         text-align: left;
       }
 
       .ant-bubble-avatar .ant-avatar.ant-avatar-circle.ant-avatar-icon {
-        background: rgba(5, 145, 255, 0.1);
-        border: 3px solid rgba(5, 145, 255, 0.4);
+        width: 40px;
+        height: 40px;
+        background: #f7f8fc;
+        // border: 3px solid rgba(5, 145, 255, 0.4);
       }
 
       .ant-card-body {
@@ -230,6 +293,15 @@
         margin-bottom: 0;
       }
     }
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    -ms-overflow-style: none;
+    /* IE #D Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
   .welcome {
@@ -237,14 +309,47 @@
   }
 
   .footer {
+    background: #fff;
+    position: fixed;
+    bottom: 40px;
     width: 800px;
     margin: 32px auto;
+    border-radius: 12px;
+
+    .framework {
+
+      :global {
+        .ant-btn {
+          gap: 2px;
+          padding: 0px 12px;
+          border-radius: 8px;
+          color: #6a6b71;
+        }
+
+        .ant-btn-variant-solid {
+          background: #1650ff0f;
+          border: 1px solid #1650ff40;
+          border-radius: 8px;
+          color: #1650ff;
+        }
+      }
+
+    }
 
     :global {
-      .ant-sender {
-        margin-top: 16px;
+
+      .ant-sender-header {
+        .ant-sender-header-content {
+          overflow-y: scroll;
+          max-height: 200px;
+        }
+
       }
+
+
     }
+
+
   }
 }
 
@@ -252,9 +357,34 @@
 .chat-emty>.messages {
   :global {
     .ant-bubble-start .ant-bubble-content {
-      border-color: transparent;
+      border: none;
       border-radius: 0;
       overflow: visible;
     }
   }
+}
+
+.user-conversation {
+
+  &-question {
+    background: #1650ff44;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #363740;
+    line-height: 24px;
+    padding: 16px;
+    margin-bottom: 8px !important;
+  }
+
+  :global {
+    .ant-flex>.ant-attachment-list-card {
+      background-color: #ffffff !important;
+      border-radius: 12px !important;
+    }
+
+    .ant-flex-align-stretch {
+      align-items: end;
+    }
+  }
+
 }
