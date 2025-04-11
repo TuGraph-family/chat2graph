@@ -54,7 +54,7 @@ class SessionWrapper:
         # get message view data for the job
         conversation_views_history: List[MessageView] = []
         for original_job_id in original_job_ids:
-            conversation_view = job_service.get_conversation_view(job_id=original_job_id)
+            conversation_view = job_service.get_conversation_view(original_job_id=original_job_id)
             conversation_views_history.append(conversation_view)
 
         historical_context = self._format_conversation_history(

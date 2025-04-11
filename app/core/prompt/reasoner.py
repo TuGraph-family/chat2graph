@@ -54,7 +54,7 @@ We share a common interest in collaborating to successfully complete the task th
     <YOUR_INSTRUCTION>  // Cannot be None
 </instruction>
 
-<input> // Must follow this structure, rather than the JSON format neither <function_call>...</function_call>
+<input> // The content of <input> can not be the JSON format nor <function_call>...</function_call>
     <YOUR_INPUT>  // Allowed to use None if no input
 </input>
 """  # noqa: E501

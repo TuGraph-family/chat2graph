@@ -63,6 +63,13 @@ class ModelService(ABC):
             func_name, call_objective, func_args = func_tuple
             func = self._find_function(func_name, tools)
             if not func:
+                if len(tools) == 0:
+                    available_funcs_desc = "No function calling available now."
+                else:
+                    available_funcs_desc = (
+                        "The available functions/tools that is able be called by <function_call>: ["
+                        f"{', '.join([tool.function.__name__ for tool in tools])}]"
+                    )
                 func_call_results.append(
                     FunctionCallResult(
                         func_name=func_name,

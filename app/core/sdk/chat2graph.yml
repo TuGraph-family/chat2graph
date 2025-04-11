@@ -104,11 +104,7 @@ actions:
 
   - &relation_pattern_recognition_action
     name: "relation_pattern_recognition"
-    desc: "发现概念间的关系模式和交互方式"
-
-  - &consistency_check_action
-    name: "consistency_check"
-    desc: "检查文档中的概念和关系是否一致"
+    desc: "发现概念间的关系模式和交互方式，同时检查发现的对象们和所给文本中的对象们是否一致"
 
   - &entity_type_definition_action
     name: "entity_type_definition"
@@ -118,13 +114,9 @@ actions:
     name: "relation_type_definition"
     desc: "设计实体间的关系类型和属性"
 
-  - &self_reflection_schema_action
-    name: "self_reflection_schema"
-    desc: "不断检查和反思当前概念模型的设计"
-
-  - &schema_design_action
-    name: "schema_design"
-    desc: "将概念模型转化为图数据库 label"
+  - &schema_design_and_import_action
+    name: "schema_design_and_import"
+    desc: "将概念模型转化为图数据库 labels，并在图数据库中创建 labels"
     tools:
       - *schema_getter_tool
       - *vertex_label_generator_tool
@@ -234,18 +226,27 @@ actions:
     name: "reference_listing"
     desc: "以markdown格式返回推理过程中所涉及的原文出处链接，方便展示"
 
+  # job decomposition actions
+  - &query_system_status_action
+    name: "query_system_status"
+    desc: "调用相关工具查询系统状态获取系统状态信息。大模型需要了解系统的状态，以便更好地进行推理和决策"
+    tools:
+      - *system_status_checker_tool
+
+  - &job_decomposition_action
+    name: "job_decomposition"
+    desc: "按照相关的要求将任务，手动分解为多个子任务(job)，并将每个子任务分配给对应的专家"
+
 toolkit:
   - [
       *content_understanding_action,
       *concept_identification_action,
       *relation_pattern_recognition_action,
-      *consistency_check_action,
     ]
   - [
       *entity_type_definition_action,
       *relation_type_definition_action,
-      *self_reflection_schema_action,
-      *schema_design_action,
+      *schema_design_and_import_action,
       *graph_validation_action,
     ]
   - [
@@ -331,7 +332,6 @@ operators:
       - *content_understanding_action
       - *concept_identification_action
       - *relation_pattern_recognition_action
-      - *consistency_check_action
 
   - &concept_modeling_operator
     instruction: |
@@ -384,8 +384,7 @@ operators:
     actions:
       - *entity_type_definition_action
       - *relation_type_definition_action
-      - *self_reflection_schema_action
-      - *schema_design_action
+      - *schema_design_and_import_action
       - *graph_validation_action
 
   # data importation operators
