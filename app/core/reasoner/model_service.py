@@ -67,7 +67,7 @@ class ModelService(ABC):
                     available_funcs_desc = "No function calling available now."
                 else:
                     available_funcs_desc = (
-                        "The available functions/tools that is able be called by <function_call>: ["
+                        "The available functions/tools that can be called by <function_call>: ["
                         f"{', '.join([tool.function.__name__ for tool in tools])}]"
                     )
                 func_call_results.append(
