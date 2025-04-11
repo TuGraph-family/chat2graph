@@ -16,6 +16,9 @@ def create_app():
     print(f"Web resources location: {static_folder_path}")
     app = Flask(__name__, static_folder=static_folder_path)
 
+    # make sure JSON responses are not escaped
+    app.json.ensure_ascii = False
+
     with app.app_context():
         init_db()
 
