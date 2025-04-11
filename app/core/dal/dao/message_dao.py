@@ -215,15 +215,6 @@ class MessageDao(Dao[MessageDo]):
                 timestamp=int(message_do.timestamp),
             )
 
-        if message_type == MessageType.GRAPH_MESSAGE:
-            return GraphMessage(
-                id=str(message_do.id),
-                job_id=str(message_do.job_id),
-                session_id=str(message_do.session_id),
-                payload=GraphMessage.deserialize_payload(str(message_do.payload)),
-                timestamp=int(message_do.timestamp),
-            )
-
         if message_type == MessageType.HYBRID_MESSAGE:
             role = ChatMessageRole(str(message_do.role))
             instruction_results: List[TextMessageDo] = self.get_text_message_by_job_id_and_role(
