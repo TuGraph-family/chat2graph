@@ -1,9 +1,10 @@
-from typing import Any, Dict, List, TypeVar, cast
+from typing import Any, Dict, List, Optional, TypeVar, cast
 
 from attr import dataclass
 
 from app.core.common.type import ChatMessageRole, ChatMessageType
 from app.core.dal.do.message_do import MessageType
+from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.job import SubJob
 from app.core.model.job_result import JobResult
 from app.core.model.message import (
@@ -85,6 +86,9 @@ class MessageViewTransformer:
             }
 
         if isinstance(message, FileMessage):
+            descriptor: Optional[FileDescriptor] = message.get_descriptor()
+            if descriptor is None:
+                raise ValueError(f"File message {message.get_id()} has no descriptor.")
             return {
                 "id": message.get_id(),
                 "job_id": message.get_job_id(),
@@ -92,6 +96,8 @@ class MessageViewTransformer:
                 "timestamp": message.get_timestamp(),
                 "file_id": message.get_file_id(),
                 "message_type": ChatMessageType.FILE.value,
+                "name": descriptor.name,  # required by the frontend
+                "size": descriptor.size,  # required by the frontend
             }
 
         if isinstance(message, GraphMessage):
