@@ -10,6 +10,7 @@ from app.core.model.message import (
     AgentMessage,
     ChatMessage,
     FileMessage,
+    GraphMessage,
     HybridMessage,
     Message,
     TextMessage,
@@ -75,13 +76,49 @@ class MessageViewTransformer:
             return {
                 "id": message.get_id(),
                 "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
                 "timestamp": message.get_timestamp(),
                 "payload": message.get_payload(),
                 "message_type": ChatMessageType.TEXT.value,
                 "role": message.get_role().value,
-                "session_id": message.get_session_id(),
                 "assigned_expert_name": message.get_assigned_expert_name(),
             }
+
+        if isinstance(message, FileMessage):
+            return {
+                "id": message.get_id(),
+                "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
+                "timestamp": message.get_timestamp(),
+                "file_id": message.get_file_id(),
+                "message_type": ChatMessageType.FILE.value,
+            }
+
+        if isinstance(message, GraphMessage):
+            return {
+                "id": message.get_id(),
+                "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
+                "timestamp": message.get_timestamp(),
+                "payload": GraphMessage.serialize_payload(message.get_payload()),
+                "message_type": ChatMessageType.GRAPH.value,
+            }
+
+        if isinstance(message, HybridMessage):
+            return {
+                "id": message.get_id(),
+                "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
+                "timestamp": message.get_timestamp(),
+                "instruction_message": MessageViewTransformer.serialize_message(
+                    message.get_instruction_message()
+                ),
+                "attached_messages": [
+                    MessageViewTransformer.serialize_message(msg)
+                    for msg in message.get_attached_messages()
+                ],
+            }
+
         raise ValueError(f"Unsupported message type: {type(message)}")
 
     @staticmethod
