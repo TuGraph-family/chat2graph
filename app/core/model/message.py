@@ -390,7 +390,7 @@ class GraphMessage(ChatMessage):
             {"id": "2", "label": "B", "properties": {}}
         ],
         "edges": [
-            {"source": "1", "target": "2", "label": "A_to_B", "properties": {}
+            {"source": "1", "target": "2", "label": "A_to_B", "properties": {}}
         ]
     }
     """
