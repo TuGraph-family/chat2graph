@@ -446,7 +446,7 @@ class VertexLabelAdder(Tool):
         cypher_exec = CypherExecutor()
         return await cypher_exec.validate_and_execute_cypher(
             graph_db_service=graph_db_service,
-            cypher_schema=f"CALL db.createVertexLabelByJson('{json.dumps(label_json)}')",
+            cypher_schema=f"CALL db.createVertexLabelByJson('{json.dumps(label_json, ensure_ascii=False)}')",  # noqa: E501
         )
 
 
@@ -530,7 +530,7 @@ class EdgeLabelAdder(Tool):
         cypher_exec = CypherExecutor()
         return await cypher_exec.validate_and_execute_cypher(
             graph_db_service=graph_db_service,
-            cypher_schema=f"CALL db.createEdgeLabelByJson('{json.dumps(label_json)}')",
+            cypher_schema=f"CALL db.createEdgeLabelByJson('{json.dumps(label_json, ensure_ascii=False)}')",  # noqa: E501
         )
 
 

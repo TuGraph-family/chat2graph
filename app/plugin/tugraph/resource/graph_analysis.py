@@ -53,7 +53,7 @@ class AlgorithmsGetter(Tool):
                 }
             )
 
-        return json.dumps(plugins, indent=4)
+        return json.dumps(plugins, indent=4, ensure_ascii=False)
 
 
 class AlgorithmsExecutor(Tool):

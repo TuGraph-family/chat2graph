@@ -5,21 +5,22 @@ import styles from './index.less';
 import { useImmer } from 'use-immer';
 
 interface Props {
-  name: React.ReactNode;
-  editing: boolean;
+  name: any;
   onConfirm: (name: React.ReactNode) => void;
+  onEdited: () => void;
 }
 
 // 脚手架示例组件
 const NameEditor: React.FC<Props> = (props) => {
-  const { name, editing, onConfirm } = props;
-  const [showName, setShowName] = useImmer<React.ReactNode>(name);
+  const { name, onConfirm, onEdited } = props;
 
-  if (!editing) {
-    return showName;
-  }
+  const [showName, setShowName] = useImmer<string>(name?.split(']')?.[1]);
+
+
 
   return <Input
+    onClick={(e) => { e.stopPropagation() }}
+    value={showName}
     suffix={<>
       <Button
         type='text'
@@ -28,6 +29,7 @@ const NameEditor: React.FC<Props> = (props) => {
         className={styles['icon-check']}
         onClick={() => {
           onConfirm?.(showName);
+          onEdited?.();
         }}
       />
       <Button
@@ -36,17 +38,21 @@ const NameEditor: React.FC<Props> = (props) => {
         icon={<CloseOutlined />}
         className={styles['icon-cancel']}
         onClick={() => {
-          onConfirm?.(name);
+          onConfirm?.(name?.split(']')[1]);
+          onEdited?.();
         }}
       />
     </>}
     onPressEnter={(e) => {
       onConfirm?.(showName);
+      onEdited?.();
     }}
     onChange={(e) => {
       setShowName(e?.target?.value);
     }}
   />;
+
+
 };
 
 export default NameEditor;

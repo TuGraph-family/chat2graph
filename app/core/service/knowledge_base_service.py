@@ -37,12 +37,13 @@ class KnowledgeBaseService(metaclass=Singleton):
             len(self._knowledge_base_dao.filter_by(category=KnowledgeStoreCategory.GLOBAL.value))
             == 0
         ):
-            self._knowledge_base_dao.create(
+            result = self._knowledge_base_dao.create(
                 name=SystemEnv.GLOBAL_KNOWLEDGE_BASE_NAME,
                 knowledge_type=SystemEnv.KNOWLEDGE_STORE_TYPE.value,
                 session_id="",
                 category=KnowledgeStoreCategory.GLOBAL.value,
             )
+            KnowledgeStoreFactory.get_or_create(str(result.id))
         self._global_kb_do = self._knowledge_base_dao.filter_by(
             category=KnowledgeStoreCategory.GLOBAL.value
         )[0]

@@ -2,7 +2,7 @@ from typing import Any, Dict, cast
 
 from flask import Blueprint, request
 
-from app.core.model.message import MessageType, TextMessage
+from app.core.model.message import HybridMessage, MessageType
 from app.core.model.session import Session
 from app.server.common.util import ApiException, make_response
 from app.server.manager.message_manager import MessageManager
@@ -99,8 +99,8 @@ def chat(session_id: str):
     for attached_message in data["attached_messages"]:
         attached_message["session_id"] = session_id
 
-    chat_message: TextMessage = cast(
-        TextMessage,
+    chat_message: HybridMessage = cast(
+        HybridMessage,
         MessageViewTransformer.deserialize_message(
             message=data, message_type=MessageType.HYBRID_MESSAGE
         ),

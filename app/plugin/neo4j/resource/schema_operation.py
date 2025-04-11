@@ -35,7 +35,7 @@ class SchemaManager:
     @staticmethod
     async def write_schema(file_service: FileService, schema: Dict[str, Any]) -> None:
         """Write the schema file using file_service's upload_file method."""
-        # first, try to read existing schema
+        # first, try to read existing schema1
         existing_schema = await SchemaManager.read_schema(file_service)
 
         async with schema_file_lock:
@@ -80,3 +80,54 @@ class SchemaManager:
     def _find_schema_files(file_service: FileService) -> List[str]:
         """Find all schema files id by querying the file_service."""
         return [SystemEnv.SCHEMA_FILE_ID]
+
+    @staticmethod
+    def schema_to_graph_dict(schema: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert the graph database schema into a Graph dict that conforms to the
+            GraphMessage format.
+
+        Args:
+            schema (Dict[str, Any]): The graph database schema dictionary
+
+        Returns:
+            A Graph dict that conforms to the GraphMessage format
+        """
+        graph_dict: Dict[str, Any] = {"vertices": [], "edges": []}
+
+        # 处理节点
+        for node_label, node_info in schema.get("nodes", {}).items():
+            vertex = {
+                "id": node_label,
+                "label": node_label,
+                "properties": {
+                    "primary_key": node_info.get("primary_key", ""),
+                    "property_definitions": [
+                        prop.get("name") for prop in node_info.get("properties", [])
+                    ],
+                },
+            }
+            graph_dict["vertices"].append(vertex)
+
+        # 处理关系
+        for rel_label, rel_info in schema.get("relationships", {}).items():
+            # 获取源节点和目标节点标签列表
+            source_labels = rel_info.get("source_vertex_labels", [])
+            target_labels = rel_info.get("target_vertex_labels", [])
+
+            # 为每对可能的源节点和目标节点组合创建一条边
+            for source_label in source_labels:
+                for target_label in target_labels:
+                    edge = {
+                        "source": source_label,
+                        "target": target_label,
+                        "label": rel_label,
+                        "properties": {
+                            "primary_key": rel_info.get("primary_key", ""),
+                            "property_definitions": [
+                                prop.get("name") for prop in rel_info.get("properties", [])
+                            ],
+                        },
+                    }
+                    graph_dict["edges"].append(edge)
+
+        return graph_dict

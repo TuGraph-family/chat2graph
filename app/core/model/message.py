@@ -5,6 +5,7 @@ from typing import Any, Dict, Generic, List, Optional, TypeVar
 from uuid import uuid4
 
 from app.core.common.type import ChatMessageRole, MessageSourceType, WorkflowStatus
+from app.core.model.file_descriptor import FileDescriptor
 from app.core.toolkit.tool import FunctionCallResult
 
 T = TypeVar("T", bound="ChatMessage")
@@ -350,6 +351,7 @@ class FileMessage(ChatMessage):
         session_id: str,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
+        descriptor: Optional[FileDescriptor] = None,
     ):
         super().__init__(
             payload=None,
@@ -361,6 +363,10 @@ class FileMessage(ChatMessage):
         assert file_id and file_id != "", "File ID cannot be empty."
         self._file_id: str = file_id
 
+        # _descriptor is used to temporarily store the file metadata required by the frontend
+        # it will not be stored in the message table
+        self._descriptor: Optional[FileDescriptor] = descriptor
+
     def get_payload(self) -> None:
         """Get the content of the message."""
         raise ValueError("File message does not have a payload.")
@@ -368,6 +374,10 @@ class FileMessage(ChatMessage):
     def get_file_id(self) -> str:
         """Get the file ID."""
         return self._file_id
+
+    def get_descriptor(self) -> Optional[FileDescriptor]:
+        """Get the frontend metadata."""
+        return self._descriptor
 
 
 class GraphMessage(ChatMessage):

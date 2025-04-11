@@ -1,4 +1,4 @@
-import { Layout, Menu } from 'antd';
+import { Button, Layout, Menu } from 'antd';
 import styles from './index.less';
 import { MenuProps } from 'antd/lib';
 import Knowledgebase from '@/pages/Knowledgebase';
@@ -8,7 +8,7 @@ import useIntlConfig from '@/hooks/useIntlConfig';
 import { historyPushLinkAt } from '@/utils/link';
 import Graphdb from '@/pages/Graphdb';
 import Language from '@/components/Language';
-import { FolderOutlined, ReadOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, FolderOutlined, ReadOutlined } from '@ant-design/icons';
 import logoSrc from '@/assets/logo.png';
 
 const { Sider, Content } = Layout
@@ -55,6 +55,18 @@ const Manage = () => {
               history.push(historyPushLinkAt(key))
             }}
             items={items} />
+          <div>
+            <Button
+              onClick={() => {
+                window.open('/home',)
+              }}
+              size='large'
+              block
+              icon={<ArrowLeftOutlined />}
+            >
+              {formatMessage('manager.return')}
+            </Button>
+          </div>
           {/* TODO: 暂无用户体系 */}
           {/*   <div className={styles['manager-user']}>
             <div className={styles['manager-user-avatar']}>
