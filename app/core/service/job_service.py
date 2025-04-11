@@ -138,7 +138,7 @@ class JobService(metaclass=Singleton):
 
         # collect and combine the content of the job results and the artifacts
         # from the tail vertices
-        mutli_agent_payload = ""
+        multi_agent_payload = ""
         graph_messages: List[GraphMessage] = []
         for tail_vertex in tail_vertices:
             subjob_result: JobResult = self.get_job_result(tail_vertex)
@@ -167,7 +167,7 @@ class JobService(metaclass=Singleton):
             else:
                 # fallback to the original payload if no final_output tag found
                 processed_payload = payload.strip()
-            mutli_agent_payload += processed_payload + "\n"
+            multi_agent_payload += processed_payload + "\n"
 
             # get the graph messages
             graph_message_ids = agent_messages[0].get_artifact_ids()
@@ -184,10 +184,10 @@ class JobService(metaclass=Singleton):
             multi_agent_answer_message = self._message_service.get_text_message_by_job_id_and_role(
                 original_job_id, ChatMessageRole.SYSTEM
             )
-            multi_agent_answer_message.set_payload(mutli_agent_payload)
+            multi_agent_answer_message.set_payload(multi_agent_payload)
         except ValueError:
             multi_agent_answer_message = TextMessage(
-                payload=mutli_agent_payload,
+                payload=multi_agent_payload,
                 job_id=original_job_id,
                 session_id=original_job.session_id,
                 assigned_expert_name=original_job.assigned_expert_name,

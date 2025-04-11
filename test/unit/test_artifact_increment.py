@@ -23,10 +23,25 @@ def initial_graph():
     """Fixture to provide a sample initial graph."""
     return {
         "vertices": [
-            {"id": "1", "label": "A", "properties": {}},
-            {"id": "2", "label": "B", "properties": {}},
+            {
+                "id": "1",
+                "label": "A",
+                "properties": {},
+            },
+            {
+                "id": "2",
+                "label": "B",
+                "properties": {},
+            },
         ],
-        "edges": [{"source": "1", "target": "2", "label": "A_to_B", "properties": {}}],
+        "edges": [
+            {
+                "source": "1",
+                "target": "2",
+                "label": "A_to_B",
+                "properties": {},
+            }
+        ],
     }
 
 
@@ -35,10 +50,25 @@ def new_graph():
     """Fixture to provide a sample graph update."""
     return {
         "vertices": [
-            {"id": "2", "label": "B", "properties": {"updated": True}},  # updated vertex
-            {"id": "3", "label": "C", "properties": {}},  # new vertex
+            {
+                "id": "2",
+                "label": "B",
+                "properties": {"updated": True},
+            },  # updated vertex
+            {
+                "id": "3",
+                "label": "C",
+                "properties": {},
+            },  # new vertex
         ],
-        "edges": [{"source": "2", "target": "3", "label": "B_to_C", "properties": {}}],
+        "edges": [
+            {
+                "source": "2",
+                "target": "3",
+                "label": "B_to_C",
+                "properties": {},
+            }
+        ],
     }
 
 
