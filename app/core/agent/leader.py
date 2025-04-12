@@ -60,6 +60,7 @@ class Leader(Agent):
                 context=job.goal + "\n" + job.context,
                 expert_id=expert.get_id(),
                 life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
+                assigned_expert_name=assigned_expert_name,
             )
             self._job_service.save_job(job=subjob)
             job_graph: JobGraph = JobGraph()
@@ -135,6 +136,7 @@ class Leader(Agent):
                 ).get_id(),
                 life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
                 thinking=subjob_dict.get("thinking", None),
+                assigned_expert_name=subjob_dict.get("assigned_expert", ""),
             )
             temp_to_unique_id_map[subjob_id] = subjob.id
 

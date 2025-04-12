@@ -33,19 +33,18 @@ And make sure that the title of your pull request follows the following format:
   - [ ] `dal`: (data access layer)
   - [ ] `sdk`: (sdk module)
 - [ ] `agent`: (**Agent Layer**)
-  - [ ] `model`: (model/LLM module)
   - [ ] `reasoner`: (reasoner module)
-  - [ ] `planner`: (planner/leader module)
+  - [ ] `planner`: (planner module)
   - [ ] `workflow`: (workflow module)
   - [ ] `memory`: (memory module)
   - [ ] `knowledge`: (knowledge module)
   - [ ] `env`: (env module)
   - [ ] `toolkit`: (toolkit module)
 - [ ] `system`: (**System Layer**)
-  - [ ] `resource`: (resource module)
-  - [ ] `tracer`: (tracer module)
   - [ ] `plugin`: (plugin module)
-- [ ] `none`: (no module)
+  - [ ] `tracer`: (tracer module)
+  - [ ] `resource`: (resource module)
+- [ ] `none`: (N/A)
 
 ### Description
 <!-- Provide the relevant issue number associated with your pull request if needed. -->

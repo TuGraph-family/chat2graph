@@ -61,7 +61,7 @@ Here is the Subtasks Template
         "completion_criteria": "Acceptance criteria, etc.",
         "dependencies": ["specific_task_id_*", "specific_task_id_*", ...],
         "assigned_expert": "Name of an expert (in English)",
-        "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear.",
+        "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
     },
     "specific_task_id": {
         "goal": "subtask_description",
@@ -70,7 +70,7 @@ Here is the Subtasks Template
         "dependencies": ["specific_task_id_*", "specific_task_id_*", ...],
         "language of the assigned_expert": "Engilish",
         "assigned_expert": "Name of an expert (in English)",
-        "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear.",
+        "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
     }
     ... // make sure the json format is correct
 }

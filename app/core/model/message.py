@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 from uuid import uuid4
 
 from app.core.common.type import ChatMessageRole, MessageSourceType, WorkflowStatus
+from app.core.model.file_descriptor import FileDescriptor
 from app.core.toolkit.tool import FunctionCallResult
+
+T = TypeVar("T", bound="ChatMessage")
 
 
 class MessageType(Enum):
@@ -15,6 +18,7 @@ class MessageType(Enum):
     WORKFLOW_MESSAGE = "WORKFLOW_MESSAGE"
     AGENT_MESSAGE = "AGENT_MESSAGE"
     CHAT_MESSAGE = "CHAT_MESSAGE"
+    GRAPH_MESSAGE = "GRAPH_MESSAGE"
     TEXT_MESSAGE = "TEXT_MESSAGE"
     FILE_MESSAGE = "FILE_MESSAGE"
     HYBRID_MESSAGE = "HYBRID_MESSAGE"
@@ -108,6 +112,7 @@ class WorkflowMessage(Message):
         self,
         payload: Dict[str, Any],
         job_id=str,
+        artifact_ids: Optional[List[str]] = None,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
     ):
@@ -115,10 +120,15 @@ class WorkflowMessage(Message):
         self._payload: Dict[str, Any] = payload
         for key, value in payload.items():
             setattr(self, key, value)
+        self._artifact_ids: List[str] = artifact_ids or []
 
     def get_payload(self) -> Dict[str, Any]:
         """Get the content of the message."""
         return self._payload
+
+    def get_artifact_ids(self) -> List[str]:
+        """Get the artifact IDs."""
+        return self._artifact_ids
 
     def __getattr__(self, name: str) -> Any:
         """Dynamic field access through attributes."""
@@ -154,7 +164,7 @@ class WorkflowMessage(Message):
                 return obj.value
             raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
-        return json.dumps(payload, default=enum_handler)
+        return json.dumps(payload, default=enum_handler, ensure_ascii=False)
 
     @staticmethod
     def deserialize_payload(payload: str) -> Dict[str, Any]:
@@ -173,6 +183,7 @@ class AgentMessage(Message):
         job_id: str,
         payload: Optional[str] = None,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        artifact_ids: Optional[List[str]] = None,
         lesson: Optional[str] = None,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
@@ -180,6 +191,7 @@ class AgentMessage(Message):
         super().__init__(job_id=job_id, timestamp=timestamp, id=id)
         self._payload: Optional[str] = payload
         self._workflow_messages: List[WorkflowMessage] = workflow_messages or []
+        self._artifact_ids: List[str] = artifact_ids or []
         self._lesson: Optional[str] = lesson
 
     def get_payload(self) -> Optional[str]:
@@ -198,6 +210,10 @@ class AgentMessage(Message):
         if len(self._workflow_messages) != 1:
             raise ValueError("The agent message received no or multiple workflow result messages.")
         return self._workflow_messages[0]
+
+    def get_artifact_ids(self) -> List[str]:
+        """Get the artifact IDs."""
+        return self._artifact_ids
 
     def get_lesson(self) -> Optional[str]:
         """Get the lesson of the execution of the job."""
@@ -335,6 +351,7 @@ class FileMessage(ChatMessage):
         session_id: str,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
+        descriptor: Optional[FileDescriptor] = None,
     ):
         super().__init__(
             payload=None,
@@ -346,6 +363,10 @@ class FileMessage(ChatMessage):
         assert file_id and file_id != "", "File ID cannot be empty."
         self._file_id: str = file_id
 
+        # _descriptor is used to temporarily store the file metadata required by the frontend
+        # it will not be stored in the message table
+        self._descriptor: Optional[FileDescriptor] = descriptor
+
     def get_payload(self) -> None:
         """Get the content of the message."""
         raise ValueError("File message does not have a payload.")
@@ -354,8 +375,66 @@ class FileMessage(ChatMessage):
         """Get the file ID."""
         return self._file_id
 
+    def get_descriptor(self) -> Optional[FileDescriptor]:
+        """Get the frontend metadata."""
+        return self._descriptor
 
-class HybridMessage(ChatMessage):
+
+class GraphMessage(ChatMessage):
+    """Graph message
+
+    The payload structure example:
+    {
+        "vertices": [
+            {"id": "1", "label": "A", "properties": {}},
+            {"id": "2", "label": "B", "properties": {}}
+        ],
+        "edges": [
+            {"source": "1", "target": "2", "label": "A_to_B", "properties": {}}
+        ]
+    }
+    """
+
+    def __init__(
+        self,
+        payload: Dict[str, Any],
+        job_id: str,
+        timestamp: Optional[int] = None,
+        id: Optional[str] = None,
+        session_id: Optional[str] = None,
+    ):
+        super().__init__(
+            payload=payload, job_id=job_id, timestamp=timestamp, id=id, session_id=session_id
+        )
+        self._payload: Dict[str, Any] = payload
+
+    def get_payload(self) -> Dict[str, Any]:
+        """Get the json str of the graph."""
+        return self._payload
+
+    def copy(self) -> "GraphMessage":
+        """Copy the message."""
+        return GraphMessage(
+            payload=self._payload,
+            job_id=self._job_id,
+            timestamp=self._timestamp,
+            id=self._id,
+            session_id=self._session_id,
+        )
+
+    @staticmethod
+    def serialize_payload(payload: Dict[str, Any]) -> str:
+        """Serialize the payload."""
+        return json.dumps(payload)
+
+    @staticmethod
+    def deserialize_payload(payload: str) -> Dict[str, Any]:
+        """Deserialize the payload."""
+        payload_dict = json.loads(payload)
+        return payload_dict
+
+
+class HybridMessage(ChatMessage, Generic[T]):
     """Hybrid message"""
 
     def __init__(
@@ -365,7 +444,8 @@ class HybridMessage(ChatMessage):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
-        attached_messages: Optional[List[ChatMessage]] = None,
+        attached_messages: Optional[List[T]] = None,
+        role: Optional[ChatMessageRole] = None,
     ):
         super().__init__(
             payload=None,
@@ -375,7 +455,8 @@ class HybridMessage(ChatMessage):
             session_id=session_id,
         )
         self._instruction_message: ChatMessage = instruction_message
-        self._attached_messages: List[ChatMessage] = attached_messages or []
+        self._attached_messages: List[T] = attached_messages or []
+        self._role: ChatMessageRole = role or ChatMessageRole.USER
 
     def get_payload(self) -> None:
         """Get the payload of the message."""
@@ -385,6 +466,14 @@ class HybridMessage(ChatMessage):
         """Get the instruction message."""
         return self._instruction_message
 
-    def get_attached_messages(self) -> List[ChatMessage]:
+    def get_attached_messages(self) -> List[T]:
         """Get the supplementary messages."""
         return self._attached_messages
+
+    def get_role(self) -> ChatMessageRole:
+        """Get the role."""
+        return self._role
+
+    def set_attached_messages(self, attached_messages: List[T]):
+        """Set the supplementary messages."""
+        self._attached_messages = attached_messages

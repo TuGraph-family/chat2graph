@@ -10,7 +10,13 @@ from app.core.dal.do.job_do import JobDo
 from app.core.model.job import Job, JobType, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
-from app.core.model.message import AgentMessage, MessageType, TextMessage
+from app.core.model.message import (
+    AgentMessage,
+    GraphMessage,
+    HybridMessage,
+    MessageType,
+    TextMessage,
+)
 from app.core.service.message_service import MessageService
 from app.server.manager.view.message_view import MessageView
 
@@ -130,8 +136,10 @@ class JobService(metaclass=Singleton):
             vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
         ]
 
-        # collect and combine the content of the job results from the tail vertices
-        mutli_agent_payload = ""
+        # collect and combine the content of the job results and the artifacts
+        # from the tail vertices
+        multi_agent_payload = ""
+        graph_messages: List[GraphMessage] = []
         for tail_vertex in tail_vertices:
             subjob_result: JobResult = self.get_job_result(tail_vertex)
             if not subjob_result.has_result():
@@ -159,47 +167,79 @@ class JobService(metaclass=Singleton):
             else:
                 # fallback to the original payload if no final_output tag found
                 processed_payload = payload.strip()
-            mutli_agent_payload += processed_payload + "\n"
+            multi_agent_payload += processed_payload + "\n"
 
-        # save the multi-agent result to the database
+            # get the graph messages
+            graph_message_ids = agent_messages[0].get_artifact_ids()
+            graph_messages.extend(
+                [
+                    cast(GraphMessage, self._message_service.get_message(id=id))
+                    for id in graph_message_ids
+                ]
+            )
+
+        # save/update the multi-agent result to the database
         original_job: Job = self.get_orignal_job(original_job_id)
         try:
-            multi_agent_message = self._message_service.get_text_message_by_job_id_and_role(
+            multi_agent_answer_message = self._message_service.get_text_message_by_job_id_and_role(
                 original_job_id, ChatMessageRole.SYSTEM
             )
-            multi_agent_message.set_payload(mutli_agent_payload)
+            multi_agent_answer_message.set_payload(multi_agent_payload)
         except ValueError:
-            multi_agent_message = TextMessage(
-                payload=mutli_agent_payload,
+            multi_agent_answer_message = TextMessage(
+                payload=multi_agent_payload,
                 job_id=original_job_id,
                 session_id=original_job.session_id,
                 assigned_expert_name=original_job.assigned_expert_name,
                 role=ChatMessageRole.SYSTEM,
             )
-        self._message_service.save_message(message=multi_agent_message)
+        self._message_service.save_message(message=multi_agent_answer_message)
+
+        # save/update the multi-agent hybrid answer message (including the graph messages as
+        # attached messages)
+        # TODO: abstract the save&update method.
+        try:
+            multi_agent_hybrid_message: HybridMessage = (
+                self._message_service.get_hybrid_message_by_job_id_and_role(
+                    job_id=original_job_id, role=ChatMessageRole.SYSTEM
+                )
+            )
+        except ValueError:
+            multi_agent_hybrid_message = HybridMessage(
+                instruction_message=multi_agent_answer_message,
+                attached_messages=graph_messages,
+                job_id=original_job_id,
+                session_id=original_job.session_id,
+                role=ChatMessageRole.SYSTEM,
+            )
+        multi_agent_hybrid_message.set_attached_messages(attached_messages=graph_messages)
+        self._message_service.save_message(message=multi_agent_hybrid_message)
 
         # save the original job result
         original_job_result.status = JobStatus.FINISHED
         self.save_job_result(job_result=original_job_result)
         return original_job_result
 
-    def get_conversation_view(self, job_id: str) -> MessageView:
+    def get_conversation_view(self, original_job_id: str) -> MessageView:
         """Get conversation view (including thinking chain) for a specific job."""
-        # get job details
-        original_job = self.get_orignal_job(job_id)
+        # get original job
+        original_job = self.get_orignal_job(original_job_id=original_job_id)
 
         # get original job result
-        orignial_job_result = self.query_original_job_result(job_id)
+        original_job_result = self.query_original_job_result(original_job_id=original_job_id)
 
         # get the user question message
-        question_message = self._message_service.get_text_message_by_job_id_and_role(
-            job_id, ChatMessageRole.USER
+        question_message = self._message_service.get_hybrid_message_by_job_id_and_role(
+            job_id=original_job_id,
+            role=ChatMessageRole.USER,
         )
 
         # get the AI answer message
-        answer_message = self._message_service.get_text_message_by_job_id_and_role(
-            job_id, ChatMessageRole.SYSTEM
+        answer_message = self._message_service.get_hybrid_message_by_job_id_and_role(
+            job_id=original_job_id,
+            role=ChatMessageRole.SYSTEM,
         )
+
         # get thinking chain messages
         message_result_pairs: List[
             Tuple[AgentMessage, SubJob, JobResult]
@@ -249,7 +289,7 @@ class JobService(metaclass=Singleton):
         return MessageView(
             question=question_message,
             answer=answer_message,
-            answer_metrics=orignial_job_result,
+            answer_metrics=original_job_result,
             thinking_messages=thinking_messages,
             thinking_subjobs=subjobs,
             thinking_metrics=subjob_results,

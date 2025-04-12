@@ -157,6 +157,7 @@ class MonoModelReasoner(Reasoner):
         else:
             env_info = "No environment information provided in this round."
         if task.workflow_messages:
+            # TODO: decode the artifacts in the workflow messages into natural language
             previous_input = "\n".join(
                 [f"{workflow_message.scratchpad}" for workflow_message in task.workflow_messages]
             )
@@ -176,6 +177,7 @@ class MonoModelReasoner(Reasoner):
             action_rels=action_rels,
             context=task.job.context,
             session_id=task.job.session_id,
+            job_id=task.job.id,
             file_descriptors=file_desc,
             env_info=env_info,
             knowledge=task.knowledge.get_payload() if task.knowledge else "",

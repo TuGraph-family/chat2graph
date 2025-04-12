@@ -30,13 +30,23 @@ class MessageManager:
         job_wrapper = session_wrapper.submit(message=chat_message)
 
         # create system message
-        system_chat_message = TextMessage(
+        system_chat_message: TextMessage = TextMessage(
             session_id=chat_message.get_session_id(),
             job_id=job_wrapper.id,
             role=ChatMessageRole.SYSTEM,
             payload="",  # TODO: to be handled
         )
         self._message_service.save_message(message=system_chat_message)
+
+        # create system hybrid message
+        system_hybrid_message: HybridMessage = HybridMessage(
+            job_id=job_wrapper.id,
+            session_id=chat_message.get_session_id(),
+            instruction_message=system_chat_message,
+            attached_messages=[],
+            role=ChatMessageRole.SYSTEM,
+        )
+        self._message_service.save_message(message=system_hybrid_message)
 
         # update the name of the session
         if isinstance(chat_message, TextMessage):

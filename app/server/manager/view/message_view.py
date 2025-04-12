@@ -1,15 +1,17 @@
-from typing import Any, Dict, List, TypeVar, cast
+from typing import Any, Dict, List, Optional, TypeVar, cast
 
 from attr import dataclass
 
 from app.core.common.type import ChatMessageRole, ChatMessageType
 from app.core.dal.do.message_do import MessageType
+from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.job import SubJob
 from app.core.model.job_result import JobResult
 from app.core.model.message import (
     AgentMessage,
     ChatMessage,
     FileMessage,
+    GraphMessage,
     HybridMessage,
     Message,
     TextMessage,
@@ -75,13 +77,54 @@ class MessageViewTransformer:
             return {
                 "id": message.get_id(),
                 "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
                 "timestamp": message.get_timestamp(),
                 "payload": message.get_payload(),
                 "message_type": ChatMessageType.TEXT.value,
                 "role": message.get_role().value,
-                "session_id": message.get_session_id(),
                 "assigned_expert_name": message.get_assigned_expert_name(),
             }
+
+        if isinstance(message, FileMessage):
+            descriptor: Optional[FileDescriptor] = message.get_descriptor()
+            if descriptor is None:
+                raise ValueError(f"File message {message.get_id()} has no descriptor.")
+            return {
+                "id": message.get_id(),
+                "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
+                "timestamp": message.get_timestamp(),
+                "file_id": message.get_file_id(),
+                "message_type": ChatMessageType.FILE.value,
+                "name": descriptor.name,  # required by the frontend
+                "size": descriptor.size,  # required by the frontend
+            }
+
+        if isinstance(message, GraphMessage):
+            return {
+                "id": message.get_id(),
+                "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
+                "timestamp": message.get_timestamp(),
+                "payload": GraphMessage.serialize_payload(message.get_payload()),
+                "message_type": ChatMessageType.GRAPH.value,
+            }
+
+        if isinstance(message, HybridMessage):
+            return {
+                "id": message.get_id(),
+                "job_id": message.get_job_id(),
+                "session_id": message.get_session_id(),
+                "timestamp": message.get_timestamp(),
+                "instruction_message": MessageViewTransformer.serialize_message(
+                    message.get_instruction_message()
+                ),
+                "attached_messages": [
+                    MessageViewTransformer.serialize_message(msg)
+                    for msg in message.get_attached_messages()
+                ],
+            }
+
         raise ValueError(f"Unsupported message type: {type(message)}")
 
     @staticmethod

@@ -2,6 +2,14 @@ import re
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.core.model.artifact import (
+    Artifact,
+    ArtifactMetadata,
+    ArtifactStatus,
+    ContentType,
+    SourceReference,
+)
+from app.core.service.artifact_service import ArtifactService
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
@@ -47,6 +55,8 @@ class SchemaGetter(Tool):
         for label, info in schema["relationships"].items():
             result += f"### {label}\n"
             result += f"- Primary Key: `{info['primary_key']}`\n"
+            result += f"- Source Vertex Labels: {info['source_vertex_labels']}\n"
+            result += f"- Target Vertex Labels: {info['target_vertex_labels']}\n"
             result += "- Properties:\n"
             for prop in info["properties"]:
                 index_info = ""
@@ -248,14 +258,17 @@ class DataImport(Tool):
     def __init__(self, id: Optional[str] = None):
         super().__init__(
             id=id or str(uuid4()),
-            name=self.import_data.__name__,
-            description=self.import_data.__doc__ or "",
-            function=self.import_data,
+            name=self.import_triplet_data.__name__,
+            description=self.import_triplet_data.__doc__ or "",
+            function=self.import_triplet_data,
         )
 
-    async def import_data(
+    async def import_triplet_data(
         self,
         graph_db_service: GraphDbService,
+        artifact_service: ArtifactService,
+        session_id: str,
+        job_id: str,
         source_label: str,
         source_primary_key: str,
         source_properties: Dict[str, Any],
@@ -284,15 +297,17 @@ class DataImport(Tool):
                 instead of the number (e.g., "LiuBei" for person_id, instead of "123")
 
         Args:
+            session_id (str): The session ID
+            job_id (str): The job ID
             source_label (str): Label of the source node (e.g., "Person"), defined in the graph schema
-            source_primary_key (str): Primary key of the source node (e.g., "id")
+            source_primary_key (str): Primary key of the source node (e.g., "id"), defined in the graph schema
             source_properties (Dict[str, Any]): Properties of the source node. If it is related to the identity of
                     the entity, it should be in English letters (by snake_case naming)
                 - some_not_optional_field (str): Required field. If it is related to the identity of
                     the entity, it should be in English letters (by snake_case naming)
                 - Other related fields as defined in schema
-            target_label (str): Label of the target node, defined in the graph schema
-            target_primary_key (str): Primary key of the target node
+            target_label (str): Label of the target node (e.g., "Event"), defined in the graph schema
+            target_primary_key (str): Primary key of the target node (e.g., "id"), defined in the graph schema
             target_properties (Dict[str, Any]): Properties of the target node. If it is related to the identity of
                     the entity, it should be in English letters (by snake_case naming)
                 - Other related fields as defined in schema
@@ -398,6 +413,60 @@ class DataImport(Tool):
                         count(DISTINCT n) as total_nodes,
                         count(DISTINCT r) as total_relationships
                 """).single()
+
+            with store.conn.session() as session:
+                # 获取所有节点和边
+                all_nodes = session.run("MATCH (n) RETURN n")
+                all_edges = session.run("MATCH ()-[r]->() RETURN r")
+
+                # 构造 GraphMessage JSON
+                vertices = [
+                    {
+                        "id": node.element_id if hasattr(node, "element_id") else node.id,
+                        "label": list(node.labels)[0]
+                        if hasattr(node, "labels") and node.labels
+                        else "",
+                        "properties": dict(node.items()),
+                    }
+                    for record in all_nodes
+                    for node in [record.get("n")]
+                ]
+
+                edges = [
+                    {
+                        "source": relationship.start_node.element_id
+                        if hasattr(relationship.start_node, "element_id")
+                        else relationship.start_node.id,
+                        "target": relationship.end_node.element_id
+                        if hasattr(relationship.end_node, "element_id")
+                        else relationship.end_node.id,
+                        "label": relationship.type,
+                        "properties": dict(relationship.items()),
+                    }
+                    for record in all_edges
+                    for relationship in [record.get("r")]
+                ]
+
+                data_graph_dict = {"vertices": vertices, "edges": edges}
+
+                # 保存 graph type artifact
+                artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
+                    job_id=job_id, content_type=ContentType.GRAPH
+                )
+
+                if len(artifacts) == 0:
+                    artifact = Artifact(
+                        content_type=ContentType.GRAPH,
+                        content=data_graph_dict,
+                        source_reference=SourceReference(job_id=job_id, session_id=session_id),
+                        status=ArtifactStatus.FINISHED,
+                        metadata=ArtifactMetadata(version=1, description="It is the data graph."),
+                    )
+                    artifact_service.save_artifact(artifact=artifact)
+                else:
+                    artifact_service.increment_and_save(
+                        artifact=artifacts[0], new_content=data_graph_dict
+                    )
 
                 return f"""数据导入成功！
 本次操作详情：

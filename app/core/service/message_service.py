@@ -4,7 +4,7 @@ from app.core.common.singleton import Singleton
 from app.core.common.type import ChatMessageRole
 from app.core.dal.dao.message_dao import MessageDao
 from app.core.dal.do.message_do import TextMessageDo
-from app.core.model.message import Message, MessageType, TextMessage
+from app.core.model.message import HybridMessage, Message, MessageType, TextMessage
 
 
 class MessageService(metaclass=Singleton):
@@ -17,6 +17,10 @@ class MessageService(metaclass=Singleton):
         """Save a new message."""
         self._message_dao.save_message(message=message)
         return message
+
+    def get_message(self, id: str) -> Message:
+        """Get a message by ID."""
+        return self._message_dao.get_message(id=id)
 
     def get_message_by_job_id(self, job_id: str, message_type: MessageType) -> List[Message]:
         """Get all messages by job ID."""
@@ -38,6 +42,20 @@ class MessageService(metaclass=Singleton):
 
         result = results[0]
         return cast(TextMessage, self._message_dao.parse_into_message(message_do=result))
+
+    def get_hybrid_message_by_job_id_and_role(
+        self, job_id: str, role: ChatMessageRole
+    ) -> HybridMessage:
+        """Get system text messages by job ID."""
+        hybrid_messages = cast(
+            List[HybridMessage],
+            self.get_message_by_job_id(job_id=job_id, message_type=MessageType.HYBRID_MESSAGE),
+        )
+        for hybrid_message in hybrid_messages:
+            instruction_message = cast(TextMessage, hybrid_message.get_instruction_message())
+            if instruction_message.get_role() == role:
+                return hybrid_message
+        raise ValueError(f"Hybrid message not found for job {job_id} and role {role.value}.")
 
     def filter_text_messages_by_session(self, session_id: str) -> List[TextMessage]:
         """Filter messages by session ID.
