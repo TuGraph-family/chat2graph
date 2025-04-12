@@ -80,7 +80,7 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
 
     const props: UploadProps = {
         name: 'file',
-        accept: '.pdf,.txt,.doc,.docx,.md',
+        accept: '.pdf,.xlsx,.txt,.doc,.docx,.md',
         maxCount: 1,
         beforeUpload,
     }

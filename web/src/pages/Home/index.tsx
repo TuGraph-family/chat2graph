@@ -151,30 +151,34 @@ const HomePage: React.FC = () => {
 
   const getAttached = () => {
     const uid_list = attachedFiles?.map(item => item?.uid);
-    const attached_list: { file_id: string, message_type: string }[] = []
-    const originalAttached = attachedFiles?.map(item => {
-      return {
-        uid: item?.uid,
-        name: item?.name,
-        size: item?.size,
-        percent: item?.percent
-      }
-    })
+    const attached_messages: { file_id: string, message_type: string, name: string, size: number }[] = []
+    // const originalAttached = attachedFiles?.map(item => {
+    //   return {
+    //     uid: item?.uid,
+    //     name: item?.name,
+    //     size: item?.size,
+    //     percent: item?.percent
+    //   }
+    // })
     uplodaFileIds?.forEach(item => {
       if (uid_list.includes(item?.uid)) {
-        attached_list.push({
+        const { name, size } = attachedFiles?.find((fileItem: any) => fileItem?.uid === item.uid)
+
+        attached_messages.push({
           file_id: item?.file_id,
           message_type: 'FILE',
+          name,
+          size
         })
       }
     })
 
-    return { attached_list, originalAttached }
+    return attached_messages
   }
 
   const [agent] = useXAgent<API.ChatVO>({
     request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { payload = '', session_id = '', attached_messages = {} } = msg || {};
+      const { payload = '', session_id = '', attached_messages } = msg || {};
 
       runGetJobIdsBySessionId({
         session_id,
@@ -183,7 +187,7 @@ const HomePage: React.FC = () => {
           payload,
           message_type: 'TEXT',
         },
-        attached_messages: attached_messages?.attached_list || [],
+        attached_messages,
       }).then((res: API.Result_Chat_) => {
         const { job_id = '' } = res?.data || {};
         getMessage(job_id, onSuccess, onUpdate);
@@ -277,7 +281,7 @@ const HomePage: React.FC = () => {
           <pre className={styles['user-conversation-question']}>{text}</pre>
           {
             <Flex vertical gap="middle">
-              {(message?.attached_messages?.originalAttached as any[])?.map((item) => (
+              {(message?.attached_messages as any[])?.map((item) => (
                 <Attachments.FileCard key={item.uid} item={item} />
               ))}
             </Flex>
@@ -311,6 +315,17 @@ const HomePage: React.FC = () => {
   }
 
 
+  const removePrefix = (inputString) => {
+    const prefixes = ['[当前会话]', '[Current]'];
+    for (const prefix of prefixes) {
+      if (inputString.startsWith(prefix)) {
+        return inputString.slice(prefix.length).trim();
+      }
+    }
+    return inputString.trim();
+  }
+
+
   const menuConfig: ConversationsProps['menu'] = (conversation) => ({
     trigger: () => {
       return <div id='conversation-extra'>
@@ -331,7 +346,7 @@ const HomePage: React.FC = () => {
                   return {
                     ...item,
                     label: <NameEditor
-                      name={item.label}
+                      name={removePrefix(item.label)}
                       onEdited={() => {
                         setState((draft) => {
                           draft.editing = false;
@@ -432,7 +447,7 @@ const HomePage: React.FC = () => {
       draft.conversationsItems = sessions?.map(item => {
         return {
           ...item,
-          label: `${item?.key === activeKey ? '[当前会话]' : ''}${item?.label}`,
+          label: `${item?.key === activeKey ? formatMessage('home.current') : ''}${item?.label}`,
           group: formatTimestamp(formatMessage, item?.timestamp)
         }
       })
@@ -589,7 +604,7 @@ const HomePage: React.FC = () => {
                       <Button
                         type="text"
                         icon={<i className='iconfont  icon-Chat2graphshangchuan' style={{
-                          fontSize: 30, color: '#6a6b71;'
+                          fontSize: 30, color: '#6a6b71'
                         }} />}
                         onClick={() => {
                           setState((draft) => {

@@ -9,7 +9,6 @@ import ThinkStatus from "@/components/ThinkStatus";
 const ThinkCollapse: React.FC<{ think: any }> = ({
     think,
 }) => {
-
     return <div className={styles['think-collapse']}>
         <Collapse
             collapsible="header"

@@ -14,7 +14,7 @@ interface Props {
 const NameEditor: React.FC<Props> = (props) => {
   const { name, onConfirm, onEdited } = props;
 
-  const [showName, setShowName] = useImmer<string>(name?.split(']')?.[1]);
+  const [showName, setShowName] = useImmer<string>(name);
 
 
 
@@ -38,7 +38,7 @@ const NameEditor: React.FC<Props> = (props) => {
         icon={<CloseOutlined />}
         className={styles['icon-cancel']}
         onClick={() => {
-          onConfirm?.(name?.split(']')[1]);
+          onConfirm?.(name);
           onEdited?.();
         }}
       />

@@ -1,5 +1,5 @@
 import useIntlConfig from "@/hooks/useIntlConfig";
-import { Card, Skeleton, Spin, Steps } from "antd";
+import { Card, Collapse, Skeleton, Spin, Steps } from "antd";
 import { throttle } from "lodash";
 import { useMemo, useEffect, useState } from "react";
 import logoSrc from '@/assets/logo.png';
@@ -10,6 +10,8 @@ import { MESSAGE_TYPE, MESSAGE_TYPE_TIPS } from "@/constants";
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
 import ThinkCollapse from "@/components/ThinkCollapse";
+import ThinkStatus from "@/components/ThinkStatus";
+import { DownOutlined, UpOutlined } from "@ant-design/icons";
 
 interface BubbleContentProps {
   status?: string,
@@ -23,20 +25,21 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
   const [state, setState] = useImmer<{
     thinks: any[],
     startTime: number,
-    diffTime: number
+    diffTime: number,
+    percent: number,
   }>({
     thinks: [],
     startTime: new Date().getTime(),
     diffTime: 0,
+    percent: 20
   })
 
-  const { startTime, diffTime } = state;
+  const { startTime, diffTime, percent } = state;
 
 
 
   const updateCachedData = (cachedData, newData) => {
     const cachedMap = new Map(cachedData.map(item => [item.jobId, item]));
-
     newData.forEach(newItem => {
       const cachedItem = cachedMap.get(newItem.jobId);
       if (cachedItem) {
@@ -50,7 +53,12 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
   }
 
   const getThink = throttle(() => {
+    console.log(message)
+    let finidshed = 0
     const newThinks = message?.thinking?.map(item => {
+      if (item?.status === MESSAGE_TYPE.FINISHED) {
+        finidshed += 1
+      }
       return {
         jobId: item?.job?.id,
         status: item?.status,
@@ -59,13 +67,14 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         assigned_expert_name: item?.message?.assigned_expert_name
       }
     })
+
     setThinks(updateCachedData(thinks, newThinks))
     setState(draft => {
       if (status === MESSAGE_TYPE.CREATED || status === MESSAGE_TYPE.RUNNING) {
         draft.diffTime = new Date().getTime() - startTime
       }
+      draft.percent = 20 + 60 * (finidshed / message?.thinking?.length)
     })
-
   }, 2000);
 
 
@@ -115,6 +124,9 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
     ]
 
     if (status === MESSAGE_TYPE.FINISHED) {
+      setState(draft => {
+        draft.percent = 100
+      })
       steps.push({
         title: <div className={styles['title']}>
           <div className={styles['title-content']}>{formatMessage('home.thinks.answer')}</div>
@@ -128,20 +140,38 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
 
   return <div className={styles['bubble-content']}>
     {
-      content !== 'STOP' && status !== MESSAGE_TYPE.FAILED && <Card style={{ border: 'unset' }}>
-        <div className={styles['bubble-content-header']}>
-          <div className={styles['bubble-content-status']}>
-            <Spin percent={status === MESSAGE_TYPE.FINISHED ? 100 : 50} />
-            <span className={styles['bubble-content-status-text']}>{formatMessage(MESSAGE_TYPE_TIPS[status])}</span>
-          </div>
-          {/* <div onClick={() => { setState(draft => { draft.open = !draft.open }) }}>
-            {
-              open ? <UpOutlined /> : <DownOutlined />
-            }
-          </div> */}
-        </div>
-        <Steps items={items} direction="vertical" />
-      </Card>
+
+      <Collapse
+        collapsible="header"
+        defaultActiveKey={['1']}
+        expandIconPosition="end"
+        expandIcon={({ isActive }) => isActive ? <UpOutlined style={{ color: '#6a6b71' }} /> : <DownOutlined style={{ color: '#6a6b71' }} />}
+        items={[
+          {
+            key: '1',
+            label: <div className={styles['bubble-content-header']}>
+              <div className={styles['bubble-content-status']}>
+                {/* <Spin percent={status === MESSAGE_TYPE.FINISHED ? 100 : 50} /> */}
+                <ThinkStatus status={status} percent={percent} />
+                <span className={styles['bubble-content-status-text']}>{formatMessage(MESSAGE_TYPE_TIPS[status])}</span>
+              </div>
+              {/* <div onClick={() => { setState(draft => { draft.open = !draft.open }) }}>
+          {
+            open ? <UpOutlined /> : <DownOutlined />
+          }
+        </div> */}
+            </div>,
+            children: content !== 'STOP' && ![MESSAGE_TYPE.FAILED, MESSAGE_TYPE.STOPPED].includes(status) && <Steps items={items} direction="vertical" />
+            ,
+          },
+        ]}
+      />
+      // <Card style={{ border: 'unset' }}>
+
+      //   {
+      //     content !== 'STOP' && ![MESSAGE_TYPE.FAILED, MESSAGE_TYPE.STOPPED].includes(status) && <Steps items={items} direction="vertical" />
+      //   }
+      // </Card>
     }
     {
       content

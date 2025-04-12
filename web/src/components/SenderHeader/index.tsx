@@ -70,7 +70,7 @@ const SenderHeader: React.FC<Props> = (props) => {
       <Attachments
         beforeUpload={beforeUpload}
         name='file'
-        accept='.pdf,.xlsx,.doc,.docx,.md'
+        accept='.pdf,.txt,.xlsx,.doc,.docx,.md'
         items={attachedFiles}
         onChange={handleFileChange}
         placeholder={(type) =>
