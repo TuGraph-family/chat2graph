@@ -4,6 +4,7 @@ import {
 } from "@antv/g6";
 import { IAttachedMessageItem } from "@/interfaces";
 import { createRoot } from "react-dom/client";
+import styles from './index.less'
 
 
 interface GraphMessageProps {
@@ -50,24 +51,24 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
                 height: 400,
                 animation: false,
                 autoResize: true,
-                autoFit: "center",
+                autoFit: 'view',
                 node: {
                     style: {
                         labelText: (d) => d?.label,
+                        labelFontSize: 8,
                     },
                 },
                 edge: {
                     style: {
                         labelText: (d) => d?.label,
                         endArrow: true,
-                        labelFontSize: 10,
+                        labelFontSize: 8,
                         labelBackgroundFill: "#fff",
                         labelBackground: true,
                     },
                 },
                 layout: {
                     type: "force",
-                    linkDistance: 50,
                     clustering: true,
                     nodeClusterBy: 'cluster',
                     clusterNodeStrength: 70,
@@ -91,10 +92,13 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
         }
     }, [])
 
-    return <div id={`graph_${message?.id}`} style={{
-        border: '1px solid #ccc',
-        margin: 16
-    }} />
+    return <div>
+        <div id={`graph_${message?.id}`} style={{
+            border: '1px solid #ccc',
+            margin: 16
+        }} />
+        <div className={styles['graph_description']}>{message?.graph_description}</div>
+    </div>
 
 }
 

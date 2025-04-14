@@ -1,14 +1,18 @@
-import { Collapse, Skeleton, Spin } from "antd"
+import { Collapse, Skeleton } from "antd"
 import styles from './index.less'
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import ThinkStatus from "@/components/ThinkStatus";
+import useIntlConfig from "@/hooks/useIntlConfig";
+import { EXPERTS } from "@/constants";
 
 
 const ThinkCollapse: React.FC<{ think: any }> = ({
     think,
 }) => {
+    const { formatMessage } = useIntlConfig();
+
     return <div className={styles['think-collapse']}>
         <Collapse
             collapsible="header"
@@ -18,16 +22,15 @@ const ThinkCollapse: React.FC<{ think: any }> = ({
             items={[
                 {
                     key: '1',
-                    label: <div className={styles['step-thinks-title']}>
+                    label: <p className={styles['step-thinks-title']}>
                         <ThinkStatus status={think?.status} />
-                        <div className={styles['step-thinks-title-expert']}>
-                            {think?.assigned_expert_name ? think?.assigned_expert_name : '@数据导入专家'}
-                        </div>
-                        <div className={styles['step-thinks-title-goal']}> : {think?.goal}</div>
-                    </div>,
+                        <span className={styles['step-thinks-title-expert']}>
+                            @{think?.assigned_expert_name ? formatMessage(`home.expert.${EXPERTS[think.assigned_expert_name]}`) : '数据导入专家'}
+                        </span>
+                        : {think?.goal}
+                    </p>,
                     children:
                         think?.payload ? <div key={`${think?.jobId}_payload`} className={styles['step-thinks-message']}>
-                            {/* <pre>{think?.payload}</pre> */}
                             <ReactMarkdown remarkPlugins={[gfm]}>{think?.payload}</ReactMarkdown>
                         </div> : <Skeleton paragraph={{ rows: 1 }} active />
                     ,

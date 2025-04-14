@@ -132,7 +132,14 @@ export default {
     today: '今天',
     yesterday: '昨天',
     date: '{month}月{day}日',
-    current: '[当前会话]'
+    current: '[当前会话]',
+    expert: {
+      MODELING: '图建模专家',
+      IMPORT: '数据导入专家',
+      QUERY: '图查询专家',
+      ANALYSIS: '图分析专家',
+      ANSWERING: '问答专家',
+    }
   },
   manager: {
     return: '返回会话'

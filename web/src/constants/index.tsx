@@ -79,5 +79,24 @@ export const MESSAGE_TYPE_TIPS = {
 export const CURRENT_PREFIXES = ['[当前会话]', '[Current]'];
 
 
+enum EXPERT_ENUM {
+  MODELLING = 'Graph Modeling Expert',
+  IMPORT = 'Data Importation Expert',
+  QUERY = 'Graph Query Expert',
+  ANALYSIS = 'Graph Analysis Expert',
+  ANSWERING = 'Question Answering Expert',
+}
+
+export const EXPERTS = {
+  [EXPERT_ENUM.MODELLING]: 'MODELING',
+  [EXPERT_ENUM.IMPORT]: 'IMPORT',
+  [EXPERT_ENUM.QUERY]: 'QUERY',
+  [EXPERT_ENUM.ANALYSIS]: 'ANALYSIS',
+  [EXPERT_ENUM.ANSWERING]: 'ANSWERING',
+}
+
+
+
+
 
 
