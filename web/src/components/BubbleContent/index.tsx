@@ -1,5 +1,5 @@
 import useIntlConfig from "@/hooks/useIntlConfig";
-import { Card, Collapse, Skeleton, Spin, Steps } from "antd";
+import { Collapse, Skeleton, Steps } from "antd";
 import { throttle } from "lodash";
 import { useMemo, useEffect, useState } from "react";
 import logoSrc from '@/assets/logo.png';
@@ -12,6 +12,7 @@ import gfm from 'remark-gfm';
 import ThinkCollapse from "@/components/ThinkCollapse";
 import ThinkStatus from "@/components/ThinkStatus";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import GraphMessage from "@/components/GraphMessage";
 
 interface BubbleContentProps {
   status?: string,
@@ -53,7 +54,6 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
   }
 
   const getThink = throttle(() => {
-    console.log(message)
     let finidshed = 0
     const newThinks = message?.thinking?.map(item => {
       if (item?.status === MESSAGE_TYPE.FINISHED) {
@@ -166,21 +166,24 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
           },
         ]}
       />
-      // <Card style={{ border: 'unset' }}>
-
-      //   {
-      //     content !== 'STOP' && ![MESSAGE_TYPE.FAILED, MESSAGE_TYPE.STOPPED].includes(status) && <Steps items={items} direction="vertical" />
-      //   }
-      // </Card>
     }
     {
       content
       && (status === MESSAGE_TYPE.FINISHED || content === MESSAGE_TYPE.STOP || status === MESSAGE_TYPE.FAILED)
       && <div className={styles['bubble-content-message']}>
-        {/* <pre className={styles['bubble-content-message']}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</pre> */}
         <ReactMarkdown remarkPlugins={[gfm]}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</ReactMarkdown>
+        {
+          message?.attached_messages?.length ? <div>
+            {
+              message?.attached_messages?.map((item: any) => <GraphMessage key={item?.id} message={item} />)
+            }
+          </div> : null
+        }
       </div>
     }
+
+
+
 
   </div>
 }

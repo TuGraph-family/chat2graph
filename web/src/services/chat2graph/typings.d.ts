@@ -116,8 +116,9 @@ declare namespace API {
     timestamp?: string,
     payload?: string,
     status?: string,
-    thinking?: any
-    attached_messages?: any
+    thinking?: any,
+    attached_messages?: any,
+    instruction_message?: any
   }
 
   interface Result_Chat_ {
