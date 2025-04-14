@@ -93,10 +93,7 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
     }, [])
 
     return <div>
-        <div id={`graph_${message?.id}`} style={{
-            border: '1px solid #ccc',
-            margin: 16
-        }} />
+        <div id={`graph_${message?.id}`} className={styles['graph']} />
         <div className={styles['graph_description']}>{message?.graph_description}</div>
     </div>
 
