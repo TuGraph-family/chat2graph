@@ -1,6 +1,6 @@
 import styles from './index.less';
-import { Button, GetProp, Modal, Tooltip, Flex, Spin, message, Badge, Space, Popconfirm } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, LeftCircleOutlined, RightCircleOutlined, MessageOutlined, LayoutFilled, UploadOutlined, LinkOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
+import { Button, GetProp, Tooltip, Flex, Spin, message, Space, Popconfirm } from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined, LayoutFilled, RightOutlined, LeftOutlined } from '@ant-design/icons';
 import {
   Attachments,
   Bubble,
@@ -13,7 +13,7 @@ import {
 } from '@ant-design/x';
 import { useImmer } from 'use-immer';
 import NameEditor from '@/components/NameEditor';
-import { FRAMEWORK, FRAMEWORK_CONFIG, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
+import { CURRENT_PREFIXES, FRAMEWORK, FRAMEWORK_CONFIG, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
 import Placeholder from '@/components/Placeholder';
 import SenderHeader from '@/components/SenderHeader';
 import { useCallback, useEffect } from 'react';
@@ -24,6 +24,7 @@ import logoSrc from '@/assets/logo.png';
 import BubbleContent from '@/components/BubbleContent';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { formatTimestamp } from '@/utils/formatTimestamp';
+import { isEmpty } from 'lodash';
 
 const HomePage: React.FC = () => {
 
@@ -75,6 +76,7 @@ const HomePage: React.FC = () => {
   } = useSessionEntity();
   const { sessions } = sessionEntity;
 
+
   const onConversationRename = (name: React.ReactNode, key: string) => {
     runUpdateSession({
       session_id: key,
@@ -92,7 +94,7 @@ const HomePage: React.FC = () => {
 
   const transformMessage = (answer: any) => {
     if (!answer) return null;
-    const { message, thinking, metrics } = answer || {};
+    const { message: { instruction_message, attached_messages }, thinking, metrics } = answer || {};
 
     const thinkingList = thinking?.map((item: any) => {
       const { message: thinkMsg, metrics, job } = item
@@ -105,10 +107,11 @@ const HomePage: React.FC = () => {
       }
     })
     return {
-      payload: message?.payload,
-      session_id: message?.session_id,
-      job_id: message?.job_id,
-      role: message?.role,
+      payload: instruction_message?.payload,
+      session_id: instruction_message?.session_id,
+      job_id: instruction_message?.job_id,
+      role: instruction_message?.role,
+      attached_messages,
       thinking: thinkingList,
       status: metrics?.status
     }
@@ -127,13 +130,15 @@ const HomePage: React.FC = () => {
         const { status } = res?.data?.answer?.metrics || {};
         if (getLocalStorage("MESSAGE_TOP") === "true") {
           clearTimeout(timer);
-          onSuccess({
-            payload: 'STOP',
-            session_id: res?.data?.answer?.message?.session_id,
-            job_id,
-            role: res?.data?.answer?.message?.role,
-            thinking: []
-          });
+          onSuccess({})
+          // TODO 停止思考逻辑
+          // onSuccess({
+          //   payload: 'STOP',
+          //   session_id: res?.data?.answer?.message?.session_id,
+          //   job_id,
+          //   role: res?.data?.answer?.message?.role,
+          //   thinking: []
+          // });
           onStop()
           return;
         }
@@ -151,30 +156,26 @@ const HomePage: React.FC = () => {
 
   const getAttached = () => {
     const uid_list = attachedFiles?.map(item => item?.uid);
-    const attached_list: { file_id: string, message_type: string }[] = []
-    const originalAttached = attachedFiles?.map(item => {
-      return {
-        uid: item?.uid,
-        name: item?.name,
-        size: item?.size,
-        percent: item?.percent
-      }
-    })
+    const attached_messages: { file_id: string, message_type: string, name: string, size: number }[] = []
     uplodaFileIds?.forEach(item => {
       if (uid_list.includes(item?.uid)) {
-        attached_list.push({
+        const { name, size } = attachedFiles?.find((fileItem: any) => fileItem?.uid === item.uid)
+
+        attached_messages.push({
           file_id: item?.file_id,
           message_type: 'FILE',
+          name,
+          size
         })
       }
     })
 
-    return { attached_list, originalAttached }
+    return attached_messages
   }
 
   const [agent] = useXAgent<API.ChatVO>({
     request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { payload = '', session_id = '', attached_messages = {} } = msg || {};
+      const { payload = '', session_id = '', attached_messages } = msg || {};
 
       runGetJobIdsBySessionId({
         session_id,
@@ -183,7 +184,7 @@ const HomePage: React.FC = () => {
           payload,
           message_type: 'TEXT',
         },
-        attached_messages: attached_messages?.attached_list || [],
+        attached_messages,
       }).then((res: API.Result_Chat_) => {
         const { job_id = '' } = res?.data || {};
         getMessage(job_id, onSuccess, onUpdate);
@@ -233,6 +234,10 @@ const HomePage: React.FC = () => {
   }
 
   const onConversationClick: GetProp<typeof Conversations, 'onActiveChange'> = (key: string) => {
+    // 切换时，有思考中任务，则停止
+    if (agent.isRequesting()) {
+      setLocalStorage('MESSAGE_TOP', true)
+    }
     runGetSessionById({
       session_id: key,
     }).then((res: API.Result_Session_) => {
@@ -257,17 +262,16 @@ const HomePage: React.FC = () => {
       }
       setMessages(res?.data?.map(item => getHistoryMessage(item))?.flat() || [])
     })
-
   };
 
-  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages.map((item) => {
+  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages?.filter(item => !isEmpty(item?.message)).map((item) => {
     // @ts-ignore
-    const { message, id, status, } = item;
+    const { message, id, } = item;
     return {
       key: id,
       loading: message?.role === 'SYSTEM' && !message?.thinking,
       role: message?.role === 'SYSTEM' ? 'ai' : 'local',
-      content: message?.payload || formatMessage('home.noResult'),
+      content: message?.payload || message?.instruction_message?.payload || formatMessage('home.noResult'),
       avatar: message?.role === 'SYSTEM' ? {
         icon: <img src={logoSrc} />
       } : undefined,
@@ -277,9 +281,14 @@ const HomePage: React.FC = () => {
           <pre className={styles['user-conversation-question']}>{text}</pre>
           {
             <Flex vertical gap="middle">
-              {(message?.attached_messages?.originalAttached as any[])?.map((item) => (
-                <Attachments.FileCard key={item.uid} item={item} />
-              ))}
+              {(message?.attached_messages as any[])?.map((item) => {
+                const fileItem = {
+                  name: item.name,
+                  size: +item?.size,
+                }
+                return <Attachments.FileCard key={item.uid} item={fileItem} />
+
+              })}
             </Flex>
           }
         </div>
@@ -305,9 +314,19 @@ const HomePage: React.FC = () => {
 
       return id;
     } catch (error) {
-      console.log('onBeforeUpload' + error)
+      console.error('onBeforeUpload' + error)
     }
 
+  }
+
+
+  const removePrefix = (inputString) => {
+    for (const prefix of CURRENT_PREFIXES) {
+      if (inputString.startsWith(prefix)) {
+        return inputString.slice(prefix.length).trim();
+      }
+    }
+    return inputString.trim();
   }
 
 
@@ -331,7 +350,7 @@ const HomePage: React.FC = () => {
                   return {
                     ...item,
                     label: <NameEditor
-                      name={item.label}
+                      name={removePrefix(item.label)}
                       onEdited={() => {
                         setState((draft) => {
                           draft.editing = false;
@@ -432,7 +451,7 @@ const HomePage: React.FC = () => {
       draft.conversationsItems = sessions?.map(item => {
         return {
           ...item,
-          label: `${item?.key === activeKey ? '[当前会话]' : ''}${item?.label}`,
+          label: `${item?.key === activeKey ? formatMessage('home.current') : ''}${item?.label}`,
           group: formatTimestamp(formatMessage, item?.timestamp)
         }
       })
@@ -475,7 +494,6 @@ const HomePage: React.FC = () => {
             {
               collapse ? <RightOutlined /> : <LeftOutlined />
             }
-
           </div>
         </div>
 
@@ -528,6 +546,7 @@ const HomePage: React.FC = () => {
       <div className={
         [styles.chat,
         !items?.length ? styles['chat-emty'] : ''].join(' ')}>
+        <div className={styles['chat-masking']} />
         {/* 消息列表 */}
         <Bubble.List
           items={items.length > 0 ? items : [{
@@ -589,7 +608,7 @@ const HomePage: React.FC = () => {
                       <Button
                         type="text"
                         icon={<i className='iconfont  icon-Chat2graphshangchuan' style={{
-                          fontSize: 30, color: '#6a6b71;'
+                          fontSize: 30, color: '#6a6b71'
                         }} />}
                         onClick={() => {
                           setState((draft) => {

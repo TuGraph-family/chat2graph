@@ -28,7 +28,7 @@ export default {
       step2: "数据处理配置",
       upload: {
         title: "点击/拖拽文件到此处上传",
-        description: "支持PDF、TXT、DOC、DOCX、MD，文件大小不超过20MB",
+        description: "支持PDF、TXT、XLSX、DOC、DOCX、MD，文件大小不超过20MB",
         required: "请上传文件",
         errorSize: "文件大小不能超过20MB",
       },
@@ -55,7 +55,6 @@ export default {
       defaultTag: '默认',
       host: '图数据库地址',
     },
-
     deleteConfirm: '请确定是否删除图数据库{name}？',
     modal: {
       title1: '新建图数据库',
@@ -109,7 +108,7 @@ export default {
     confirm: '确认',
     cancel: '取消',
     noResult: '暂未搜索到',
-    attachment: '附件',
+    attachment: '文件上传',
     placeholder: '请输入问题',
     stop: '思考已停止',
     send: '发送 ⏎',
@@ -132,7 +131,8 @@ export default {
     },
     today: '今天',
     yesterday: '昨天',
-    date: '{{month}}月{{day}}日'
+    date: '{month}月{day}日',
+    current: '[当前会话]'
   },
   manager: {
     return: '返回会话'

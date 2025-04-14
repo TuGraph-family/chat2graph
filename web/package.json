@@ -14,6 +14,7 @@
     "@ant-design/icons": "^5.0.1",
     "@ant-design/pro-components": "^2.4.4",
     "@ant-design/x": "^1.1.0",
+    "@antv/g6": "^5.0.45",
     "@umijs/max": "^4.4.5",
     "antd": "^5.4.0",
     "dayjs": "^1.11.13",

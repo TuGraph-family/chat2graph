@@ -28,7 +28,7 @@ export default {
       step2: "Data Processing Configuration",
       upload: {
         title: "Click/drag files here to upload",
-        description: "Supports PDF, TXT, DOC, DOCX, MD, The file size does not exceed 20MB",
+        description: "Supports PDF, TXT,XLSX, DOC, DOCX, MD, The file size does not exceed 20MB",
         required: "Please upload a file",
         errorSize: "File size cannot exceed 20MB",
       },
@@ -108,7 +108,7 @@ export default {
     confirm: 'Confirm',
     cancel: 'Cancel',
     noResult: 'No Result',
-    attachment: 'upload files',
+    attachment: 'File Upload',
     placeholder: 'Please enter content',
     stop: 'Thinking Stopped',
     send: 'Send ⏎',
@@ -131,7 +131,8 @@ export default {
     },
     today: 'Today',
     yesterday: 'Yesterday',
-    date: '{{month}}Month{{day}}Day'
+    date: '{month}-{day}',
+    current: '[Current]'
   },
   manager: {
     return: 'Return Session'
