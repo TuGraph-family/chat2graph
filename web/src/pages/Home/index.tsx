@@ -13,7 +13,7 @@ import {
 } from '@ant-design/x';
 import { useImmer } from 'use-immer';
 import NameEditor from '@/components/NameEditor';
-import { FRAMEWORK, FRAMEWORK_CONFIG, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
+import { CURRENT_PREFIXES, FRAMEWORK, FRAMEWORK_CONFIG, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
 import Placeholder from '@/components/Placeholder';
 import SenderHeader from '@/components/SenderHeader';
 import { useCallback, useEffect } from 'react';
@@ -321,8 +321,7 @@ const HomePage: React.FC = () => {
 
 
   const removePrefix = (inputString) => {
-    const prefixes = ['[当前会话]', '[Current]'];
-    for (const prefix of prefixes) {
+    for (const prefix of CURRENT_PREFIXES) {
       if (inputString.startsWith(prefix)) {
         return inputString.slice(prefix.length).trim();
       }

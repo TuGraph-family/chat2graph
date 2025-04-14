@@ -151,15 +151,9 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
             key: '1',
             label: <div className={styles['bubble-content-header']}>
               <div className={styles['bubble-content-status']}>
-                {/* <Spin percent={status === MESSAGE_TYPE.FINISHED ? 100 : 50} /> */}
                 <ThinkStatus status={status} percent={percent} />
                 <span className={styles['bubble-content-status-text']}>{formatMessage(MESSAGE_TYPE_TIPS[status])}</span>
               </div>
-              {/* <div onClick={() => { setState(draft => { draft.open = !draft.open }) }}>
-          {
-            open ? <UpOutlined /> : <DownOutlined />
-          }
-        </div> */}
             </div>,
             children: content !== 'STOP' && ![MESSAGE_TYPE.FAILED, MESSAGE_TYPE.STOPPED].includes(status) && <Steps items={items} direction="vertical" />
             ,

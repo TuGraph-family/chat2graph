@@ -76,5 +76,8 @@ export const MESSAGE_TYPE_TIPS = {
 }
 
 
+export const CURRENT_PREFIXES = ['[当前会话]', '[Current]'];
+
+
 
 
