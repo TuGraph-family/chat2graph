@@ -137,6 +137,7 @@ class MessageDao(Dao[MessageDo]):
                 job_id=message.get_job_id(),
                 session_id=message.get_session_id(),
                 timestamp=message.get_timestamp(),
+                message_metadata=GraphMessage.serialize_payload(message.get_metadata()),
             )
 
         if isinstance(message, HybridMessage):
@@ -213,6 +214,7 @@ class MessageDao(Dao[MessageDo]):
                 session_id=str(message_do.session_id),
                 payload=GraphMessage.deserialize_payload(str(message_do.payload)),
                 timestamp=int(message_do.timestamp),
+                metadata=GraphMessage.deserialize_payload(str(message_do.message_metadata)),
             )
 
         if message_type == MessageType.HYBRID_MESSAGE:
@@ -243,5 +245,4 @@ class MessageDao(Dao[MessageDo]):
                 role=role,
             )
 
-        # TODO: support more message types
         raise ValueError(f"Unsupported message type: {message_type}")

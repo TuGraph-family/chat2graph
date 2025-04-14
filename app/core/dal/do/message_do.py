@@ -44,6 +44,9 @@ class MessageDo(Do):  # type: ignore
     related_message_ids = Column(JSON, nullable=True)
     artifact_ids = Column(JSON, nullable=True)
 
+    # metadata fields
+    message_metadata = Column(JSON, nullable=True)
+
     # chat/text message fields
     role = Column(String(36), nullable=True)
     assigned_expert_name = Column(String(36), nullable=True)

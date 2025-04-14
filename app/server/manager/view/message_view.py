@@ -107,6 +107,7 @@ class MessageViewTransformer:
                 "session_id": message.get_session_id(),
                 "timestamp": message.get_timestamp(),
                 "payload": GraphMessage.serialize_payload(message.get_payload()),
+                "graph_description": message.get_graph_description(),
                 "message_type": ChatMessageType.GRAPH.value,
             }
 

@@ -63,7 +63,9 @@ class DualModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
             payload=(
-                "<shallow_thinking>\nEmpty\n</shallow_thinking>\n<action>\nEmpty\n</action>\n"
+                "<shallow_thinking>\nI need your help.\n</shallow_thinking>\n"
+                "<action>\nI don't need to take action right now, "
+                "nor do I need to invoke <function_call>.\n</action>\n"
             ),
             job_id=task.job.id,
             step=1,
@@ -230,6 +232,7 @@ class DualModelReasoner(Reasoner):
         return ACTOR_PROMPT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
+            reasoning_rounds=SystemEnv.REASONING_ROUNDS,
             task=reasoning_task,
             functions=func_description,
             output_schema=output_schema,
@@ -278,11 +281,24 @@ class DualModelReasoner(Reasoner):
         # set the reasoning task
         reasoning_task = f"=====\nTASK:\n{task_description}\nCONTEXT:\n{task_context}\n====="
 
+        # set the function docstrings
+        if len(task.tools) > 0:
+            func_description = "\n".join(
+                [
+                    f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n"
+                    for i, tool in enumerate(task.tools)
+                ]
+            )
+        else:
+            func_description = "No function calling in this round."
+
         # TODO: The prompt template comes from the <system-name>.config.yaml
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
+            reasoning_rounds=SystemEnv.REASONING_ROUNDS,
             task=reasoning_task,
+            functions=func_description,
         )
 
     def init_memory(self, task: Task) -> ReasonerMemory:
