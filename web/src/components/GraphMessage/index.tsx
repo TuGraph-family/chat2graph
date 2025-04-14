@@ -23,7 +23,7 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
                 edges: edges
             }
         } catch (error) {
-            console.log('formatGraphData' + error)
+            console.error('formatGraphData' + error)
 
         }
     }
@@ -44,7 +44,6 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
 
     useEffect(() => {
         try {
-            console.log(`graph_${message?.id}`)
             const graph = new Graph({
                 container: `graph_${message?.id}`,
                 data: formatGraphData(message?.payload),
@@ -88,7 +87,7 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
 
             graph.render()
         } catch (e) {
-            console.log('GraphMessage:' + e)
+            console.error('GraphMessage:' + e)
         }
     }, [])
 

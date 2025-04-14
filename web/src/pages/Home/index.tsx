@@ -314,7 +314,7 @@ const HomePage: React.FC = () => {
 
       return id;
     } catch (error) {
-      console.log('onBeforeUpload' + error)
+      console.error('onBeforeUpload' + error)
     }
 
   }
