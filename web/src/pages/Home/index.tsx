@@ -546,7 +546,6 @@ const HomePage: React.FC = () => {
       <div className={
         [styles.chat,
         !items?.length ? styles['chat-emty'] : ''].join(' ')}>
-        <div className={styles['chat-masking']} />
         {/* 消息列表 */}
         <Bubble.List
           items={items.length > 0 ? items : [{

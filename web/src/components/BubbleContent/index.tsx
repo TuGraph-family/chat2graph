@@ -64,7 +64,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         status: item?.status,
         goal: item?.job?.goal,
         payload: item?.status === MESSAGE_TYPE.FINISHED ? item?.payload : '',
-        assigned_expert_name: item?.message?.assigned_expert_name
+        assigned_expert_name: item?.job?.assigned_expert_name
       }
     })
 
