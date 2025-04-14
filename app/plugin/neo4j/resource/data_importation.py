@@ -2,6 +2,8 @@ import re
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
 from app.core.model.artifact import (
     Artifact,
     ArtifactMetadata,
@@ -12,6 +14,7 @@ from app.core.model.artifact import (
 from app.core.service.artifact_service import ArtifactService
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
+from app.core.service.service_factory import ServiceFactory
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
@@ -28,7 +31,10 @@ class SchemaGetter(Tool):
         )
 
     async def get_schema(self, file_service: FileService) -> str:
-        """Get the schema of the graph database."""
+        """Get the schema of the graph database.
+
+        The graph schema defines the allowed structure and rules for the graph data in the database.
+        """
         schema = await SchemaManager.read_schema(file_service=file_service)
         if len(schema) == 0:
             return "The schema is not defined yet. Please define the schema first."
@@ -99,99 +105,140 @@ class DataStatusCheck(Tool):
 
         Returns:
             str: A formatted string containing database status information.
-        """  # noqa: E501
+        """
         try:
             store = graph_db_service.get_default_graph_db()
-            results = {}
+            results: Dict[str, Any] = {}
+
+            # keep track of whether the user provided specific labels/types
+            user_provided_node_labels: bool = node_labels is not None
+            user_provided_relationship_labels: bool = relationship_labels is not None
+            # store the original lists if provided, for accurate reporting later
+            original_node_labels = node_labels if user_provided_node_labels else []
+            original_relationship_labels = (
+                relationship_labels if user_provided_relationship_labels else []
+            )
 
             with store.conn.session() as session:
                 # 1. 获取总体统计信息
                 total_stats = session.run("""
-                    MATCH (n) 
-                    OPTIONAL MATCH (n)-[r]->() 
-                    RETURN 
+                    MATCH (n)
+                    OPTIONAL MATCH (n)-[r]->()
+                    RETURN
                         count(DISTINCT n) as total_nodes,
                         count(DISTINCT r) as total_relationships
                 """).single()
 
                 results["总体统计"] = {
-                    "总节点数": total_stats["total_nodes"],
-                    "总关系数": total_stats["total_relationships"],
+                    "总节点数": total_stats["total_nodes"] if total_stats else 0,
+                    "总关系数": total_stats["total_relationships"] if total_stats else 0,
                 }
 
                 # 2. 获取所有节点标签列表（如果未指定）
                 if node_labels is None:
                     labels_result = session.run(
                         "CALL db.labels() YIELD label RETURN collect(label) as labels"
-                    )
-                    all_labels = labels_result.single()["labels"]
-                    node_labels = all_labels
+                    ).single()
+                    node_labels = labels_result["labels"] if labels_result else []
 
                 # 3. 获取所有关系类型列表（如果未指定）
                 if relationship_labels is None:
                     rel_types_result = session.run(
                         "CALL db.relationshipTypes() YIELD relationshipType RETURN collect(relationshipType) as types"  # noqa: E501
-                    )
-                    all_rel_types = rel_types_result.single()["types"]
-                    relationship_labels = all_rel_types
+                    ).single()
+                    relationship_labels = rel_types_result["types"] if rel_types_result else []
 
                 # 4. 获取节点标签统计和样例
                 results["节点统计"] = {}
                 results["节点样例"] = {}
 
-                for label in node_labels:
-                    # 统计每个标签的节点数量
-                    count_query = f"MATCH (n:{label}) RETURN count(n) as count"
-                    count_result = session.run(count_query).single()
-                    results["节点统计"][label] = count_result["count"]
+                # Ensure node_labels is iterable even if fetching failed or DB is empty
+                current_node_labels = node_labels if node_labels is not None else []
+                for label in current_node_labels:
+                    try:
+                        # Escape label if it contains special characters (basic escaping)
+                        safe_label = f"`{label.replace('`', '``')}`"
+                        # 统计每个标签的节点数量
+                        count_query = f"MATCH (n:{safe_label}) RETURN count(n) as count"
+                        count_result = session.run(count_query).single()
+                        node_count = count_result["count"] if count_result else 0
+                        results["节点统计"][label] = node_count
 
-                    # 获取每个标签的样例数据
-                    if count_result["count"] > 0:
-                        sample_query = f"MATCH (n:{label}) RETURN n LIMIT {sample_limit}"
-                        sample_results = list(session.run(sample_query))
-                        samples = []
+                        # 获取每个标签的样例数据
+                        if node_count > 0:
+                            sample_query = f"MATCH (n:{safe_label}) RETURN n LIMIT {sample_limit}"
+                            sample_results = list(session.run(sample_query))
+                            samples = []
 
-                        for record in sample_results:
-                            node = record["n"]
-                            samples.append(
-                                {"id": dict(node).get("id", "N/A"), "properties": dict(node)}
-                            )
-
-                        results["节点样例"][label] = samples
+                            for record in sample_results:
+                                node = record["n"]
+                                node_props = dict(node)
+                                samples.append(
+                                    {
+                                        "id": node_props.get(
+                                            "id", node.element_id
+                                        ),  # Use element_id as fallback
+                                        "properties": node_props,
+                                    }
+                                )
+                            results["节点样例"][label] = samples
+                    except Exception as label_e:
+                        print(f"Warning: Failed to process node label '{label}': {label_e}")
+                        results["节点统计"][label] = f"Error: {label_e}"
 
                 # 5. 获取关系类型统计和样例
                 results["关系统计"] = {}
                 results["关系样例"] = {}
 
-                for rel_type in relationship_labels:
-                    # 统计每个类型的关系数量
-                    count_query = f"MATCH ()-[r:{rel_type}]->() RETURN count(r) as count"
-                    count_result = session.run(count_query).single()
-                    results["关系统计"][rel_type] = count_result["count"]
+                # Ensure relationship_labels is iterable
+                current_relationship_labels = (
+                    relationship_labels if relationship_labels is not None else []
+                )
+                for rel_type in current_relationship_labels:
+                    try:
+                        # Escape relationship type if it contains special characters (basic escaping)
+                        safe_rel_type = f"`{rel_type.replace('`', '``')}`"
+                        # 统计每个类型的关系数量
+                        count_query = f"MATCH ()-[r:{safe_rel_type}]->() RETURN count(r) as count"
+                        count_result = session.run(count_query).single()
+                        rel_count = count_result["count"] if count_result else 0
+                        results["关系统计"][rel_type] = rel_count
 
-                    # 获取每个类型的样例数据
-                    if count_result["count"] > 0:
-                        sample_query = f"""
-                            MATCH (a)-[r:{rel_type}]->(b)
-                            RETURN type(r) as type, properties(r) as props,
-                                   labels(a)[0] as source_label, a.id as source_id,
-                                   labels(b)[0] as target_label, b.id as target_id
-                            LIMIT {sample_limit}
-                        """
-                        sample_results = list(session.run(sample_query))
-                        samples = []
+                        # 获取每个类型的样例数据
+                        if rel_count > 0:
+                            # Enhanced sample query to handle missing labels/ids gracefully
+                            sample_query = f"""
+                                MATCH (a)-[r:{safe_rel_type}]->(b)
+                                RETURN
+                                    elementId(r) as rel_element_id,
+                                    type(r) as type,
+                                    properties(r) as props,
+                                    coalesce(labels(a)[0], 'Unknown') as source_label,
+                                    coalesce(a.id, elementId(a)) as source_id,
+                                    coalesce(labels(b)[0], 'Unknown') as target_label,
+                                    coalesce(b.id, elementId(b)) as target_id
+                                LIMIT {sample_limit}
+                            """
+                            sample_results = list(session.run(sample_query))
+                            samples = []
 
-                        for record in sample_results:
-                            samples.append(
-                                {
-                                    "type": record["type"],
-                                    "properties": record["props"],
-                                    "source": f"{record['source_label']}(id: {record['source_id']})",  # noqa: E501
-                                    "target": f"{record['target_label']}(id: {record['target_id']})",  # noqa: E501
-                                }
-                            )
+                            for record in sample_results:
+                                samples.append(
+                                    {
+                                        "type": record["type"],
+                                        "properties": record["props"],
+                                        "source": f"{record['source_label']}(id: {record['source_id']})",
+                                        "target": f"{record['target_label']}(id: {record['target_id']})",
+                                        "element_id": record[
+                                            "rel_element_id"
+                                        ],  # Include relationship element ID
+                                    }
+                                )
 
-                        results["关系样例"][rel_type] = samples
+                            results["关系样例"][rel_type] = samples
+                    except Exception as rel_e:
+                        print(f"Warning: Failed to process relationship type '{rel_type}': {rel_e}")
+                        results["关系统计"][rel_type] = f"Error: {rel_e}"
 
             # 格式化输出结果
             output = []
@@ -204,51 +251,101 @@ class DataStatusCheck(Tool):
 
             # 节点统计
             output.append("\n## 节点统计")
-            if not results["节点统计"]:
-                output.append("- 数据库中暂无节点")
+            # Check if any counts > 0 or if specific labels were requested but none found
+            node_counts_found = any(
+                v > 0 for v in results["节点统计"].values() if isinstance(v, int)
+            )
+
+            if not node_counts_found:
+                # --- Start Modification ---
+                if user_provided_node_labels:
+                    # User specified labels, but none were found (or had count 0)
+                    output.append(f"- 数据库中未找到与指定标签 {original_node_labels} 相关的节点")
+                elif not current_node_labels and results["总体统计"]["总节点数"] == 0:
+                    # No labels specified, and no labels exist in the DB (implies no nodes)
+                    output.append("- 数据库中当前无任何节点标签或节点")
+                else:
+                    # No labels specified, labels *might* exist, but all counts are 0
+                    output.append("- 数据库中所有已检查的节点标签下均无节点")
+            # --- End Modification ---
             else:
                 for label, count in results["节点统计"].items():
-                    output.append(f"- {label}: {count} 个")
+                    if isinstance(count, int):
+                        output.append(f"- {label}: {count} 个")
+                    else:  # Handle potential error messages stored during processing
+                        output.append(f"- {label}: {count}")
 
             # 关系统计
             output.append("\n## 关系统计")
-            if not results["关系统计"]:
-                output.append("- 数据库中暂无关系")
+            rel_counts_found = any(
+                v > 0 for v in results["关系统计"].values() if isinstance(v, int)
+            )
+
+            if not rel_counts_found:
+                # --- Start Modification ---
+                if user_provided_relationship_labels:
+                    # User specified types, but none were found (or had count 0)
+                    output.append(
+                        f"- 数据库中未找到与指定类型 {original_relationship_labels} 相关的关系"
+                    )
+                elif not current_relationship_labels and results["总体统计"]["总关系数"] == 0:
+                    # No types specified, and no types exist in the DB (implies no relationships)
+                    output.append("- 数据库中当前无任何关系类型或关系")
+                else:
+                    # No types specified, types *might* exist, but all counts are 0
+                    output.append("- 数据库中所有已检查的关系类型下均无关系")
+                # --- End Modification ---
             else:
                 for rel_type, count in results["关系统计"].items():
-                    output.append(f"- {rel_type}: {count} 个")
+                    if isinstance(count, int):
+                        output.append(f"- {rel_type}: {count} 个")
+                    else:  # Handle potential error messages
+                        output.append(f"- {rel_type}: {count}")
 
             # 节点样例
             if any(results["节点样例"].values()):
                 output.append("\n## 节点样例")
                 for label, samples in results["节点样例"].items():
                     if samples:
-                        output.append(f"\n### {label} 节点样例")
+                        output.append(f"\n### {label} 节点样例 (最多打印 {sample_limit} 个)")
                         for i, sample in enumerate(samples, 1):
                             output.append(f"样例 {i}:")
+                            # Use element_id if specific 'id' property is missing
                             output.append(f"- ID: {sample['id']}")
                             output.append("- 属性:")
-                            for prop_key, prop_value in sample["properties"].items():
-                                output.append(f"  - {prop_key}: {prop_value}")
+                            if sample["properties"]:
+                                for prop_key, prop_value in sample["properties"].items():
+                                    output.append(f"  - {prop_key}: {prop_value}")
+                            else:
+                                output.append("  - (无属性)")
 
             # 关系样例
             if any(results["关系样例"].values()):
                 output.append("\n## 关系样例")
                 for rel_type, samples in results["关系样例"].items():
                     if samples:
-                        output.append(f"\n### {rel_type} 关系样例")
+                        output.append(f"\n### {rel_type} 关系样例 (最多打印 {sample_limit} 个)")
                         for i, sample in enumerate(samples, 1):
                             output.append(f"样例 {i}:")
+                            output.append(
+                                f"- Element ID: {sample['element_id']}"
+                            )  # Added element ID
                             output.append(f"- 源节点: {sample['source']}")
                             output.append(f"- 目标节点: {sample['target']}")
                             if sample["properties"]:
                                 output.append("- 关系属性:")
                                 for prop_key, prop_value in sample["properties"].items():
                                     output.append(f"  - {prop_key}: {prop_value}")
+                            else:
+                                output.append("- (无关系属性)")
 
             return "\n".join(output)
 
         except Exception as e:
+            # Log the exception traceback for debugging
+            import traceback
+
+            traceback.print_exc()
             raise Exception(f"检查数据状态失败: {str(e)}") from e
 
 
@@ -552,3 +649,28 @@ Neo4j中的节点代表实体，具有以下特征：
 - 合理使用索引提升性能
 - 根据查询模式设计数据模型
 """
+
+
+DaoFactory.initialize(DbSession())
+ServiceFactory.initialize()
+
+
+async def main():
+    your_instance = DataStatusCheck()
+    graph_db_service = GraphDbService()  # Your actual service instance
+
+    print("--- Checking status with no specific labels/types (empty DB simulation) ---")
+    status_all_empty = await your_instance.check_data_status(graph_db_service)
+    print(status_all_empty)
+
+    print("\n--- Checking status for specific labels/types (empty DB simulation) ---")
+    status_specific_empty = await your_instance.check_data_status(
+        graph_db_service, node_labels=["character"], relationship_labels=["BELONGS_TO"]
+    )
+    print(status_specific_empty)
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(main())

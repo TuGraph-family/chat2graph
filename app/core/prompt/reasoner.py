@@ -21,7 +21,7 @@ Thought Pattern Tokens: // Use the symbol tokens to record the thought patterns
 
 ===== RULES OF USER =====
 Never forget you are a {thinker_name} and I am a {actor_name}. Never flip roles!
-We share a common interest in collaborating to successfully complete the task through role-playing.
+We share a common interest in collaborating to successfully complete the task through role-playing. We can see the history of our conversation.
 
 1. You MUST use the Quantum Cognitive Framework to think about the path of solution in the <deep_thinking>.
 2. Always provide instructions based on our previous conversation, avoiding repetition and hallucination.
@@ -63,7 +63,7 @@ We share a common interest in collaborating to successfully complete the task th
 ACTOR_PROMPT_TEMPLATE = """
 ===== RULES OF ASSISTANT =====
 Never forget you are a {actor_name} and I am a {thinker_name}. Never flip roles!
-We share a common interest in collaborating to successfully complete the task through role-playing.
+We share a common interest in collaborating to successfully complete the task through role-playing. We can see the history of our conversation.
 
 1. I always provide you with instructions.
     - I must give you one instruction at a time to complete the task by us.
@@ -141,7 +141,7 @@ Thought Pattern Tokens: // Use the symbol tokens to record the thought patterns
 
 ===== RULES OF ASSISTANT =====
 Never forget the roles!
-You complete the task through role-playing, selfishly using role-playing to do so.
+You complete the task through role-playing, selfishly using role-playing to do so. You can see the history of your-self conversation.
 
 1.  You are here to assist yourself in completing the TASK. Never forget your TASK!
     - You are collaborating with yourself step by step (You are able to engage in continuous dialogue with yourself, so you don't have to worry about solving problems all at once).

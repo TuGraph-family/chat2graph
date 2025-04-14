@@ -1,10 +1,11 @@
 import json
-from typing import Dict
+import re
+from typing import Any, Dict, List
 
 
-def parse_json(
+def parse_jsons(
     text: str, start_marker: str = "```json", end_marker: str = "```"
-) -> Dict[str, Dict[str, str]]:
+) -> List[Dict[str, Any]]:
     """Extract JSON content from a text string.
 
     Args:
@@ -13,16 +14,20 @@ def parse_json(
         end_marker (str): The marker indicating the end of the JSON content.
 
     Returns:
-        Dict[str, Dict[str, str]]: The extracted JSON content as a dictionary.
+        List[Dict[str, Any]]: The extracted JSON content as a list of dictionaries
+        if single or multiple matches are found.
     """
-    start_idx = text.find(start_marker)
-    if start_idx == -1:
-        raise ValueError(f"Start marker '{start_marker}' not found in scratchpad.")
+    # find all occurrences of content between markers
+    pattern = f"{re.escape(start_marker)}(.*?){re.escape(end_marker)}"
+    matches = re.finditer(pattern, text, re.DOTALL)
+    results: List[Dict[str, Any]] = []
 
-    json_start = start_idx + len(start_marker)
-    end_idx = text.find(end_marker, json_start)
-    if end_idx == -1:
-        raise ValueError(f"End marker '{end_marker}' not found in scratchpad.")
+    for match in matches:
+        json_str = match.group(1).strip()
+        try:
+            parsed_json = json.loads(json_str)
+            results.append(parsed_json)
+        except json.JSONDecodeError as e:
+            raise json.JSONDecodeError(f"Error parsing JSON: {str(e)}", e.doc, e.pos)
 
-    json_str = text[json_start:end_idx].strip()
-    return json.loads(json_str)
+    return results

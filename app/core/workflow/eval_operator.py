@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from app.core.common.async_func import run_async_function
 from app.core.common.type import WorkflowStatus
-from app.core.common.util import parse_json
+from app.core.common.util import parse_jsons
 from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
@@ -52,7 +52,7 @@ class EvalOperator(Operator):
         result = run_async_function(reasoner.infer, task=task)
 
         try:
-            result_dict = parse_json(text=result)
+            result_dict = parse_jsons(text=result)[0]
         except (ValueError, json.JSONDecodeError) as e:
             # not validated json format
             # color: red
@@ -64,7 +64,7 @@ class EvalOperator(Operator):
                 + str(e)
             )
             result = run_async_function(reasoner.infer, task=task)
-            result_dict = parse_json(text=result)
+            result_dict = parse_jsons(text=result)[0]
 
         return WorkflowMessage(
             payload={

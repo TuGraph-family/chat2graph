@@ -55,19 +55,19 @@ Here is the Subtasks Template
 // Must use ```json``` to mark the beginning of the json content.
 ```json
 {
-    "specific_task_id": {
+    "task_idx": {
         "goal": "subtask_description",
         "context": "Input data, resources, etc.",
         "completion_criteria": "Acceptance criteria, etc.",
-        "dependencies": ["specific_task_id_*", "specific_task_id_*", ...],
+        "dependencies": ["task_idx_*", "task_idx_*", ...],
         "assigned_expert": "Name of an expert (in English)",
         "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
     },
-    "specific_task_id": {
+    "task_idx": {
         "goal": "subtask_description",
         "context": "Input data, resources, etc.",
         "completion_criteria": "Acceptance criteria, etc.",
-        "dependencies": ["specific_task_id_*", "specific_task_id_*", ...],
+        "dependencies": ["task_idx_*", "task_idx_*", ...],
         "language of the assigned_expert": "Engilish",
         "assigned_expert": "Name of an expert (in English)",
         "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",

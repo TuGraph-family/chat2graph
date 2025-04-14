@@ -11,7 +11,7 @@ from app.core.agent.expert import Expert
 from app.core.agent.leader_state import LeaderState
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import JobStatus, WorkflowStatus
-from app.core.common.util import parse_json
+from app.core.common.util import parse_jsons
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, WorkflowMessage
@@ -89,8 +89,12 @@ class Leader(Agent):
 
         try:
             # extract the subjobs from the json block
-            job_dict: Dict[str, Dict[str, str]] = parse_json(text=workflow_message.scratchpad)
-            assert job_dict is not None
+            job_dicts: List[Dict[str, Dict[str, str]]] = parse_jsons(
+                text=workflow_message.scratchpad,
+            )
+            if len(job_dicts) == 0:
+                raise ValueError("The job is not decomposed.")
+            job_dict = job_dicts[0]
         except (ValueError, json.JSONDecodeError) as e:
             # color: red
             print(f"\033[38;5;196m[WARNNING]: {e}\033[0m")
@@ -106,8 +110,10 @@ class Leader(Agent):
             )
             try:
                 # extract the subjobs from the json block
-                job_dict = parse_json(text=workflow_message.scratchpad)
-                assert job_dict is not None
+                job_dicts = parse_jsons(text=workflow_message.scratchpad)
+                if len(job_dicts) == 0:
+                    raise ValueError("The job is not decomposed.")
+                job_dict = job_dicts[0]
             except (ValueError, json.JSONDecodeError):
                 self._job_service.stop_job_graph(
                     job=job,

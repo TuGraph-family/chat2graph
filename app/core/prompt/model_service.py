@@ -1,6 +1,6 @@
 TASK_DESCRIPTOR_PROMPT_TEMPLATE = """
 ===== ACTIONS =====
-LLMs need explicit action spaces and valid transitions. This isn't just a list - it's a state machine definition showing valid transitions (-next->) between actions.
+LLMs need explicit action spaces and valid transitions. This isn't just a list - it's a state machine definition showing valid transitions (-next->) between actions. In addition, not all recommended Actions require the callings of tools/funcations.
 It prevents invalid action sequences and ensures operational coherence. However the sequences of the actions are recommended, not mandatory.
 However, this state machine defines the boundaries of the possibilities and legality of action transitions; in actual execution, while the specific order of action selection needs to adhere to these boundaries, there may be multiple legitimate paths. The "order" provided by the system at this time is more inclined towards a suggestion or guidance rather than a unique and mandatory execution path.
 Here are the ACTIONS:

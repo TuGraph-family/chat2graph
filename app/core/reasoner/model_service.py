@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 import inspect
 import json
-import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 from app.core.common.type import FunctionCallStatus
+from app.core.common.util import parse_jsons
 from app.core.model.message import ModelMessage
 from app.core.prompt.model_service import FUNC_CALLING_JSON_GUIDE
 from app.core.reasoner.injection_mapping import (
@@ -156,21 +156,22 @@ class ModelService(ABC):
                 - Optional error message if parsing fails.
         """
         # calling format: <function_call>name(arg1=value1, arg2=value2)</function_call>
-        pattern = r"<function_call>(.*?)</function_call>"
-        matches = re.finditer(pattern, text, re.DOTALL)
+        func_dicts = parse_jsons(
+            text=text,
+            start_marker="<function_call>",
+            end_marker="</function_call>",
+        )
 
-        if not matches:
+        if len(func_dicts) == 0:
             # did not call any functions
             return []
 
         func_calls: List[Tuple[Optional[Tuple[str, str, Dict[str, Any]]], Optional[str]]] = []
-        for match in matches:
+        for func_dict in func_dicts:
             try:
-                func_str: str = match.group(1)
-                func_data = json.loads(func_str)
-                func_name: str = func_data.get("name", "")
-                call_objective: str = func_data.get("call_objective", "")
-                func_args: Dict[str, Any] = func_data.get("args", {})
+                func_name: str = func_dict.get("name", "")
+                call_objective: str = func_dict.get("call_objective", "")
+                func_args: Dict[str, Any] = func_dict.get("args", {})
                 func_calls.append(((func_name, call_objective, func_args), None))
             except json.JSONDecodeError as e:
                 print(

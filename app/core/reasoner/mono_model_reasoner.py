@@ -189,7 +189,10 @@ class MonoModelReasoner(Reasoner):
 
         if len(task.tools) > 0:
             func_description = "\n".join(
-                [f"Function {tool.name}():\n\t{tool.description}\n" for tool in task.tools]
+                [
+                    f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n"
+                    for i, tool in enumerate(task.tools)
+                ]
             )
         else:
             func_description = "No function calling in this round."
