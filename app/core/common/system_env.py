@@ -19,7 +19,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "LLM_ENDPOINT": (str, None),
     "LLM_APIKEY": (str, None),
     "TEMPERATURE": (float, 0.7),
-    "REASONING_ROUNDS": (int, 20),
+    "REASONING_ROUNDS": (int, 15),
     "PRINT_REASONER_MESSAGES": (bool, True),
     "PRINT_SYSTEM_PROMPT": (bool, True),
     "PRINT_REASONER_OUTPUT": (bool, True),

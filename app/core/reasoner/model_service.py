@@ -161,6 +161,21 @@ class ModelService(ABC):
             start_marker="<function_call>",
             end_marker="</function_call>",
         )
+        if "json" in text:
+            try:
+                json_func_dicts = parse_jsons(text=text, start_marker="```json", end_marker="```")
+
+                if (
+                    len(json_func_dicts) > 0
+                    and "name" not in json_func_dicts[0]
+                    and "call_objective" not in json_func_dicts[0]
+                    and "args" not in json_func_dicts[0]
+                ):
+                    # if the JSON does not contain function calling information, skip
+                    pass
+                func_dicts.extend(json_func_dicts)
+            except json.JSONDecodeError:
+                pass
 
         if len(func_dicts) == 0:
             # did not call any functions

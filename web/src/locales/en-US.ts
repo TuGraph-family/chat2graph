@@ -132,7 +132,14 @@ export default {
     today: 'Today',
     yesterday: 'Yesterday',
     date: '{month}-{day}',
-    current: '[Current]'
+    current: '[Current]',
+    expert: {
+      MODELING: 'Graph Modeling Expert',
+      IMPORT: 'Data Importation Expert',
+      QUERY: 'Graph Query Expert',
+      ANALYSIS: 'Graph Analysis Expert',
+      ANSWERING: 'Question Answering Expert',
+    }
   },
   manager: {
     return: 'Return Session'
