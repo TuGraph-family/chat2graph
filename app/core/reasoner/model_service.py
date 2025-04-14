@@ -168,7 +168,7 @@ class ModelService(ABC):
                 if (
                     len(json_func_dicts) > 0
                     and "name" not in json_func_dicts[0]
-                    and "cll_objective" not in json_func_dicts[0]
+                    and "call_objective" not in json_func_dicts[0]
                     and "args" not in json_func_dicts[0]
                 ):
                     # if the JSON does not contain function calling information, skip
