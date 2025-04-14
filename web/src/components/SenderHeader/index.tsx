@@ -53,7 +53,7 @@ const SenderHeader: React.FC<Props> = (props) => {
 
 
 
-  return <div className={styles['sender-header']}>
+return <div className={styles['sender-header']}>
     <Sender.Header
       title={<>
         <i className={`iconfont  icon-Chat2graphwenjianshangchuanbiaoshi ${styles['icon-file']}`} />
@@ -70,7 +70,7 @@ const SenderHeader: React.FC<Props> = (props) => {
       <Attachments
         beforeUpload={beforeUpload}
         name='file'
-        accept='.pdf,.xlsx,.doc,.docx,.md'
+        accept='.pdf,.xlsx,.doc,.docx,.md,.txt'
         items={attachedFiles}
         onChange={handleFileChange}
         placeholder={(type) =>
@@ -86,7 +86,6 @@ const SenderHeader: React.FC<Props> = (props) => {
       />
     </Sender.Header>
   </div>
-
 };
 
 export default SenderHeader
