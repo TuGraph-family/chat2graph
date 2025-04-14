@@ -18,7 +18,7 @@ class JobView:
                 "goal": job.goal,
                 "context": job.context,
                 "thinking": job.thinking,
-                "assigned_expert_name": None,
+                "assigned_expert_name": job.assigned_expert_name,
             }
         return {
             "id": job.id,

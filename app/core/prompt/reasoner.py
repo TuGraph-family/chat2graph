@@ -54,7 +54,7 @@ We share a common interest in collaborating to successfully complete the task th
     <YOUR_INSTRUCTION>  // Cannot be None
 </instruction>
 
-<input> // Must follow this structure, rather than the JSON format neither <function_call>...</function_call>
+<input> // The content of <input> can not be the JSON format nor <function_call>...</function_call>
     <YOUR_INPUT>  // Allowed to use None if no input
 </input>
 """  # noqa: E501
@@ -82,7 +82,7 @@ We share a common interest in collaborating to successfully complete the task th
 {task}
 
 ===== FUNCTION CALLING LIST =====
-Here are the functions you can call to help you complete the task. The third party will execute the functions and paste the results in <function_call_result>...</function_call_result> in the next conversation turn.
+Here are some available tools (functions) that you can use and enhance your abilities to interact with the external system. If you determine that a certain tool is needed, please generate text containing <function_call>...</function_call> (defined and specified format). Then, the external system will be responsible for running these tool(s) and embedding the result(s) through the <function_call_result>...</function_call_result> tag (although you may only see the function's result(s) in the chat history during your next chat turn), for both of us to read later.
 {functions}
 
 ===== ANSWER TEMPLATE =====
@@ -163,6 +163,7 @@ You complete the task through role-playing, selfishly using role-playing to do s
 {task}
 
 ===== FUNCTION CALLING LIST =====
+Here are some available tools (functions) that you can use and enhance your abilities to interact with the external system. If you determine that a certain tool is needed, please generate text containing <function_call>...</function_call> (defined and specified format). Then, the external system will be responsible for running these tool(s) and embedding the result(s) through the <function_call_result>...</function_call_result> tag (although you may only see the function's result(s) in the chat history during your next chat turn), for both of us to read later.
 {functions}
 
 ===== ANSWER TEMPLATE =====

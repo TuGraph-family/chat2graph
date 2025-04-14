@@ -27,7 +27,7 @@ export default {
       step1: "上传本地文件",
       step2: "数据处理配置",
       upload: {
-        title: "点击上传或拖拽文件到这里",
+        title: "点击/拖拽文件到此处上传",
         description: "支持PDF、TXT、DOC、DOCX、MD，文件大小不超过20MB",
         required: "请上传文件",
         errorSize: "文件大小不能超过20MB",
@@ -104,8 +104,7 @@ export default {
     description: '关于图的问题，欢迎和我沟通。',
     rename: '重命名',
     delete: '删除',
-    deleteConversation: '删除对话',
-    deleteConversationConfirm: '删除后无法恢复，是否继续删除？',
+    deleteConversation: '你确定要删除吗？',
     deleteConversationSuccess: '删除成功',
     confirm: '确认',
     cancel: '取消',
@@ -123,7 +122,20 @@ export default {
       minutes: '分',
       seconds: '秒',
       analyze: '分析'
-    }
+    },
+    status: {
+      created: '待运行',
+      failed: '运行失败',
+      finished: '运行成功',
+      running: '运行中',
+      stopped: '停止运行',
+    },
+    today: '今天',
+    yesterday: '昨天',
+    date: '{{month}}月{{day}}日'
+  },
+  manager: {
+    return: '返回会话'
   }
 }
 

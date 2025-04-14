@@ -38,19 +38,19 @@ Chat2Graph 目前提供了基础的智能体系统能力，仍有诸多特性需
 - [x] 工具知识图谱。
 - [x] 向量与图谱知识库。
 - [x] 简洁的智能体SDK。
-- [x] 服务化与Web交互。
+- [x] Web服务化与交互。
 - [x] 智能体一键配置。
 - [ ] 结构化智能体角色管理。
 - [ ] 工作流自动生成。
-- [ ] 算子层行动推荐。
+- [ ] 算子动作推荐。
 - [ ] 工具图谱优化器。
-- [ ] 环境信息管理。
+- [ ] 环境管理。
 - [ ] 智能体任务编译器。
 - [ ] 统一资源管理器。
 - [ ] 跟踪与管控能力。
 - [ ] 丰富的工具集与MCP集成。
 - [ ] Benchmark测试。
-- [ ] 接入主流开源生态。
+- [ ] 开源生态集成。
 - [ ] 多模态能力。
 - [ ] 产品化增强。
 
@@ -88,7 +88,7 @@ cp .env.template .env && vim .env
 ```text
 Starting server...
 Web resources location: /Users/florian/code/chat2graph/app/server/web
-Prepare database tables ...
+System database url: sqlite:////Users/florian/.chat2graph/system/chat2graph.db
 Loading AgenticService from app/core/sdk/chat2graph.yml with encoding utf-8
 Init application: Chat2Graph
 Init the Leader agent
@@ -149,14 +149,17 @@ mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 
 ## 贡献
 您可以参考[贡献文档][contrib]，提交 GitHub Issue/PR 提供反馈建议对 Chat2Graph 继续改进。
+TuGraph 为社区制定了清晰的[架构][arch]和[角色][roles]，并会邀请优秀贡献者加入[特别兴趣小组][sigs]。
 
 ## 联系
 您可以通过下面提供的 TuGraph 微信群或 Discord 与我们直接联系。
 
 - 微信：
 ![](https://github.com/TuGraph-family/community/blob/master/assets/contacts-cn.png)
-
 - Discord：https://discord.gg/KBCFbNFj
 
 [conda]: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
 [contrib]: https://github.com/TuGraph-family/community/blob/master/docs/CONTRIBUTING-cn.md
+[arch]: https://github.com/TuGraph-family/community/blob/master/assets/arch.png
+[roles]: https://github.com/TuGraph-family/community/blob/master/docs/ROLES-cn.md
+[sigs]: https://github.com/TuGraph-family/community/blob/master/docs/SIGS-cn.md

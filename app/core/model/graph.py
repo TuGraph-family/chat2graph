@@ -89,7 +89,7 @@ class Graph:
             "vertices": [{"id": node} for node in self._graph.nodes()],
             "edges": [{"source": u, "target": v} for u, v in self._graph.edges()],
         }
-        return json.dumps(graph_dict, indent=4)
+        return json.dumps(graph_dict, indent=4, ensure_ascii=False)
 
     @classmethod
     def from_json_str(cls: Type[T], json_str: str) -> T:

@@ -61,7 +61,6 @@ class SubJob(Job):
     life_cycle: int = SystemEnv.LIFE_CYCLE
     is_legacy: bool = False
     thinking: Optional[str] = None
-    assigned_expert_name: None = field(default=None, init=False)
     dag: None = field(default=None, init=False)
 
     def __post_init__(self):

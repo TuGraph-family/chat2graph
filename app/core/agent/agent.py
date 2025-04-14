@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional, cast
+from typing import Any, List, Optional, cast
 
+from app.core.model.artifact import Artifact, ContentType
 from app.core.model.job import Job
-from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
+from app.core.model.message import AgentMessage, GraphMessage, MessageType, WorkflowMessage
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.artifact_service import ArtifactService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
 from app.core.workflow.workflow import Workflow
@@ -63,6 +65,7 @@ class Agent(ABC):
 
         self._message_service: MessageService = MessageService.instance
         self._job_service: JobService = JobService.instance
+        self._artifact_service: ArtifactService = ArtifactService.instance
 
     def get_id(self) -> str:
         """Get the unique identifier of the agent."""
@@ -81,6 +84,27 @@ class Agent(ABC):
     ) -> AgentMessage:
         """Save the agent message of the expert as an output message."""
 
+        # collect the ids of the artifacts that handled in the workflow
+        # TODO: how to define the selection of the artifacts to persist?
+        artifact_ids: List[str] = []
+
+        # get the graph artifacts by hard coding and then persist them into the graph messages
+        graph_artifacts: List[Artifact] = self._artifact_service.get_artifacts_by_job_id_and_type(
+            job_id=job.id,
+            content_type=ContentType.GRAPH,
+        )
+        for graph_artifact in graph_artifacts:
+            graph_message = GraphMessage(
+                payload=cast(dict, graph_artifact.content),
+                job_id=graph_artifact.source_reference.job_id,
+                session_id=graph_artifact.source_reference.session_id,
+            )
+            graph_message_id = self._message_service.save_message(message=graph_message).get_id()
+            artifact_ids.append(graph_message_id)
+
+        # delete the all the temp artifacts for the (sub)job
+        self._artifact_service.delete_artifacts_by_job_id(job_id=job.id)
+
         try:
             existed_expert_message: AgentMessage = cast(
                 AgentMessage,
@@ -91,8 +115,9 @@ class Agent(ABC):
             expert_message: AgentMessage = AgentMessage(
                 id=existed_expert_message.get_id(),
                 job_id=job.id,
-                workflow_messages=[workflow_message],
                 payload=workflow_message.scratchpad,
+                workflow_messages=[workflow_message],
+                artifact_ids=artifact_ids,
                 timestamp=existed_expert_message.get_timestamp(),
                 lesson=lesson or existed_expert_message.get_lesson(),
             )
@@ -100,8 +125,9 @@ class Agent(ABC):
             # if the agent message is not found, create a new agent message
             expert_message = AgentMessage(
                 job_id=job.id,
-                workflow_messages=[workflow_message],
                 payload=workflow_message.scratchpad,
+                workflow_messages=[workflow_message],
+                artifact_ids=artifact_ids,
                 lesson=lesson,
             )
         self._message_service.save_message(message=expert_message)

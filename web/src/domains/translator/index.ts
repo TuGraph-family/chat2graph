@@ -3,6 +3,7 @@ export const sessionListTranslator = (sessionList: API.SessionVO[] = []) => {
     return {
       key: session?.id || '',
       label: session?.name || '',
+      timestamp: session?.timestamp || '',
     };
   })
 };

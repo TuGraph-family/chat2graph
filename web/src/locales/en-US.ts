@@ -6,7 +6,7 @@ export default {
       subTitle2: 'Session Knowledge Base',
       subTitle3: 'AI Consensus',
       docs: 'Document Count',
-      remove: 'Clear Knowledge Base',
+      remove: 'Clear',
       removeConfirm: "Will clear all the content of the knowledge base, affecting the output of the corresponding session, please confirm whether to clear?",
       edit: 'Edit Knowledge Base',
       name: 'Knowledge Base Name',
@@ -27,7 +27,7 @@ export default {
       step1: "Upload Local File",
       step2: "Data Processing Configuration",
       upload: {
-        title: "Click or drag file to this area to upload",
+        title: "Click/drag files here to upload",
         description: "Supports PDF, TXT, DOC, DOCX, MD, The file size does not exceed 20MB",
         required: "Please upload a file",
         errorSize: "File size cannot exceed 20MB",
@@ -103,8 +103,7 @@ export default {
     description: "Welcome to talk about graph with me.",
     rename: 'Rename',
     delete: 'Delete',
-    deleteConversation: 'Delete Conversation',
-    deleteConversationConfirm: 'Are you sure you want to delete the conversation?',
+    deleteConversation: 'Are you sure you want to delete?',
     deleteConversationSuccess: 'Delete Success',
     confirm: 'Confirm',
     cancel: 'Cancel',
@@ -122,7 +121,20 @@ export default {
       minutes: 'm',
       seconds: 's',
       analyze: 'Analyze'
-    }
+    },
+    status: {
+      created: 'Pending',
+      failed: 'Failed',
+      finished: 'Successful',
+      running: 'Running',
+      stopped: 'Stopped',
+    },
+    today: 'Today',
+    yesterday: 'Yesterday',
+    date: '{{month}}Month{{day}}Day'
+  },
+  manager: {
+    return: 'Return Session'
   }
 }
 

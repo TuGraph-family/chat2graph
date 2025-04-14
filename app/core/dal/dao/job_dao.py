@@ -33,6 +33,7 @@ class JobDao(Dao[JobDo]):
                     life_cycle=job.life_cycle,
                     is_legacy=job.is_legacy,
                     thinking=job.thinking,
+                    assigned_expert_name=job.assigned_expert_name,
                 )
             return self.create(
                 category=JobType.JOB.value,
@@ -57,6 +58,7 @@ class JobDao(Dao[JobDo]):
                 life_cycle=job.life_cycle,
                 is_legacy=job.is_legacy,
                 thinking=job.thinking,
+                assigned_expert_name=job.assigned_expert_name,
             )
         return self.update(
             id=job.id,
@@ -100,5 +102,12 @@ class JobDao(Dao[JobDo]):
             output_schema=cast(str, result.output_schema),
             life_cycle=cast(int, result.life_cycle),
             is_legacy=cast(bool, result.is_legacy),
-            thinking=cast(Optional[str], result.thinking),
+            thinking=cast(
+                Optional[str],
+                str(result.thinking) if result.thinking else None,
+            ),
+            assigned_expert_name=cast(
+                Optional[str],
+                str(result.assigned_expert_name) if result.assigned_expert_name else None,
+            ),
         )

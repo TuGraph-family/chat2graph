@@ -4,9 +4,11 @@ from sqlalchemy.orm import Session as SqlAlchemySession
 
 from app.core.common.type import ChatMessageRole
 from app.core.dal.dao.dao import Dao
+from app.core.dal.dao.file_descriptor_dao import FileDescriptorDao
 from app.core.dal.do.message_do import (
     AgentMessageDo,
     FileMessageDo,
+    GraphMessageDo,
     HybridMessageDo,
     MessageDo,
     ModelMessageAO,
@@ -16,6 +18,7 @@ from app.core.dal.do.message_do import (
 from app.core.model.message import (
     AgentMessage,
     FileMessage,
+    GraphMessage,
     HybridMessage,
     Message,
     MessageType,
@@ -71,6 +74,7 @@ class MessageDao(Dao[MessageDo]):
             return WorkflowMessageDo(
                 type=MessageType.WORKFLOW_MESSAGE.value,
                 payload=WorkflowMessage.serialize_payload(message.get_payload()),
+                artifact_ids=message.get_artifact_ids(),
                 id=message.get_id(),
                 job_id=message.get_id(),
                 timestamp=message.get_timestamp(),
@@ -83,6 +87,7 @@ class MessageDao(Dao[MessageDo]):
                 payload=message.get_payload(),
                 lesson=message.get_lesson(),
                 related_message_ids=related_message_ids,
+                artifact_ids=message.get_artifact_ids(),
                 id=message.get_id(),
                 job_id=message.get_job_id(),
                 timestamp=message.get_timestamp(),
@@ -113,6 +118,7 @@ class MessageDao(Dao[MessageDo]):
                 session_id=message.get_session_id(),
                 job_id=message.get_job_id(),
             )
+
         if isinstance(message, FileMessage):
             return FileMessageDo(
                 type=MessageType.FILE_MESSAGE.value,
@@ -122,6 +128,17 @@ class MessageDao(Dao[MessageDo]):
                 related_message_ids=[message.get_file_id()],
                 timestamp=message.get_timestamp(),
             )
+
+        if isinstance(message, GraphMessage):
+            return GraphMessageDo(
+                type=MessageType.GRAPH_MESSAGE.value,
+                payload=GraphMessage.serialize_payload(message.get_payload()),
+                id=message.get_id(),
+                job_id=message.get_job_id(),
+                session_id=message.get_session_id(),
+                timestamp=message.get_timestamp(),
+            )
+
         if isinstance(message, HybridMessage):
             return HybridMessageDo(
                 type=MessageType.HYBRID_MESSAGE.value,
@@ -130,6 +147,7 @@ class MessageDao(Dao[MessageDo]):
                 job_id=message.get_job_id(),
                 related_message_ids=[msg.get_id() for msg in message.get_attached_messages()],
                 timestamp=message.get_timestamp(),
+                role=message.get_role().value,
             )
         raise ValueError(f"Unsupported message type: {type(message)}")
 
@@ -141,9 +159,11 @@ class MessageDao(Dao[MessageDo]):
             return WorkflowMessage(
                 id=str(message_do.id),
                 payload=WorkflowMessage.deserialize_payload(str(message_do.payload)),
+                artifact_ids=list(message_do.artifact_ids),
                 job_id=str(message_do.job_id),
                 timestamp=int(message_do.timestamp),
             )
+
         if message_type == MessageType.AGENT_MESSAGE:
             return AgentMessage(
                 id=str(message_do.id),
@@ -154,8 +174,11 @@ class MessageDao(Dao[MessageDo]):
                     [self.get_message(wf_id) for wf_id in list(message_do.related_message_ids)]
                     or [],
                 ),
+                artifact_ids=list(message_do.artifact_ids),
+                lesson=str(message_do.lesson),
                 timestamp=int(message_do.timestamp),
             )
+
         if message_type == MessageType.TEXT_MESSAGE:
             return TextMessage(
                 id=str(message_do.id),
@@ -166,21 +189,36 @@ class MessageDao(Dao[MessageDo]):
                 timestamp=int(message_do.timestamp),
                 assigned_expert_name=str(message_do.assigned_expert_name),
             )
+
         if message_type == MessageType.FILE_MESSAGE:
+            file_descriptor_dao: FileDescriptorDao = FileDescriptorDao.instance
             assert len(list(message_do.related_message_ids)) == 1, (
                 f"File message {message_do.id} should have only one file id. "
                 f"File id(s) :{list(message_do.related_message_ids)}"
             )
+            file_id: str = list(message_do.related_message_ids)[0]
+            file_descriptor = file_descriptor_dao.get_file_descriptor_by_id(id=file_id)
             return FileMessage(
                 id=str(message_do.id),
                 file_id=str(list(message_do.related_message_ids)[0]),
                 session_id=str(message_do.session_id),
                 timestamp=int(message_do.timestamp),
+                descriptor=file_descriptor,
+            )
+
+        if message_type == MessageType.GRAPH_MESSAGE:
+            return GraphMessage(
+                id=str(message_do.id),
+                job_id=str(message_do.job_id),
+                session_id=str(message_do.session_id),
+                payload=GraphMessage.deserialize_payload(str(message_do.payload)),
+                timestamp=int(message_do.timestamp),
             )
 
         if message_type == MessageType.HYBRID_MESSAGE:
+            role = ChatMessageRole(str(message_do.role))
             instruction_results: List[TextMessageDo] = self.get_text_message_by_job_id_and_role(
-                job_id=str(message_do.job_id), role=ChatMessageRole.USER
+                job_id=str(message_do.job_id), role=role
             )
             assert len(instruction_results) == 1, (
                 f"Hybrid message {message_do.id} should have exactly one instruction message, "
@@ -202,6 +240,7 @@ class MessageDao(Dao[MessageDo]):
                     for attached_id in list(message_do.related_message_ids)
                 ],
                 timestamp=int(message_do.timestamp),
+                role=role,
             )
 
         # TODO: support more message types

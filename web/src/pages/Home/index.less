@@ -6,20 +6,21 @@
 .sider {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  width: 300px;
+  padding: 20px 16px;
+  width: 280px;
   background: #fff;
   transition: all 0.3s;
   position: relative;
 
   .create-conversation {
     background: #1650ff0f;
-    border: 1px solid transparent;
+    border: 1px solid #1650ff40;
     border-radius: 8px;
     font-size: 14px;
     color: #1650ff;
     line-height: 22px;
     font-weight: 500;
+
 
 
     &:hover {
@@ -37,13 +38,15 @@
   }
 
   &-collapsed {
-    width: 80px;
+    width: 72px;
 
     .create-conversation {
       font-size: 24px;
       line-height: 32px;
       color: #484848;
       background: transparent !important;
+      border: 1px solid #1650ff40;
+      border-radius: 8px;
 
       &:hover {
         background: rgba(0, 0, 0, 0.04) !important;
@@ -71,50 +74,106 @@
       transition: all 0.3s;
     }
 
-    .sider-collapsed-icon {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      margin: auto;
+    :global {
+      .ant-btn-icon {
+        height: 13px;
+        line-height: 0;
+      }
     }
+
+
   }
 
   .title-text {
     display: flex;
     gap: 2px;
     align-items: center;
+
+    span {
+      margin-top: 2px;
+    }
   }
 
-  .title-right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
+
 
   .title-logo {
     width: 40px;
+    margin-right: 8px;
   }
 
+  .conversation-extra-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    text-align: center;
+
+
+    svg {
+      color: #333333;
+      font-size: 13px;
+      line-height: 20px;
+    }
+
+
+    &:hover {
+      background: #1a1b250f;
+    }
+  }
 
   :global {
     .ant-conversations {
       padding: 0;
       margin: 16px 0;
+      color: #363740;
     }
 
     .ant-conversations-icon {
       font-size: 12px;
     }
 
-    .ant-conversations .ant-conversations-item-active .ant-conversations-label,
-    .ant-conversations .ant-conversations-item-active .ant-conversations-menu-icon,
-    .ant-conversations .ant-conversations-item-active .ant-conversations-icon {
-      color: #484848;
+    .ant-conversations-item {
+      padding-inline-start: 8px !important;
+    }
+
+    .ant-conversations-item:hover {
+      background-color: #1a1b2505;
+
+      #conversation-extra {
+        visibility: visible;
+      }
+    }
+
+    .ant-conversations .ant-conversations-item-active {
+      background-color: #1a1b2505;
+
+      #conversation-extra {
+        visibility: visible;
+      }
+    }
+
+
+    .ant-conversations .ant-conversations-item-active .ant-conversations-label {
+      color: #363740;
+      font-weight: 500;
     }
 
     .ant-btn-variant-text:not(:disabled):not(.ant-btn-disabled):hover {
       color: #6a6b71;
+    }
+
+    .ant-conversations .ant-conversations-list .ant-conversations-label {
+      color: #363740;
+    }
+
+    .ant-conversations .ant-conversations-list {
+      padding: 0;
+    }
+
+    .ant-conversations-group-title>.ant-typography {
+      font-family: PingFangSC-Regular;
+      font-size: 14px;
+      color: #98989d;
+      line-height: 22px;
     }
   }
 }
@@ -122,14 +181,31 @@
 .title {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 24px;
-  font-style: italic;
+  margin-bottom: 20px;
   align-items: center;
-  font-family: AlimamaAgileVF-Bold;
+  font-family: 'AlimamaAgileVF';
   font-size: 18px;
   color: #102953;
   line-height: 22px;
   font-weight: 700;
+
+  .sider-collapsed-icon {
+    position: absolute;
+    top: 143px;
+    right: -6px;
+    width: 12px;
+    height: 36px;
+    text-align: center;
+    background: #f2f2f2;
+    border-radius: 8px;
+    box-shadow: 0px 2px 8px 0px #bfcded33;
+    cursor: pointer;
+
+    svg {
+      font-size: 12px;
+      color: #c6c6c8;
+    }
+  }
 }
 
 .tips {
@@ -240,6 +316,26 @@
     margin: 32px auto;
     border-radius: 12px;
 
+    .framework {
+
+      :global {
+        .ant-btn {
+          gap: 2px;
+          padding: 0px 12px;
+          border-radius: 8px;
+          color: #6a6b71;
+        }
+
+        .ant-btn-variant-solid {
+          background: #1650ff0f;
+          border: 1px solid #1650ff40;
+          border-radius: 8px;
+          color: #1650ff;
+        }
+      }
+
+    }
+
     :global {
 
       .ant-sender-header {
@@ -249,6 +345,8 @@
         }
 
       }
+
+
     }
 
 

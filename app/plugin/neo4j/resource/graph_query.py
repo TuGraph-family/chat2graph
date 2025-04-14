@@ -1,7 +1,10 @@
+import json
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.core.model.message import GraphMessage
 from app.core.service.graph_db_service import GraphDbService
+from app.core.service.message_service import MessageService
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.resource.doc import QUERY_GRAMMER
 
@@ -59,6 +62,9 @@ class VertexQuerier(Tool):
     async def query_vertex(
         self,
         graph_db_service: GraphDbService,
+        message_service: MessageService,
+        session_id: str,
+        job_id: str,
         vertex_type: str,
         conditions: List[Dict[str, str]],
         distinct: bool = False,
@@ -67,6 +73,8 @@ class VertexQuerier(Tool):
         graph database.
 
         Args:
+            session_id (str): The session ID
+            job_id (str): The job ID
             vertex_type (str): The vertex type to query
             conditions (List[Dict[str, str]]): List of conditions to query, which is a dict with:
                 - field (str): Field name to query, should be a property of the vertex
@@ -123,8 +131,8 @@ class VertexQuerier(Tool):
             ...     {"field": "status", "operator": "IN", "value": ["active", "pending"]},
             ...     {"field": "description", "operator": "IS NOT NULL"}
             ... ]
-            >>> result = await querier.query_vertex("Person", conditions, True)
-        """
+            >>> result = await querier.query_vertex("session_id_xxx", "job_id_xxx", "Person", conditions, True)
+        """  # noqa: E501
         where_parts = []
         for condition in conditions:
             field = condition["field"]
@@ -148,6 +156,11 @@ RETURN {distinct_keyword}n
 
         store = graph_db_service.get_default_graph_db()
         results = []
+        # 初始化 graph data，用于自动拼接 Graph JSON
+        graph_data: Dict[str, Any] = {
+            "vertices": [],
+            "edges": [],  # 当前查询仅返回节点，所以 edges 为空
+        }
 
         with store.conn.session() as session:
             result = session.run(query)
@@ -158,10 +171,30 @@ RETURN {distinct_keyword}n
                 if node:
                     # get properties of the vertex
                     props = dict(node.items())
-                    # use element_id to get node id in Neo4j 4.0+
+                    # 使用 element_id 获取 Neo4j 4.0+ 节点ID
                     node_id = node.element_id if hasattr(node, "element_id") else node.id
+                    # 构造用于返回的字符串，供文本展示使用
                     node_str = f"({node_id}:{vertex_type} {props})"
                     results.append(node_str)
 
-        result_str = "\n".join(results)
-        return f"查询图数据库成功。\n查询语句：\n{query}：\n查询结果：\n{result_str}"
+                    # 构建 Graph JSON 中的 vertex 对象结构
+                    vertex_obj = {"id": node_id, "label": vertex_type, "properties": props}
+                    graph_data["vertices"].append(vertex_obj)
+
+        if not results:
+            result_str = "没有查询到符合条件的节点。"
+        else:
+            result_str = "\n".join(results)
+
+        # 将 Graph JSON 添加到消息服务中
+        graph_message = GraphMessage(
+            payload=graph_data,
+            job_id=job_id,
+            session_id=session_id,
+        )
+        message_service.save_message(message=graph_message)
+
+        return (
+            f"查询图数据库成功。\n查询语句：\n{query}\n查询结果：\n{result_str}\n"
+            f"GraphJSON：\n{json.dumps(graph_data, indent=4, ensure_ascii=False)}"
+        )

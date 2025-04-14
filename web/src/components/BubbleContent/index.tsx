@@ -6,9 +6,10 @@ import logoSrc from '@/assets/logo.png';
 import styles from './index.less';
 import { useImmer } from "use-immer";
 import { getTimeDifference } from "@/utils/getTimeDifference";
-import { MESSAGE_TYPE } from "@/constants";
+import { MESSAGE_TYPE, MESSAGE_TYPE_TIPS } from "@/constants";
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
+import ThinkCollapse from "@/components/ThinkCollapse";
 
 interface BubbleContentProps {
   status?: string,
@@ -26,7 +27,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
   }>({
     thinks: [],
     startTime: new Date().getTime(),
-    diffTime: 0
+    diffTime: 0,
   })
 
   const { startTime, diffTime } = state;
@@ -54,7 +55,8 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         jobId: item?.job?.id,
         status: item?.status,
         goal: item?.job?.goal,
-        payload: item?.status === MESSAGE_TYPE.FINISHED ? item?.payload : ''
+        payload: item?.status === MESSAGE_TYPE.FINISHED ? item?.payload : '',
+        assigned_expert_name: item?.message?.assigned_expert_name
       }
     })
     setThinks(updateCachedData(thinks, newThinks))
@@ -103,19 +105,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
           </div>
         </div>,
         description: <div className={styles['step-thinks']}>
-          {thinks.map((think: any, idx: number) => (
-            <>
-              <div key={`${think?.jobId}_goal`} className={styles['step-thinks-title']}>
-                {`${idx + 1}.${think?.goal}`}
-              </div>
-              {
-                think?.payload ? <div key={`${think?.jobId}_payload`} className={styles['step-thinks-message']}>
-                  {/* <pre>{think?.payload}</pre> */}
-                  <ReactMarkdown remarkPlugins={[gfm]}>{think?.payload}</ReactMarkdown>
-                </div> : <Skeleton paragraph={{ rows: 1 }} active />
-              }
-            </>
-          ))}
+          {thinks.map((think: any) => <ThinkCollapse key={`${think?.jobId}_goal`} think={think} />)}
           {
             status !== MESSAGE_TYPE.FINISHED && thinks?.length === 0 && <Skeleton paragraph={{ rows: 2 }} active />
           }
@@ -139,9 +129,16 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
   return <div className={styles['bubble-content']}>
     {
       content !== 'STOP' && status !== MESSAGE_TYPE.FAILED && <Card style={{ border: 'unset' }}>
-        <div className={styles['bubble-content-status']}>
-          <Spin percent={status === MESSAGE_TYPE.FINISHED ? 100 : 50} />
-          <span className={styles['bubble-content-status-text']}>{status === MESSAGE_TYPE.FINISHED ? formatMessage('home.thinks.finished') : formatMessage('home.thinks.thinking')}</span>
+        <div className={styles['bubble-content-header']}>
+          <div className={styles['bubble-content-status']}>
+            <Spin percent={status === MESSAGE_TYPE.FINISHED ? 100 : 50} />
+            <span className={styles['bubble-content-status-text']}>{formatMessage(MESSAGE_TYPE_TIPS[status])}</span>
+          </div>
+          {/* <div onClick={() => { setState(draft => { draft.open = !draft.open }) }}>
+            {
+              open ? <UpOutlined /> : <DownOutlined />
+            }
+          </div> */}
         </div>
         <Steps items={items} direction="vertical" />
       </Card>
