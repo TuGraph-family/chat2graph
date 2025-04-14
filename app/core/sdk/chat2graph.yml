@@ -38,8 +38,8 @@ tools:
     name: "DataImport"
     module_path: "app.plugin.neo4j.resource.data_importation"
 
-  - &grammer_reader_tool
-    name: "GrammerReader"
+  - &cypher_executor_tool
+    name: "CypherExecutor"
     module_path: "app.plugin.neo4j.resource.graph_query"
 
   - &vertex_querier_tool
@@ -98,17 +98,49 @@ actions:
   # graph modeling actions
   - &content_understanding_action
     name: "content_understanding"
-    desc: "通过阅读和批注理解文档的主要内容和结构"
+    desc: "通过阅读和批注理解文档的主要内容和结构（需要调用一个/些工具）"
     tools:
       - *document_reader_tool
 
-  - &concept_identification_action
-    name: "concept_identification"
-    desc: "识别并提取文档中的关键概念和术语（通过文本的形式），对概念进行分类，建立层级关系"
+  - &deep_recognition_action
+    name: "deep_recognition"
+    desc:
+      识别被分析的文本中的关键概念和术语（通过文本的形式），对概念进行分类，发现概念间的关系模式和交互方式，建立层级关系
+      1. 语义层分析
+      - 显式信息（比如，关键词、主题、术语定义）
+      - 隐式信息（比如，深层语义、上下文关联、领域映射）
+      2. 关系层分析
+      - 实体关系（比如，直接关系、间接关系、层次关系）。时序关系（比如，状态变迁、演化规律、因果链条）
+      3. 知识推理
+      - 模式推理、知识补全
 
-  - &relation_pattern_recognition_action
-    name: "relation_pattern_recognition"
-    desc: "发现概念间的关系模式和交互方式，同时检查发现的对象们和所给文本中的对象们是否一致"
+      关于图 schema 建模的思考维度：
+      1. 实体类型定义
+      - 从以下维度思考和定义实体类型：
+      * 时间维度：事件、时期、朝代等时序性实体
+      * 空间维度：地点、区域、地理特征等空间性实体
+      * 社会维度：人物、组织、势力等社会性实体（可选）
+      * 文化维度：思想、文化、典故等抽象实体（可选）
+      * 物理维度：物品、资源、建筑等具象实体（可选）
+      - 建立实体类型的层次体系：
+      * 定义上下位关系（如：人物-君主-诸侯）
+      * 确定平行关系（如：军事人物、政治人物、谋士）
+      * 设计多重继承关系（如：既是军事人物又是谋士）
+      - 为每个实体类型设计丰富的属性集：
+      * 基础属性：标识符、名称、描述等
+      * 类型特有属性：根据实体类型特点定义
+      * 关联属性：引用其他实体的属性
+      - 考虑实体的时态性：
+      * 属性的时效性（如：官职随时间变化）（可选）
+      * 状态的可变性（如：阵营的转变）（可选）
+      - 为每个实体类型定义完整的属性集，包括必需属性和可选属性
+      - 确保实体类型之间存在潜在的关联路径，但保持概念边界的独立性
+
+      2. 关系类型设计
+      - 定义实体间的关系类型，包括直接关系、派生关系和潜在关系
+      - 明确关系的方向性（有向）、设计关系的属性集
+      - 通过关系组合，验证关键实体间的可达性
+      - （可选）考虑添加反向关系以增强图的表达能力
 
   - &entity_type_definition_action
     name: "entity_type_definition"
@@ -120,7 +152,7 @@ actions:
 
   - &schema_design_and_import_action
     name: "schema_design_and_import"
-    desc: "将概念模型转化为图数据库 labels，并在图数据库中创建 labels"
+    desc: "将概念模型转化为图数据库 labels，并使用相关工具在图数据库中创建图 schema（需要调用一个/些工具）"
     tools:
       - *schema_getter_tool
       - *vertex_label_adder_tool
@@ -128,32 +160,32 @@ actions:
 
   - &graph_validation_action
     name: "graph_validation"
-    desc: "反思和检查图的可达性(Reachability)"
+    desc: "反思和检查图的可达性(Reachability)（需要调用一个/些工具）"
     tools:
       - *graph_reachability_getter_tool
 
   # data importation actions
   - &schema_understanding_action
     name: "schema_understanding"
-    desc: "调用相关工具获取图模型，并对图模型进行分析和理解"
+    desc: "调用相关工具获取图模型，并对图模型进行分析和理解（需要调用一个/些工具）"
     tools:
       - *schema_getter_tool
 
   - &data_status_check_action
     name: "data_status_check"
-    desc: "检查图数据库中当前数据的状态，了解现有数据情况，确保后续数据导入的一致性"
+    desc: "检查图数据库中当前数据的状态，了解现有数据情况，确保后续数据导入的一致性（需要调用一个/些工具）"
     tools:
       - *data_status_check_tool
 
   - &content_understanding_action_2
     name: "content_understanding_2"
-    desc: "调用相关工具获取原始文本内容，并结合图模型（schema）进行分析和理解"
+    desc: "调用相关工具获取原始文本内容，并结合图模型（schema）进行分析和理解（需要调用一个/些工具）"
     tools:
       - *document_reader_tool
 
   - &triplet_data_generation_action
     name: "triplet_data_generation"
-    desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库(如果需要的话，可以多次抽取并导入数据库，以确保完成给定的任务)"
+    desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库(如果需要的话，可以多次抽取并导入数据库，以确保完成给定的任务)（需要调用一个/些工具）"
     tools:
       - *data_import_tool
 
@@ -162,37 +194,22 @@ actions:
     desc: "输出数据导入结果的汇总信息"
 
   # graph query actions
-  - &query_intention_identification_action
-    name: "query_intention_identification"
-    desc: "识别并理解提供的查询要求，提取出查询针对的图模型名称、查询点的种类和查询条件"
-
-  - &vertex_type_validation_action
-    name: "vertex_type_validation"
-    desc: "读取图数据现有的 schema，以帮助检查节点类型是否和对应的模型匹配"
-    tools:
-      - *schema_getter_tool
-
-  - &condition_validation_action
-    name: "condition_validation"
-    desc: "读取图数据现有的 schema，以帮助检查条件是否和对应的模型匹配"
+  - &vertex_type_and_condition_validation_action
+    name: "vertex_type_and_condition_validation"
+    desc: "读取图数据现有的 schema，以检查查询的意图和要求是否和对应的模型匹配、检查条件是否和对应的模型匹配，如果不匹配，需要修改相应查询句柄（需要调用一个/些工具）"
     tools:
       - *schema_getter_tool
 
   - &supplement_action
     name: "supplement"
-    desc: "如查询条件/节点类型缺少或不匹配，则需要经过自己的思考和推理，补充缺少的查询内容"
-
-  - &grammar_study_action
-    name: "grammar_study"
-    desc: "按查询要求在图查询语法文档中学习对应语法"
-    tools:
-      - *grammer_reader_tool
+    desc: "如查询条件/节点类型缺少或不匹配，则需要经过自己的思考和推理，补充缺少的查询内容（如果多次尝试失败，那么需要及时止损）"
 
   - &query_execution_action
     name: "query_execution"
-    desc: "根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，在对应图上执行查询语句得到结果"
+    desc: "根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，在对应图上执行查询语句得到结果（需要调用一个/些工具）"
     tools:
       - *schema_getter_tool
+      - *cypher_executor_tool
       - *vertex_querier_tool
 
   # graph analysis actions
@@ -208,7 +225,7 @@ actions:
 
   - &algorithms_execution_action
     name: "algorithms_execution"
-    desc: "调用相关的算法执行工具，执行算法"
+    desc: "调用相关的算法执行工具，执行算法（需要调用一个/些工具）"
     tools:
       - *page_rank_executor_tool
       - *betweenness_centrality_executor_tool
@@ -218,11 +235,12 @@ actions:
       - *node_similarity_executor_tool
       - *common_neighbors_executor_tool
       - *kmeans_executor_tool
+      - *cypher_executor_tool
 
   # question answering actions
   - &knowledge_base_retrieving_action
     name: "knowledge_base_retrieving"
-    desc: "调用knowledge_base_search工具，从外接知识库中检索得到问题相关的文档，若多次检索得不到相关结果，放弃调用该工具"
+    desc: "调用knowledge_base_search工具，从外接知识库中检索得到问题相关的文档，若多次检索得不到相关结果，放弃调用该工具（需要调用一个/些工具）"
     tools:
       - *knowledge_base_retriever_tool
 
@@ -233,7 +251,7 @@ actions:
   # job decomposition actions
   - &query_system_status_action
     name: "query_system_status"
-    desc: "调用相关工具查询系统状态获取系统状态信息。大模型需要了解系统的状态，以便更好地进行推理和决策"
+    desc: "调用相关工具查询系统状态获取系统状态信息。大模型需要了解系统的状态，以便更好地进行推理和决策（需要调用一个/些工具）"
     tools:
       - *system_status_checker_tool
 
@@ -242,11 +260,7 @@ actions:
     desc: "按照相关的要求将任务，手动分解为多个子任务(job)，并将每个子任务分配给对应的专家"
 
 toolkit:
-  - [
-      *content_understanding_action,
-      *concept_identification_action,
-      *relation_pattern_recognition_action,
-    ]
+  - [*content_understanding_action, *deep_recognition_action]
   - [
       *entity_type_definition_action,
       *relation_type_definition_action,
@@ -261,12 +275,10 @@ toolkit:
       *output_result_action,
     ]
   - [
-      *query_intention_identification_action,
-      *vertex_type_validation_action,
-      *condition_validation_action,
+      *vertex_type_and_condition_validation_action,
       *supplement_action,
+      *query_execution_action,
     ]
-  - [*grammar_study_action, *query_execution_action]
   - [
       *content_understanding_action_3,
       *algorithms_intention_identification_action,
@@ -283,19 +295,6 @@ operators:
       你是一位专业的文档分析专家，专注于从文档中提取关键信息，为知识图谱的构建奠定坚实基础。
       你需要理解文档内容。请注意，你分析的文档可能只是全集的一个子集，需要通过局部推断全局。
       请注意，你的任务不是需要操作图数据库。你的任务是分析文档，为后续的 knowledge graph modeling 提供重要信息。
-
-      请仔细阅读给定的文档，并按以下要求完成任务：
-
-      1. 语义层分析
-        - 显式信息（比如，关键词、主题、术语定义）
-        - 隐式信息（比如，深层语义、上下文关联、领域映射）
-
-      2. 关系层分析  
-        - 实体关系（比如，直接关系、间接关系、层次关系）。时序关系（比如，状态变迁、演化规律、因果链条）
-
-      3. 知识推理
-        - 模式推理、知识补全
-
       请确保你的分析全面、细致，并为每一个结论提供充分的理由。
     output_schema: |
       domain：文档所属领域的描述，帮助后续建模和数据抽取
@@ -335,8 +334,7 @@ operators:
       document_snippets：文档中的关键片段，用于支撑你的分析结论，提供上下文信息。可以是原文摘录或重要段落。
     actions:
       - *content_understanding_action
-      - *concept_identification_action
-      - *relation_pattern_recognition_action
+      - *deep_recognition_action
 
   - &concept_modeling_operator
     instruction: |
@@ -344,32 +342,6 @@ operators:
 
       你应该基于文档分析的结果，完成概念建模的任务，同时确保图建模的正确性和可达性。
 
-      1. 实体类型定义
-      - 从以下维度思考和定义实体类型：
-        * 时间维度：事件、时期、朝代等时序性实体
-        * 空间维度：地点、区域、地理特征等空间性实体
-        * 社会维度：人物、组织、势力等社会性实体（可选）
-        * 文化维度：思想、文化、典故等抽象实体（可选）
-        * 物理维度：物品、资源、建筑等具象实体（可选）
-      - 建立实体类型的层次体系：
-        * 定义上下位关系（如：人物-君主-诸侯）
-        * 确定平行关系（如：军事人物、政治人物、谋士）
-        * 设计多重继承关系（如：既是军事人物又是谋士）
-      - 为每个实体类型设计丰富的属性集：
-        * 基础属性：标识符、名称、描述等
-        * 类型特有属性：根据实体类型特点定义
-        * 关联属性：引用其他实体的属性
-      - 考虑实体的时态性：
-        * 属性的时效性（如：官职随时间变化）（可选）
-        * 状态的可变性（如：阵营的转变）（可选）
-      - 为每个实体类型定义完整的属性集，包括必需属性和可选属性
-      - 确保实体类型之间存在潜在的关联路径，但保持概念边界的独立性
-
-      2. 关系类型设计
-      - 定义实体间的关系类型，包括直接关系、派生关系和潜在关系
-      - 明确关系的方向性（有向）、设计关系的属性集
-      - 通过关系组合，验证关键实体间的可达性
-      - （可选）考虑添加反向关系以增强图的表达能力
 
       3. Schema生成
       - 使用 graph schema creator 的函数，可以使用该函数生成 schema，为 vertex 和 edge 创建特殊的 schema。你不能直接写 cypher 语句，而是使用工具函数来帮助你操作数据库。
@@ -387,6 +359,8 @@ operators:
       关系标签: 成功创建的关系标签列表，例如：'WorksAt', 'LocatedIn'
     tools:
     actions:
+      - *content_understanding_action
+      - *deep_recognition_action
       - *entity_type_definition_action
       - *relation_type_definition_action
       - *schema_design_and_import_action
@@ -417,56 +391,18 @@ operators:
       - *output_result_action
 
   # graph query operators
-  - &qery_intention_analysis_operator
-    instruction: |
-      你是一位专业的查询意图识别专家。你的工作是，理解给定的输入，给出一些结论，然后为后续的写查询语句做好准备工作。
-      你需要识别图查询的诉求，并校验查询的节点内容和对应的图模型是否匹配。注意你的任务不是将输入进行查询语句的转换，而是识别出存在着单点查询的诉求。
-      如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
-
-      请理解提供的内容和上下文，按要求完成任务：
-
-      1. 内容分析
-      - 理解内容中的单点查询的诉求
-      - 确定描述的单点查询内容是完整的
-      - 识别出有多个节点查询的情况
-
-      2. 查询检测
-      - 验证查询的节点种类是否和对应的模型相匹配
-      - 验证查询的条件是否和对应模型相匹配
-      - 如果有不匹配的情况，需要补充缺少的内容
-
-      3. 避免错误
-      - 请不要将查询的内容转换为查询语句，也不要执行查询语句，这不是你的任务
-    output_schema: |
-      ## Query Analysis
-      - Query Intent: [Describe the content's query requirements here]
-      - Vertex Type: [Specify the type of vertex being queried]
-      - Query Condition: [Describe the query conditions]
-      - Supplemental Information: [Include any missing information or details that don't match the schema]
-    actions:
-      - *query_intention_identification_action
-      - *vertex_type_validation_action
-      - *condition_validation_action
-      - *supplement_action
-
   - &query_design_operator
     instruction: |
-      你是一位专业的图查询语言设计专家。你的工作是根据查询要求使用对应的图查询语言语法设计出对应的图查询语言，并执行该查询语句。
+      你是一位专业的图数据库查询专家。
+      你需要识别图查询的诉求，并校验查询的内容和对应的图模型是否匹配。如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
+      然后基于此，执行相关查询语句或者工具，从而获得数据库中的数据。
       如节点查询最常用的语法为 MATCH, WHERE, RETURN 等。你不具备写 Cypher 的能力，你只能调用工具来帮助你达到相关的目的。
-
-      基于经验证过的图模型、查询节点和查询条件，按要求完成图查询语言设计的任务：
-
-      1. 语法学习与工具调用
-      - 按查询要求在图查询语法文档中匹配学习对应语法，会正确调用图数据库的工具函数。
-      - 了解图查询语法的基本结构和语法规则，如果得到调用错误信息，需要及时调整查询语句。
-
-      2. 查询结果交付
-      - 在最后，根据查询意图，交付查询的结果。
     output_schema: |
       查询的内容：[用自然语言描述查询的内容]
       查询的结果：[如果查询成功，返回查询结果；如果查询失败，返回错误信息；r如果没有查询结果，用自然语言说明原因]
     actions:
-      - *grammar_study_action
+      - *vertex_type_and_condition_validation_action
+      - *supplement_action
       - *query_execution_action
 
   # graph analysis operators
@@ -575,7 +511,7 @@ experts:
       actor_name: "Graph Query Expert"
       thinker_name: "Graph Query Expert"
     workflow:
-      - [*qery_intention_analysis_operator, *query_design_operator]
+      - [*query_design_operator]
 
   - profile:
       name: "Graph Analysis Expert"
