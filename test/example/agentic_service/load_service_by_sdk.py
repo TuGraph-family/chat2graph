@@ -26,7 +26,7 @@ def main():
     mas.toolkit(
         (
             content_understanding_action,
-            concept_identification_action,
+            deep_recognition_action,
             relation_pattern_recognition_action,
             consistency_check_action,
         ),
@@ -48,7 +48,7 @@ def main():
         .actions(
             [
                 content_understanding_action,
-                concept_identification_action,
+                deep_recognition_action,
                 relation_pattern_recognition_action,
                 consistency_check_action,
             ]
@@ -111,8 +111,8 @@ content_understanding_action = Action(
     description="通过阅读和批注理解文档的主要内容和结构",
     tools=[read_document],
 )
-concept_identification_action = Action(
-    id="doc_analysis.concept_identification",
+deep_recognition_action = Action(
+    id="doc_analysis.deep_recognition",
     name="核心概念识别",
     description="识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系。",
 )

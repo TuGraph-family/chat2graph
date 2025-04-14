@@ -28,8 +28,8 @@ actions:
     name: "query_intention_identification"
     desc: "识别并理解提供的查询要求，提取出查询针对的图模型名称、查询点的种类和查询条件"
 
-  - &vertex_type_validation_action
-    name: "vertex_type_validation"
+  - &vertex_type_and_condition_validation_action
+    name: "vertex_type_and_condition_validation"
     desc: "读取图数据现有的 schema，以帮助检查节点类型是否和对应的模型匹配"
     tools:
       - *schema_getter_tool
@@ -60,7 +60,7 @@ actions:
 toolkit:
   - [
       *query_intention_identification_action,
-      *vertex_type_validation_action,
+      *vertex_type_and_condition_validation_action,
       *condition_validation_action,
       *supplement_action,
     ]
@@ -97,7 +97,7 @@ operators:
       }
     actions:
       - *query_intention_identification_action
-      - *vertex_type_validation_action
+      - *vertex_type_and_condition_validation_action
       - *condition_validation_action
       - *supplement_action
 

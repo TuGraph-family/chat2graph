@@ -34,8 +34,8 @@ actions:
     tools:
       - *document_reader_tool
 
-  - &concept_identification_action
-    name: "concept_identification"
+  - &deep_recognition_action
+    name: "deep_recognition"
     desc: "识别并提取文档中的关键概念和术语，对概念进行分类，建立层级关系"
 
   - &relation_pattern_recognition_action
@@ -74,7 +74,7 @@ actions:
 toolkit:
   - [
       *content_understanding_action,
-      *concept_identification_action,
+      *deep_recognition_action,
       *relation_pattern_recognition_action,
       *consistency_check_action,
     ]
@@ -128,7 +128,7 @@ operators:
       }
     actions:
       - *content_understanding_action
-      - *concept_identification_action
+      - *deep_recognition_action
       - *relation_pattern_recognition_action
       - *consistency_check_action
 
