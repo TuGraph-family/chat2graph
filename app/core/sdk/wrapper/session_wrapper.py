@@ -115,7 +115,12 @@ class SessionWrapper:
         for view in conversation_views:
             # 1. user question
             message_views.append("[User Message]")
-            message_views.append(cast(str, view.question.get_payload()).strip())
+            question = view.question
+            if isinstance(question, HybridMessage):
+                text_question = question.get_instruction_message()
+                message_views.append(cast(str, text_question.get_payload()).strip())
+            else:
+                message_views.append(cast(str, question.get_payload()).strip())
 
             # 2. agent thinking steps (if available)
             if view.thinking_messages:
@@ -128,7 +133,12 @@ class SessionWrapper:
 
             # 3. ai answer
             message_views.append("[AI Message]")
-            message_views.append(cast(str, view.answer.get_payload()).strip())
+            answer = view.answer
+            if isinstance(answer, HybridMessage):
+                text_answer = answer.get_instruction_message()
+                message_views.append(cast(str, text_answer.get_payload()).strip())
+            else:
+                message_views.append(cast(str, view.answer.get_payload()).strip())
 
         if current_question_message:
             message_views.append("[User Message]")
