@@ -70,7 +70,7 @@ return <div className={styles['sender-header']}>
       <Attachments
         beforeUpload={beforeUpload}
         name='file'
-        accept='.pdf,.xlsx,.doc,.docx,.md'
+        accept='.pdf,.xlsx,.doc,.docx,.md,.txt'
         items={attachedFiles}
         onChange={handleFileChange}
         placeholder={(type) =>
