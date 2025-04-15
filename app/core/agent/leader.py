@@ -104,7 +104,7 @@ class Leader(Agent):
             job_dict = result
         except (ValueError, json.JSONDecodeError) as e:
             # color: red
-            print(f"\033[38;5;196m[WARNNING]: {e}\033[0m")
+            print(f"\033[38;5;196m[WARNING]: {e}\033[0m")
 
             # retry to decompose the job with the new lesson
             workflow_message = self._workflow.execute(
