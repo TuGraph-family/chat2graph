@@ -236,6 +236,7 @@ actions:
       - *common_neighbors_executor_tool
       - *kmeans_executor_tool
       - *cypher_executor_tool
+      - *schema_getter_tool
 
   # question answering actions
   - &knowledge_base_retrieving_action
