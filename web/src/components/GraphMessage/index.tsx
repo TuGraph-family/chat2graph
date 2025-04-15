@@ -19,13 +19,18 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
         if (!payload) return {}
         try {
             const { vertices, edges } = JSON.parse(payload)
+            console.log(vertices, edges)
             return {
                 nodes: vertices,
-                edges: edges
+                edges: edges?.map(item => {
+                    return {
+                        ...item,
+                        id: `${item?.source}_${item?.target}_${item?.label}`
+                    }
+                })
             }
         } catch (error) {
             console.error('formatGraphData' + error)
-
         }
     }
 
@@ -69,11 +74,15 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
                 },
                 layout: {
                     type: "force",
+                    linkDistance: 300,
                     clustering: true,
+                    preventOverlap: true,
                     nodeClusterBy: 'cluster',
                     clusterNodeStrength: 70,
+                    nodeSize: 20
                 },
                 behaviors: ['zoom-canvas', 'drag-canvas', "click-select",],
+                transforms: ['process-parallel-edges'],
                 plugins: [
                     {
                         type: "tooltip",
