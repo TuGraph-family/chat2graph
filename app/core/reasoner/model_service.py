@@ -164,20 +164,24 @@ class ModelService(ABC):
                 end_marker="</function_call>",
             )
             if "json" in text:
-                json_func_dicts = parse_jsons(
-                    text=text,
-                    start_marker="```json",
-                    end_marker="```",
-                )
+                try:
+                    json_func_dicts = parse_jsons(
+                        text=text,
+                        start_marker="```json",
+                        end_marker="```",
+                    )
 
-                if (
-                    len(json_func_dicts) > 0
-                    and "name" not in json_func_dicts[0]
-                    and "call_objective" not in json_func_dicts[0]
-                    and "args" not in json_func_dicts[0]
-                ):
-                    # if the JSON does not contain function calling information, skip
-                    func_dicts.extend(json_func_dicts)
+                    if (
+                        len(json_func_dicts) > 0
+                        and "name" not in json_func_dicts[0]
+                        and "call_objective" not in json_func_dicts[0]
+                        and "args" not in json_func_dicts[0]
+                    ):
+                        # if the JSON does not contain function calling information, skip
+                        func_dicts.extend(json_func_dicts)
+                except json.JSONDecodeError:
+                    # handle the case when the JSON is not valid
+                    pass
 
         except json.JSONDecodeError:
             pass
@@ -186,6 +190,8 @@ class ModelService(ABC):
             # did not call any functions
             return []
 
+        # if func_call correct: ((func_name, call_objective, func_args), None)
+        # if err: (None, err_msg)
         func_calls: List[Tuple[Optional[Tuple[str, str, Dict[str, Any]]], Optional[str]]] = []
         for func_dict in func_dicts:
             try:

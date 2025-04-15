@@ -28,6 +28,6 @@ def parse_jsons(
             parsed_json = json.loads(json_str)
             results.append(parsed_json)
         except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"Error parsing JSON: {str(e)}", e.doc, e.pos)
+            raise json.JSONDecodeError(f"Error parsing JSON: {str(e)}", e.doc, e.pos) from e
 
     return results
