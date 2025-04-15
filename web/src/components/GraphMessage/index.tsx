@@ -19,7 +19,6 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
         if (!payload) return {}
         try {
             const { vertices, edges } = JSON.parse(payload)
-            console.log(vertices, edges)
             return {
                 nodes: vertices,
                 edges: edges?.map(item => {
