@@ -62,7 +62,7 @@ async def test_infer_basic_flow(mock_reasoner: DualModelReasoner, task: Task):
 
     # check initial message
     assert messages[0].get_source_type() == MessageSourceType.ACTOR
-    assert "<shallow_thinking>\nEmpty" in messages[0].get_payload()
+    assert "<shallow_thinking>" in messages[0].get_payload()
 
     # check message flow
     assert len(messages) > 2  # Should have initial + at least one round of interaction

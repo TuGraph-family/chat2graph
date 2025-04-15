@@ -206,8 +206,7 @@ class MonoModelReasoner(Reasoner):
             output_schema = ""
 
         return MONO_PROMPT_TEMPLATE.format(
-            actor_name="AI Assistant",
-            thinker_name=self._model_name,
+            reasoning_rounds=SystemEnv.REASONING_ROUNDS,
             task=reasoning_task,
             functions=func_description,
             output_schema=output_schema,

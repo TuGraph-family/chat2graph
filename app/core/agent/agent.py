@@ -98,6 +98,7 @@ class Agent(ABC):
                 payload=cast(dict, graph_artifact.content),
                 job_id=graph_artifact.source_reference.job_id,
                 session_id=graph_artifact.source_reference.session_id,
+                metadata={"graph_description": graph_artifact.metadata.description},
             )
             graph_message_id = self._message_service.save_message(message=graph_message).get_id()
             artifact_ids.append(graph_message_id)

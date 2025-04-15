@@ -402,15 +402,31 @@ class GraphMessage(ChatMessage):
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
         session_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
-            payload=payload, job_id=job_id, timestamp=timestamp, id=id, session_id=session_id
+            payload=payload,
+            job_id=job_id,
+            timestamp=timestamp,
+            id=id,
+            session_id=session_id,
         )
         self._payload: Dict[str, Any] = payload
+        self._metadata: Dict[str, Any] = metadata or {}
 
     def get_payload(self) -> Dict[str, Any]:
         """Get the json str of the graph."""
         return self._payload
+
+    def get_metadata(self) -> Dict[str, Any]:
+        """Get the metadata."""
+        return self._metadata
+
+    def get_graph_description(self) -> str:
+        """Get the graph description."""
+        if "graph_description" not in self._metadata:
+            self._metadata["graph_description"] = "It is a graph."
+        return self._metadata["graph_description"]
 
     def copy(self) -> "GraphMessage":
         """Copy the message."""
@@ -420,6 +436,7 @@ class GraphMessage(ChatMessage):
             timestamp=self._timestamp,
             id=self._id,
             session_id=self._session_id,
+            metadata=self._metadata,
         )
 
     @staticmethod

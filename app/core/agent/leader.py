@@ -134,7 +134,7 @@ class Leader(Agent):
                 goal=subjob_dict.get("goal", ""),
                 context=(
                     subjob_dict.get("context", "")
-                    + "\n"
+                    + "\nThe completion criteria is determined: "
                     + subjob_dict.get("completion_criteria", "")
                 ),
                 expert_id=self.state.get_expert_by_name(
