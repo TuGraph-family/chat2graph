@@ -397,7 +397,7 @@ const HomePage: React.FC = () => {
   });
 
   const onSubmit = (nextContent: string) => {
-    if (!nextContent || agent.isRequesting()) return;
+    if (!nextContent || agent.isRequesting() || attachedFiles?.some(item => item?.status === 'uploading')) return;
     setState((draft) => {
       draft.isInit = false;
     });
