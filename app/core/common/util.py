@@ -15,8 +15,8 @@ def parse_jsons(
 
     Returns:
         List[Union[Dict[str, Any], json.JSONDecodeError]]: A list of parsed JSON objects or
-            error messages. Each JSON object is represented as a dictionary, and error
-            messages are strings. If no JSON content is found, an empty list is returned.
+            error messages. Each JSON object is represented as a dictionary. If no JSON content
+            is found, an empty list is returned.
     """
     # find all occurrences of content between markers
     pattern = f"{re.escape(start_marker)}(.*?){re.escape(end_marker)}"
