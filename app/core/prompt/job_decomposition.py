@@ -9,7 +9,7 @@ JOB_DECOMPOSITION_PROMPT = """
     - **Proceed even with incomplete information:** Even if the `Given Task` or history suggests prerequisites are missing (e.g., a user mentioning they forgot a file), you must still formulate the subtask for the relevant expert. Assume the necessary conditions will be met or that the expert must handle the situation.
     - **Package Context Carefully:** Include all available context from the `Given Task`, `Conversation History` and other system status information in the subtask description. If you identified potential issues (like the missing file based on user's statement), **briefly note this within the subtask's context** for the expert's awareness (e.g., "Context: User previously failed due to missing file and stated they forgot it. Assume file will be available for this import task.").
     - Simple tasks or those requiring only one expert (based on inferred intent) should be handled as a single subtask.
- - **Minimum Necessary Steps (During Decomposition):** Aim for the fewest logical subtasks required to fulfill the inferred intent.
+    - **Minimum Necessary Steps (During Decomposition):** Aim for the fewest logical subtasks required to fulfill the inferred intent. At the same time, the premise of minimization is that it cannot contradict the inferred intent and other rules.
  - **Targeted Expert Assignment (During Decomposition):** Assign subtasks only to the expert(s) identified in Step 2.
 ## Self-contained: Each subtask includes all necessary information.
 ## Role-neutral: Avoid mentioning specific roles unless in TASK.

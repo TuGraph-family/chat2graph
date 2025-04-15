@@ -78,14 +78,15 @@ class Leader(Agent):
         )
 
         job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(task=job.goal, role_list=role_list)
-        decompsed_job = Job(
+        decomp_job = Job(
+            id=job.id,
             session_id=job.session_id,
             goal=job.goal,
             context=job.context + f"\n\n{job_decomp_prompt}",
         )
 
         # decompose the job by the reasoner in the workflow
-        workflow_message = self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
+        workflow_message = self._workflow.execute(job=decomp_job, reasoner=self._reasoner)
 
         try:
             # extract the subjobs from the json block
@@ -108,7 +109,7 @@ class Leader(Agent):
 
             # retry to decompose the job with the new lesson
             workflow_message = self._workflow.execute(
-                job=decompsed_job,
+                job=decomp_job,
                 reasoner=self._reasoner,
                 lesson="LLM output format (json format) specification is crucial for "
                 "reliable parsing. And do not forget ```json prefix and ``` suffix when "

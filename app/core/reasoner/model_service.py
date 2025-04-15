@@ -176,9 +176,9 @@ class ModelService(ABC):
             for json_func_dict in json_func_dicts:
                 if (
                     isinstance(json_func_dict, dict)
-                    and "name" not in json_func_dict
-                    and "call_objective" not in json_func_dict
-                    and "args" not in json_func_dict
+                    and "name" in json_func_dict
+                    and "call_objective" in json_func_dict
+                    and "args" in json_func_dict
                 ):
                     # if the JSON does not contain function calling information, skip
                     func_dicts.append(json_func_dict)

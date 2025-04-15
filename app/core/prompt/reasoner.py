@@ -104,7 +104,7 @@ The external system will then execute the function. The results will be added to
 </shallow_thinking>
 
 <action>
-    <YOUR_ACTION>  // Can not be None. Execute the plan from <shallow_thinking>. Use <function_call>...</function_call> here to call the functions if needed.
+    <YOUR_ACTION>  // Can not be None. Execute the plan from <shallow_thinking>. Use <function_call>...</function_call> here to call the multi/single function(s) if needed.
 </action>
 
 <deliverable>
@@ -192,7 +192,7 @@ The external system will then execute the function. The results will be added to
 </deep_thinking>
 
 <action>
-    <YOUR_ACTION>  // Can not be None. You can use <function_call>...</function_call> here to call the functions.
+    <YOUR_ACTION>  // Can not be None. Execute the plan from <shallow_thinking>. Use <function_call>...</function_call> here to call the multi/single function(s) if needed.
 </action>
 
 <deliverable>

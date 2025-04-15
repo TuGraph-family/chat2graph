@@ -57,7 +57,10 @@ class MonoModelReasoner(Reasoner):
         # trigger the reasoning process
         init_message = ModelMessage(
             source_type=MessageSourceType.MODEL,
-            payload=("<deep_thinking>\nEmpty\n</deep_thinking>\n<action>\nEmpty\n</action>\n"),
+            payload=(
+                "<deep_thinking>\nLet's start to complete the task.\n</deep_thinking>\n"
+                "<action>\nEmpty\n</action>\n"
+            ),
             job_id=task.job.id,
             step=1,
         )

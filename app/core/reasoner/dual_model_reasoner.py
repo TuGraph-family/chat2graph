@@ -63,7 +63,7 @@ class DualModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
             payload=(
-                "<shallow_thinking>\nI need your help.\n</shallow_thinking>\n"
+                "<shallow_thinking>\nLet's start to complete the task.\n</shallow_thinking>\n"
                 "<action>\nI don't need to take action right now, "
                 "nor do I need to invoke <function_call>.\n</action>\n"
             ),
