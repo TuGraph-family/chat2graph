@@ -52,7 +52,10 @@ class EvalOperator(Operator):
         result = run_async_function(reasoner.infer, task=task)
 
         try:
-            result_dict = parse_jsons(text=result)[0]
+            parse_result = parse_jsons(text=result)[0]
+            if isinstance(parse_result, json.JSONDecodeError):
+                raise parse_result
+            result_dict = parse_result
         except (ValueError, json.JSONDecodeError) as e:
             # not validated json format
             # color: red
@@ -64,7 +67,10 @@ class EvalOperator(Operator):
                 + str(e)
             )
             result = run_async_function(reasoner.infer, task=task)
-            result_dict = parse_jsons(text=result)[0]
+            parse_result = parse_jsons(text=result)[0]
+            if isinstance(parse_result, json.JSONDecodeError):
+                raise parse_result from e
+            result_dict = parse_result
 
         return WorkflowMessage(
             payload={

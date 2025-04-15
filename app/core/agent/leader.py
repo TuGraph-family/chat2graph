@@ -1,7 +1,7 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 import json
 import time
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Union
 
 import networkx as nx  # type: ignore
 
@@ -89,12 +89,19 @@ class Leader(Agent):
 
         try:
             # extract the subjobs from the json block
-            job_dicts: List[Dict[str, Dict[str, str]]] = parse_jsons(
+            results: List[Union[Dict[str, Dict[str, str]], json.JSONDecodeError]] = parse_jsons(
                 text=workflow_message.scratchpad,
             )
-            if len(job_dicts) == 0:
+
+            if len(results) == 0:
                 raise ValueError("The job is not decomposed.")
-            job_dict = job_dicts[0]
+            result = results[0]
+
+            # if parse_jsons returns a JSONDecodeError directly, raise it
+            if isinstance(result, json.JSONDecodeError):
+                raise result
+
+            job_dict = result
         except (ValueError, json.JSONDecodeError) as e:
             # color: red
             print(f"\033[38;5;196m[WARNNING]: {e}\033[0m")
@@ -110,10 +117,14 @@ class Leader(Agent):
             )
             try:
                 # extract the subjobs from the json block
-                job_dicts = parse_jsons(text=workflow_message.scratchpad)
-                if len(job_dicts) == 0:
+                results = parse_jsons(text=workflow_message.scratchpad)
+                if len(results) == 0:
                     raise ValueError("The job is not decomposed.")
-                job_dict = job_dicts[0]
+                result = results[0]
+                # if parse_jsons returns a JSONDecodeError directly, raise it
+                if isinstance(result, json.JSONDecodeError):
+                    raise result
+                job_dict = result
             except (ValueError, json.JSONDecodeError):
                 self._job_service.stop_job_graph(
                     job=job,
