@@ -222,8 +222,7 @@ class DualModelReasoner(Reasoner):
 
         if task.operator_config and task.operator_config.output_schema:
             output_schema = (
-                "[Follow the final delivery example:]\n"
-                + task.operator_config.output_schema.strip()
+                "[Follow the final_output example:]\n" + task.operator_config.output_schema.strip()
             )
         else:
             output_schema = ""
