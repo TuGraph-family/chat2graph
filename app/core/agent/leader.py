@@ -46,9 +46,11 @@ class Leader(Agent):
         try:
             job: Job = self._job_service.get_original_job(original_job_id=job_id)
             original_job_id: str = job_id
-        except ValueError:
+        except ValueError as e:
             job = self._job_service.get_subjob(subjob_id=job_id)
             life_cycle = job.life_cycle
+            if not job.original_job_id:
+                raise ValueError("The subjob is not assigned to an original job.") from e
             original_job_id = job.original_job_id
 
         # check if the job is already assigned to an expert
