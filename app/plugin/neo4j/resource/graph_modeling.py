@@ -15,7 +15,6 @@ from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.service.service_factory import ServiceFactory
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class DocumentReader(Tool):
@@ -54,7 +53,6 @@ class VertexLabelAdder(Tool):
 
     async def create_and_import_vertex_label_schema(
         self,
-        file_service: FileService,
         graph_db_service: GraphDbService,
         artifact_service: ArtifactService,
         session_id: str,
@@ -137,11 +135,18 @@ class VertexLabelAdder(Tool):
                 session.run(statement)
 
             # update schema file
-            schema = await SchemaManager.read_schema(file_service=file_service)
+            schema = graph_db_service.get_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
             schema["nodes"][label] = {"primary_key": primary, "properties": property_details}
-            await SchemaManager.write_schema(file_service=file_service, schema=schema)
+            graph_db_service.update_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config(),
+                schema=schema,
+            )
 
-            schema_graph_dict: Dict[str, Any] = SchemaManager.schema_to_graph_dict(schema)
+            schema_graph_dict: Dict[str, Any] = graph_db_service.schema_to_graph_dict(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
             # save the graph artifact
             artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
                 job_id=job_id, content_type=ContentType.GRAPH
@@ -179,7 +184,6 @@ class EdgeLabelAdder(Tool):
 
     async def create_and_import_edge_label_schema(
         self,
-        file_service: FileService,
         graph_db_service: GraphDbService,
         artifact_service: ArtifactService,
         session_id: str,
@@ -232,7 +236,9 @@ class EdgeLabelAdder(Tool):
         """  # noqa: E501
         # validate the schema before creating the edge label
         try:
-            schema = await SchemaManager.read_schema(file_service=file_service)
+            schema = graph_db_service.get_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
             existing_node_labels = set(schema.get("nodes", {}).keys())
 
             required_labels = set(source_vertex_labels) | set(target_vertex_labels)
@@ -297,7 +303,9 @@ class EdgeLabelAdder(Tool):
                 session.run(statement)
 
         # update schema file
-        schema = await SchemaManager.read_schema(file_service=file_service)
+        schema = graph_db_service.get_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
+        )
         if "relationships" not in schema:
             schema["relationships"] = {}
 
@@ -308,10 +316,15 @@ class EdgeLabelAdder(Tool):
             "source_vertex_labels": source_vertex_labels,
             "target_vertex_labels": target_vertex_labels,
         }
-        await SchemaManager.write_schema(file_service=file_service, schema=schema)
+        graph_db_service.update_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config(),
+            schema=schema,
+        )
 
         # save the graph artifact
-        schema_graph_dict: Dict[str, Any] = SchemaManager.schema_to_graph_dict(schema)
+        schema_graph_dict: Dict[str, Any] = graph_db_service.schema_to_graph_dict(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
+        )
         artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
             job_id=job_id,
             content_type=ContentType.GRAPH,
@@ -352,7 +365,7 @@ class GraphReachabilityGetter(Tool):
             function=self.calculate_and_get_graph_reachability,
         )
 
-    async def calculate_and_get_graph_reachability(self, file_service: FileService) -> str:
+    async def calculate_and_get_graph_reachability(self, graph_db_service: GraphDbService) -> str:
         """Analyzes the graph schema reachability by checking for isolated node labels (hanging points).
 
         It retrieves all defined node labels and relationship types, then analyzes the
@@ -368,7 +381,9 @@ class GraphReachabilityGetter(Tool):
         """  # noqa: E501
 
         # 1. Read the stored schema definition
-        schema: Dict[str, Any] = await SchemaManager.read_schema(file_service=file_service)
+        schema: Dict[str, Any] = graph_db_service.get_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
+        )
         if not schema:
             return "Schema definition file not found or is empty."
 

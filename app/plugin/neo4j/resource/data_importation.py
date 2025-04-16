@@ -12,11 +12,9 @@ from app.core.model.artifact import (
     SourceReference,
 )
 from app.core.service.artifact_service import ArtifactService
-from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.service.service_factory import ServiceFactory
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class SchemaGetter(Tool):
@@ -30,12 +28,14 @@ class SchemaGetter(Tool):
             function=self.get_schema,
         )
 
-    async def get_schema(self, file_service: FileService) -> str:
+    async def get_schema(self, graph_db_service: GraphDbService) -> str:
         """Get the schema of the graph database.
 
         The graph schema defines the allowed structure and rules for the graph data in the database.
         """
-        schema = await SchemaManager.read_schema(file_service=file_service)
+        schema = graph_db_service.get_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
+        )
         if len(schema) == 0:
             return "The schema is not defined yet. Please define the schema first."
 

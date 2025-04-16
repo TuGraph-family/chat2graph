@@ -1,9 +1,10 @@
-from typing import List, cast
+import json
+from typing import Any, Dict, List, cast
 
 from app.core.common.singleton import Singleton
 from app.core.common.type import GraphDbType
 from app.core.dal.dao.graph_db_dao import GraphDbDao
-from app.core.model.graph_db_config import GraphDbConfig
+from app.core.model.graph_db_config import GraphDbConfig, Neo4jDbConfig
 from app.core.toolkit.graph_db.graph_db import GraphDb
 from app.core.toolkit.graph_db.graph_db_factory import GraphDbFactory
 
@@ -140,3 +141,112 @@ class GraphDbService(metaclass=Singleton):
         finally:
             if "graph_db" in locals():
                 graph_db.conn.close()
+
+    def get_schema_metadata(self, graph_db_config: GraphDbConfig) -> Dict[str, Any]:
+        """Get schema metadata for a graph database."""
+        if isinstance(graph_db_config, Neo4jDbConfig):
+            return graph_db_config.schema_metadata or {"nodes": {}, "relationships": {}}
+
+        # TODO: add support for TuGraph
+        raise ValueError(
+            f"Unsupported graph database type to get schema metadata: {graph_db_config.type}"
+        )
+
+    def update_schema_metadata(
+        self,
+        graph_db_config: GraphDbConfig,
+        schema: Dict[str, Any],
+    ) -> None:
+        """Update schema metadata for a graph database."""
+        if not graph_db_config.id:
+            raise ValueError("GraphDB ID is required to update schema metadata")
+
+        if isinstance(graph_db_config, Neo4jDbConfig):
+            # get the existing schema metadata
+            existing_schema = graph_db_config.schema_metadata
+
+            # merge with new schema (this will override existing data with new data)
+            if isinstance(schema, dict) and isinstance(existing_schema, dict):
+                if "nodes" in schema and "nodes" in existing_schema:
+                    existing_schema["nodes"].update(schema["nodes"])
+                if "relationships" in schema and "relationships" in existing_schema:
+                    existing_schema["relationships"].update(schema["relationships"])
+                # update other top-level keys
+                for key in schema:
+                    if key not in ["nodes", "relationships"]:
+                        existing_schema[key] = schema[key]
+            else:
+                # if not a dict or structure is different, just use the new schema
+                existing_schema = schema
+
+            # update the schema_metadata in the database
+            self._graph_db_dao.update(
+                id=graph_db_config.id,
+                schema_metadata=json.dumps(existing_schema, ensure_ascii=False),
+            )
+
+            # update graph_db_config with the new schema
+            graph_db_config.schema_metadata = existing_schema
+        else:
+            raise ValueError(
+                f"Unsupported graph database type to update schema metadata: {graph_db_config.type}"
+            )
+        return
+
+    def schema_to_graph_dict(self, graph_db_config: GraphDbConfig) -> Dict[str, Any]:
+        """Convert the graph database schema into a Graph dict that conforms to the
+            GraphMessage format.
+
+        Args:
+            graph_db_config (GraphDbConfig): GraphDB configuration
+
+        Returns:
+            A Graph dict that conforms to the GraphMessage format
+        """
+        graph_dict: Dict[str, Any] = {"vertices": [], "edges": []}
+
+        if isinstance(graph_db_config, Neo4jDbConfig):
+            schema = graph_db_config.schema_metadata or {"nodes": {}, "relationships": {}}
+
+            # processing node
+            for node_label, node_info in schema.get("nodes", {}).items():
+                vertex = {
+                    "id": node_label,
+                    "label": node_label,
+                    "properties": {
+                        "primary_key": node_info.get("primary_key", ""),
+                        "property_definitions": [
+                            prop.get("name") for prop in node_info.get("properties", [])
+                        ],
+                    },
+                }
+                graph_dict["vertices"].append(vertex)
+
+            # handling relationships
+            for rel_label, rel_info in schema.get("relationships", {}).items():
+                # obtain the label list of source nodes and target nodes.
+                source_labels = rel_info.get("source_vertex_labels", [])
+                target_labels = rel_info.get("target_vertex_labels", [])
+
+                # create an edge for each possible combination of source nodes and target nodes.
+                for source_label in source_labels:
+                    for target_label in target_labels:
+                        edge = {
+                            "source": source_label,
+                            "target": target_label,
+                            "label": rel_label,
+                            "properties": {
+                                "primary_key": rel_info.get("primary_key", ""),
+                                "property_definitions": [
+                                    prop.get("name") for prop in rel_info.get("properties", [])
+                                ],
+                            },
+                        }
+                        graph_dict["edges"].append(edge)
+        else:
+            raise ValueError(
+                "Unsupported graph database type to convert schema to graph dict: "
+                f"{graph_db_config.type}"
+            )
+
+        return graph_dict

@@ -7,10 +7,10 @@ from app.core.model.graph_db_config import GraphDbConfig
 from app.server.common.util import ApiException, make_response
 from app.server.manager.graph_db_manager import GraphDBManager
 
-graphdbs_bp = Blueprint("graphdbs", __name__)
+graph_dbs_bp = Blueprint("graphdbs", __name__)
 
 
-@graphdbs_bp.route("/", methods=["GET"])
+@graph_dbs_bp.route("/", methods=["GET"])
 def get_all_graph_dbs():
     """Get all GraphDBs."""
     manager = GraphDBManager()
@@ -18,7 +18,7 @@ def get_all_graph_dbs():
     return make_response(data=graph_dbs, message=message)
 
 
-@graphdbs_bp.route("/", methods=["POST"])
+@graph_dbs_bp.route("/", methods=["POST"])
 def create_graph_db():
     """Create a new GraphDB."""
     manager = GraphDBManager()
@@ -42,7 +42,7 @@ def create_graph_db():
     return make_response(data=new_graph_db, message=message)
 
 
-@graphdbs_bp.route("/<string:graph_db_id>", methods=["GET"])
+@graph_dbs_bp.route("/<string:graph_db_id>", methods=["GET"])
 def get_graph_db_by_id(graph_db_id: str):
     """Get a GraphDB by ID."""
     manager = GraphDBManager()
@@ -50,7 +50,7 @@ def get_graph_db_by_id(graph_db_id: str):
     return make_response(data=graph_db, message=message)
 
 
-@graphdbs_bp.route("/<string:graph_db_id>", methods=["DELETE"])
+@graph_dbs_bp.route("/<string:graph_db_id>", methods=["DELETE"])
 def delete_graph_db_by_id(graph_db_id: str):
     """Delete a GraphDB by ID."""
     manager = GraphDBManager()
@@ -58,7 +58,7 @@ def delete_graph_db_by_id(graph_db_id: str):
     return make_response(data=result, message=message)
 
 
-@graphdbs_bp.route("/<string:graph_db_id>", methods=["PUT"])
+@graph_dbs_bp.route("/<string:graph_db_id>", methods=["PUT"])
 def update_graph_db_by_id(graph_db_id: str):
     """Update a GraphDB by ID."""
     manager = GraphDBManager()
@@ -80,7 +80,7 @@ def update_graph_db_by_id(graph_db_id: str):
     return make_response(data=result, message=message)
 
 
-@graphdbs_bp.route("/validate_connection", methods=["POST"])
+@graph_dbs_bp.route("/validate_connection", methods=["POST"])
 def validate_graph_connection():
     """Validate connection to a GraphDB."""
     manager = GraphDBManager()
