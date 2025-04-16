@@ -1,8 +1,6 @@
 from typing import Any, Dict, List, Optional, Set, Union
 from uuid import uuid4
 
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 from app.core.model.artifact import (
     Artifact,
     ArtifactMetadata,
@@ -13,7 +11,6 @@ from app.core.model.artifact import (
 from app.core.service.artifact_service import ArtifactService
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
-from app.core.service.service_factory import ServiceFactory
 from app.core.toolkit.tool import Tool
 
 
@@ -471,36 +468,3 @@ class GraphReachabilityGetter(Tool):
             )
 
         return "\n".join(report_lines)
-
-
-import asyncio
-import sys
-
-from app.core.service.graph_db_service import GraphDbService
-from app.plugin.neo4j.resource.graph_modeling import GraphReachabilityGetter
-
-DaoFactory.initialize(DbSession())
-ServiceFactory.initialize()
-
-
-async def main():
-    try:
-        # for real testing, replace this with your actual GraphDbService implementation
-        file_service = FileService()
-        tool = GraphReachabilityGetter()
-
-        result = await tool.calculate_and_get_graph_reachability(file_service=file_service)
-
-        print(result)
-
-    except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return 1
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
