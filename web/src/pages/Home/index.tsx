@@ -25,6 +25,7 @@ import BubbleContent from '@/components/BubbleContent';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { formatTimestamp } from '@/utils/formatTimestamp';
 import { isEmpty } from 'lodash';
+import { historyPushLinkAt } from '@/utils/link';
 
 const HomePage: React.FC = () => {
 
@@ -527,7 +528,7 @@ const HomePage: React.FC = () => {
         <Tooltip title={collapse ? formatMessage('home.manager') : ''}>
           <Button
             onClick={() => {
-              window.open('/manager', '_blank')
+              window.open(historyPushLinkAt('/manager/knowledgebase'), '_blank')
             }}
             type={'text'}
             className={`${styles['go-manager']} ${collapse ? styles['go-manager-collapsed'] : ''}`}
