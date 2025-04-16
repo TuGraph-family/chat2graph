@@ -115,8 +115,7 @@ cp .env.template .env && vim .env
 ./bin/start.sh
 ```
 
-When you see the following log, you can access Chat2Graph in the browser at 
-[http://localhost:5000/](http://localhost:5000/).
+When you see the following log:
 
 ```text
 Starting server...
@@ -138,6 +137,34 @@ Init the Expert agents
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
  * Running on http://127.0.0.1:5000
 Press CTRL+C to quit
+```
+
+You can access Chat2Graph in the browser at [http://localhost:5000/](http://localhost:5000/):
+
+![](doc/img/index.png)
+
+
+## Register Graph Database
+
+After registering the graph database to Chat2Graph in "Backend Manager", you can experience the complete ability 
+of "chat to graph".
+![](doc/img/gdb-mng.png)
+
+The currently supported graph databases are:
+
+* Neo4j
+
+```bash
+docker pull neo4j:latest
+docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none neo4j:latest
+```
+
+* TuGraph
+
+```bash
+docker pull tugraph/tugraph-runtime-centos7:4.5.1
+docker run -d -p 7070:7070 -p 7687:7687 -p 9090:9090 --name tugraph-server \
+  tugraph/tugraph-runtime-centos7:latest lgraph_server -d run --enable_plugin true
 ```
 
 ### Use SDK
