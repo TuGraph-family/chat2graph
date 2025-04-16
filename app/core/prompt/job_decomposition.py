@@ -5,7 +5,7 @@ JOB_DECOMPOSITION_PROMPT = """
 ## Capabilities:
  - **1. Actively Infer Intent (Mandatory First Step):** **Crucially, you MUST analyze the `Given Task` *in conjunction with the entire `Conversation History` (if provided) and the obtained system current status*** to infer the user's **true underlying intent and desired next logical step**. Ask yourself: "Given the current system status, our past interactions and the user's latest input (even if not a command), what is the user *really* trying to achieve next in the overall task?"
  - **2. Determine Target Expert(s) & Action: Analyze the `System Current Status` (you can call related function/tool if related function/tool provided) to understand the system environment. Then ** Based on the **inferred intent (step 1)**, the current system status, profiles of the experts and other potential information, identify the Expert(s) whose capabilities and limitations are required for this next logical step.
- - **3. Mandatory Task Decomposition:** **Your *only* output is task decomposition.** You MUST formulate one or more subtasks directed at the identified Expert(s) to fulfill the inferred intent.
+ - **3. Mandatory Task Decomposition:** **Your *only* output is task decomposition.** You MUST formulate one or more subtasks directed at the identified Expert(s) to fulfill the inferred intent. After successfully generating the complete and correctly formatted decomposition JSON according to all requirements, it means the decomposition task is being done, and then use <deliverable>...</deliverable> to indicate the end of the task.
     - **Proceed even with incomplete information:** Even if the `Given Task` or history suggests prerequisites are missing (e.g., a user mentioning they forgot a file), you must still formulate the subtask for the relevant expert. Assume the necessary conditions will be met or that the expert must handle the situation.
     - **Package Context Carefully:** Include all available context from the `Given Task`, `Conversation History` and other system status information in the subtask description. If you identified potential issues (like the missing file based on user's statement), **briefly note this within the subtask's context** for the expert's awareness (e.g., "Context: User previously failed due to missing file and stated they forgot it. Assume file will be available for this import task.").
     - Simple tasks or those requiring only one expert (based on inferred intent) should be handled as a single subtask.
@@ -49,30 +49,30 @@ If the given task is very colloquial, you should distill an accurate task descri
 """  # noqa: E501
 
 JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
-Here is the Subtasks Template
-// You must generate subtasks at the end of <deliverable> section.
-// And the subtasks should be in the following json format.
-// Must use ```json``` to mark the beginning of the json content.
-```json
-{
-    "task_idx_1": {
-        "goal": "subtask_description",
-        "context": "Input data, resources, etc.",
-        "completion_criteria": "Acceptance criteria, etc.",
-        "dependencies": ["task_idx_*", "task_idx_*", ...],
-        "assigned_expert": "Name of an expert (in English)",
-        "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
-    },
-    "task_idx_2": {
-        "goal": "subtask_description",
-        "context": "Input data, resources, etc.",
-        "completion_criteria": "Acceptance criteria, etc.",
-        "dependencies": ["task_idx_*", "task_idx_*", ...],
-        "language of the assigned_expert": "English",
-        "assigned_expert": "Name of an expert (in English)",
-        "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+    Here is the Subtasks Template
+    // You must generate subtasks at the end of <final_output> section.
+    // And the subtasks should be in the following format. Do not forget to use <decomposition>...</decomposition> to indicate the start of the decomposed subtasks dict, so that the external system can parse the <decomposition> content correctly.
+    // Here is the decomposition example template:
+    <decomposition>
+    {
+        "task_idx_1": {
+            "goal": "subtask_description",
+            "context": "Input data, resources, etc.",
+            "completion_criteria": "Acceptance criteria, etc.",
+            "dependencies": ["task_idx_*", "task_idx_*", ...],
+            "assigned_expert": "Name of an expert (in English)",
+            "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+        },
+        "task_idx_2": {
+            "goal": "subtask_description",
+            "context": "Input data, resources, etc.",
+            "completion_criteria": "Acceptance criteria, etc.",
+            "dependencies": ["task_idx_*", "task_idx_*", ...],
+            "language of the assigned_expert": "English",
+            "assigned_expert": "Name of an expert (in English)",
+            "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+        }
+        ... // make sure the json format is correct
     }
-    ... // make sure the json format is correct
-}
-```
+    </decomposition>
 """  # noqa: E501

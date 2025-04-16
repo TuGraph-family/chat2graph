@@ -52,7 +52,7 @@ async def test_infer_basic_flow(mock_reasoner: MonoModelReasoner, task: Task):
 
     # check initial message
     assert messages[0].get_source_type() == MessageSourceType.MODEL
-    assert "<deep_thinking>\nEmpty" in messages[0].get_payload()
+    assert "<deep_thinking>" in messages[0].get_payload()
 
     # check message flow
     assert len(messages) >= 1

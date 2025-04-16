@@ -44,17 +44,21 @@ class Leader(Agent):
         life_cycle: Optional[int] = None
         job_id = agent_message.get_job_id()
         try:
-            job: Job = self._job_service.get_orignal_job(original_job_id=job_id)
-        except ValueError:
+            job: Job = self._job_service.get_original_job(original_job_id=job_id)
+            original_job_id: str = job_id
+        except ValueError as e:
             job = self._job_service.get_subjob(subjob_id=job_id)
             life_cycle = job.life_cycle
+            if not job.original_job_id:
+                raise ValueError("The subjob is not assigned to an original job.") from e
+            original_job_id = job.original_job_id
 
         # check if the job is already assigned to an expert
         assigned_expert_name: Optional[str] = job.assigned_expert_name
         if assigned_expert_name:
             expert = self.state.get_expert_by_name(assigned_expert_name)
             subjob = SubJob(
-                original_job_id=job.id,
+                original_job_id=original_job_id,
                 session_id=job.session_id,
                 goal=job.goal,
                 context=job.goal + "\n" + job.context,
@@ -92,6 +96,8 @@ class Leader(Agent):
             # extract the subjobs from the json block
             results: List[Union[Dict[str, Dict[str, str]], json.JSONDecodeError]] = parse_jsons(
                 text=workflow_message.scratchpad,
+                start_marker="<decomposition>",
+                end_marker="</decomposition>",
             )
 
             if len(results) == 0:
@@ -111,20 +117,24 @@ class Leader(Agent):
             workflow_message = self._workflow.execute(
                 job=decomp_job,
                 reasoner=self._reasoner,
-                lesson="LLM output format (json format) specification is crucial for "
-                "reliable parsing. And do not forget ```json prefix and ``` suffix when "
-                "you generate the json block in <deliverable>...</deliverable>. Error info: "
-                + str(e),
+                lesson="LLM output format (<decomposition> format) specification is crucial for "
+                "reliable parsing. And do not forget <decomposition> prefix and "
+                "</decomposition> suffix when you generate the json block in "
+                "<final_output>...</final_output>. Error info: " + str(e),
             )
             try:
                 # extract the subjobs from the json block
-                results = parse_jsons(text=workflow_message.scratchpad)
+                results = parse_jsons(
+                    text=workflow_message.scratchpad,
+                    start_marker="<decomposition>",
+                    end_marker="</decomposition>",
+                )
                 if len(results) == 0:
-                    raise ValueError("The job is not decomposed.")
+                    raise ValueError("The job is not decomposed.") from e
                 result = results[0]
                 # if parse_jsons returns a JSONDecodeError directly, raise it
                 if isinstance(result, json.JSONDecodeError):
-                    raise result
+                    raise result from e
                 job_dict = result
             except (ValueError, json.JSONDecodeError):
                 self._job_service.stop_job_graph(
@@ -141,7 +151,7 @@ class Leader(Agent):
         temp_to_unique_id_map: Dict[str, str] = {}  # id_generated_by_leader -> unique_id
         for subjob_id, subjob_dict in job_dict.items():
             subjob = SubJob(
-                original_job_id=job_id,
+                original_job_id=original_job_id,
                 session_id=job.session_id,
                 goal=subjob_dict.get("goal", ""),
                 context=(
