@@ -219,7 +219,7 @@ class EdgeLabelAdder(Tool):
         Example:
             ```python
             # assuming 'Person', 'Company' exist, but 'Organization' does not
-            properties = [{"name": "role", "type": "STRING"}]
+            properties = [{"name": "role", "type": "STRING", "index": True}]
             result = await create_edge_label_by_json_schema(
                 "WORKS_AT",
                 properties,
