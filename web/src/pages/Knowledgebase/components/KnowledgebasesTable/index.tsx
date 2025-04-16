@@ -1,4 +1,4 @@
-import { Input, Pagination, Spin, Row, Col, Dropdown, Popconfirm, message, Modal, Form, Typography } from "antd";
+import { Input, Pagination, Spin, Row, Col, Dropdown, Popconfirm, message, Modal, Form, Typography, Empty } from "antd";
 import { DeleteOutlined, EditOutlined, EllipsisOutlined, SearchOutlined } from "@ant-design/icons";
 import styles from './index.less'
 import { debounce } from "lodash";
@@ -186,16 +186,19 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
     <Spin spinning={loading} >
       {renderCard()}
     </Spin>
-    <Pagination
-      align="end"
-      current={currentPage}
-      pageSize={6}
-      showSizeChanger={false}
-      total={total}
-      onChange={(page) => {
-        setCurrentPage(page)
-      }}
-    />
+    {
+      paginatedData?.length ? <Pagination
+        align="end"
+        current={currentPage}
+        pageSize={6}
+        showSizeChanger={false}
+        total={total}
+        onChange={(page) => {
+          setCurrentPage(page)
+        }}
+      /> : <Empty />
+    }
+
 
     <Modal
       open={!!knowledgebasesId}

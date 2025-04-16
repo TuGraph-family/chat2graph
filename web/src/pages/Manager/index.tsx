@@ -20,8 +20,8 @@ const Manage = () => {
   const path = location.pathname
   const { formatMessage } = useIntlConfig()
   const items: MenuItem[] = [
-    { key: '/manager/knowledgebase', icon: <FolderOutlined />, label: formatMessage('knowledgebase.home.title') },
-    { key: '/manager/graphdb', icon: <ReadOutlined />, label: formatMessage('database.title') },
+    { key: '/manager/knowledgebase', icon: <FolderOutlined />, label: formatMessage('knowledgebase.home.title'), title: formatMessage('knowledgebase.home.title') },
+    { key: '/manager/graphdb', icon: <ReadOutlined />, label: formatMessage('database.title'), title: formatMessage('database.title') },
   ]
 
   const managerRoutes: { path: string, component: JSX.Element }[] = [
@@ -58,7 +58,7 @@ const Manage = () => {
           <div>
             <Button
               onClick={() => {
-                window.open('/home',)
+                window.open(historyPushLinkAt('/home'),)
               }}
               size='large'
               block

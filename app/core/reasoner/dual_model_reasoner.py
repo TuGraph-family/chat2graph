@@ -50,7 +50,7 @@ class DualModelReasoner(Reasoner):
             str: The conclusion and the final resultes of the inference.
         """
         # prepare the variables from the SystemEnv
-        reasoning_rounds: int = SystemEnv.REASONING_ROUNDS
+        max_reasoning_rounds: int = SystemEnv.MAX_REASONING_ROUNDS
         print_messages: bool = SystemEnv.PRINT_REASONER_MESSAGES
 
         # set the system prompt
@@ -63,7 +63,7 @@ class DualModelReasoner(Reasoner):
         init_message = ModelMessage(
             source_type=MessageSourceType.ACTOR,
             payload=(
-                "<shallow_thinking>\nI need your help.\n</shallow_thinking>\n"
+                "<shallow_thinking>\nLet's start to complete the task.\n</shallow_thinking>\n"
                 "<action>\nI don't need to take action right now, "
                 "nor do I need to invoke <function_call>.\n</action>\n"
             ),
@@ -75,7 +75,7 @@ class DualModelReasoner(Reasoner):
         reasoner_memory = self.init_memory(task=task)
         reasoner_memory.add_message(init_message)
 
-        for _ in range(reasoning_rounds):
+        for _ in range(max_reasoning_rounds):
             # thinker
             response = await self._thinker_model.generate(
                 sys_prompt=thinker_sys_prompt, messages=reasoner_memory.get_messages()
@@ -232,7 +232,7 @@ class DualModelReasoner(Reasoner):
         return ACTOR_PROMPT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
-            reasoning_rounds=SystemEnv.REASONING_ROUNDS,
+            max_reasoning_rounds=SystemEnv.MAX_REASONING_ROUNDS,
             task=reasoning_task,
             functions=func_description,
             output_schema=output_schema,
@@ -296,7 +296,7 @@ class DualModelReasoner(Reasoner):
         return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
-            reasoning_rounds=SystemEnv.REASONING_ROUNDS,
+            max_reasoning_rounds=SystemEnv.MAX_REASONING_ROUNDS,
             task=reasoning_task,
             functions=func_description,
         )

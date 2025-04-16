@@ -80,21 +80,23 @@ class Operator:
         if isinstance(job, SubJob):
             original_job_id: Optional[str] = job.original_job_id
             assert original_job_id is not None, "SubJob must have an original job id"
-            hybrid_messages: List[HybridMessage] = cast(
-                List[HybridMessage],
-                self._message_service.get_message_by_job_id(
-                    job_id=original_job_id, message_type=MessageType.HYBRID_MESSAGE
-                ),
-            )
-            for hybrid_message in hybrid_messages:
-                # get the file descriptors from the hybrid message
-                attached_messages = hybrid_message.get_attached_messages()
-                for attached_message in attached_messages:
-                    if isinstance(attached_message, FileMessage):
-                        file_descriptor = self._file_service.get_file_descriptor(
-                            file_id=attached_message.get_file_id()
-                        )
-                        file_descriptors.append(file_descriptor)
+        else:
+            original_job_id = job.id
+        hybrid_messages: List[HybridMessage] = cast(
+            List[HybridMessage],
+            self._message_service.get_message_by_job_id(
+                job_id=original_job_id, message_type=MessageType.HYBRID_MESSAGE
+            ),
+        )
+        for hybrid_message in hybrid_messages:
+            # get the file descriptors from the hybrid message
+            attached_messages = hybrid_message.get_attached_messages()
+            for attached_message in attached_messages:
+                if isinstance(attached_message, FileMessage):
+                    file_descriptor = self._file_service.get_file_descriptor(
+                        file_id=attached_message.get_file_id()
+                    )
+                    file_descriptors.append(file_descriptor)
 
         task = Task(
             job=job,

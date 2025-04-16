@@ -1,11 +1,11 @@
 import json
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 
 def parse_jsons(
     text: str, start_marker: str = "```json", end_marker: str = "```"
-) -> List[Dict[str, Any]]:
+) -> List[Union[Dict[str, Any], json.JSONDecodeError]]:
     """Extract JSON content from a text string.
 
     Args:
@@ -14,13 +14,14 @@ def parse_jsons(
         end_marker (str): The marker indicating the end of the JSON content.
 
     Returns:
-        List[Dict[str, Any]]: The extracted JSON content as a list of dictionaries
-        if single or multiple matches are found.
+        List[Union[Dict[str, Any], json.JSONDecodeError]]: A list of parsed JSON objects or
+            error messages. Each JSON object is represented as a dictionary. If no JSON content
+            is found, an empty list is returned.
     """
     # find all occurrences of content between markers
     pattern = f"{re.escape(start_marker)}(.*?){re.escape(end_marker)}"
     matches = re.finditer(pattern, text, re.DOTALL)
-    results: List[Dict[str, Any]] = []
+    results: List[Union[Dict[str, Any], json.JSONDecodeError]] = []
 
     for match in matches:
         json_str = match.group(1).strip()
@@ -28,6 +29,6 @@ def parse_jsons(
             parsed_json = json.loads(json_str)
             results.append(parsed_json)
         except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"Error parsing JSON: {str(e)}", e.doc, e.pos)
+            results.append(e)
 
     return results

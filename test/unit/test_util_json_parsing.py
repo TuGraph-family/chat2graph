@@ -16,6 +16,7 @@ def test_parse_jsons_basic():
     """
     result = parse_jsons(text)
     assert len(result) == 1
+    assert not isinstance(result[0], json.JSONDecodeError)
     assert result[0]["key"] == "value"
 
 
@@ -30,6 +31,7 @@ def test_parse_jsons_custom_markers():
     """
     result = parse_jsons(text, start_marker="<json>", end_marker="</json>")
     assert len(result) == 1
+    assert not isinstance(result[0], json.JSONDecodeError)
     assert result[0]["key"] == "value"
 
 
@@ -46,6 +48,8 @@ def test_parse_jsons_multiple():
     """
     result = parse_jsons(text)
     assert len(result) == 2
+    assert not isinstance(result[0], json.JSONDecodeError)
+    assert not isinstance(result[1], json.JSONDecodeError)
     assert result[0]["id"] == 1
     assert result[1]["id"] == 2
     assert result[0]["name"] == "first"
@@ -70,6 +74,7 @@ def test_parse_jsons_nested():
     """
     result = parse_jsons(text)
     assert len(result) == 1
+    assert not isinstance(result[0], json.JSONDecodeError)
     assert result[0]["person"]["name"] == "John"
     assert result[0]["person"]["address"]["city"] == "New York"
 
@@ -82,7 +87,10 @@ def test_parse_jsons_invalid():
     ```
     """
     with pytest.raises(json.JSONDecodeError):
-        parse_jsons(text)
+        result = parse_jsons(text)
+        assert len(result) == 1
+        assert isinstance(result[0], json.JSONDecodeError)
+        raise result[0]
 
 
 def test_parse_jsons_empty():

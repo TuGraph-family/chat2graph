@@ -156,51 +156,59 @@ class ModelService(ABC):
                 - Optional error message if parsing fails.
         """
         # calling format: <function_call>name(arg1=value1, arg2=value2)</function_call>
+        func_dicts: List[Union[Dict[str, Any], json.JSONDecodeError]] = []
         func_dicts = parse_jsons(
             text=text,
             start_marker="<function_call>",
             end_marker="</function_call>",
         )
-        if "json" in text:
-            try:
-                json_func_dicts = parse_jsons(text=text, start_marker="```json", end_marker="```")
 
+        # if the function calling is not in <function_call>...</function_call> format,
+        # try to parse the JSON format in the text
+        # this is used for the case when the function calling is not in the standard format
+        # but the JSON format is used in the text. Caused by the LLM model hallucination.
+        if "json" in text:
+            json_func_dicts = parse_jsons(
+                text=text,
+                start_marker="```json",
+                end_marker="```",
+            )
+            for json_func_dict in json_func_dicts:
                 if (
-                    len(json_func_dicts) > 0
-                    and "name" not in json_func_dicts[0]
-                    and "call_objective" not in json_func_dicts[0]
-                    and "args" not in json_func_dicts[0]
+                    isinstance(json_func_dict, dict)
+                    and "name" in json_func_dict
+                    and "call_objective" in json_func_dict
+                    and "args" in json_func_dict
                 ):
                     # if the JSON does not contain function calling information, skip
-                    pass
-                func_dicts.extend(json_func_dicts)
-            except json.JSONDecodeError:
-                pass
+                    func_dicts.append(json_func_dict)
 
         if len(func_dicts) == 0:
             # did not call any functions
             return []
 
+        # if func_call correct: ((func_name, call_objective, func_args), None)
+        # if err: (None, err_msg)
         func_calls: List[Tuple[Optional[Tuple[str, str, Dict[str, Any]]], Optional[str]]] = []
         for func_dict in func_dicts:
-            try:
+            if isinstance(func_dict, dict):
                 func_name: str = func_dict.get("name", "")
                 call_objective: str = func_dict.get("call_objective", "")
                 func_args: Dict[str, Any] = func_dict.get("args", {})
                 func_calls.append(((func_name, call_objective, func_args), None))
-            except json.JSONDecodeError as e:
+            else:
                 print(
                     "The system is attempting to match the JSON format within the <funciton_call> "
                     "section through string matching, but a matching error has occurred. "
                     "Please ensure that the content inside <funciton_call> can be parsed as JSON.\n"
-                    f"{str(e)}\nPlease check the format of the function calling.\n"
+                    f"{func_dict}\nPlease check the format of the function calling.\n"
                     f"{FUNC_CALLING_JSON_GUIDE}"
                 )
                 err = (
                     "The system is attempting to match the JSON format within the <funciton_call> "
                     "section through string matching, but a matching error has occurred. "
                     "Please ensure that the content inside <funciton_call> can be parsed as JSON.\n"
-                    f"{str(e)}\nPlease check the format of the function calling.\n"
+                    f"{func_dict}\nPlease check the format of the function calling.\n"
                     f"{FUNC_CALLING_JSON_GUIDE}"
                 )
                 func_calls.append((None, err))  # append None to indicate this match failed to parse

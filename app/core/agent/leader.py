@@ -1,7 +1,7 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 import json
 import time
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Union
 
 import networkx as nx  # type: ignore
 
@@ -78,30 +78,38 @@ class Leader(Agent):
         )
 
         job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(task=job.goal, role_list=role_list)
-        decompsed_job = Job(
+        decomp_job = Job(
+            id=job.id,
             session_id=job.session_id,
             goal=job.goal,
             context=job.context + f"\n\n{job_decomp_prompt}",
         )
 
         # decompose the job by the reasoner in the workflow
-        workflow_message = self._workflow.execute(job=decompsed_job, reasoner=self._reasoner)
+        workflow_message = self._workflow.execute(job=decomp_job, reasoner=self._reasoner)
 
         try:
             # extract the subjobs from the json block
-            job_dicts: List[Dict[str, Dict[str, str]]] = parse_jsons(
+            results: List[Union[Dict[str, Dict[str, str]], json.JSONDecodeError]] = parse_jsons(
                 text=workflow_message.scratchpad,
             )
-            if len(job_dicts) == 0:
+
+            if len(results) == 0:
                 raise ValueError("The job is not decomposed.")
-            job_dict = job_dicts[0]
+            result = results[0]
+
+            # if parse_jsons returns a JSONDecodeError directly, raise it
+            if isinstance(result, json.JSONDecodeError):
+                raise result
+
+            job_dict = result
         except (ValueError, json.JSONDecodeError) as e:
             # color: red
-            print(f"\033[38;5;196m[WARNNING]: {e}\033[0m")
+            print(f"\033[38;5;196m[WARNING]: {e}\033[0m")
 
             # retry to decompose the job with the new lesson
             workflow_message = self._workflow.execute(
-                job=decompsed_job,
+                job=decomp_job,
                 reasoner=self._reasoner,
                 lesson="LLM output format (json format) specification is crucial for "
                 "reliable parsing. And do not forget ```json prefix and ``` suffix when "
@@ -110,10 +118,14 @@ class Leader(Agent):
             )
             try:
                 # extract the subjobs from the json block
-                job_dicts = parse_jsons(text=workflow_message.scratchpad)
-                if len(job_dicts) == 0:
+                results = parse_jsons(text=workflow_message.scratchpad)
+                if len(results) == 0:
                     raise ValueError("The job is not decomposed.")
-                job_dict = job_dicts[0]
+                result = results[0]
+                # if parse_jsons returns a JSONDecodeError directly, raise it
+                if isinstance(result, json.JSONDecodeError):
+                    raise result
+                job_dict = result
             except (ValueError, json.JSONDecodeError):
                 self._job_service.stop_job_graph(
                     job=job,
