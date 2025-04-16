@@ -24,15 +24,21 @@ def test_parse_jsons_custom_markers():
     """Test parse_jsons with custom start and end markers."""
     text = """
     Some text
-    <json>
-    {"key": "value"}
-    </json>
+    <function_call>
+    {
+        "name": "query_system_status",
+        "call_objective": "query the current system status",
+        "args": {}
+    }
+    </function_call>
     More text
     """
-    result = parse_jsons(text, start_marker="<json>", end_marker="</json>")
+    result = parse_jsons(text, start_marker="<function_call>", end_marker="</function_call>")
     assert len(result) == 1
     assert not isinstance(result[0], json.JSONDecodeError)
-    assert result[0]["key"] == "value"
+    assert result[0]["name"] == "query_system_status"
+    assert result[0]["call_objective"] == "query the current system status"
+    assert result[0]["args"] == {}
 
 
 def test_parse_jsons_multiple():

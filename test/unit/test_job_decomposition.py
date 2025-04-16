@@ -123,7 +123,7 @@ Decomposing the task...
 Final Delivery:
 为了完成这一目标，我将为我们确定三个具体的子任务：
 
-    ```json
+    <decomposition>
     {
         "subtask_1": 
         {
@@ -131,7 +131,8 @@ Final Delivery:
             "context": "需要从各个数据源收集相关文本。",
             "completion_criteria": "成功收集到至少100个有效文本样本。",
             "dependencies": [],
-            "assigned_expert": "Expert 1"
+            "assigned_expert": "Expert 1",
+            "thinking": "我将使用网络爬虫和API来收集数据。"
         },
         "subtask_2":
         {
@@ -139,7 +140,8 @@ Final Delivery:
             "context": "使用自然语言处理工具进行实体识别。",
             "completion_criteria": "成功识别出至少300个关键实体。",
             "dependencies": ["subtask_1"],
-            "assigned_expert": "Expert 2"
+            "assigned_expert": "Expert 2",
+            "thinking": "我将使用预训练的NER模型来识别实体。"
         },
         "subtask_3":
         {
@@ -147,10 +149,11 @@ Final Delivery:
             "context": "对已提取的实体进行审查，确保符合图数据库设计要求。",
             "completion_criteria": "审核报告显示95%一致性。",
             "dependencies": ["subtask_1", "subtask_2"],
-            "assigned_expert": "Expert 3"
+            "assigned_expert": "Expert 3",
+            "thinking": "我将使用数据可视化工具来分析结果。"
         }
     }
-    ```
+    </decomposition>
 """
     mock_reasoner.infer.return_value = mock_response
 
@@ -183,35 +186,37 @@ Final Delivery:
     leader.state.create_expert(expert_profile_3)
 
     # create the main job and the existing subjob
-    job = Job(goal="The tested main job")
+    original_job = Job(goal="The tested main job")
     job_service: JobService = JobService.instance
-    job_service.save_job(job)
+    job_service.save_job(original_job)
     sub_job = SubJob(
         goal="extract entities from text",
-        original_job_id=job.id,
+        original_job_id=original_job.id,
         expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
     )
     job_service.save_job(sub_job)
 
     # configure the initial job graph
     job_service.add_subjob(
-        original_job_id=job.id,
+        original_job_id=original_job.id,
         job=sub_job,
         expert_id=leader.state.get_expert_by_name("Expert 1").get_id(),
         predecessors=[],
         successors=[],
     )
-    initial_job_graph: JobGraph = job_service.get_job_graph(job.id)
+    initial_job_graph: JobGraph = job_service.get_job_graph(original_job.id)
 
-    job_graph = leader.execute(AgentMessage(job_id=job.id))
+    job_graph = leader.execute(AgentMessage(job_id=original_job.id))
     job_service.replace_subgraph(
-        original_job_id=job.id, new_subgraph=job_graph, old_subgraph=initial_job_graph
+        original_job_id=original_job.id,
+        new_subgraph=job_graph,
+        old_subgraph=initial_job_graph,
     )
 
     assert isinstance(job_graph, JobGraph)
 
-    assert len(job_service.get_job_graph(job.id).vertices()) == 3
-    assert len(job_service.get_job_graph(job.id).edges()) == 3  # 3 dependencies
+    assert len(job_service.get_job_graph(original_job.id).vertices()) == 3
+    assert len(job_service.get_job_graph(original_job.id).edges()) == 3  # 3 dependencies
 
     assert job_service.get_subjob(sub_job.id).is_legacy
 
@@ -231,7 +236,9 @@ Analyzing the task...
     original_job = Job(goal="test_job_for_error_handling")
     job_service.save_job(original_job)
     subjob = SubJob(
-        goal="test_subjob_for_error_handling", original_job_id=original_job.id, expert_id=leader._id
+        goal="test_subjob_for_error_handling",
+        original_job_id=original_job.id,
+        expert_id=leader._id,
     )
     job_service.save_job(subjob)
 
