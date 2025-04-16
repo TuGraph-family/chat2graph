@@ -207,9 +207,9 @@ class ModelService(ABC):
                     else func_dict.doc
                 )
                 error_message = (
-                    "The system is attempting to match the JSON format within the <funciton_call> "
+                    "The system is attempting to match the JSON format within the <function_call> "
                     "section through string matching, but a matching error has occurred. "
-                    "Please ensure that the content inside <funciton_call> can be parsed as JSON.\n"
+                    "Please ensure that the content inside <function_call> can be parsed as JSON.\n"
                     f"{error_details}\nPlease check the format of the function calling.\n"
                     f"{FUNC_CALLING_JSON_GUIDE}"
                 )
