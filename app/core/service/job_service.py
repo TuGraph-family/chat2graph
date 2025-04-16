@@ -37,7 +37,7 @@ class JobService(metaclass=Singleton):
         """Get all job ids."""
         return [str(job_do.id) for job_do in self._job_dao.filter_by(category=JobType.JOB.value)]
 
-    def get_orignal_job(self, original_job_id: str) -> Job:
+    def get_original_job(self, original_job_id: str) -> Job:
         """Get a job from the job registry."""
         return self._job_dao.get_job_by_id(original_job_id)
 
@@ -179,7 +179,7 @@ class JobService(metaclass=Singleton):
             )
 
         # save/update the multi-agent result to the database
-        original_job: Job = self.get_orignal_job(original_job_id)
+        original_job: Job = self.get_original_job(original_job_id)
         try:
             multi_agent_answer_message = self._message_service.get_text_message_by_job_id_and_role(
                 original_job_id, ChatMessageRole.SYSTEM
@@ -223,7 +223,7 @@ class JobService(metaclass=Singleton):
     def get_conversation_view(self, original_job_id: str) -> MessageView:
         """Get conversation view (including thinking chain) for a specific job."""
         # get original job
-        original_job = self.get_orignal_job(original_job_id=original_job_id)
+        original_job = self.get_original_job(original_job_id=original_job_id)
 
         # get original job result
         original_job_result = self.query_original_job_result(original_job_id=original_job_id)
@@ -313,7 +313,7 @@ class JobService(metaclass=Singleton):
         # get the original job
         if isinstance(job, SubJob):
             assert job.original_job_id is not None, "The subjob must have an original job ID."
-            original_job: Job = self.get_orignal_job(original_job_id=job.original_job_id)
+            original_job: Job = self.get_original_job(original_job_id=job.original_job_id)
         else:
             original_job = job
 
@@ -369,7 +369,7 @@ class JobService(metaclass=Singleton):
     def set_job_graph(self, original_job_id: str, job_graph: JobGraph) -> None:
         """Set the job graph by the original job id."""
         # save the jobs to the databases
-        original_job: Job = self.get_orignal_job(original_job_id)
+        original_job: Job = self.get_original_job(original_job_id)
         original_job.dag = job_graph.to_json_str()
         self.save_job(original_job)
         for subjob_id in job_graph.vertices():

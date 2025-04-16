@@ -44,7 +44,7 @@ class Leader(Agent):
         life_cycle: Optional[int] = None
         job_id = agent_message.get_job_id()
         try:
-            job: Job = self._job_service.get_orignal_job(original_job_id=job_id)
+            job: Job = self._job_service.get_original_job(original_job_id=job_id)
             original_job_id: str = job_id
         except ValueError:
             job = self._job_service.get_subjob(subjob_id=job_id)
