@@ -2,8 +2,6 @@ import re
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 from app.core.model.artifact import (
     Artifact,
     ArtifactMetadata,
@@ -12,11 +10,8 @@ from app.core.model.artifact import (
     SourceReference,
 )
 from app.core.service.artifact_service import ArtifactService
-from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
-from app.core.service.service_factory import ServiceFactory
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class SchemaGetter(Tool):
@@ -30,12 +25,14 @@ class SchemaGetter(Tool):
             function=self.get_schema,
         )
 
-    async def get_schema(self, file_service: FileService) -> str:
+    async def get_schema(self, graph_db_service: GraphDbService) -> str:
         """Get the schema of the graph database.
 
         The graph schema defines the allowed structure and rules for the graph data in the database.
         """
-        schema = await SchemaManager.read_schema(file_service=file_service)
+        schema = graph_db_service.get_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
+        )
         if len(schema) == 0:
             return "The schema is not defined yet. Please define the schema first."
 
@@ -589,88 +586,3 @@ class DataImport(Tool):
 
         except Exception as e:
             raise Exception(f"Failed to import data: {str(e)}") from e
-
-
-SCHEMA_BOOK = """
-# Neo4j Schema 指南 (LLM 友好版)
-
-本指南帮助理解Neo4j的数据模型和Schema设计。
-
-## 1. 节点 (Node) 定义
-
-Neo4j中的节点代表实体，具有以下特征：
-
-### 1.1 标签 (Labels)
-- 节点可以有一个或多个标签
-- 标签用于分类和区分不同类型的节点
-- 示例：`:Person`、`:Location`
-
-### 1.2 属性 (Properties)
-- 属性是键值对
-- 支持的数据类型：
-  - String：字符串
-  - Integer：整数
-  - Float：浮点数
-  - Boolean：布尔值
-  - Point：空间点
-  - Date/DateTime：日期时间
-  - Duration：时间段
-- 属性可以建立索引提高查询性能
-
-### 1.3 约束 (Constraints)
-- 唯一性约束：确保属性值唯一性
-- 示例：`CREATE CONSTRAINT person_id_unique IF NOT EXISTS FOR (n:Person) REQUIRE n.id IS UNIQUE`
-
-## 2. 关系 (Relationship) 定义
-
-关系连接节点，具有以下特征：
-
-### 2.1 类型 (Types)
-- 关系必须有一个类型
-- 关系类型通常使用大写字母
-- 示例：`:KNOWS`、`:WORKS_FOR`
-
-### 2.2 属性
-- 关系也可以有属性
-- 属性数据类型与节点相同
-- 可以为关系属性创建索引
-
-### 2.3 方向性
-- 关系有方向，但可以双向查询
-- 格式：`(source)-[relationship]->(target)`
-
-## 3. 索引 (Indexes)
-- 支持节点和关系的属性索引
-- 用于优化查询性能
-- 示例：`CREATE INDEX person_name_idx IF NOT EXISTS FOR (n:Person) ON (n.name)`
-
-## 4. 最佳实践
-- 使用有意义的标签名
-- 合理使用索引提升性能
-- 根据查询模式设计数据模型
-"""
-
-
-DaoFactory.initialize(DbSession())
-ServiceFactory.initialize()
-
-
-async def main():
-    your_instance = DataStatusCheck()
-    graph_db_service = GraphDbService()  # Your actual service instance
-
-    print("--- Checking status with no specific labels/types (empty DB simulation) ---")
-    status_all_empty = await your_instance.check_data_status(graph_db_service)
-    print(status_all_empty)
-
-    print("\n--- Checking status for specific labels/types (empty DB simulation) ---")
-    status_specific_empty = await your_instance.check_data_status(
-        graph_db_service, node_labels=["character"], relationship_labels=["BELONGS_TO"]
-    )
-    print(status_specific_empty)
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    asyncio.run(main())

@@ -225,7 +225,7 @@ actions:
 
   - &algorithms_execution_action
     name: "algorithms_execution"
-    desc: "调用相关的算法执行工具，执行算法（需要调用一个/些工具）。当遇见棘手的算法工具使用问题时，可以查询当下图数据库的 schema或者查询数据库数据，从而帮助你更好地理解和配置算法工具的输入参数"
+    desc: "调用相关的算法执行工具，执行算法（需要调用一个/些工具）。当遇见棘手的算法工具使用问题时，可以查询当下图数据库的 schema 或者执行 Cypher 查询语句，从而帮助你更好地理解和配置算法工具的输入参数"
     tools:
       - *page_rank_executor_tool
       - *betweenness_centrality_executor_tool

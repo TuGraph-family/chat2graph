@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Union
 from uuid import uuid4
 
 from app.core.model.artifact import (
@@ -12,7 +12,6 @@ from app.core.service.artifact_service import ArtifactService
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class DocumentReader(Tool):
@@ -51,7 +50,6 @@ class VertexLabelAdder(Tool):
 
     async def create_and_import_vertex_label_schema(
         self,
-        file_service: FileService,
         graph_db_service: GraphDbService,
         artifact_service: ArtifactService,
         session_id: str,
@@ -134,11 +132,18 @@ class VertexLabelAdder(Tool):
                 session.run(statement)
 
             # update schema file
-            schema = await SchemaManager.read_schema(file_service=file_service)
+            schema = graph_db_service.get_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
             schema["nodes"][label] = {"primary_key": primary, "properties": property_details}
-            await SchemaManager.write_schema(file_service=file_service, schema=schema)
+            graph_db_service.update_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config(),
+                schema=schema,
+            )
 
-            schema_graph_dict: Dict[str, Any] = SchemaManager.schema_to_graph_dict(schema)
+            schema_graph_dict: Dict[str, Any] = graph_db_service.schema_to_graph_dict(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
             # save the graph artifact
             artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
                 job_id=job_id, content_type=ContentType.GRAPH
@@ -176,7 +181,6 @@ class EdgeLabelAdder(Tool):
 
     async def create_and_import_edge_label_schema(
         self,
-        file_service: FileService,
         graph_db_service: GraphDbService,
         artifact_service: ArtifactService,
         session_id: str,
@@ -191,7 +195,8 @@ class EdgeLabelAdder(Tool):
 
         This function defines a new relationship type in the Neo4j graph database,
         establishing its property schema, primary key, and valid node label pairs
-        for the relationship endpoints.
+        for the relationship endpoints. It first validates if the specified source
+        and target node labels exist in the current schema.
 
         Args:
             session_id (str): The session ID for the current session.
@@ -203,41 +208,56 @@ class EdgeLabelAdder(Tool):
                     - name (str): Property name
                     - type (str): Data type (e.g., 'STRING', 'INTEGER', 'FLOAT', 'BOOLEAN', 'DATE', 'DATETIME')
                     - index (bool): Whether to create an index for this property (default: True)
-            source_vertex_labels (List[str]): List of allowed source node labels.
-            target_vertex_labels (List[str]): List of allowed target node labels.
+            source_vertex_labels (List[str]): List of allowed source node labels. (please make sure the node labels has been created in the current schema)
+            target_vertex_labels (List[str]): List of allowed target node labels. (please make sure the node labels has been created in the current schema)
             primary (str): The property name used as a unique identifier. Must be unique within the relationship type (default: 'id').
 
         Returns:
             str: A status message indicating successful creation of the relationship type,
-                including details about constraints and indexes,
-                as well as endpoint label restrictions stored in the schema.
+                including details about constraints and indexes, and endpoint label restrictions stored in the schema.
+                Or, an error message if source or target node labels are not found in the existing schema.
 
         Example:
             ```python
-            properties = [
-                {
-                    "name": "participate",
-                    "type": "STRING",
-                    "index": True,
-                },
-                {
-                    "name": "since",
-                    "type": "DATETIME",
-                    "index": False,
-                }
-            ]
+            # assuming 'Person', 'Company' exist, but 'Organization' does not
+            properties = [{"name": "role", "type": "STRING", "index": True}]
             result = await create_edge_label_by_json_schema(
                 "WORKS_AT",
                 properties,
                 source_vertex_labels=["Person"],
-                target_vertex_labels=["Company", "Organization"],
+                target_vertex_labels=["Company", "Organization"], # 'Organization' is missing
                 "id"
             )
-            # Expected result: Schema updated with WORKS_AT relationship allowing
-            # (Person)-[:WORKS_AT]->(Company) and (Person)-[:WORKS_AT]->(Organization)
-            # and constraints/indexes created for properties 'id' and 'role'.
+            # expected result: "Error: Cannot create relationship 'WORKS_AT'. The following node labels are not defined in the schema: ['Organization']. Please define these node labels first."
             ```
         """  # noqa: E501
+        # validate the schema before creating the edge label
+        try:
+            schema = graph_db_service.get_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
+            existing_node_labels = set(schema.get("nodes", {}).keys())
+
+            required_labels = set(source_vertex_labels) | set(target_vertex_labels)
+            missing_labels = required_labels - existing_node_labels
+
+            if missing_labels:
+                error_message = (
+                    f"Error: Cannot create relationship '{label.upper()}'. "
+                    f"The following node labels are not defined in the schema: "
+                    f"{sorted(missing_labels)}. Please define these node labels first using "
+                    "the appropriate tool (like VertexLabelAdder)."
+                )
+                print(f"Warning: validation failed for EdgeLabelAdder: {error_message}")
+                return error_message
+
+        except Exception as e:
+            return (
+                f"Error: Failed to validate schema before creating edge '{label.upper()}'. "
+                f"Details: {e}"
+            )
+        # end of validation
+
         label = label.upper()
         statements = []
 
@@ -280,7 +300,9 @@ class EdgeLabelAdder(Tool):
                 session.run(statement)
 
         # update schema file
-        schema = await SchemaManager.read_schema(file_service=file_service)
+        schema = graph_db_service.get_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
+        )
         if "relationships" not in schema:
             schema["relationships"] = {}
 
@@ -291,12 +313,18 @@ class EdgeLabelAdder(Tool):
             "source_vertex_labels": source_vertex_labels,
             "target_vertex_labels": target_vertex_labels,
         }
-        await SchemaManager.write_schema(file_service=file_service, schema=schema)
+        graph_db_service.update_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config(),
+            schema=schema,
+        )
 
         # save the graph artifact
-        schema_graph_dict: Dict[str, Any] = SchemaManager.schema_to_graph_dict(schema)
+        schema_graph_dict: Dict[str, Any] = graph_db_service.schema_to_graph_dict(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
+        )
         artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
-            job_id=job_id, content_type=ContentType.GRAPH
+            job_id=job_id,
+            content_type=ContentType.GRAPH,
         )
         if len(artifacts) == 0:
             artifact = Artifact(
@@ -311,9 +339,11 @@ class EdgeLabelAdder(Tool):
             artifact_service.save_artifact(artifact=artifact)
         else:
             artifact_service.increment_and_save(
-                artifact=artifacts[0], new_content=schema_graph_dict
+                artifact=artifacts[0],
+                new_content=schema_graph_dict,
             )
 
+        # final success message
         return (
             f"Successfully configured relationship type {label} in schema "
             f"(Source: {source_vertex_labels}, Target: {target_vertex_labels}) "
@@ -333,35 +363,108 @@ class GraphReachabilityGetter(Tool):
         )
 
     async def calculate_and_get_graph_reachability(self, graph_db_service: GraphDbService) -> str:
-        """Calculate and get the reachability information of the graph database which can help to
-            understand the graph schema structure.
+        """Analyzes the graph schema reachability by checking for isolated node labels (hanging points).
+
+        It retrieves all defined node labels and relationship types, then analyzes the
+        schema visualization to identify node labels that do not participate in any
+        relationships.
 
         Args:
             None args required
 
         Returns:
-            str: The reachability of the graph database in string format
-        """
-        store = graph_db_service.get_default_graph_db()
-        vertex_labels: List = []
-        relationship_types: List = []
-        with store.conn.session() as session:
-            # get all vertex labels
-            result = session.run("""
-                CALL db.labels() YIELD label 
-                RETURN collect(label) as labels
-            """)
-            vertex_labels = result.single()["labels"]
+            str: A summary of the graph schema, highlighting any isolated node labels found.
+                 Indicates potential "hanging points" in the schema structure.
+        """  # noqa: E501
 
-            # get all relationship types and their connected node labels
-            result = session.run("""
-                CALL db.relationshipTypes() YIELD relationshipType
-                RETURN collect(relationshipType) as types
-            """)
-            relationship_types = result.single()["types"]
-
-        return (
-            "Here is the schema, you have to check if there exists at least one edge label between "
-            "two vertex labels! If no, create more edges to make the graph more connected.\n"
-            f"Vertex labels: {vertex_labels}\nRelationship types: {relationship_types}"
+        # 1. Read the stored schema definition
+        schema: Dict[str, Any] = graph_db_service.get_schema_metadata(
+            graph_db_config=graph_db_service.get_default_graph_db_config()
         )
+        if not schema:
+            return "Schema definition file not found or is empty."
+
+        nodes_schema = schema.get("nodes", {})
+        relationships_schema = schema.get("relationships", {})
+
+        # 2. Get all defined node labels from the schema
+        all_defined_node_labels: Set[str] = set(nodes_schema.keys())
+
+        # 3. Get all defined relationship types from the schema
+        all_defined_relationship_types: Set[str] = set(relationships_schema.keys())
+
+        # 4. Identify connected node labels and check for hanging edge definitions
+        connected_node_labels: Set[str] = set()
+        hanging_edge_definitions: List[str] = []
+        schema_connections: List[str] = []  # descriptions like (:LabelA)-[:REL]->(:LabelB)
+
+        for rel_type, rel_info in relationships_schema.items():
+            source_labels = rel_info.get("source_vertex_labels", [])
+            target_labels = rel_info.get("target_vertex_labels", [])
+
+            # add labels involved in this relationship to the connected set
+            connected_node_labels.update(source_labels)
+            connected_node_labels.update(target_labels)
+
+            # build connection description string
+            schema_connections.append(f"(:{source_labels})-[:{rel_type}]->(:{target_labels})")
+
+            # check if source labels are defined node types
+            for src_label in source_labels:
+                if src_label not in all_defined_node_labels:
+                    hanging_edge_definitions.append(
+                        f"- Relationship '{rel_type}' "
+                        f"uses undefined source node label: '{src_label}'"
+                    )
+
+            # check if target labels are defined node types
+            for tgt_label in target_labels:
+                if tgt_label not in all_defined_node_labels:
+                    hanging_edge_definitions.append(
+                        f"- Relationship '{rel_type}' "
+                        f"uses undefined target node label: '{tgt_label}'"
+                    )
+
+        # 5. Identify isolated node labels (hanging points)
+        # these are node labels defined in schema['nodes'] but not used in any relationship
+        isolated_labels = all_defined_node_labels - connected_node_labels
+
+        # 6. Construct the report string
+        report_lines = [
+            "Stored Graph Schema Analysis:",
+            f"- Defined Node Labels: {sorted(all_defined_node_labels)}",
+            f"- Defined Relationship Types: {sorted(all_defined_relationship_types)}",
+            f"- Defined Connections Count: {len(schema_connections)}",
+            # uncomment below to see example connections from schema definition
+            "  - Example Defined Connections: (showing first 10)",
+            *[f"    {conn}" for conn in schema_connections[:10]],
+            ("    ..." if len(schema_connections) > 10 else ""),
+        ]
+
+        issues_found = False
+        if isolated_labels:
+            issues_found = True
+            report_lines.append("\nPotential Connectivity Issues (Hanging Points):")
+            report_lines.append(f"  - Isolated Node Labels: {sorted(isolated_labels)}")
+            report_lines.append(
+                "    Reason: These node labels are defined in the schema ('nodes' section) "
+                "but are not listed as a source or target for any defined relationship "
+                "in the schema ('relationships' section)."
+            )
+
+        if hanging_edge_definitions:
+            issues_found = True
+            report_lines.append("\nPotential Consistency Issues (Hanging Edge Definitions):")
+            report_lines.extend(hanging_edge_definitions)
+            report_lines.append(
+                "    Reason: These relationships are defined to connect node labels "
+                "that do not have a corresponding definition in the schema's 'nodes' section."
+            )
+
+        if not issues_found:
+            report_lines.append(
+                "\nSchema Status: No isolated nodes or inconsistent relationship definitions "
+                "found in the stored schema. The reachability of graph is good."
+            )
+
+        return "\n".join(report_lines)

@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import BigInteger, Boolean, Column, Integer, String, Text, func
+from sqlalchemy import JSON, BigInteger, Boolean, Column, Integer, String, Text, func
 
 from app.core.dal.database import Do
 
@@ -26,3 +26,6 @@ class GraphDbDo(Do):  # type: ignore
         server_default=func.strftime("%s", "now"),
         onupdate=func.strftime("%s", "now"),
     )
+
+    # weak schema database (Neo4j) specific fields for the graph schema
+    schema_metadata = Column(JSON, nullable=True)

@@ -139,17 +139,3 @@ class FileService(metaclass=Singleton):
                 timestamp=int(file_descriptor_do.timestamp),
             )
         raise ValueError(f"Cannot find file with ID {id}.")
-
-    def write_file_content(self, file_path: str, content: str) -> None:
-        """Write content to a file.
-
-        Args:
-            file_path (str): Path to the file
-            content (str): Content to write
-        """
-        directory = os.path.dirname(file_path)
-        if directory and not os.path.exists(directory):
-            os.makedirs(directory)
-
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)

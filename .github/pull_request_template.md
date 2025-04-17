@@ -1,6 +1,6 @@
 <!--
 Before opening your pull request, have a quick look at our contribution guidelines:
-https://github.com/TuGraph-family/chat2graph/blob/master/community/CONTRIBUTING.md
+https://github.com/TuGraph-family/community/blob/master/docs/CONTRIBUTING.md
 -->
 
 ## Title

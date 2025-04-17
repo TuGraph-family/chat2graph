@@ -197,21 +197,26 @@ class ModelService(ABC):
                 func_args: Dict[str, Any] = func_dict.get("args", {})
                 func_calls.append(((func_name, call_objective, func_args), None))
             else:
-                print(
-                    "The system is attempting to match the JSON format within the <funciton_call> "
+                error_details = (
+                    f"\nJSON Error Details:\n"
+                    f"- Message: {func_dict.msg}\n"
+                    f"- Line: {func_dict.lineno}, Column: {func_dict.colno}\n"
+                    f"- Position: {func_dict.pos}\n"
+                    f"- Document excerpt: {func_dict.doc[:100]}..."
+                    if len(func_dict.doc) > 100
+                    else func_dict.doc
+                )
+                error_message = (
+                    "The system is attempting to match the JSON format within the <function_call> "
                     "section through string matching, but a matching error has occurred. "
-                    "Please ensure that the content inside <funciton_call> can be parsed as JSON.\n"
-                    f"{func_dict}\nPlease check the format of the function calling.\n"
+                    "Please ensure that the content inside <function_call> can be parsed as JSON.\n"
+                    f"{error_details}\nPlease check the format of the function calling.\n"
                     f"{FUNC_CALLING_JSON_GUIDE}"
                 )
-                err = (
-                    "The system is attempting to match the JSON format within the <funciton_call> "
-                    "section through string matching, but a matching error has occurred. "
-                    "Please ensure that the content inside <funciton_call> can be parsed as JSON.\n"
-                    f"{func_dict}\nPlease check the format of the function calling.\n"
-                    f"{FUNC_CALLING_JSON_GUIDE}"
-                )
-                func_calls.append((None, err))  # append None to indicate this match failed to parse
+
+                print(error_message)
+                # append None to indicate this match failed to parse
+                func_calls.append((None, error_message))
                 continue
 
         return func_calls

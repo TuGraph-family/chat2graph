@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass
-from typing import Optional, cast
+import json
+from typing import Any, Dict, Optional, cast
 
 from app.core.common.type import GraphDbType
 from app.core.dal.do.graph_db_do import GraphDbDo
@@ -26,20 +27,7 @@ class GraphDbConfig:
     def from_do(do: GraphDbDo) -> "GraphDbConfig":
         """Create a GraphDbConfig instance from a GraphDbDo object."""
         if str(do.type) == GraphDbType.NEO4J.value:
-            return Neo4jDbConfig(
-                id=str(do.id),
-                create_time=int(do.create_time),
-                update_time=int(do.update_time),
-                type=GraphDbType(do.type),
-                name=str(do.name),
-                desc=cast(str, do.desc),
-                host=str(do.host),
-                port=int(do.port),
-                user=cast(str, do.user),
-                pwd=cast(str, do.pwd),
-                default_schema=cast(str, do.default_schema),
-                is_default_db=bool(do.is_default_db),
-            )
+            return Neo4jDbConfig.from_do(do)
         return GraphDbConfig(
             id=str(do.id),
             create_time=int(do.create_time),
@@ -62,8 +50,34 @@ class GraphDbConfig:
         return data
 
 
+@dataclass
 class Neo4jDbConfig(GraphDbConfig):
     """Neo4jDbConfig class"""
+
+    schema_metadata: Optional[Dict[str, Any]] = None
+
+    @staticmethod
+    def from_do(do: GraphDbDo) -> "Neo4jDbConfig":
+        return Neo4jDbConfig(
+            id=str(do.id),
+            create_time=int(do.create_time),
+            update_time=int(do.update_time),
+            type=GraphDbType(do.type),
+            name=str(do.name),
+            desc=cast(str, do.desc),
+            host=str(do.host),
+            port=int(do.port),
+            user=cast(str, do.user),
+            pwd=cast(str, do.pwd),
+            default_schema=cast(str, do.default_schema),
+            is_default_db=bool(do.is_default_db),
+            schema_metadata=json.loads(str(do.schema_metadata))
+            if do.schema_metadata
+            else {
+                "nodes": {},
+                "relationships": {},
+            },
+        )
 
     @property
     def uri(self) -> str:
