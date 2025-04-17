@@ -93,7 +93,9 @@ class EvalOperator(Operator):
         toolkit_service: ToolkitService = ToolkitService.instance
 
         rec_tools, rec_actions = toolkit_service.recommend_tools_actions(
-            actions=self._config.actions, threshold=self._config.threshold, hops=self._config.hops
+            actions=self._config.actions,
+            threshold=self._config.threshold,
+            hops=self._config.hops,
         )
 
         assert workflow_messages is not None and len(workflow_messages) == 1, (
