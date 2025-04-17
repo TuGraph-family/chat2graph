@@ -3,7 +3,7 @@ export const useLocalStorage = () => {
 
     const setLocalStorage = (key: string, val: any) => {
         // 存localStorage
-        localStorage.setItem(key, JSON.stringify(val))
+        localStorage.setItem(key, val)
     }
 
     const getLocalStorage = (key: string) => {
@@ -11,8 +11,13 @@ export const useLocalStorage = () => {
         return val
     }
 
+    const removeLocalStorage = (key: string) => {
+        localStorage.removeItem(key)
+    }
+
     return {
         setLocalStorage,
-        getLocalStorage
+        getLocalStorage,
+        removeLocalStorage
     }
 }

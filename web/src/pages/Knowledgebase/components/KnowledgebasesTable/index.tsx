@@ -1,5 +1,5 @@
 import { Input, Pagination, Spin, Row, Col, Dropdown, Popconfirm, message, Modal, Form, Typography, Empty } from "antd";
-import { DeleteOutlined, EditOutlined, EllipsisOutlined, SearchOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, EllipsisOutlined, RollbackOutlined, SearchOutlined } from "@ant-design/icons";
 import styles from './index.less'
 import { debounce } from "lodash";
 import { history } from "umi";
@@ -7,6 +7,8 @@ import { historyPushLinkAt } from "@/utils/link";
 import { useSearchPagination } from "@/hooks/useSearchPagination";
 import { useKnowledgebaseEntity } from "@/domains/entities/knowledgebase-manager";
 import { useImmer } from "use-immer";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { LOCAL_STORAGE_SESSION_KEY } from "@/constants";
 
 interface KnowledgebasesTableProps {
   formatMessage: (id: string, params?: any) => string
@@ -23,6 +25,7 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
   onRefresh,
   onDeleteKnowledgebase
 }) => {
+  const { setLocalStorage } = useLocalStorage()
   const { runEditKnowledgebase } = useKnowledgebaseEntity()
   const [state, setState] = useImmer({
     dropdownOpen: '',
@@ -151,6 +154,16 @@ const KnowledgebasesTable: React.FC<KnowledgebasesTableProps> = ({
                         setState((draft) => {
                           draft.dropdownOpen = item.id
                         })
+                      }
+                    },
+                    {
+                      label: formatMessage('manager.return'),
+                      icon: <RollbackOutlined />,
+                      key: 'return',
+                      onClick: (e: any) => {
+                        e?.domEvent.stopPropagation()
+                        setLocalStorage(LOCAL_STORAGE_SESSION_KEY, item?.session_id)
+                        history.push(historyPushLinkAt('/home'))
                       }
                     }
                   ]

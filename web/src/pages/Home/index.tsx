@@ -1,5 +1,5 @@
 import styles from './index.less';
-import { Button, GetProp, Tooltip, Flex, Spin, message, Space, Popconfirm } from 'antd';
+import { Button, GetProp, Tooltip, Flex, Spin, message, Space, Popconfirm, Alert } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined, LayoutFilled, RightOutlined, LeftOutlined } from '@ant-design/icons';
 import {
   Attachments,
@@ -13,7 +13,7 @@ import {
 } from '@ant-design/x';
 import { useImmer } from 'use-immer';
 import NameEditor from '@/components/NameEditor';
-import { CURRENT_PREFIXES, FRAMEWORK, FRAMEWORK_CONFIG, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
+import { CURRENT_PREFIXES, FRAMEWORK, FRAMEWORK_CONFIG, LOCAL_STORAGE_SESSION_KEY, LOCAL_STORAGE_STOP_KEY, MESSAGE_TYPE, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
 import Placeholder from '@/components/Placeholder';
 import SenderHeader from '@/components/SenderHeader';
 import { useCallback, useEffect } from 'react';
@@ -26,10 +26,11 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { formatTimestamp } from '@/utils/formatTimestamp';
 import { isEmpty } from 'lodash';
 import { historyPushLinkAt } from '@/utils/link';
+import { useDatabaseEntity } from '@/domains/entities/database-manager';
 
 const HomePage: React.FC = () => {
 
-  const { getLocalStorage, setLocalStorage } = useLocalStorage()
+  const { getLocalStorage, setLocalStorage, removeLocalStorage } = useLocalStorage()
 
   const [state, setState] = useImmer<{
     selectedFramework?: FRAMEWORK;
@@ -63,6 +64,8 @@ const HomePage: React.FC = () => {
 
   const { formatMessage } = useIntlConfig();
 
+  const { getDatabaseList, databaseEntity } = useDatabaseEntity()
+
   const {
     sessionEntity,
     getSessionList,
@@ -75,6 +78,7 @@ const HomePage: React.FC = () => {
     runGetJobIdsBySessionId,
     runGetMessagesBySessionId,
   } = useSessionEntity();
+
   const { sessions } = sessionEntity;
 
 
@@ -120,7 +124,7 @@ const HomePage: React.FC = () => {
 
 
   const onStop = () => {
-    setLocalStorage('MESSAGE_TOP', '')
+    removeLocalStorage(LOCAL_STORAGE_STOP_KEY)
   }
 
   const getMessage = useCallback((job_id: string, onSuccess: (message: any) => void, onUpdate: (message: any) => void) => {
@@ -129,7 +133,7 @@ const HomePage: React.FC = () => {
         job_id,
       }).then(res => {
         const { status } = res?.data?.answer?.metrics || {};
-        if (getLocalStorage("MESSAGE_TOP") === "true") {
+        if (getLocalStorage(LOCAL_STORAGE_STOP_KEY) === "true") {
           clearTimeout(timer);
           onSuccess({})
           // TODO 停止思考逻辑
@@ -176,7 +180,13 @@ const HomePage: React.FC = () => {
 
   const [agent] = useXAgent<API.ChatVO>({
     request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { payload = '', session_id = '', attached_messages } = msg || {};
+      const { payload = '', session_id = '', attached_messages, isRunning } = msg || {};
+
+      // 继续思考
+      if (isRunning) {
+        getMessage(payload, onSuccess, onUpdate);
+        return
+      }
 
       runGetJobIdsBySessionId({
         session_id,
@@ -237,7 +247,7 @@ const HomePage: React.FC = () => {
   const onConversationClick: GetProp<typeof Conversations, 'onActiveChange'> = (key: string) => {
     // 切换时，有思考中任务，则停止
     if (agent.isRequesting()) {
-      setLocalStorage('MESSAGE_TOP', true)
+      setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)
     }
     runGetSessionById({
       session_id: key,
@@ -261,11 +271,24 @@ const HomePage: React.FC = () => {
           draft.isInit = true;
         });
       }
-      setMessages(res?.data?.map(item => getHistoryMessage(item))?.flat() || [])
+
+      const historyMessages: any = res?.data?.map(item => getHistoryMessage(item))?.flat() || []
+
+      if (historyMessages?.length && [MESSAGE_TYPE.RUNNING, MESSAGE_TYPE.CREATED].includes(historyMessages[historyMessages?.length - 1]?.message?.status)) {
+        onRequest({
+          payload: historyMessages[historyMessages?.length - 1]?.message?.job_id,
+          isRunning: true,
+        })
+
+        historyMessages.pop()
+      }
+      setMessages(historyMessages)
     })
+
+    removeLocalStorage(LOCAL_STORAGE_SESSION_KEY)
   };
 
-  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages?.filter(item => !isEmpty(item?.message)).map((item) => {
+  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages?.filter(item => !isEmpty(item?.message)).map((item, idx) => {
     // @ts-ignore
     const { message, id, } = item;
     return {
@@ -293,7 +316,23 @@ const HomePage: React.FC = () => {
             </Flex>
           }
         </div>
+      },
+      onTypingComplete: () => {
+        const newMessages = parsedMessages?.filter(item => !isEmpty(item?.message)).map((newItem, newIdx) => {
+          if (newIdx === idx) {
+            return {
+              ...newItem,
+              message: {
+                ...newItem.message,
+                isTyping: true
+              }
+            }
+          }
+          return newItem;
+        })
+        setMessages(newMessages)
       }
+
     }
   });
 
@@ -374,13 +413,20 @@ const HomePage: React.FC = () => {
             title={formatMessage('home.deleteConversation')}
             okText={formatMessage('home.confirm')}
             cancelText={formatMessage('home.cancel')}
-            onConfirm={() => {
+            onConfirm={(e: any) => {
+              e.stopPropagation()
               runDeleteSession({
                 session_id: conversation.key,
               }).then((res: API.Result_Session_) => {
                 if (res?.success) {
                   getSessionList();
                   message.success(formatMessage('home.deleteConversationSuccess'));
+                  if (activeKey === conversation.key) {
+                    setState((draft) => {
+                      draft.activeKey = ''
+                    })
+                    setMessages([])
+                  }
                 }
               })
             }}
@@ -464,6 +510,13 @@ const HomePage: React.FC = () => {
   // 初始化请求对话列表
   useEffect(() => {
     getSessionList();
+    getDatabaseList();
+
+    const managerSessionId = getLocalStorage(LOCAL_STORAGE_SESSION_KEY);
+
+    if (managerSessionId) {
+      onConversationClick(managerSessionId)
+    }
   }, []);
 
   const onAddUploadId = (fileId: { file_id: string, uid: string }) => {
@@ -482,6 +535,7 @@ const HomePage: React.FC = () => {
   }
   return (
     <div className={styles.wrapper}>
+      <Language />
       <div className={`${styles.sider} ${collapse ? styles['sider-collapsed'] : ''}`}>
         <div className={styles.title}>
           <span className={styles['title-text']}>
@@ -490,7 +544,7 @@ const HomePage: React.FC = () => {
               !collapse && <span>Chat2Graph</span>
             }
           </span>
-          <Language />
+
           <div className={styles['sider-collapsed-icon']} onClick={() => { setState((draft) => { draft.collapse = !draft.collapse; }) }}>
             {
               collapse ? <RightOutlined /> : <LeftOutlined />
@@ -547,6 +601,12 @@ const HomePage: React.FC = () => {
       <div className={
         [styles.chat,
         !items?.length ? styles['chat-emty'] : ''].join(' ')}>
+        {!databaseEntity?.databaseList?.length ? <Alert message={
+          <div>
+            {formatMessage('home.tip')}
+            <a href={historyPushLinkAt('/manager/graphdb')} target="_blank" rel="noreferrer">{formatMessage('home.click')}</a>
+          </div>
+        } type="error" /> : null}
         {/* 消息列表 */}
         <Bubble.List
           items={items.length > 0 ? items : [{
@@ -581,7 +641,7 @@ const HomePage: React.FC = () => {
             actions={false}
             placeholder={formatMessage('home.placeholder')}
             className={styles.sender}
-            onCancel={() => setLocalStorage('MESSAGE_TOP', true)}
+            onCancel={() => setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)}
             footer={({ components }) => {
               const { SendButton, LoadingButton } = components;
               return (

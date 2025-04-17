@@ -96,6 +96,9 @@ export const EXPERTS = {
 }
 
 
+export const LOCAL_STORAGE_STOP_KEY = 'MESSAGE_TOP';
+export const LOCAL_STORAGE_SESSION_KEY = 'SESSION_ID_SELECTED';
+
 
 
 

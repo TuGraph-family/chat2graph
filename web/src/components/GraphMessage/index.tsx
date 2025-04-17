@@ -34,17 +34,22 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
     }
 
     const getTooltipContent = (record) => {
-        const { properties } = record[0]
-        const mountNode = document.createElement("div");
-        const root = createRoot(mountNode);
-        root.render(
-            <div>
-                {Object.entries(properties).map(([key, value]) => (
-                    <div key={key}>{key}: {value || '-'}</div>
-                ))}
-            </div>
-        );
-        return mountNode;
+        try {
+            const { properties } = record[0]
+            const mountNode = document.createElement("div");
+            const root = createRoot(mountNode);
+            root.render(
+                <div>
+                    {Object.entries(properties).map(([key, value]) => (
+                        <div key={key}>{key}: {value ? JSON.stringify(value) : '-'}</div>
+                    ))}
+                </div>
+            );
+            return mountNode;
+        } catch (error) {
+            console.error('getTooltipContent' + error);
+        }
+
     }
 
     useEffect(() => {
@@ -58,13 +63,13 @@ const GraphMessage: React.FC<GraphMessageProps> = ({
                 autoFit: 'view',
                 node: {
                     style: {
-                        labelText: (d) => d?.label,
+                        labelText: (d) => d?.alias,
                         labelFontSize: 8,
                     },
                 },
                 edge: {
                     style: {
-                        labelText: (d) => d?.label,
+                        labelText: (d) => d?.alias,
                         endArrow: true,
                         labelFontSize: 8,
                         labelBackgroundFill: "#fff",
