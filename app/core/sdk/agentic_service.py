@@ -111,9 +111,9 @@ class AgenticService(metaclass=Singleton):
 
         return agent_wrapper
 
-    def graph_db(self, graph_db_congfig: GraphDbConfig) -> "AgenticService":
+    def graph_db(self, graph_db_config: GraphDbConfig) -> "AgenticService":
         """Set the graph database configuration."""
-        GraphDbWrapper(graph_db_congfig).graph_db()
+        GraphDbWrapper(graph_db_config).graph_db()
         return self
 
     @staticmethod
