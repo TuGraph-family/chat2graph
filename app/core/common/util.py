@@ -4,7 +4,9 @@ from typing import Any, Dict, List, Union
 
 
 def parse_jsons(
-    text: str, start_marker: str = "```json", end_marker: str = "```"
+    text: str,
+    start_marker: str = "```json",
+    end_marker: str = "```",
 ) -> List[Union[Dict[str, Any], json.JSONDecodeError]]:
     """Extract JSON content from a text string.
 
