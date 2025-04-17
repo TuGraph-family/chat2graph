@@ -2,10 +2,8 @@ from typing import Optional
 from uuid import uuid4
 
 from app.core.model.graph_db_config import GraphDbConfig
-from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
-from app.plugin.neo4j.resource.schema_operation import SchemaManager
 
 
 class SystemStatusChecker(Tool):
@@ -19,9 +17,7 @@ class SystemStatusChecker(Tool):
             function=self.query_system_status,
         )
 
-    async def query_system_status(
-        self, file_service: FileService, graph_db_service: GraphDbService
-    ) -> str:
+    async def query_system_status(self, graph_db_service: GraphDbService) -> str:
         """Query the system status.
 
         Args:
@@ -53,7 +49,9 @@ class SystemStatusChecker(Tool):
         # schema status
         has_schema: bool = False
         if is_connected:
-            schema = await SchemaManager.read_schema(file_service=file_service)
+            schema = graph_db_service.get_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
 
             # count the number of node and relationship types
             node_count = len(schema["nodes"])

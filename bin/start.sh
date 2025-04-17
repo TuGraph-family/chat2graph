@@ -1,3 +1,5 @@
+#!/bin/bash
+
 main() {
   project_dir=$(cd $(dirname $(dirname $0)); pwd)
 

@@ -48,7 +48,7 @@ export default {
     columns: {
       name: '图数据库名',
       ip: 'IP地址',
-      default: '默认图项目',
+      default: '默认图 Schema',
       status: '可用状态',
       updateTime: '更新时间',
       operation: '操作',
@@ -71,8 +71,8 @@ export default {
       placeholder4: '请输入用户名',
       label5: '密码',
       placeholder5: '请输入密码',
-      label6: '默认图项目',
-      placeholder6: '请输入默认图项目名',
+      label6: '默认图 Schema',
+      placeholder6: '请输入默认图 Schema 名',
       label7: '描述',
       placeholder7: '请输入描述'
     },

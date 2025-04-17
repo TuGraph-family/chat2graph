@@ -83,7 +83,7 @@ cp .env.template .env && vim .env
 ./bin/start.sh
 ```
 
-当看到如下日志后，可以在浏览器访问 [http://localhost:5000/](http://localhost:5000/) 使用 Chat2Graph。
+当看到如下日志后：
 
 ```text
 Starting server...
@@ -108,6 +108,32 @@ WARNING: This is a development server. Do not use it in a production deployment.
 Press CTRL+C to quit
 
 ```
+
+你可以在浏览器访问 [http://localhost:5000/](http://localhost:5000/) 使用 Chat2Graph。
+
+![](img/index-cn.png)
+
+## 注册图数据库
+
+在「管理后台」注册图数据库到Chat2Graph后，可以体验完整的「与图对话」的能力。
+![](img/gdb-mng-cn.png)
+
+当前支持的图数据库类型有：
+* Neo4j
+
+```bash
+docker pull neo4j:latest
+docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none neo4j:latest
+```
+
+* TuGraph
+
+```bash
+docker pull tugraph/tugraph-runtime-centos7:4.5.1
+docker run -d -p 7070:7070 -p 7687:7687 -p 9090:9090 --name tugraph-server \
+  tugraph/tugraph-runtime-centos7:latest lgraph_server -d run --enable_plugin true
+```
+
 
 ### 使用SDK
 
