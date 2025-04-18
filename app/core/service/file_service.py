@@ -40,7 +40,7 @@ class FileService(metaclass=Singleton):
             str: ID of the file
         """
         md5_hash = self._calculate_md5(file)
-        md5_folder = os.join(self._upload_folder, md5_hash)
+        md5_folder = os.path.join(self._upload_folder, md5_hash)
         if not os.path.exists(md5_folder):
             os.makedirs(md5_folder)
             # save the file
