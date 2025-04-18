@@ -27,7 +27,7 @@ const ThinkCollapse: React.FC<{ think: any }> = ({
                         <span className={styles['step-thinks-title-expert']}>
                             @{think?.assigned_expert_name ? formatMessage(`home.expert.${EXPERTS[think.assigned_expert_name]}`) : '数据导入专家'}
                         </span>
-                        : {think?.goal + think?.status}
+                        : {think?.goal}
                     </p>,
                     children:
                         think?.payload ? <div key={`${think?.jobId}_payload`} className={styles['step-thinks-message']}>
