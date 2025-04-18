@@ -40,33 +40,33 @@ class FileService(metaclass=Singleton):
             str: ID of the file
         """
         md5_hash = self._calculate_md5(file)
-        md5_folder = self._upload_folder + f"/{md5_hash}/"
+        md5_folder = os.path.join(self._upload_folder, md5_hash)
         if not os.path.exists(md5_folder):
             os.makedirs(md5_folder)
-
-        # save the file
-        file_path = os.path.join(md5_folder, file.filename)
-        file.seek(0)
-        file.save(file_path)
+            # save the file
+            file_path = os.path.join(md5_folder, file.filename)
+            file.seek(0)
+            file.save(file_path)
+        else:
+            if len(os.listdir(md5_folder)) != 1:
+                raise ValueError(f"More than one file under folder {md5_folder}.")
+            file_path = os.path.join(md5_folder, os.listdir(md5_folder)[0])
 
         if file_id:
             existing_file_do = self._file_descriptor_dao.get_by_id(id=file_id)
             if existing_file_do:
                 # remove the old file
-                old_path = existing_file_do.path
-                old_file_path = os.path.join(old_path, existing_file_do.name)
+                old_file_path = str(existing_file_do.path)
 
                 # check if there is any other record using the same flolder
-                other_records = self._file_descriptor_dao.filter_by(path=old_path)
+                other_records = self._file_descriptor_dao.filter_by(path=old_file_path)
                 other_records = [r for r in other_records if r.id != file_id]
 
                 # if the old path is different from the new one and no other records using it
-                if old_path != md5_folder and len(other_records) == 0:
+                if old_file_path != file_path and len(other_records) == 0:
                     try:
-                        if os.path.exists(old_file_path):
-                            os.remove(old_file_path)
-                        if os.path.exists(old_path) and len(os.listdir(old_path)) == 0:
-                            os.rmdir(old_path)
+                        os.remove(old_file_path)
+                        os.rmdir(os.path.dirname(old_file_path))
                     except Exception:
                         print(
                             "Warning: Failed to update the file storage, "
@@ -77,7 +77,7 @@ class FileService(metaclass=Singleton):
                 self._file_descriptor_dao.update(
                     id=file_id,
                     name=file.filename,
-                    path=md5_folder,
+                    path=file_path,
                     type=FileStorageType.LOCAL.value,
                     size=os.path.getsize(file_path),
                 )
@@ -87,7 +87,7 @@ class FileService(metaclass=Singleton):
         result = self._file_descriptor_dao.create(
             id=file_id,  # allow id to be None for new records
             name=file.filename,
-            path=md5_folder,
+            path=file_path,
             type=FileStorageType.LOCAL.value,
             size=os.path.getsize(file_path),
         )
@@ -101,14 +101,12 @@ class FileService(metaclass=Singleton):
         """
         file_descriptor_do = self._file_descriptor_dao.get_by_id(id=id)
         if file_descriptor_do:
-            path = file_descriptor_do.path
+            file_path = file_descriptor_do.path
             self._file_descriptor_dao.delete(id=id)
-            results = self._file_descriptor_dao.filter_by(path=path)
+            results = self._file_descriptor_dao.filter_by(path=file_path)
             if len(results) == 0:
-                for file_name in os.listdir(path):
-                    file_path = os.path.join(path, file_name)
-                    os.remove(file_path)
-                os.rmdir(path)
+                os.remove(file_path)
+                os.rmdir(os.path.dirname(file_path))
         else:
             raise ValueError(f"Cannot find file with ID {id}.")
 
@@ -116,8 +114,7 @@ class FileService(metaclass=Singleton):
         """Read the content of a file with ID and return it as a string."""
         file_do = self._file_descriptor_dao.get_by_id(id=file_id)
         if file_do:
-            file_path = os.path.join(file_do.path, file_do.name)
-            with open(file_path, encoding="utf-8") as f:
+            with open(str(file_do.path), encoding="utf-8") as f:
                 return f.read()
         raise ValueError(f"Cannot find file with ID {id}.")
 

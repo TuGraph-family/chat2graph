@@ -55,18 +55,6 @@ const Manage = () => {
               history.push(historyPushLinkAt(key))
             }}
             items={items} />
-          <div>
-            <Button
-              onClick={() => {
-                window.open(historyPushLinkAt('/home'),)
-              }}
-              size='large'
-              block
-              icon={<ArrowLeftOutlined />}
-            >
-              {formatMessage('manager.return')}
-            </Button>
-          </div>
           {/* TODO: 暂无用户体系 */}
           {/*   <div className={styles['manager-user']}>
             <div className={styles['manager-user-avatar']}>

@@ -119,6 +119,10 @@ declare namespace API {
     thinking?: any,
     attached_messages?: any,
     instruction_message?: any
+    // Thinking about interruption
+    isRunning?: boolean;
+    // Is typing finished?
+    isTyping?: boolean;
   }
 
   interface Result_Chat_ {

@@ -75,7 +75,7 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
             draft.file_id = res?.data?.file_id || ''
         })
 
-        return res?.data?.file_id
+        return false
     }
 
     const props: UploadProps = {
@@ -124,7 +124,9 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
             ]}
         />
 
-        <Form form={form} style={{ marginTop: 30 }}>
+        <Form form={form} style={{ marginTop: 30 }} initialValues={{
+            config: `{\n"chunk_size":512\n}`
+        }}>
             <Form.Item name="file" rules={[{ required: true, message: formatMessage('knowledgebase.detail.upload.required') }]} hidden={current !== 0}>
                 <Dragger {...props}>
                     <p className="ant-upload-drag-icon">

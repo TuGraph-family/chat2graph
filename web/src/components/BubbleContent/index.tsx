@@ -46,6 +46,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
       if (cachedItem) {
         cachedItem.goal = newItem.goal ?? cachedItem.goal;
         cachedItem.payload = newItem.payload ?? cachedItem.payload;
+        cachedItem.status = newItem.status ?? cachedItem.status;
       } else {
         cachedMap.set(newItem.jobId, { ...newItem });
       }
@@ -67,7 +68,6 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         assigned_expert_name: item?.job?.assigned_expert_name
       }
     })
-
     setThinks(updateCachedData(thinks, newThinks))
     setState(draft => {
       if (status === MESSAGE_TYPE.CREATED || status === MESSAGE_TYPE.RUNNING) {
@@ -167,7 +167,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
       && <div className={styles['bubble-content-message']}>
         <ReactMarkdown remarkPlugins={[gfm]}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</ReactMarkdown>
         {
-          message?.attached_messages?.length ? <div>
+          message?.isTyping && message?.attached_messages?.length ? <div>
             {
               message?.attached_messages?.map((item: any) => <GraphMessage key={item?.id} message={item} />)
             }

@@ -139,7 +139,9 @@ export default {
       QUERY: '图查询专家',
       ANALYSIS: '图分析专家',
       ANSWERING: '问答专家',
-    }
+    },
+    tip: '未发现默认图数据库，建议提前添加以便访问完整的功能。',
+    click: '点击这里',
   },
   manager: {
     return: '返回会话'

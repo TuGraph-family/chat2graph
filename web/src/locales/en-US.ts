@@ -139,7 +139,9 @@ export default {
       QUERY: 'Graph Query Expert',
       ANALYSIS: 'Graph Analysis Expert',
       ANSWERING: 'Question Answering Expert',
-    }
+    },
+    tip: 'No default graph database was registered, we suggest you add a new one to access the completed capabilities.',
+    click: 'Click here',
   },
   manager: {
     return: 'Return Session'

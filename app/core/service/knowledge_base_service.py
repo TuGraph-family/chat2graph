@@ -256,9 +256,8 @@ class KnowledgeBaseService(metaclass=Singleton):
         # get file with file id
         file_descriptor_do = self._file_descriptor_dao.get_by_id(id=file_id)
         if file_descriptor_do:
-            folder_path = file_descriptor_do.path
-            file_name = file_descriptor_do.name
-            file_path = os.path.join(folder_path, os.listdir(folder_path)[0])
+            file_name = str(file_descriptor_do.name)
+            file_path = str(file_descriptor_do.path)
 
             # add file_kb_mapping
             if self._file_kb_mapping_dao.get_by_id(id=file_id) is None:
