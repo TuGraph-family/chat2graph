@@ -56,7 +56,7 @@ class FileService(metaclass=Singleton):
             existing_file_do = self._file_descriptor_dao.get_by_id(id=file_id)
             if existing_file_do:
                 # remove the old file
-                old_file_path = existing_file_do.path
+                old_file_path = str(existing_file_do.path)
 
                 # check if there is any other record using the same flolder
                 other_records = self._file_descriptor_dao.filter_by(path=old_file_path)
@@ -114,8 +114,7 @@ class FileService(metaclass=Singleton):
         """Read the content of a file with ID and return it as a string."""
         file_do = self._file_descriptor_dao.get_by_id(id=file_id)
         if file_do:
-            file_path = file_do.path
-            with open(file_path, encoding="utf-8") as f:
+            with open(str(file_do.path), encoding="utf-8") as f:
                 return f.read()
         raise ValueError(f"Cannot find file with ID {id}.")
 

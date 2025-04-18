@@ -20,8 +20,7 @@ class FileDescriptor:
     def get_payload(self) -> str:
         """Get the content of the file."""
         if self.path:
-            file_path = self.path
-            with open(file_path, encoding="utf-8") as f:
+            with open(self.path, encoding="utf-8") as f:
                 return f.read()
         else:
             return ""
