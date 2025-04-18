@@ -75,7 +75,7 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
             draft.file_id = res?.data?.file_id || ''
         })
 
-        return res?.data?.file_id
+        return false
     }
 
     const props: UploadProps = {

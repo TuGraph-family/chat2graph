@@ -47,7 +47,7 @@ const SenderHeader: React.FC<Props> = (props) => {
       uid: file.uid
     })
 
-    return res?.data?.file_id
+    return false
   }
 
 
