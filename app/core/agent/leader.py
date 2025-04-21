@@ -390,7 +390,7 @@ class Leader(Agent):
         """Stop the job graph.
 
         When a specific job (original job / subjob) is stopped, this method is called to mark the
-        entire current job as `STOPPED`, whilel other jobs without results (including subjobs and
+        entire current job as `STOPPED`, while other jobs without results (including subjobs and
         original jobs) are marked as `STOPPED`.
         """
         # get the original job
@@ -445,7 +445,7 @@ class Leader(Agent):
         """Fail the job graph.
 
         When a specific job (original job / subjob) fails and it is necessary to stop the execution
-        of the JobGraph, this method is called to mark the entire current job as `FAILED`, whilel
+        of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
         other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
         """
         # mark the current job as failed
