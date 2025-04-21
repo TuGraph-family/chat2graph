@@ -116,11 +116,11 @@ def stop_job_graph(session_id: str):
     return make_response(message=message)
 
 
-@sessions_bp.route("/<string:session_id>/continue", methods=["POST"])
-def continue_job_graph(session_id: str):
-    """Continue a specific original job graph by id."""
+@sessions_bp.route("/<string:session_id>/recover", methods=["POST"])
+def revover_original_job(session_id: str):
+    """Recover a specific original job graph by id."""
     manager = SessionManager()
-    message = manager.continue_job_graph(session_id=session_id)
+    message = manager.recover_original_job(session_id=session_id)
     return make_response(message=message)
 
 

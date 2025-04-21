@@ -455,8 +455,8 @@ class Leader(Agent):
             self._job_service.save_job_result(job_result=job_result)
             self.stop_job_graph(job_id=job_id, error_info=error_info)
 
-    def continue_job_graph(self, original_job_id: str) -> None:
-        """Continue the job graph.
+    def recover_original_job(self, original_job_id: str) -> None:
+        """Reconver the original job.
 
         When a specific original job is stopped and it is necessary to continue
         the execution of the JobGraph. If the leader has not decomposed the original job,

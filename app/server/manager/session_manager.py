@@ -213,8 +213,8 @@ class SessionManager:
         session_wrapper.stop_job_graph()
         return "Job execution stopped successfully"
 
-    def continue_job_graph(self, session_id: str) -> str:
-        """Continue a specific original job by id."""
+    def recover_original_job(self, session_id: str) -> str:
+        """Recover a specific original job by id."""
         session_wrapper = self._agentic_service.session(session_id=session_id)
-        session_wrapper.continue_job_graph()
-        return "Job execution continued successfully"
+        session_wrapper.recover_original_job()
+        return "Job execution revocered successfully"

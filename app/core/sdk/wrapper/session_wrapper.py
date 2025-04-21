@@ -100,13 +100,13 @@ class SessionWrapper:
             error_info=f"The job `{latest_job_id}` is stopped by user.",
         )
 
-    def continue_job_graph(self) -> None:
-        """Continue the job graph execution."""
+    def recover_original_job(self) -> None:
+        """Recover the original job execution."""
         agent_service: AgentService = AgentService.instance
         latest_job_id = self._session.latest_job_id
         if not latest_job_id:
             raise ValueError("No job submitted in the session since the latest job ID is None.")
-        agent_service.leader.continue_job_graph(original_job_id=latest_job_id)
+        agent_service.leader.recover_original_job(original_job_id=latest_job_id)
 
     def _format_conversation_history(
         self, conversation_views: List[MessageView], current_question_message: Optional[TextMessage]
