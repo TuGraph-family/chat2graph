@@ -247,5 +247,6 @@ class MonoModelReasoner(Reasoner):
     @staticmethod
     def stopped(message: ModelMessage) -> bool:
         """Stop the reasoner when the task is done or deliverable is found."""
+        # TODO: improve the stop condition
         payload = message.get_payload()
-        return "TASK_DONE" in payload or "<deliverable>" in payload
+        return "<deliverable>" in payload and "</deliverable>" in payload
