@@ -108,3 +108,17 @@ class SessionService(metaclass=Singleton):
             )
             for result in results
         ]
+
+    def get_latest_job_id(self, session_id: str) -> str:
+        """Get the latest job ID for a session.
+
+        Args:
+            session_id (str): ID of the session
+
+        Returns:
+            str: Latest job ID
+        """
+        session = self.get_session(session_id=session_id)
+        if not session.latest_job_id:
+            raise ValueError(f"Session with ID {session_id} has no latest job ID")
+        return session.latest_job_id

@@ -178,6 +178,11 @@ class JobService(metaclass=Singleton):
                 ]
             )
 
+            # save the original job result
+            if not original_job_result.has_result():
+                original_job_result.status = JobStatus.FINISHED
+                self.save_job_result(job_result=original_job_result)
+
         # save/update the multi-agent result to the database
         original_job: Job = self.get_original_job(original_job_id)
         try:
@@ -215,9 +220,6 @@ class JobService(metaclass=Singleton):
         multi_agent_hybrid_message.set_attached_messages(attached_messages=graph_messages)
         self._message_service.save_message(message=multi_agent_hybrid_message)
 
-        # save the original job result
-        original_job_result.status = JobStatus.FINISHED
-        self.save_job_result(job_result=original_job_result)
         return original_job_result
 
     def get_conversation_view(self, original_job_id: str) -> MessageView:
@@ -294,63 +296,6 @@ class JobService(metaclass=Singleton):
             thinking_subjobs=subjobs,
             thinking_metrics=subjob_results,
         )
-
-    def stop_job_graph(self, job: Job, error_info: str) -> None:
-        """Stop the job graph.
-
-        When a specific job (original job / subjob) fails and it is necessary to stop the execution
-        of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
-        other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
-        """
-        # color: red
-        print(f"\033[38;5;196m[ERROR]: {error_info}\033[0m")
-
-        # mark the current job as failed
-        job_result = self.get_job_result(job_id=job.id)
-        job_result.status = JobStatus.FAILED
-        self.save_job_result(job_result=job_result)
-
-        # get the original job
-        if isinstance(job, SubJob):
-            assert job.original_job_id is not None, "The subjob must have an original job ID."
-            original_job: Job = self.get_original_job(original_job_id=job.original_job_id)
-        else:
-            original_job = job
-
-        # if the original job does not have a result, mark it as failed
-        original_job_result = self.get_job_result(job_id=original_job.id)
-        if not original_job_result.has_result():
-            original_job_result.status = JobStatus.STOPPED
-            self.save_job_result(job_result=original_job_result)
-
-        # update all the subjobs which have not the result to FAILED
-        subjob_ids = self.get_subjob_ids(original_job_id=original_job.id)
-        for subjob_id in subjob_ids:
-            # mark all the subjobs as legacy
-            subjob_result = self.get_job_result(job_id=subjob_id)
-            if not subjob_result.has_result():
-                subjob_result.status = JobStatus.STOPPED  # mark the subjob as STOPPED
-                self.save_job_result(job_result=subjob_result)
-
-        # save the final system message with the error information
-        error_payload = (
-            f"An error occurred during the execution of the job: {error_info}\n"
-            f"Please check the job `{original_job.id}` for more details."
-        )
-        try:
-            error_message = self._message_service.get_text_message_by_job_id_and_role(
-                original_job.id, ChatMessageRole.SYSTEM
-            )
-            error_message.set_payload(error_payload)
-        except ValueError:
-            error_message = TextMessage(
-                payload=error_payload,
-                job_id=original_job.id,
-                session_id=original_job.session_id,
-                assigned_expert_name=original_job.assigned_expert_name,
-                role=ChatMessageRole.SYSTEM,
-            )
-        self._message_service.save_message(message=error_message)
 
     def get_job_graph(self, original_job_id: str) -> JobGraph:
         """Get the job graph by the original job id. If the job graph does not exist,

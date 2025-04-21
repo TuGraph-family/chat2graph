@@ -32,25 +32,23 @@ class SystemStatusChecker(Tool):
         try:
             graph_db_config: GraphDbConfig = graph_db_service.get_default_graph_db_config()
             is_connected = graph_db_service.validate_graph_db_connection(graph_db_config)
-            if is_connected:
-                response += (
-                    "- The graph database connection is valid.\n"
-                    f"\tGraph DB name: {graph_db_config.name}\n"
-                    f"\tGraph DB type: {graph_db_config.type.value}\n"
-                    f"\tGraph DB host: {graph_db_config.host}\n"
-                    f"\tGraph DB port: {graph_db_config.port}\n"
-                    f"\tIs default Graph DB: {graph_db_config.is_default_db}\n"
-                )
-                response += (
-                    "- The graph database connection is invalid. "
-                    "Please connect the Graph DB to the system\n"
-                )
         except ValueError:
             is_connected = False
+
+        if is_connected:
+            response += (
+                "- The graph database connection is valid.\n"
+                f"\tGraph DB name: {graph_db_config.name}\n"
+                f"\tGraph DB type: {graph_db_config.type.value}\n"
+                f"\tGraph DB host: {graph_db_config.host}\n"
+                f"\tGraph DB port: {graph_db_config.port}\n"
+                f"\tIs default Graph DB: {graph_db_config.is_default_db}\n"
+            )
+        else:
             response += (
                 "- The graph database connection is invalid. "
                 "Please configure the Graph DB configuration and "
-                "connect the Graph DB to the system\n"
+                "connect the Graph DB to the system.\n"
             )
 
         # schema status
