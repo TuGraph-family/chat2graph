@@ -162,7 +162,7 @@ class Leader(Agent):
         # init the decomposed job graph
         job_graph = JobGraph()
 
-        # check the current job (orginal job / subjob) status
+        # check the current job (original job / subjob) status
         if self._job_service.get_job_result(job_id=job_id).has_result():
             return job_graph
 
@@ -465,13 +465,13 @@ class Leader(Agent):
         """
         original_job = self._job_service.get_original_job(original_job_id=original_job_id)
         # mark the current job as finished
-        orginal_job_result = self._job_service.get_job_result(job_id=original_job_id)
-        if orginal_job_result.status == JobStatus.STOPPED:
+        original_job_result = self._job_service.get_job_result(job_id=original_job_id)
+        if original_job_result.status == JobStatus.STOPPED:
             subjobs = self._job_service.get_subjobs(original_job_id=original_job_id)
             if len(subjobs) == 0:
                 # if there are no subjobs, it means leader did not decompose the original job
-                orginal_job_result.status = JobStatus.CREATED
-                self._job_service.save_job_result(job_result=orginal_job_result)
+                original_job_result.status = JobStatus.CREATED
+                self._job_service.save_job_result(job_result=original_job_result)
 
                 # start to execute the original job
                 run_in_thread(self.execute_original_job, original_job=original_job)
@@ -479,8 +479,8 @@ class Leader(Agent):
             else:
                 # if there are subjobs, it means leader decomposed the original job,
                 # and waiting for the completion of the job graph
-                orginal_job_result.status = JobStatus.RUNNING
-                self._job_service.save_job_result(job_result=orginal_job_result)
+                original_job_result.status = JobStatus.RUNNING
+                self._job_service.save_job_result(job_result=original_job_result)
 
                 for sub_job in subjobs:
                     sub_job_result = self._job_service.get_job_result(job_id=sub_job.id)
