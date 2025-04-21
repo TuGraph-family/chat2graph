@@ -458,7 +458,7 @@ class Leader(Agent):
     def continue_job_graph(self, orginal_job_id: str) -> None:
         """Continue the job graph.
 
-        When a specific original job is finished and it is necessary to continue
+        When a specific original job is stopped and it is necessary to continue
         the execution of the JobGraph. If the leader has not decomposed the original job,
         this method is called to restart the job decomposition. If not, it will continue all the
         subjobs and mark them as `CREATED` to re-execute the job graph.
