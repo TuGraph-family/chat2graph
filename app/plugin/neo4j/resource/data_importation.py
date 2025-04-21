@@ -449,12 +449,12 @@ class DataImport(Tool):
             return "{" + ", ".join(props) + "}"
 
         try:
-            # 格式化属性
+            # format properties to Cypher property string
             source_props = format_properties(source_properties)
             target_props = format_properties(target_properties)
             rel_props = format_properties(relationship_properties)
 
-            # 构建Cypher语句
+            # cypher statement
             cypher = f"""
             MERGE (source:{source_label} {{{source_primary_key}: {format_property_value(source_properties[source_primary_key])}}})
             ON CREATE SET source = {source_props}
@@ -472,7 +472,7 @@ class DataImport(Tool):
 
             store = graph_db_service.get_default_graph_db()
             with store.conn.session() as session:
-                # 执行导入操作
+                # execute the import operation
                 print(f"Executing statement: {cypher}")
                 result = session.run(cypher)
                 summary = result.consume()
@@ -480,26 +480,26 @@ class DataImport(Tool):
                 nodes_updated = summary.counters.properties_set
                 rels_created = summary.counters.relationships_created
 
-                # 获取本次操作的详细信息
+                # get details of this operation
                 details = {
                     "source": f"{source_label}(id: {source_properties[source_primary_key]})",
                     "target": f"{target_label}(id: {target_properties[target_primary_key]})",
                     "relationship": f"{relationship_label}",
                 }
 
-                # 获取数据库当前状态
-                # 1. 节点统计
+                # get current status of the database
+                # 1. node statistics
                 node_counts = {}
                 for label in [source_label, target_label]:
                     result = session.run(f"MATCH (n:{label}) RETURN count(n) as count")
                     node_counts[label] = result.single()["count"]
 
-                # 2. 关系统计
+                # 2. relationship statistics
                 rel_count = session.run(
                     f"MATCH ()-[r:{relationship_label}]->() RETURN count(r) as count"
                 ).single()["count"]
 
-                # 3. 总体统计
+                # 3. overall statistics
                 total_stats = session.run("""
                     MATCH (n) 
                     OPTIONAL MATCH (n)-[r]->() 
@@ -570,7 +570,7 @@ class DataImport(Tool):
 
                 data_graph_dict = {"vertices": vertices, "edges": edges}
 
-                # 保存 graph type artifact
+                # save graph type artifact
                 artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
                     job_id=job_id, content_type=ContentType.GRAPH
                 )
