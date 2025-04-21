@@ -146,7 +146,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         defaultActiveKey={['1']}
         expandIconPosition="end"
         expandIcon={({ isActive }) => {
-          if (content !== 'STOP' && thinks?.length) {
+          if (thinks?.length) {
             return isActive ? <UpOutlined style={{ color: '#6a6b71' }} /> : <DownOutlined style={{ color: '#6a6b71' }} />
           }
           return null
@@ -160,16 +160,16 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
                 <span className={styles['bubble-content-status-text']}>{formatMessage(MESSAGE_TYPE_TIPS[status])}</span>
               </div>
             </div>,
-            children: content !== 'STOP' && thinks?.length ? <Steps items={items} direction="vertical" /> : null
+            children: thinks?.length ? <Steps items={items} direction="vertical" /> : null
           },
         ]}
       />
     }
     {
       content
-      && (status === MESSAGE_TYPE.FINISHED || content === MESSAGE_TYPE.STOP || status === MESSAGE_TYPE.FAILED)
+      && (status === MESSAGE_TYPE.FINISHED || status === MESSAGE_TYPE.FAILED)
       && <div className={styles['bubble-content-message']}>
-        <ReactMarkdown remarkPlugins={[gfm]}>{content === MESSAGE_TYPE.STOP ? formatMessage('home.stop') : content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[gfm]}>{content}</ReactMarkdown>
         {
           message?.isTyping && message?.attached_messages?.length ? <div>
             {

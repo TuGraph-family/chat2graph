@@ -63,8 +63,7 @@ export const MESSAGE_TYPE = {
   FAILED: 'FAILED',
   // 被终止
   STOPPED: 'STOPPED',
-  // 停止
-  STOP: 'STOP',
+
 }
 
 export const MESSAGE_TYPE_TIPS = {
