@@ -455,7 +455,7 @@ class Leader(Agent):
             self._job_service.save_job_result(job_result=job_result)
             self.stop_job_graph(job_id=job_id, error_info=error_info)
 
-    def continue_job_graph(self, orginal_job_id: str) -> None:
+    def continue_job_graph(self, original_job_id: str) -> None:
         """Continue the job graph.
 
         When a specific original job is stopped and it is necessary to continue
@@ -463,11 +463,11 @@ class Leader(Agent):
         this method is called to restart the job decomposition. If not, it will continue all the
         subjobs and mark them as `CREATED` to re-execute the job graph.
         """
-        original_job = self._job_service.get_original_job(original_job_id=orginal_job_id)
+        original_job = self._job_service.get_original_job(original_job_id=original_job_id)
         # mark the current job as finished
-        orginal_job_result = self._job_service.get_job_result(job_id=orginal_job_id)
+        orginal_job_result = self._job_service.get_job_result(job_id=original_job_id)
         if orginal_job_result.status == JobStatus.STOPPED:
-            subjobs = self._job_service.get_subjobs(original_job_id=orginal_job_id)
+            subjobs = self._job_service.get_subjobs(original_job_id=original_job_id)
             if len(subjobs) == 0:
                 # if there are no subjobs, it means leader did not decompose the original job
                 orginal_job_result.status = JobStatus.CREATED
@@ -489,7 +489,7 @@ class Leader(Agent):
                         self._job_service.save_job_result(job_result=sub_job_result)
 
                 # start to execute the job graph
-                run_in_thread(self.execute_job_graph, original_job_id=orginal_job_id)
+                run_in_thread(self.execute_job_graph, original_job_id=original_job_id)
 
     def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
         """Dispatch the job to the expert, and handle the result."""
