@@ -28,11 +28,9 @@ def parse_jsons(
     for match in json_matches:
         json_str = match.group(1).strip()
         try:
-            # attempt to fix trailing commas before parsing
-            # remove trailing commas before closing curly braces }
-            json_str_fixed = re.sub(r",\s*(\})$", r"\1", json_str, flags=re.MULTILINE)
-            # remove trailing commas before closing square brackets ]
-            json_str_fixed = re.sub(r",\s*(\])$", r"\1", json_str_fixed, flags=re.MULTILINE)
+            # attempt to fix trailing commas before parsing using lookahead
+            # remove comma and trailing whitespace if followed by } or ]
+            json_str_fixed = re.sub(r",\s*(?=[\}\]])", "", json_str)
 
             parsed_json = json.loads(json_str_fixed)
             results.append(parsed_json)
