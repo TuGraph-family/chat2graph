@@ -9,10 +9,12 @@ from app.core.common.type import ReasonerType, WorkflowPlatformType
 from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
 from app.core.model.agentic_config import AgenticConfig
+from app.core.model.graph_db_config import GraphDbConfig
 from app.core.model.job import Job
 from app.core.model.message import ChatMessage, MessageType, TextMessage
 from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
+from app.core.sdk.wrapper.graph_db_wrapper import GraphDbWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.session_wrapper import SessionWrapper
@@ -108,6 +110,11 @@ class AgenticService(metaclass=Singleton):
         agent_wrapper.profile(name=name, description=description).type(Expert)
 
         return agent_wrapper
+
+    def graph_db(self, graph_db_config: GraphDbConfig) -> "AgenticService":
+        """Set the graph database configuration."""
+        GraphDbWrapper(graph_db_config).graph_db()
+        return self
 
     @staticmethod
     def load(

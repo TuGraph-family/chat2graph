@@ -9,7 +9,6 @@ from app.core.model.message import FileMessage, HybridMessage, MessageType, Work
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.file_service import FileService
-from app.core.service.job_service import JobService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.message_service import MessageService
 from app.core.service.toolkit_service import ToolkitService
@@ -26,10 +25,6 @@ class Operator:
 
     def __init__(self, config: OperatorConfig):
         self._config: OperatorConfig = config
-        self._toolkit_service: ToolkitService = ToolkitService.instance
-        self._file_service: FileService = FileService.instance
-        self._message_service: MessageService = MessageService.instance
-        self._job_service: JobService = JobService.instance
 
     def execute(
         self,
@@ -67,7 +62,11 @@ class Operator:
         previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> Task:
-        rec_tools, rec_actions = self._toolkit_service.recommend_tools_actions(
+        toolkit_service: ToolkitService = ToolkitService.instance
+        file_service: FileService = FileService.instance
+        message_service: MessageService = MessageService.instance
+
+        rec_tools, rec_actions = toolkit_service.recommend_tools_actions(
             actions=self._config.actions,
             threshold=self._config.threshold,
             hops=self._config.hops,
@@ -84,7 +83,7 @@ class Operator:
             original_job_id = job.id
         hybrid_messages: List[HybridMessage] = cast(
             List[HybridMessage],
-            self._message_service.get_message_by_job_id(
+            message_service.get_message_by_job_id(
                 job_id=original_job_id, message_type=MessageType.HYBRID_MESSAGE
             ),
         )
@@ -93,7 +92,7 @@ class Operator:
             attached_messages = hybrid_message.get_attached_messages()
             for attached_message in attached_messages:
                 if isinstance(attached_message, FileMessage):
-                    file_descriptor = self._file_service.get_file_descriptor(
+                    file_descriptor = file_service.get_file_descriptor(
                         file_id=attached_message.get_file_id()
                     )
                     file_descriptors.append(file_descriptor)

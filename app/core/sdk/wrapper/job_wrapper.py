@@ -1,9 +1,10 @@
 import time
-from typing import List, cast
+from typing import cast
 
+from app.core.common.type import ChatMessageRole
 from app.core.model.job import Job
 from app.core.model.job_result import JobResult
-from app.core.model.message import ChatMessage, MessageType
+from app.core.model.message import ChatMessage, HybridMessage
 from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
@@ -35,11 +36,6 @@ class JobWrapper:
         # TODO: implement the stream function
         raise NotImplementedError("Stream is not supported yet.")
 
-    def query_result(self) -> JobResult:
-        """Get the result of the job."""
-        job_service: JobService = JobService.instance
-        return job_service.query_original_job_result(original_job_id=self._job.id)
-
     def wait(self, interval: int = 5) -> ChatMessage:
         """Wait for the result."""
         while 1:
@@ -49,18 +45,18 @@ class JobWrapper:
             # query the result every `interval` seconds.
             # please note that the job is executed in the thread,
             # so the result may not be queryed immediately.
-            job_result: JobResult = self.query_result()
+            job_service: JobService = JobService.instance
+            job_result: JobResult = job_service.query_original_job_result(
+                original_job_id=self._job.id
+            )
 
             # check if the job is finished
             if job_result.has_result():
                 message_service: MessageService = MessageService.instance
-                result_messages: List[ChatMessage] = cast(
-                    List[ChatMessage],
-                    message_service.get_message_by_job_id(
-                        job_id=self._job.id, message_type=MessageType.TEXT_MESSAGE
+                return cast(
+                    HybridMessage,
+                    message_service.get_hybrid_message_by_job_id_and_role(
+                        job_id=self._job.id,
+                        role=ChatMessageRole.SYSTEM,
                     ),
                 )
-                assert len(result_messages) == 1, (
-                    "The result of the multi agent's job should be unique."
-                )
-                return result_messages[0]

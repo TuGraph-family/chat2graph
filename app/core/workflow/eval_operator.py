@@ -8,6 +8,7 @@ from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator import Operator
 
 
@@ -89,8 +90,12 @@ class EvalOperator(Operator):
         previous_expert_outputs: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> Task:
-        rec_tools, rec_actions = self._toolkit_service.recommend_tools_actions(
-            actions=self._config.actions, threshold=self._config.threshold, hops=self._config.hops
+        toolkit_service: ToolkitService = ToolkitService.instance
+
+        rec_tools, rec_actions = toolkit_service.recommend_tools_actions(
+            actions=self._config.actions,
+            threshold=self._config.threshold,
+            hops=self._config.hops,
         )
 
         assert workflow_messages is not None and len(workflow_messages) == 1, (
