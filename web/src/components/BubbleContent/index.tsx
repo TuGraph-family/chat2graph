@@ -145,7 +145,12 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         collapsible="header"
         defaultActiveKey={['1']}
         expandIconPosition="end"
-        expandIcon={({ isActive }) => isActive ? <UpOutlined style={{ color: '#6a6b71' }} /> : <DownOutlined style={{ color: '#6a6b71' }} />}
+        expandIcon={({ isActive }) => {
+          if (content !== 'STOP' && thinks?.length) {
+            return isActive ? <UpOutlined style={{ color: '#6a6b71' }} /> : <DownOutlined style={{ color: '#6a6b71' }} />
+          }
+          return null
+        }}
         items={[
           {
             key: '1',
@@ -155,8 +160,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
                 <span className={styles['bubble-content-status-text']}>{formatMessage(MESSAGE_TYPE_TIPS[status])}</span>
               </div>
             </div>,
-            children: content !== 'STOP' && ![MESSAGE_TYPE.FAILED, MESSAGE_TYPE.STOPPED].includes(status) && <Steps items={items} direction="vertical" />
-            ,
+            children: content !== 'STOP' && thinks?.length ? <Steps items={items} direction="vertical" /> : null
           },
         ]}
       />
@@ -175,10 +179,6 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         }
       </div>
     }
-
-
-
-
   </div>
 }
 
