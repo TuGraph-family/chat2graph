@@ -392,6 +392,9 @@ class Leader(Agent):
         When a specific job (original job / subjob) is stopped, this method is called to mark the
         entire current job as `STOPPED`, while other jobs without results (including subjobs and
         original jobs) are marked as `STOPPED`.
+
+        Note that the running jobs are not stopped, since they are already set up in the
+        ThreadPoolExecutor. The running jobs will be marked as `STOPPED` when they are finished.
         """
         # get the original job
         try:
