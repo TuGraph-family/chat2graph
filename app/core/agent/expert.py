@@ -1,11 +1,11 @@
 import traceback
-from typing import List
+from typing import List, cast
 
 from app.core.agent.agent import Agent
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import JobStatus, WorkflowStatus
 from app.core.model.job import SubJob
-from app.core.model.message import AgentMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 
 
 class Expert(Agent):
@@ -26,13 +26,24 @@ class Expert(Agent):
         job_id = agent_message.get_job_id()
         job: SubJob = self._job_service.get_subjob(subjob_id=job_id)
 
-        # get the workflow messages from the agent message
-        workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
-
         # update the job status to running
         job_result = self._job_service.get_job_result(job_id=job.id)
         if job_result.has_result():
             # if the job result already has a final status, do not execute again
+
+            if job_result.status == JobStatus.FINISHED:
+                # color: green
+                print(
+                    f"\033[38;5;46m[Success]: Job {job.id} already completed successfully.\033[0m"
+                )
+                return cast(
+                    AgentMessage,
+                    self._message_service.get_message_by_job_id(
+                        job_id=job.id,
+                        message_type=MessageType.AGENT_MESSAGE,
+                    )[0],
+                )
+
             # color: orange
             print(
                 f"\033[38;5;208m[Warning]: Job {job.id} already has a final status: "
@@ -65,6 +76,9 @@ class Expert(Agent):
         job_result.status = JobStatus.RUNNING
         self._job_service.save_job_result(job_result=job_result)
 
+        # get the workflow messages from the agent message
+        workflow_messages: List[WorkflowMessage] = agent_message.get_workflow_messages()
+
         # execute the workflow of the expert
         try:
             workflow_message: WorkflowMessage = self._workflow.execute(
@@ -89,9 +103,6 @@ class Expert(Agent):
 
         if workflow_message.status == WorkflowStatus.SUCCESS:
             # (1) WorkflowStatus.SUCCESS
-            # color: bright green
-            print(f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m")
-
             # (1.1) save the expert message in the database
             expert_message = self.save_output_agent_message(
                 job=job, workflow_message=workflow_message
@@ -99,8 +110,12 @@ class Expert(Agent):
 
             # (1.2) save the job result in the database
             job_result = self._job_service.get_job_result(job_id=job.id)
-            job_result.status = JobStatus.FINISHED
-            self._job_service.save_job_result(job_result=job_result)
+            if not job_result.has_result():
+                job_result.status = JobStatus.FINISHED
+                self._job_service.save_job_result(job_result=job_result)
+
+                # color: bright green
+                print(f"\033[38;5;46m[Success]: Job {job.id} completed successfully.\033[0m")
 
             return expert_message
         if workflow_message.status == WorkflowStatus.EXECUTION_ERROR:
@@ -125,12 +140,7 @@ class Expert(Agent):
                 job_result = self._job_service.get_job_result(job_id=job.id)
                 job_result.status = JobStatus.FAILED
                 self._job_service.save_job_result(job_result=job_result)
-
-                self._job_service.stop_job_graph(
-                    job=job,
-                    error_info=f"Failed after retrying {max_retry_count} times.\n"
-                    f"{workflow_message.evaluation}\n{workflow_message.lesson}",
-                )
+                return agent_message
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
             # (3) WorkflowStatus.INPUT_DATA_ERROR

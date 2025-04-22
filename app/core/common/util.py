@@ -21,14 +21,18 @@ def parse_jsons(
             is found, an empty list is returned.
     """
     # find all occurrences of content between markers
-    pattern = f"{re.escape(start_marker)}(.*?){re.escape(end_marker)}"
-    matches = re.finditer(pattern, text, re.DOTALL)
+    json_pattern = f"{re.escape(start_marker)}(.*?){re.escape(end_marker)}"
+    json_matches = re.finditer(json_pattern, text, re.DOTALL)
     results: List[Union[Dict[str, Any], json.JSONDecodeError]] = []
 
-    for match in matches:
+    for match in json_matches:
         json_str = match.group(1).strip()
         try:
-            parsed_json = json.loads(json_str)
+            # attempt to fix trailing commas before parsing using lookahead
+            # remove comma and trailing whitespace if followed by } or ]
+            json_str_fixed = re.sub(r",\s*(?=[\}\]])", "", json_str)
+
+            parsed_json = json.loads(json_str_fixed)
             results.append(parsed_json)
         except json.JSONDecodeError as e:
             results.append(e)

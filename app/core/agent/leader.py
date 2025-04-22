@@ -4,17 +4,19 @@ import time
 from typing import Dict, List, Optional, Set, Union
 
 import networkx as nx  # type: ignore
+from requests import HTTPError
 
 from app.core.agent.agent import Agent, AgentConfig
 from app.core.agent.builtin_leader_state import BuiltinLeaderState
 from app.core.agent.expert import Expert
 from app.core.agent.leader_state import LeaderState
+from app.core.common.async_func import run_in_thread
 from app.core.common.system_env import SystemEnv
-from app.core.common.type import JobStatus, WorkflowStatus
+from app.core.common.type import ChatMessageRole, JobStatus, WorkflowStatus
 from app.core.common.util import parse_jsons
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
-from app.core.model.message import AgentMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
 from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_PROMPT
 
 
@@ -89,10 +91,10 @@ class Leader(Agent):
             context=job.context + f"\n\n{job_decomp_prompt}",
         )
 
-        # decompose the job by the reasoner in the workflow
-        workflow_message = self._workflow.execute(job=decomp_job, reasoner=self._reasoner)
-
         try:
+            # decompose the job by the reasoner in the workflow
+            workflow_message = self._workflow.execute(job=decomp_job, reasoner=self._reasoner)
+
             # extract the subjobs from the json block
             results: List[Union[Dict[str, Dict[str, str]], json.JSONDecodeError]] = parse_jsons(
                 text=workflow_message.scratchpad,
@@ -109,43 +111,60 @@ class Leader(Agent):
                 raise result
 
             job_dict = result
-        except (ValueError, json.JSONDecodeError) as e:
+        except (ValueError, json.JSONDecodeError, HTTPError) as e:
             # color: red
             print(f"\033[38;5;196m[WARNING]: {e}\033[0m")
 
-            # retry to decompose the job with the new lesson
-            workflow_message = self._workflow.execute(
-                job=decomp_job,
-                reasoner=self._reasoner,
-                lesson="LLM output format (<decomposition> format) specification is crucial for "
-                "reliable parsing. And do not forget <decomposition> prefix and "
-                "</decomposition> suffix when you generate the json block in "
-                "<final_output>...</final_output>. Error info: " + str(e),
-            )
-            try:
-                # extract the subjobs from the json block
-                results = parse_jsons(
-                    text=workflow_message.scratchpad,
-                    start_marker="<decomposition>",
-                    end_marker="</decomposition>",
+            if isinstance(e, HTTPError):
+                # stop the job graph
+                self.fail_job_graph(
+                    job_id=job_id,
+                    error_info=(
+                        f"The job `{original_job_id}` is not executed, since there is an error "
+                        f"of http request. Error info: {e}"
+                    ),
                 )
-                if len(results) == 0:
-                    raise ValueError("The job is not decomposed.") from e
-                result = results[0]
-                # if parse_jsons returns a JSONDecodeError directly, raise it
-                if isinstance(result, json.JSONDecodeError):
-                    raise result from e
-                job_dict = result
-            except (ValueError, json.JSONDecodeError):
-                self._job_service.stop_job_graph(
-                    job=job,
-                    error_info="LLM output format is not correct (json format), or "
-                    "the job is not decomposed. Retry it again please.",
+                job_dict = {}
+            else:
+                # retry to decompose the job with the new lesson
+                workflow_message = self._workflow.execute(
+                    job=decomp_job,
+                    reasoner=self._reasoner,
+                    lesson="LLM output format (<decomposition> format) specification is crucial"
+                    "for reliable parsing. And do not forget <decomposition> prefix and "
+                    "</decomposition> suffix when you generate the subtasks dict block in "
+                    "<final_output>...</final_output>. Error info: " + str(e),
                 )
-                job_dict = {}  # fallback to empty dict to avoid further execution
+                try:
+                    # extract the subjobs from the json block
+                    results = parse_jsons(
+                        text=workflow_message.scratchpad,
+                        start_marker="<decomposition>",
+                        end_marker="</decomposition>",
+                    )
+                    if len(results) == 0:
+                        raise ValueError("The job is not decomposed.") from e
+                    result = results[0]
+                    # if parse_jsons returns a JSONDecodeError directly, raise it
+                    if isinstance(result, json.JSONDecodeError):
+                        raise result from e
+                    job_dict = result
+                except (ValueError, json.JSONDecodeError):
+                    self.fail_job_graph(
+                        job_id=job_id,
+                        error_info=(
+                            f"The job `{original_job_id}` is not decomposed. "
+                            f"Retry it again please.\nError info: {e}"
+                        ),
+                    )
+                    job_dict = {}  # fallback to empty dict to avoid further execution
 
         # init the decomposed job graph
         job_graph = JobGraph()
+
+        # check the current job (original job / subjob) status
+        if self._job_service.get_job_result(job_id=job_id).has_result():
+            return job_graph
 
         # create the subjobs, and add them to the decomposed job graph
         temp_to_unique_id_map: Dict[str, str] = {}  # id_generated_by_leader -> unique_id
@@ -187,16 +206,25 @@ class Leader(Agent):
 
     def execute_original_job(self, original_job: Job) -> None:
         """Execute the job."""
-        # decompose the job into decomposed job graph
-        decomposed_job_graph: JobGraph = self.execute(
-            agent_message=AgentMessage(job_id=original_job.id)
-        )
-
         # update the job status to running
         original_job_result = self._job_service.get_job_result(job_id=original_job.id)
         if original_job_result.status == JobStatus.CREATED:
             original_job_result.status = JobStatus.RUNNING
             self._job_service.save_job_result(job_result=original_job_result)
+        else:
+            # note: if the job status is running, it means the leader will generate at least two
+            # job graphs, which may lead to the leakage of the subjobs
+            raise ValueError(
+                f"Original job {original_job.id} already has a final or running status: "
+                f"{original_job_result.status.value}."
+            )
+
+        # decompose the job into decomposed job graph
+        decomposed_job_graph: JobGraph = self.execute(
+            agent_message=AgentMessage(
+                job_id=original_job.id,
+            )
+        )
 
         # update the decomposed job graph in the job service
         self._job_service.replace_subgraph(
@@ -280,7 +308,8 @@ class Leader(Agent):
                     if (
                         agent_result.get_workflow_result_message().status
                         == WorkflowStatus.INPUT_DATA_ERROR
-                    ):  # TODO: how to handle the concurrent situations?
+                    ):
+                        # TODO: how to handle the concurrent situations?
                         pending_job_ids.add(completed_job_id)
                         predecessors = list(job_graph.predecessors(completed_job_id))
 
@@ -307,7 +336,8 @@ class Leader(Agent):
                     elif (
                         agent_result.get_workflow_result_message().status
                         == WorkflowStatus.JOB_TOO_COMPLICATED_ERROR
-                    ):  # TODO: how to handle the concurrent situations?
+                    ):
+                        # TODO: how to handle the concurrent situations?
                         old_job_graph: JobGraph = JobGraph()
                         old_job_graph.add_vertex(completed_job_id)
 
@@ -356,6 +386,114 @@ class Leader(Agent):
                 if not completed_job_ids and running_jobs:
                     time.sleep(0.5)
 
+    def stop_job_graph(self, job_id: str, error_info: str) -> None:
+        """Stop the job graph.
+
+        When a specific job (original job / subjob) is stopped, this method is called to mark the
+        entire current job as `STOPPED`, while other jobs without results (including subjobs and
+        original jobs) are marked as `STOPPED`.
+
+        Note that the running jobs are not stopped, since they are already set up in the
+        ThreadPoolExecutor. The running jobs will be marked as `STOPPED` when they are finished.
+        """
+        # get the original job
+        try:
+            original_job: Job = self._job_service.get_original_job(original_job_id=job_id)
+        except ValueError as e:
+            job: SubJob = self._job_service.get_subjob(subjob_id=job_id)
+            if not job.original_job_id:
+                raise ValueError("The subjob is not assigned to an original job.") from e
+            original_job = self._job_service.get_original_job(original_job_id=job.original_job_id)
+
+        # if the original job does not have a final result, mark it as stopped
+        original_job_result = self._job_service.get_job_result(job_id=original_job.id)
+        if not original_job_result.has_result():
+            original_job_result.status = JobStatus.STOPPED
+            self._job_service.save_job_result(job_result=original_job_result)
+
+        # update all the subjobs which have not the final result
+        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
+        for subjob_id in subjob_ids:
+            # mark all the subjobs as stopped
+            subjob_result = self._job_service.get_job_result(job_id=subjob_id)
+            if not subjob_result.has_result():
+                subjob_result.status = JobStatus.STOPPED
+                self._job_service.save_job_result(job_result=subjob_result)
+
+        # save the final system message with the error information
+        error_payload = (
+            f"An error occurred during the execution of the job:\n\n{error_info}\n\n"
+            f'Please check the job `{original_job.id}` ("{original_job.goal[:10]}...") '
+            "for more details. Or you can re-try to send your message."
+        )
+        try:
+            error_message = self._message_service.get_text_message_by_job_id_and_role(
+                original_job.id, ChatMessageRole.SYSTEM
+            )
+            error_message.set_payload(error_payload)
+        except ValueError:
+            error_message = TextMessage(
+                payload=error_payload,
+                job_id=original_job.id,
+                session_id=original_job.session_id,
+                assigned_expert_name=original_job.assigned_expert_name,
+                role=ChatMessageRole.SYSTEM,
+            )
+        self._message_service.save_message(message=error_message)
+
+        # color: red
+        print(f"\033[38;5;196m[ERROR]: {error_info}\033[0m")
+
+    def fail_job_graph(self, job_id: str, error_info: str) -> None:
+        """Fail the job graph.
+
+        When a specific job (original job / subjob) fails and it is necessary to stop the execution
+        of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
+        other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
+        """
+        # mark the current job as failed
+        job_result = self._job_service.get_job_result(job_id=job_id)
+        if not job_result.has_result():
+            job_result.status = JobStatus.FAILED
+            self._job_service.save_job_result(job_result=job_result)
+            self.stop_job_graph(job_id=job_id, error_info=error_info)
+
+    def recover_original_job(self, original_job_id: str) -> None:
+        """Reconver the original job.
+
+        When a specific original job is stopped and it is necessary to continue
+        the execution of the JobGraph. If the leader has not decomposed the original job,
+        this method is called to restart the job decomposition. If not, it will continue all the
+        subjobs and mark them as `CREATED` to re-execute the job graph.
+        """
+        original_job = self._job_service.get_original_job(original_job_id=original_job_id)
+        # mark the current job as finished
+        original_job_result = self._job_service.get_job_result(job_id=original_job_id)
+        if original_job_result.status == JobStatus.STOPPED:
+            subjobs = self._job_service.get_subjobs(original_job_id=original_job_id)
+            if len(subjobs) == 0:
+                # if there are no subjobs, it means leader did not decompose the original job
+                original_job_result.status = JobStatus.CREATED
+                self._job_service.save_job_result(job_result=original_job_result)
+
+                # start to execute the original job
+                run_in_thread(self.execute_original_job, original_job=original_job)
+
+            else:
+                # if there are subjobs, it means leader decomposed the original job,
+                # and waiting for the completion of the job graph
+                original_job_result.status = JobStatus.RUNNING
+                self._job_service.save_job_result(job_result=original_job_result)
+
+                for sub_job in subjobs:
+                    sub_job_result = self._job_service.get_job_result(job_id=sub_job.id)
+                    if sub_job_result.status == JobStatus.STOPPED:
+                        sub_job_result.status = JobStatus.CREATED
+                        self._job_service.save_job_result(job_result=sub_job_result)
+
+                # start to execute the job graph
+                run_in_thread(self.execute_job_graph, original_job_id=original_job_id)
+
     def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
         """Dispatch the job to the expert, and handle the result."""
         agent_result_message: AgentMessage = expert.execute(agent_message=agent_message)
@@ -363,6 +501,12 @@ class Leader(Agent):
 
         if workflow_result.status == WorkflowStatus.SUCCESS:
             return agent_result_message
+        if workflow_result.status == WorkflowStatus.EXECUTION_ERROR:
+            error_info: str = (
+                f"The job `{agent_message.get_job_id()}` is failed, since there is an error "
+                f"of http request. Agent lesson\n: {agent_result_message.get_lesson()}"
+            )
+            self.fail_job_graph(job_id=agent_message.get_job_id(), error_info=error_info)
         if workflow_result.status == WorkflowStatus.INPUT_DATA_ERROR:
             # reexecute all the dependent jobs (predecessors)
             return agent_result_message

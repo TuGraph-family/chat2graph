@@ -334,4 +334,5 @@ class DualModelReasoner(Reasoner):
     def stopped(message: ModelMessage) -> bool:
         """Stop the reasoner."""
         # TODO: improve the stop condition
-        return "<deliverable>" in message.get_payload()
+        payload = message.get_payload()
+        return "<deliverable>" in payload and "</deliverable>" in payload

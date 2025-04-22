@@ -102,7 +102,7 @@ class DataStatusCheck(Tool):
 
         Returns:
             str: A formatted string containing database status information.
-        """
+        """  # noqa: E501
         try:
             store = graph_db_service.get_default_graph_db()
             results: Dict[str, Any] = {}
@@ -193,7 +193,7 @@ class DataStatusCheck(Tool):
                 )
                 for rel_type in current_relationship_labels:
                     try:
-                        # Escape relationship type if it contains special characters (basic escaping)
+                        # Escape relationship type if it contains special characters (basic escaping)  # noqa: E501
                         safe_rel_type = f"`{rel_type.replace('`', '``')}`"
                         # 统计每个类型的关系数量
                         count_query = f"MATCH ()-[r:{safe_rel_type}]->() RETURN count(r) as count"
@@ -224,8 +224,8 @@ class DataStatusCheck(Tool):
                                     {
                                         "type": record["type"],
                                         "properties": record["props"],
-                                        "source": f"{record['source_label']}(id: {record['source_id']})",
-                                        "target": f"{record['target_label']}(id: {record['target_id']})",
+                                        "source": f"{record['source_label']}(id: {record['source_id']})",  # noqa: E501
+                                        "target": f"{record['target_label']}(id: {record['target_id']})",  # noqa: E501
                                         "element_id": record[
                                             "rel_element_id"
                                         ],  # Include relationship element ID
@@ -449,12 +449,12 @@ class DataImport(Tool):
             return "{" + ", ".join(props) + "}"
 
         try:
-            # 格式化属性
+            # format properties to Cypher property string
             source_props = format_properties(source_properties)
             target_props = format_properties(target_properties)
             rel_props = format_properties(relationship_properties)
 
-            # 构建Cypher语句
+            # cypher statement
             cypher = f"""
             MERGE (source:{source_label} {{{source_primary_key}: {format_property_value(source_properties[source_primary_key])}}})
             ON CREATE SET source = {source_props}
@@ -472,7 +472,7 @@ class DataImport(Tool):
 
             store = graph_db_service.get_default_graph_db()
             with store.conn.session() as session:
-                # 执行导入操作
+                # execute the import operation
                 print(f"Executing statement: {cypher}")
                 result = session.run(cypher)
                 summary = result.consume()
@@ -480,26 +480,26 @@ class DataImport(Tool):
                 nodes_updated = summary.counters.properties_set
                 rels_created = summary.counters.relationships_created
 
-                # 获取本次操作的详细信息
+                # get details of this operation
                 details = {
                     "source": f"{source_label}(id: {source_properties[source_primary_key]})",
                     "target": f"{target_label}(id: {target_properties[target_primary_key]})",
                     "relationship": f"{relationship_label}",
                 }
 
-                # 获取数据库当前状态
-                # 1. 节点统计
+                # get current status of the database
+                # 1. node statistics
                 node_counts = {}
                 for label in [source_label, target_label]:
                     result = session.run(f"MATCH (n:{label}) RETURN count(n) as count")
                     node_counts[label] = result.single()["count"]
 
-                # 2. 关系统计
+                # 2. relationship statistics
                 rel_count = session.run(
                     f"MATCH ()-[r:{relationship_label}]->() RETURN count(r) as count"
                 ).single()["count"]
 
-                # 3. 总体统计
+                # 3. overall statistics
                 total_stats = session.run("""
                     MATCH (n) 
                     OPTIONAL MATCH (n)-[r]->() 
@@ -508,42 +508,69 @@ class DataImport(Tool):
                         count(DISTINCT r) as total_relationships
                 """).single()
 
+            # fetch the schema first to determine primary keys for alias generation
+            schema = graph_db_service.get_schema_metadata(
+                graph_db_config=graph_db_service.get_default_graph_db_config()
+            )
+            node_schema = schema.get("nodes", {})  # Safely get node schema part
+
             with store.conn.session() as session:
-                # 获取所有节点和边
-                all_nodes = session.run("MATCH (n) RETURN n")
-                all_edges = session.run("MATCH ()-[r]->() RETURN r")
+                # fetch all nodes
+                all_nodes_result = session.run("MATCH (n) RETURN n")
+                # fetch edges along with their start and end nodes
+                all_edges_result = session.run(
+                    "MATCH (a)-[r]->(b) RETURN r, a AS start_node, b AS end_node"
+                )
 
-                # 构造 GraphMessage JSON
-                vertices = [
-                    {
-                        "id": node.element_id if hasattr(node, "element_id") else node.id,
-                        "label": list(node.labels)[0]
-                        if hasattr(node, "labels") and node.labels
-                        else "",
-                        "properties": dict(node.items()),
-                    }
-                    for record in all_nodes
-                    for node in [record.get("n")]
-                ]
+                # construct the data graph
+                vertices = []
+                for record in all_nodes_result:
+                    node = record.get("n")
+                    if node:
+                        node_labels = list(node.labels)
+                        label = node_labels[0] if node_labels else ""
+                        properties = dict(node.items())
 
-                edges = [
-                    {
-                        "source": relationship.start_node.element_id
-                        if hasattr(relationship.start_node, "element_id")
-                        else relationship.start_node.id,
-                        "target": relationship.end_node.element_id
-                        if hasattr(relationship.end_node, "element_id")
-                        else relationship.end_node.id,
-                        "label": relationship.type,
-                        "properties": dict(relationship.items()),
-                    }
-                    for record in all_edges
-                    for relationship in [record.get("r")]
-                ]
+                        # determine alias using schema's primary key
+                        primary_key_prop = node_schema.get(label, {}).get("primary_key")
+                        alias = node.element_id  # default alias is element_id
+                        if primary_key_prop and primary_key_prop in properties:
+                            alias = properties[primary_key_prop]
+
+                        vertices.append(
+                            {
+                                "id": node.element_id,  # use element_id for the main ID
+                                "label": label,
+                                "alias": alias,  # set alias based on primary key value
+                                "properties": properties,
+                            }
+                        )
+
+                edges = []
+                for record in all_edges_result:
+                    relationship = record.get("r")
+                    start_node = record.get("start_node")
+                    end_node = record.get("end_node")
+
+                    if relationship and start_node and end_node:
+                        properties = dict(relationship.items())
+                        # determine alias: use 'id' property if exists, else use relationship type
+                        alias = properties.get("id", relationship.type)
+
+                        edges.append(
+                            {
+                                # use element_id of start/end nodes for source/target
+                                "source": start_node.element_id,
+                                "target": end_node.element_id,
+                                "label": relationship.type,
+                                "alias": alias,  # set alias based on 'id' property or type
+                                "properties": properties,
+                            }
+                        )
 
                 data_graph_dict = {"vertices": vertices, "edges": edges}
 
-                # 保存 graph type artifact
+                # save graph type artifact
                 artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
                     job_id=job_id, content_type=ContentType.GRAPH
                 )

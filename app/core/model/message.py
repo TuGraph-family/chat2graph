@@ -386,14 +386,14 @@ class GraphMessage(ChatMessage):
     The payload structure example:
     {
         "vertices": [
-            {"id": "1", "label": "A", "properties": {}},
-            {"id": "2", "label": "B", "properties": {}}
+            {"id": "1", "label": "A", "alias": "alias_v_1", "properties": {}},
+            {"id": "2", "label": "B", "alias": "alias_v_2", "properties": {}}
         ],
         "edges": [
-            {"source": "1", "target": "2", "label": "A_to_B", "properties": {}}
+            {"source": "1", "target": "2", "label": "A_to_B", "alias_edge": "alias_e_1", "properties": {}}
         ]
     }
-    """
+    """  # noqa: E501
 
     def __init__(
         self,

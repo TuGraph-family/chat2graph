@@ -5,6 +5,7 @@ from app.core.model.job import Job
 from app.core.model.message import ChatMessage, HybridMessage, TextMessage
 from app.core.model.session import Session
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
+from app.core.service.agent_service import AgentService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
 from app.core.service.session_service import SessionService
@@ -87,6 +88,25 @@ class SessionWrapper:
         run_in_thread(job_wrapper.execute)
 
         return job_wrapper
+
+    def stop_job_graph(self) -> None:
+        """Stop the job graph execution."""
+        agent_service: AgentService = AgentService.instance
+        latest_job_id = self._session.latest_job_id
+        if not latest_job_id:
+            raise ValueError("No job submitted in the session since the latest job ID is None.")
+        agent_service.leader.stop_job_graph(
+            job_id=latest_job_id,
+            error_info=f"The job `{latest_job_id}` is stopped by user.",
+        )
+
+    def recover_original_job(self) -> None:
+        """Recover the original job execution."""
+        agent_service: AgentService = AgentService.instance
+        latest_job_id = self._session.latest_job_id
+        if not latest_job_id:
+            raise ValueError("No job submitted in the session since the latest job ID is None.")
+        agent_service.leader.recover_original_job(original_job_id=latest_job_id)
 
     def _format_conversation_history(
         self, conversation_views: List[MessageView], current_question_message: Optional[TextMessage]

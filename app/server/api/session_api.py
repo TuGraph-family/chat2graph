@@ -5,7 +5,6 @@ from flask import Blueprint, request
 from app.core.model.message import HybridMessage, MessageType
 from app.core.model.session import Session
 from app.server.common.util import ApiException, make_response
-from app.server.manager.message_manager import MessageManager
 from app.server.manager.session_manager import SessionManager
 from app.server.manager.view.message_view import MessageViewTransformer
 
@@ -88,7 +87,7 @@ def get_latest_job_id(session_id: str):
 @sessions_bp.route("/<string:session_id>/chat", methods=["POST"])
 def chat(session_id: str):
     """Handle chat message creation."""
-    manager = MessageManager()
+    manager = SessionManager()
     data: Dict[str, Any] = cast(Dict[str, Any], request.json)
 
     if not data:
@@ -107,6 +106,22 @@ def chat(session_id: str):
     )
     response_data, message = manager.chat(chat_message)
     return make_response(data=response_data, message=message)
+
+
+@sessions_bp.route("/<string:session_id>/stop", methods=["POST"])
+def stop_job_graph(session_id: str):
+    """Stop a specific original job graph by id."""
+    manager = SessionManager()
+    message = manager.stop_job_graph(session_id=session_id)
+    return make_response(message=message)
+
+
+@sessions_bp.route("/<string:session_id>/recover", methods=["POST"])
+def revover_original_job(session_id: str):
+    """Recover a specific original job graph by id."""
+    manager = SessionManager()
+    message = manager.recover_original_job(session_id=session_id)
+    return make_response(message=message)
 
 
 @sessions_bp.route("/<string:session_id>/messages", methods=["GET"])
