@@ -259,8 +259,8 @@ class Leader(Agent):
             self.fail_job_graph(
                 job_id=job_id,
                 error_info=(
-                    f"The job `{original_job_id}` decomposition was validated, but an error occurred "
-                    f"during subjob creation or linking.\nError info: {e}"
+                    f"The job `{original_job_id}` decomposition was validated, but an error "
+                    f"occurred during subjob creation or linking.\nError info: {e}"
                 ),
             )
             return JobGraph()
@@ -268,7 +268,8 @@ class Leader(Agent):
         # the job graph should be a directed acyclic graph (DAG)
         if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
             print(
-                f"\033[38;5;196m[ERROR]: Cycle detected in job graph for {original_job_id} despite validation.\033[0m"
+                f"\033[38;5;196m[ERROR]: Cycle detected in job graph for {original_job_id} despite "
+                "validation.\033[0m"
             )
             self.fail_job_graph(
                 job_id=job_id,
@@ -661,14 +662,15 @@ class Leader(Agent):
             expert_name = task_data["assigned_expert"]
             if expert_name not in expert_names:
                 raise ValueError(
-                    f"Task '{task_id}' assigned expert '{expert_name}' not found in available experts: {expert_names}"
+                    f"Task '{task_id}' assigned expert '{expert_name}' not found "
+                    f"in available experts: {expert_names}"
                 )
 
             # optional: validate thinking is not empty or add more specific checks
             if not task_data["thinking"].strip():
                 print(
                     f"\033[38;5;208m[WARNING]: Task '{task_id}' has empty 'thinking' field.\033[0m"
-                )  # warning instead of error
+                )
 
     @property
     def state(self) -> LeaderState:
