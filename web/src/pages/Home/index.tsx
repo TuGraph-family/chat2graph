@@ -24,7 +24,7 @@ import logoSrc from '@/assets/logo.png';
 import BubbleContent from '@/components/BubbleContent';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { formatTimestamp } from '@/utils/formatTimestamp';
-import { isEmpty } from 'lodash';
+import { cloneDeep, isEmpty } from 'lodash';
 import { historyPushLinkAt } from '@/utils/link';
 import { useDatabaseEntity } from '@/domains/entities/database-manager';
 
@@ -77,6 +77,8 @@ const HomePage: React.FC = () => {
     runGetJobResults,
     runGetJobIdsBySessionId,
     runGetMessagesBySessionId,
+    runStopSession,
+    runRecoverSession
   } = useSessionEntity();
 
   const { sessions } = sessionEntity;
@@ -124,7 +126,10 @@ const HomePage: React.FC = () => {
 
 
   const onStop = () => {
-    removeLocalStorage(LOCAL_STORAGE_STOP_KEY)
+    runStopSession({
+      session_id: activeKey
+    })
+
   }
 
   const getMessage = useCallback((job_id: string, onSuccess: (message: any) => void, onUpdate: (message: any) => void) => {
@@ -132,9 +137,10 @@ const HomePage: React.FC = () => {
       runGetJobResults({
         job_id,
       }).then(res => {
+        console.log(job_id, getLocalStorage(LOCAL_STORAGE_STOP_KEY), 'lkm')
         const { status } = res?.data?.answer?.metrics || {};
         if (getLocalStorage(LOCAL_STORAGE_STOP_KEY) === "true") {
-          clearTimeout(timer);
+          // clearTimeout(timer);
           onSuccess({})
           // TODO 停止思考逻辑
           // onSuccess({
@@ -144,7 +150,7 @@ const HomePage: React.FC = () => {
           //   role: res?.data?.answer?.message?.role,
           //   thinking: []
           // });
-          onStop()
+          removeLocalStorage(LOCAL_STORAGE_STOP_KEY)
           return;
         }
 
@@ -249,6 +255,7 @@ const HomePage: React.FC = () => {
     if (agent.isRequesting()) {
       setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)
     }
+
     runGetSessionById({
       session_id: key,
     }).then((res: API.Result_Session_) => {
@@ -288,7 +295,20 @@ const HomePage: React.FC = () => {
     removeLocalStorage(LOCAL_STORAGE_SESSION_KEY)
   };
 
-  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages?.filter(item => !isEmpty(item?.message)).map((item, idx) => {
+  const onRecoverSession = () => {
+    runRecoverSession({
+      session_id: activeKey
+    })
+    const newParsedMessages = cloneDeep(parsedMessages)
+    const lastMessage = newParsedMessages?.pop()
+    onRequest({
+      payload: lastMessage?.message?.job_id,
+      isRunning: true,
+    })
+    setMessages(newParsedMessages)
+  }
+
+  const items: GetProp<typeof Bubble.List, 'items'> = parsedMessages?.filter(item => !isEmpty(item?.message)).map((item, idx, all) => {
     // @ts-ignore
     const { message, id, } = item;
     return {
@@ -317,6 +337,7 @@ const HomePage: React.FC = () => {
           }
         </div>
       },
+      footer: idx === all.length - 1 && message?.role === 'SYSTEM' && message?.status === MESSAGE_TYPE.STOPPED ? <Button onClick={onRecoverSession} >{formatMessage('home.recover')}</Button> : null,
       onTypingComplete: () => {
         const newMessages = parsedMessages?.filter(item => !isEmpty(item?.message)).map((newItem, newIdx) => {
           if (newIdx === idx) {
@@ -340,25 +361,10 @@ const HomePage: React.FC = () => {
   // 新增会话
   const onAddConversation = () => {
     setMessages([]);
-  };
-
-  const onBeforeUpload = async () => {
-    try {
-      const { data: { id = '' } } = await runCreateSession({
-        name: formatMessage('home.newConversation'),
-      })
-      getSessionList();
-      setState((draft) => {
-        draft.activeKey = id;
-      });
-
-      return id;
-    } catch (error) {
-      console.error('onBeforeUpload' + error)
+    if (agent.isRequesting()) {
+      setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)
     }
-
-  }
-
+  };
 
   const removePrefix = (inputString) => {
     for (const prefix of CURRENT_PREFIXES) {
@@ -617,8 +623,9 @@ const HomePage: React.FC = () => {
             variant: 'borderless',
           }]}
           roles={ROLES}
-          className={`${styles.messages} ${!items.length ? styles.welcome : ''}`}
+          className={`${styles.messages} ${!items.length ? styles.welcome : ''} ${!databaseEntity?.databaseList?.length ? styles['has-tip'] : ''}`}
         />
+
 
         <footer className={styles.footer}>
           {/* 输入框 */}
@@ -634,19 +641,16 @@ const HomePage: React.FC = () => {
                   draft.headerOpen = open;
                 });
               }}
-              onBeforeUpload={onBeforeUpload}
-              sessionId={activeKey} />}
+            />}
             onSubmit={onSubmit}
             onChange={updateContent}
             actions={false}
             placeholder={formatMessage('home.placeholder')}
             className={styles.sender}
-            onCancel={() => setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)}
             footer={({ components }) => {
               const { SendButton, LoadingButton } = components;
               return (
                 <Flex justify="space-between" align="center">
-
                   <Flex gap="small" align="center" className={styles['framework']}>
                     {FRAMEWORK_CONFIG.map(item => <Button
                       key={item.key}
@@ -677,13 +681,12 @@ const HomePage: React.FC = () => {
                         }}
                       />
                     </Tooltip>
-
-
-
                     {agent.isRequesting() ? (
-                      // <Tooltip title={'点击停止生成'}>
-                      <LoadingButton type="default" />
-                      // </Tooltip>
+                      <Tooltip title={'点击停止生成'}>
+                        <div onClick={onStop} >
+                          <LoadingButton type="default" />
+                        </div>
+                      </Tooltip>
                     ) : (
                       <Tooltip title={formatMessage(`home.${content ? 'send' : 'placeholder'}`)}>
                         <SendButton type="primary" disabled={!content} />

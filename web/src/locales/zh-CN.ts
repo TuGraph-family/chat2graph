@@ -142,6 +142,7 @@ export default {
     },
     tip: '未发现默认图数据库，建议提前添加以便访问完整的功能。',
     click: '点击这里',
+    recover: '继续思考'
   },
   manager: {
     return: '返回会话'

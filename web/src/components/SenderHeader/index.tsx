@@ -13,22 +13,16 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   handleFileChange: (info: UploadChangeParam<UploadFile<any>>) => void;
   onAddUploadId: (fileId: { file_id: string, uid: string }) => void
-  sessionId?: string;
-  onBeforeUpload?: () => void;
 };
 
 const SenderHeader: React.FC<Props> = (props) => {
-  const { open, attachedFiles, onOpenChange, handleFileChange, onAddUploadId, sessionId, onBeforeUpload } = props;
+  const { open, attachedFiles, onOpenChange, handleFileChange, onAddUploadId, } = props;
   const { runUploadFile } = useKnowledgebaseEntity()
   const { formatMessage } = useIntlConfig();
 
 
 
   const beforeUpload = async (file: RcFile) => {
-    let session_id = sessionId
-    if (!session_id) {
-      session_id = await onBeforeUpload?.()
-    }
     const { type, size, name } = file
     const fileBlob = new Blob([file], { type })
     if (size > 20 * 1024 * 1024) {
@@ -36,8 +30,6 @@ const SenderHeader: React.FC<Props> = (props) => {
       return false
     }
     const res = await runUploadFile({
-      session_id,
-    }, {
       file: fileBlob,
       filename: name
     })

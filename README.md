@@ -135,11 +135,12 @@ Init the Expert agents
  * Serving Flask app 'bootstrap'
  * Debug mode: off
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on http://127.0.0.1:5000
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5010
 Press CTRL+C to quit
 ```
 
-You can access Chat2Graph in the browser at [http://localhost:5000/](http://localhost:5000/):
+You can access Chat2Graph in the browser at [http://localhost:5010/](http://localhost:5010/):
 
 ![](doc/img/index.png)
 
@@ -156,7 +157,8 @@ The currently supported graph databases are:
 
 ```bash
 docker pull neo4j:latest
-docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none neo4j:latest
+docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none \
+  --env NEO4J_PLUGINS='["apoc", "graph-data-science"]' neo4j:latest
 ```
 
 * TuGraph

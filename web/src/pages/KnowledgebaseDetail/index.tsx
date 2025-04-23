@@ -102,14 +102,17 @@ const KnowledgebaseDetail = () => {
                 ]}
             />
 
-            <KnowledgebasesDrawer open={open} onClose={(isRefresh) => {
-                if (isRefresh && id) {
-                    getKnowledgebaseDetail(id)
-                }
-                setState((draft) => { draft.open = false })
-            }} formatMessage={formatMessage}
+            <KnowledgebasesDrawer
+                open={open}
+                onClose={(isRefresh) => {
+                    if (isRefresh && id) {
+                        getKnowledgebaseDetail(id)
+                    }
+                    setState((draft) => { draft.open = false })
+                }}
+                formatMessage={formatMessage}
                 id={id}
-                sessionId={sessionId}
+
             />
         </Spin>
     </div>
