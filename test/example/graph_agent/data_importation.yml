@@ -82,7 +82,7 @@ operators:
 
 experts:
   - profile:
-      name: "Data Importation Expert"
+      name: "Extraction Expert"
       desc: |
         你是一位资深的图数据抽取专家。
         你的使命是，基于已分析的文档内容和图模型，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。
@@ -91,8 +91,8 @@ experts:
         抽取数据完成后，你需要调用指定的工具，完成数据的导入。
         最后需要输出导入结果的总结。
     reasoner:
-      actor_name: "Data Importation Expert"
-      thinker_name: "Data Importation Expert"
+      actor_name: "Extraction Expert"
+      thinker_name: "Extraction Expert"
     workflow:
       - [*data_importation_operator]
 

@@ -459,7 +459,7 @@ def main():
     ).build()
 
     mas.expert(
-        name="Graph Modeling Expert",
+        name="Design Expert",
         description="""他是一位知识图谱建模(schema)专家。
         他的任务是根据具体的数据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。同时在图数据中创建/更新 Schema。
         他只能为某个特定的图数据库实例创建或修改数据结构（Schema）。
@@ -469,7 +469,7 @@ def main():
     ).build()
 
     mas.expert(
-        name="Data Importation Expert",
+        name="Extraction Expert",
         description="""他是一位原始数据抽取与数据导入图数据专家。
         他的前置要求是图 schema 在图数据库（不论是不是弱 schema 的数据库）中必须存在且已经定义了节点标签和边标签（否则专家将无法完成相关任务），且有明确的原始数据源（如文档、文件、数据库表、待处理文本，由用户上传）需要处理和导入到一个特定的图数据库实例。
         他的任务是：1. 根据已定义的 Schema 从原始数据中抽取结构化信息。 2. 将抽取的信息导入到目标图数据库中。
@@ -477,7 +477,7 @@ def main():
     ).workflow(data_importation_operator, platform_type=workflow_platform).build()
 
     mas.expert(
-        name="Graph Query Expert",
+        name="Query Expert",
         description="""他是一位图数据查询专家。
         假设在一个已存在数据、且结构已知的特定图数据库实例上，需要执行精确查询以获取具体数据点或关系。
         他的任务是：1. 理解用户的具体查询意图。 2. 编写精确的图查询语句。 3. 在目标图数据库上执行查询。
@@ -485,7 +485,7 @@ def main():
     ).workflow(query_design_operator, platform_type=workflow_platform).build()
 
     mas.expert(
-        name="Graph Analysis Expert",
+        name="Analysis Expert",
         description="""他是一位图数据分析与算法应用专家。
         假设在一个已存在结构化数据、且需要进行超越简单查询的复杂网络分析（如社区发现、中心性计算等）的特定图数据库实例上。
         他的任务是根据分析目标，选择、配置并在目标图数据库上执行相应的图算法。
@@ -493,7 +493,7 @@ def main():
     ).workflow(algorithms_execute_operator, platform_type=workflow_platform).build()
 
     mas.expert(
-        name="Question Answering Expert",
+        name="Q&A Expert",
         description="""他是一位通用问答与信息检索专家。
         **当任务是请求关于某个概念、技术、产品（例如，“介绍一下 Graph”）的一般性信息、定义、解释、比较或总结时，他是首选且通常是唯一的专家，** 尤其是当问题不涉及操作或查询一个具体的、已存在数据的图数据库实例时。
         他的任务是：1. 理解问题。 2. 从通用知识库、互联网或提供的文档中检索最相关的信息。 3. 综合信息并生成一个全面、清晰的回答。

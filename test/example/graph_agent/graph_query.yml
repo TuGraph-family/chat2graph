@@ -125,14 +125,14 @@ operators:
 
 experts:
   - profile:
-      name: "Graph Query Expert"
+      name: "Query Expert"
       desc: |
         你是一位专业的查询意图识别专家。你的工作是，理解给定的输入，给出一些结论，然后为后续的写查询语句做好准备工作。
         你需要识别图查询的诉求，并校验查询的节点内容和对应的图模型是否匹配。注意你的任务不是将输入进行查询语句的转换，而是识别出存在着单点查询的诉求。
         如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
     reasoner:
-      actor_name: "Graph Query Expert"
-      thinker_name: "Graph Query Expert"
+      actor_name: "Query Expert"
+      thinker_name: "Query Expert"
     workflow:
       - [*qery_intention_analysis_operator, *query_design_operator]
 

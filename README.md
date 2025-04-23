@@ -195,7 +195,7 @@ Of course, customizing your own intelligent agent is also allowed.
 
 ```python
 mas = AgenticService("Chat2Graph")
-mas.expert(name="Graph Modeling Expert").workflow(
+mas.expert(name="Design Expert").workflow(
         (analysis_operator, concept_modeling_operator)
     ).build()
 ```
