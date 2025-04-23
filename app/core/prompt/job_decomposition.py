@@ -55,25 +55,25 @@ JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
     // The presence of <decomposition>...</decomposition> shows the completion of the decomposition, and you should use TASK_DONE to indicate the end of the task.
     // Here is the decomposition example template:
     <decomposition>
-    {
-        "task_idx_1": {
-            "goal": "subtask_description",
-            "context": "Input data, resources, etc.",
-            "completion_criteria": "Acceptance criteria, etc.",
-            "dependencies": ["task_idx_*", "task_idx_*", ...],
-            "assigned_expert": "Name of an expert (in English)",
-            "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
-        },
-        "task_idx_2": {
-            "goal": "subtask_description",
-            "context": "Input data, resources, etc.",
-            "completion_criteria": "Acceptance criteria, etc.",
-            "dependencies": ["task_idx_*", "task_idx_*", ...],
-            "language of the assigned_expert": "English",
-            "assigned_expert": "Name of an expert (in English)",
-            "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+        {
+            "task_index_1": {
+                "goal": "subtask_description",
+                "context": "Input data, resources, etc.",
+                "completion_criteria": "Acceptance criteria, etc.",
+                "dependencies": ["task_idx_*", "task_idx_*", ...],
+                "assigned_expert": "Name of an expert (in English)",
+                "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+            },
+            "task_index_2": {
+                "goal": "subtask_description",
+                "context": "Input data, resources, etc.",
+                "completion_criteria": "Acceptance criteria, etc.",
+                "dependencies": ["task_idx_*", "task_idx_*", ...],
+                "language of the assigned_expert": "English",
+                "assigned_expert": "Name of an expert (in English)",
+                "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+            }
+            ... // make sure the json format is correct
         }
-        ... // make sure the json format is correct
-    }
     </decomposition>
 """  # noqa: E501
