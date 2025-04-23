@@ -172,18 +172,16 @@ class Leader(Agent):
             subjob = SubJob(
                 original_job_id=original_job_id,
                 session_id=job.session_id,
-                goal=subjob_dict.get("goal", ""),
+                goal=subjob_dict["goal"],
                 context=(
-                    subjob_dict.get("context", "")
+                    subjob_dict["context"]
                     + "\nThe completion criteria is determined: "
-                    + subjob_dict.get("completion_criteria", "")
+                    + subjob_dict["completion_criteria"]
                 ),
-                expert_id=self.state.get_expert_by_name(
-                    subjob_dict.get("assigned_expert", "")
-                ).get_id(),
+                expert_id=self.state.get_expert_by_name(subjob_dict["assigned_expert"]).get_id(),
                 life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
-                thinking=subjob_dict.get("thinking", None),
-                assigned_expert_name=subjob_dict.get("assigned_expert", ""),
+                thinking=subjob_dict["thinking"],
+                assigned_expert_name=subjob_dict["assigned_expert"],
             )
             temp_to_unique_id_map[subjob_id] = subjob.id
 
