@@ -337,7 +337,7 @@ const HomePage: React.FC = () => {
           }
         </div>
       },
-      footer: idx === all.length - 1 && message?.role === 'SYSTEM' && message?.status === MESSAGE_TYPE.STOPPED ? <Button onClick={onRecoverSession} >{formatMessage('recover')}</Button> : null,
+      footer: idx === all.length - 1 && message?.role === 'SYSTEM' && message?.status === MESSAGE_TYPE.STOPPED ? <Button onClick={onRecoverSession} >{formatMessage('home.recover')}</Button> : null,
       onTypingComplete: () => {
         const newMessages = parsedMessages?.filter(item => !isEmpty(item?.message)).map((newItem, newIdx) => {
           if (newIdx === idx) {
