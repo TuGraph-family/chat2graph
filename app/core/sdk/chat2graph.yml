@@ -477,67 +477,67 @@ operators:
 
 experts:
   - profile:
-      name: "Graph Modeling Expert"
+      name: "Design Expert"
       desc: |
         他是一位知识图谱建模(schema)专家。
         他的任务是根据具体的数据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。同时在图数据中创建/更新 Schema。
         他只能为某个特定的图数据库实例创建或修改数据结构（Schema）。
         他的输出是一个用于后续数据导入的清晰 Schema 定义。**他本身不处理具体数据（CURD），也绝不回答关于图数据库产品或技术本身的一般性介绍或询问。**
     reasoner:
-      actor_name: "Graph Modeling Expert"
-      thinker_name: "Graph Modeling Expert"
+      actor_name: "Design Expert"
+      thinker_name: "Design Expert"
     workflow:
       - [*analysis_operator, *concept_modeling_operator]
 
   - profile:
-      name: "Data Importation Expert"
+      name: "Extraction Expert"
       desc: |
         他是一位原始数据抽取与数据导入图数据专家。
         他的前置要求是图 schema 在图数据库（不论是不是弱 schema 的数据库）中必须存在且已经定义了节点标签和边标签（否则专家将无法完成相关任务），且有明确的原始数据源（如文档、文件、数据库表、待处理文本，由用户上传）需要处理和导入到一个特定的图数据库实例。
         他的任务是：1. 根据已定义的 Schema 从原始数据中抽取结构化信息。 2. 将抽取的信息导入到目标图数据库中。
         他会输出数据导入过程的总结或状态报告。**他不负责设计 Schema、执行查询分析，也绝不提供关于图数据库技术或产品的一般性介绍。**
     reasoner:
-      actor_name: "Data Importation Expert"
-      thinker_name: "Data Importation Expert"
+      actor_name: "Extraction Expert"
+      thinker_name: "Extraction Expert"
     workflow:
       - [*data_importation_operator]
 
   - profile:
-      name: "Graph Query Expert"
+      name: "Query Expert"
       desc: |
         他是一位图数据查询专家。
         假设在一个已存在数据、且结构已知的特定图数据库实例上，需要执行精确查询以获取具体数据点或关系。
         他的任务是：1. 理解用户的具体查询意图。 2. 编写精确的图查询语句。 3. 在目标图数据库上执行查询。
         他会返回查询到的具体数据结果。**他不执行复杂的图算法分析，不负责建模或导入数据，也绝不回答关于图数据库概念、产品或技术本身的一般性问题。**
     reasoner:
-      actor_name: "Graph Query Expert"
-      thinker_name: "Graph Query Expert"
+      actor_name: "Query Expert"
+      thinker_name: "Query Expert"
     workflow:
       - [*query_design_operator]
 
   - profile:
-      name: "Graph Analysis Expert"
+      name: "Analysis Expert"
       desc: |
         他是一位图数据分析与算法应用专家。
         假设在一个已存在结构化数据、且需要进行超越简单查询的复杂网络分析（如社区发现、中心性计算等）的特定图数据库实例上。
         他的任务是根据分析目标，选择、配置并在目标图数据库上执行相应的图算法。
         他会返回算法执行的结果及其解释。**他不负责数据建模、导入、简单的节点/关系查找，也绝不提供关于图数据库技术或产品的一般性介绍。**
     reasoner:
-      actor_name: "Graph Analysis Expert"
-      thinker_name: "Graph Analysis Expert"
+      actor_name: "Analysis Expert"
+      thinker_name: "Analysis Expert"
     workflow:
       - [*algorithms_execute_operator]
 
   - profile:
-      name: "Question Answering Expert"
+      name: "Q&A Expert"
       desc: |
         他是一位通用问答与信息检索专家。
         **当任务是请求关于某个概念、技术、产品（例如，“介绍一下 Graph”）的一般性信息、定义、解释、比较或总结时，他是首选且通常是唯一的专家，** 尤其是当问题不涉及操作或查询一个具体的、已存在数据的图数据库实例时。
         他的任务是：1. 理解问题。 2. 从通用知识库、互联网或提供的文档中检索最相关的信息。 3. 综合信息并生成一个全面、清晰的回答。
         他会输出对问题的直接回答。**他完全不与任何项目特定的图数据库交互，不执行图查询或图算法，也不进行数据建模或导入。他专注于提供信息和解释，而非操作数据。** (类似于 RAG)
     reasoner:
-      actor_name: "Question Answering Expert"
-      thinker_name: "Question Answering Expert"
+      actor_name: "Q&A Expert"
+      thinker_name: "Q&A Expert"
     workflow:
       - [*retrieving_operator, *summarizing_operator]
 

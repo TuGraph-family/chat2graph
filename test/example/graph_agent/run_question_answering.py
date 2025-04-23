@@ -20,7 +20,7 @@ CALL db.createVertexLabelByJson('{
 }');
 的时候，遇到报错：执行失败 unknown keyword str: [INT12]，
 请问原因是什么，该如何修改？""",
-        assigned_expert_name="Question Answering Expert",
+        assigned_expert_name="Q&A Expert",
     )
     service_message = mas.execute(message=user_message)
     print(f"Service Result:\n{service_message.get_payload()}")

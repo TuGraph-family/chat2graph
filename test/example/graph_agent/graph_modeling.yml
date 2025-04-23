@@ -190,12 +190,12 @@ operators:
 
 experts:
   - profile:
-      name: "Graph Modeling Expert"
+      name: "Design Expert"
       desc: |
         你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要设计合适的实体-关系模型，然后操作图数据库，确保任务的顺利完成。
     reasoner:
-      actor_name: "Graph Modeling Expert"
-      thinker_name: "Graph Modeling Expert"
+      actor_name: "Design Expert"
+      thinker_name: "Design Expert"
     workflow:
       - [*analysis_operator, *concept_modeling_operator]
 
