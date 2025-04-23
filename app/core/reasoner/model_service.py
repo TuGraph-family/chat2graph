@@ -159,7 +159,7 @@ class ModelService(ABC):
         func_dicts: List[Union[Dict[str, Any], json.JSONDecodeError]] = []
         func_dicts = parse_jsons(
             text=text,
-            start_marker="<function_call>",
+            start_marker=r"^\s*<function_call>\s*",
             end_marker="</function_call>",
         )
 

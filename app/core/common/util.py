@@ -50,8 +50,9 @@ def parse_jsons(
             and the processed string that failed parsing. If no JSON content is found,
             an empty list is returned.
     """
+    # add re.MULTILINE flag to allow ^ to match start of lines
     json_pattern = f"{start_marker}(.*?){re.escape(end_marker)}"
-    json_matches = re.finditer(json_pattern, text, re.DOTALL)
+    json_matches = re.finditer(json_pattern, text, re.DOTALL | re.MULTILINE)
     results: List[Union[Dict[str, Any], json.JSONDecodeError]] = []
     processed_json_for_error_reporting = ""
 
@@ -118,7 +119,15 @@ def parse_jsons(
             json_str_fixed_commas = re.sub(r",\s*(?=[\}\]])", "", json_str_fixed_keys)
 
             # 3. remove ASCII control characters (except tab, newline, carriage return)
-            json_str_cleaned = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", json_str_fixed_commas)
+            json_str_cleaned_ctrl = re.sub(
+                r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", json_str_fixed_commas
+            )
+
+            # 3.5 remove potential BOM (\ufeff) at the start
+            if json_str_cleaned_ctrl.startswith("\ufeff"):
+                json_str_cleaned = json_str_cleaned_ctrl[1:]
+            else:
+                json_str_cleaned = json_str_cleaned_ctrl
 
             # store the version we are about to parse for potential error reporting
             processed_json_for_error_reporting = json_str_cleaned
@@ -134,3 +143,55 @@ def parse_jsons(
             results.append(e)
 
     return results
+
+
+def main():
+    """Demonstrates the usage of the parse_jsons function."""
+    sample_text = """
+Some introductory text.
+<shallow_thinking>
+理解：用户指示我重新调用 `query_system_status()` 函数，并强调需要确保 `<function_call>` 标签内的内容是有效的 JSON 格式。这是因为上一次调用失败了。
+输入处理：没有额外的输入信息，但我需要记住上次失败的原因是 JSON 格式错误。
+行动：我将严格按照 JSON 格式规范，重新生成调用 `query_system_status()` 函数的 `<function_call>`。函数不需要参数，所以 `args` 部分是一个空对象 `{}`。
+</shallow_thinking>
+
+<action>
+<function_call>
+{
+    "name": "query_system_status",
+    "call_objective": "获取当前系统状态以便进行后续任务分解",
+    "args": {}
+}
+</function_call>
+</action>"""
+
+    print("--- Running parse_jsons ---")
+    parsed_jsons = parse_jsons(
+        sample_text,
+        # modified start_marker to anchor to line start
+        start_marker=r"^\s*<function_call>\s*",
+        end_marker="</function_call>",
+    )
+    print("\n--- Parsing Results ---")
+    if not parsed_jsons:
+        print("No JSON blocks found or parsed.")
+    for idx, item in enumerate(parsed_jsons):
+        print(f"\nResult {idx + 1}:")
+        if isinstance(item, json.JSONDecodeError):
+            print("  Type: Error")
+            print(f"  Message: {item}")
+            # Note: The failing string representation is not printed here anymore,
+            # but the error object 'item' contains the necessary details (msg, doc, pos).
+        elif isinstance(item, dict) or isinstance(item, list):
+            print("  Type: Success (JSON Object/Array)")
+            # pretty print the successful JSON
+            print(f"  Content: {json.dumps(item, indent=2, ensure_ascii=False)}")
+        else:
+            # this case should ideally not happen if results only contain dicts/lists or errors
+            print(f"  Type: Unknown ({type(item)})")
+            print(f"  Content: {item}")
+    print("\n--- End of main ---")
+
+
+if __name__ == "__main__":
+    main()
