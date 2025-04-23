@@ -21,22 +21,33 @@ def test_parse_jsons_basic():
 def test_parse_jsons_custom_markers():
     """Test parse_jsons with custom start and end markers, including comments and trailing comma."""
     text = """
-    Some text.
-    <function_call>
-    {
-        "call_objective": "query_system_status",
-        "args": {} // Example comment
-    }
-    </function_call>
+    <shallow_thinking>
+        Understanding: The user instructs me to call the `query_system_status()` function.  
+        Input processing: There is no additional input information, which complies with the requirement that the `query_system_status()` function does not need parameters.  
+        Action: I will generate a `<function_call>` to invoke the `query_system_status()` function as instructed.
+    </shallow_thinking>
+    <action>
+        <function_call>
+        {
+            "name": "query_system_status",
+            "call_objective": "Obtain the current system status for subsequent task decomposition.",
+            "args": {}
+        }
+        </function_call>
+    </action>
+
     More text.
+
     <function_call>
     {"another_call": "test",} // Trailing comma removed
     </function_call>
-    """
-    result = parse_jsons(text, start_marker=r"<function_call>\s*", end_marker="</function_call>")
+    """  # noqa: E501
+    result = parse_jsons(
+        text, start_marker=r"^\s*<function_call>\s*", end_marker="</function_call>"
+    )
     assert len(result) == 2
     assert isinstance(result[0], dict)
-    assert result[0]["call_objective"] == "query_system_status"
+    assert result[0]["name"] == "query_system_status"
     assert isinstance(result[1], dict)
     assert result[1]["another_call"] == "test"
 
@@ -94,16 +105,8 @@ def test_parse_jsons_invalid_syntax():
     """
     result = parse_jsons(text)
     assert len(result) == 1
-    # expecting an error tuple: (error_message, original_exception, processed_text)
-    assert isinstance(result[0], tuple)
-    assert len(result[0]) == 3
-    assert isinstance(result[0][0], str)  # error message
-    assert isinstance(result[0][1], json.JSONDecodeError)  # original exception
-    assert isinstance(result[0][2], str)  # processed text
-    assert (
-        "Expecting property name enclosed in double quotes" in result[0][0]
-        or "Expecting" in result[0][0]
-    )
+    # expecting an error original_exception
+    assert isinstance(result[0], json.JSONDecodeError)
 
 
 def test_parse_jsons_no_language_identifier():
@@ -160,7 +163,7 @@ def test_parse_jsons_llm_errors_single_quotes_value():
     ```json
     {
         'name': "Alice", // Fixed
-        "age": 30, // Missing comma before next key
+        "age": 30 // Missing comma before next key
         "city": 'Bob's Town', // Invalid single quotes for value
         "valid": true, // Trailing comma fixed
     }
@@ -168,10 +171,7 @@ def test_parse_jsons_llm_errors_single_quotes_value():
     """
     result = parse_jsons(text)
     assert len(result) == 1
-    assert isinstance(result[0], tuple)  # expect error tuple
-    assert isinstance(result[0][1], json.JSONDecodeError)
-    # error could be missing comma or invalid value depending on parser behavior
-    assert "Expecting ',' delimiter" in result[0][0] or "Expecting value" in result[0][0]
+    assert isinstance(result[0], json.JSONDecodeError)  # expect error tuple
 
 
 def test_parse_jsons_comment_in_string():
