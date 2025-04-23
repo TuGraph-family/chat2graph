@@ -79,11 +79,11 @@ export const CURRENT_PREFIXES = ['[当前会话]', '[Current]'];
 
 
 enum EXPERT_ENUM {
-  MODELLING = 'Graph Modeling Expert',
-  IMPORT = 'Data Importation Expert',
-  QUERY = 'Graph Query Expert',
-  ANALYSIS = 'Graph Analysis Expert',
-  ANSWERING = 'Question Answering Expert',
+  MODELLING = 'Design Expert',
+  IMPORT = 'Extraction Expert',
+  QUERY = 'Query Expert',
+  ANALYSIS = 'Analysis Expert',
+  ANSWERING = 'Q&A Expert',
 }
 
 export const EXPERTS = {

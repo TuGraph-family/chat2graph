@@ -97,14 +97,14 @@ operators:
 
 experts:
   - profile:
-      name: "Graph Analysis Expert"
+      name: "Analysis Expert"
       desc: |
         你是一个专业的算法意图分析专家。你擅长理解用户的需求，并根据需求找到图数据库中支持的算法。
         你需要根据用户的需求找到合适的算法，为后续的算法执行做好准备准备。
         注意，你不需要执行算法，也不能询问用户更多的信息。
     reasoner:
-      actor_name: "Graph Analysis Expert"
-      thinker_name: "Graph Analysis Expert"
+      actor_name: "Analysis Expert"
+      thinker_name: "Analysis Expert"
     workflow:
       - [*algorithms_intention_analysis_operator, *algorithms_execute_operator]
 

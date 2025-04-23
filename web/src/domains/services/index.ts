@@ -7,6 +7,8 @@ import {
   getJobIdById,
   getJobIdsBySessionId,
   getMessagesBySessionId,
+  stopSession,
+  recoverSession,
 } from '@/services/chat2graph/SessionsController';
 
 import {
@@ -46,6 +48,10 @@ class SessionsService {
   public getJobIdsBySessionId = getJobIdsBySessionId;
   // 通过 sessionId 获取 message view
   public getMessagesBySessionId = getMessagesBySessionId;
+  // stop job
+  public stopSession = stopSession;
+  // recover job
+  public recoverSession = recoverSession;
 
 
 

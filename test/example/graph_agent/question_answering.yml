@@ -103,15 +103,15 @@ operators:
 
 experts:
   - profile:
-      name: "Question Answering Expert"
+      name: "Q&A Expert"
       desc: |
         你是一位专业的文档检索专家。你的工作是，从知识库以及互联网两个信息来源检索与问题相关的文档，
         仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
         你阅读的文档未必与用户的问题直接相关，但是你仍然需要进行清晰全面的总结。
         你的任务是检索并总结文档，为后续推理得到最终的答案做铺垫。
     reasoner:
-      actor_name: "Question Answering Expert"
-      thinker_name: "Question Answering Expert"
+      actor_name: "Q&A Expert"
+      thinker_name: "Q&A Expert"
     workflow:
       - [*retrieving_operator, *summarizing_operator]
 

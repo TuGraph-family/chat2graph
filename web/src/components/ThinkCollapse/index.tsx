@@ -25,7 +25,7 @@ const ThinkCollapse: React.FC<{ think: any }> = ({
                     label: <p className={styles['step-thinks-title']}>
                         <ThinkStatus status={think?.status} />
                         <span className={styles['step-thinks-title-expert']}>
-                            @{think?.assigned_expert_name ? formatMessage(`home.expert.${EXPERTS[think.assigned_expert_name]}`) : '数据导入专家'}
+                            @{think?.assigned_expert_name ? formatMessage(`home.expert.${EXPERTS[think.assigned_expert_name]}`) : '导数专家'}
                         </span>
                         : {think?.goal}
                     </p>,

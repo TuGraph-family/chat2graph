@@ -11,9 +11,8 @@ interface KnowledgebasesDrawerProps {
     onClose: (isRefresh?: boolean) => void
     formatMessage: (id: string, params?: any) => string
     id?: string,
-    sessionId?: string
 }
-const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClose, formatMessage, id, sessionId }) => {
+const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClose, formatMessage, id }) => {
     const [form] = Form.useForm()
     const [state, setState] = useImmer<{
         current: number,
@@ -65,8 +64,6 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
             return false
         }
         const res = await runUploadFile({
-            session_id: sessionId,
-        }, {
             file: fileBlob,
             filename: name
         })
