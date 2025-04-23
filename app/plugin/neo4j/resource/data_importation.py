@@ -415,6 +415,53 @@ class DataImport(Tool):
                 processed, created, and updated.
         """  # noqa: E501
 
+        # arguments validation
+        if not all(
+            [
+                graph_db_service,
+                artifact_service,
+                session_id,
+                job_id,
+                source_label,
+                source_primary_key,
+                target_label,
+                target_primary_key,
+                relationship_label,
+            ]
+        ):
+            raise ValueError("Missing required arguments for data import.")
+
+        if not isinstance(source_label, str) or not source_label.strip():
+            raise ValueError("source_label must be a non-empty string.")
+        if not isinstance(target_label, str) or not target_label.strip():
+            raise ValueError("target_label must be a non-empty string.")
+        if not isinstance(relationship_label, str) or not relationship_label.strip():
+            raise ValueError("relationship_label must be a non-empty string.")
+
+        if not isinstance(source_primary_key, str) or not source_primary_key.strip():
+            raise ValueError("source_primary_key must be a non-empty string.")
+        if not isinstance(target_primary_key, str) or not target_primary_key.strip():
+            raise ValueError("target_primary_key must be a non-empty string.")
+
+        if not isinstance(source_properties, dict):
+            raise ValueError("source_properties must be a dictionary.")
+        if not isinstance(target_properties, dict):
+            raise ValueError("target_properties must be a dictionary.")
+        if not isinstance(relationship_properties, dict):
+            # allow None or empty dict for it, but enforce dict type if provided
+            raise ValueError("relationship_properties must be a dictionary.")
+
+        if source_primary_key not in source_properties:
+            raise ValueError(
+                f"Source primary key '{source_primary_key}' "
+                f"not found in source_properties: {source_properties}"
+            )
+        if target_primary_key not in target_properties:
+            raise ValueError(
+                f"Target primary key '{target_primary_key}' "
+                f"not found in target_properties: {target_properties}"
+            )
+
         def format_date(value: str) -> str:
             """Format date value to ensure it has a leading zero in the year."""
             date_pattern = r"^(\d{3})-(\d{2})-(\d{2})(T[\d:]+Z)?$"
