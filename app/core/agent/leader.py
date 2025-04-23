@@ -4,7 +4,6 @@ import time
 from typing import Dict, List, Optional, Set, Union
 
 import networkx as nx  # type: ignore
-from requests import HTTPError
 
 from app.core.agent.agent import Agent, AgentConfig
 from app.core.agent.builtin_leader_state import BuiltinLeaderState
@@ -111,20 +110,27 @@ class Leader(Agent):
                 raise result
 
             job_dict = result
-        except (ValueError, json.JSONDecodeError, HTTPError) as e:
+            return self._parse_job_dict(
+                original_job_id=original_job_id,
+                job=job,
+                job_dict=job_dict,
+                life_cycle=life_cycle,
+            )
+        except (ValueError, TypeError, json.JSONDecodeError, Exception) as e:
             # color: red
             print(f"\033[38;5;196m[WARNING]: {e}\033[0m")
 
-            if isinstance(e, HTTPError):
+            if not isinstance(e, ValueError | TypeError | json.JSONDecodeError):
                 # stop the job graph
                 self.fail_job_graph(
                     job_id=job_id,
                     error_info=(
-                        f"The job `{original_job_id}` is not executed, since there is an error "
-                        f"of http request. Error info: {e}"
+                        f"The job `{original_job_id}` is not executed, since there is an "
+                        f"unexpected error. Error info: {e}"
                     ),
                 )
                 job_dict = {}
+                return JobGraph()
             else:
                 # retry to decompose the job with the new lesson
                 workflow_message = self._workflow.execute(
@@ -149,7 +155,14 @@ class Leader(Agent):
                     if isinstance(result, json.JSONDecodeError):
                         raise result from e
                     job_dict = result
-                except (ValueError, json.JSONDecodeError):
+                    return self._parse_job_dict(
+                        original_job_id=original_job_id,
+                        job=job,
+                        job_dict=job_dict,
+                        life_cycle=life_cycle,
+                    )
+
+                except (ValueError, TypeError, json.JSONDecodeError):
                     self.fail_job_graph(
                         job_id=job_id,
                         error_info=(
@@ -158,12 +171,21 @@ class Leader(Agent):
                         ),
                     )
                     job_dict = {}  # fallback to empty dict to avoid further execution
+                    return JobGraph()
 
+    def _parse_job_dict(
+        self,
+        original_job_id: str,
+        job: Job,
+        job_dict: Dict[str, Dict[str, str]],
+        life_cycle: Optional[int] = None,
+    ) -> JobGraph:
+        """Parse the job dict and create the subjobs."""
         # init the decomposed job graph
         job_graph = JobGraph()
 
         # check the current job (original job / subjob) status
-        if self._job_service.get_job_result(job_id=job_id).has_result():
+        if self._job_service.get_job_result(job_id=job.id).has_result():
             return job_graph
 
         # create the subjobs, and add them to the decomposed job graph
@@ -172,15 +194,15 @@ class Leader(Agent):
             subjob = SubJob(
                 original_job_id=original_job_id,
                 session_id=job.session_id,
-                goal=subjob_dict["goal"],
+                goal=str(subjob_dict["goal"]),
                 context=(
-                    subjob_dict["context"]
+                    str(subjob_dict["context"])
                     + "\nThe completion criteria is determined: "
-                    + subjob_dict["completion_criteria"]
+                    + str(subjob_dict["completion_criteria"])
                 ),
                 expert_id=self.state.get_expert_by_name(subjob_dict["assigned_expert"]).get_id(),
                 life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
-                thinking=subjob_dict["thinking"],
+                thinking=str(subjob_dict["thinking"]),
                 assigned_expert_name=subjob_dict["assigned_expert"],
             )
             temp_to_unique_id_map[subjob_id] = subjob.id

@@ -53,6 +53,7 @@ JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
     // You must generate subtasks at the end of <final_output> section.
     // And the subtasks should be in the following format. Do not forget to use <decomposition>...</decomposition> to indicate the start of the decomposed subtasks dict, so that the external system can parse the <decomposition> content correctly.
     // The presence of <decomposition>...</decomposition> shows the completion of the decomposition, and you should use TASK_DONE to indicate the end of the task.
+    // The using language of the goal, context, completion_criteria, dependencies and thinking (except assigned_expert) should be the same as the language of the given task.
     // Here is the decomposition example template:
     <decomposition>
         {
