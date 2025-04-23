@@ -94,17 +94,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
 
   const items = useMemo(() => {
     const steps = [
-      {
-        title: <div className={styles['title']}>
-          <div className={styles['title-content']}>{formatMessage('home.thinks.planning')}</div>
-          {
-            diffTime ? <div className={styles['title-extra']}>{2 + formatMessage('home.thinks.seconds')}</div> : null
-          }
 
-        </div>,
-        description: <div>{formatMessage('home.thinks.planningDesc')}</div>,
-        icon: <img src={logoSrc} className={styles['step-icon']} />,
-      },
       {
         title: <div className={styles['title']}>
           <div className={styles['title-content']}>{formatMessage('home.thinks.analyze')}</div>
@@ -126,6 +116,16 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
     if (status === MESSAGE_TYPE.FINISHED) {
       setState(draft => {
         draft.percent = 100
+      })
+      steps.unshift({
+        title: <div className={styles['title']}>
+          <div className={styles['title-content']}>{formatMessage('home.thinks.planning')}</div>
+          {/* {
+            diffTime ? <div className={styles['title-extra']}>{2 + formatMessage('home.thinks.seconds')}</div> : null
+          } */}
+        </div>,
+        description: <div>{formatMessage('home.thinks.planningDesc')}</div>,
+        icon: <img src={logoSrc} className={styles['step-icon']} />,
       })
       steps.push({
         title: <div className={styles['title']}>

@@ -142,6 +142,7 @@ export default {
     },
     tip: 'No default graph database was registered, we suggest you add a new one to access the completed capabilities.',
     click: 'Click here',
+    recover: 'Recover'
   },
   manager: {
     return: 'Return Session'
