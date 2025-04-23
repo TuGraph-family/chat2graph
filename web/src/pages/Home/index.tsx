@@ -156,7 +156,7 @@ const HomePage: React.FC = () => {
         clearTimeout(timer);
         onSuccess(transformMessage(res?.data?.answer));
       });
-    }, 500)
+    }, 2000)
   }, [closeTag])
 
   const getAttached = () => {

@@ -152,7 +152,7 @@ actions:
 
   - &schema_design_and_import_action
     name: "schema_design_and_import"
-    desc: "将概念模型转化为图数据库 labels，并使用相关工具在图数据库中创建图 schema（需要调用一个/些工具）"
+    desc: "将概念模型转化为图数据库 labels，并使用相关工具在图数据库中创建图 schema (如果需要的话，可以多次调用工具并在数据库中创建 labels，以确保完成给定的任务)（需要调用一个/些工具）"
     tools:
       - *schema_getter_tool
       - *vertex_label_adder_tool

@@ -170,7 +170,7 @@ class ModelService(ABC):
         if "json" in text:
             json_func_dicts = parse_jsons(
                 text=text,
-                start_marker="```json",
+                start_marker=r"^\s*```json\s*",
                 end_marker="```",
             )
             for json_func_dict in json_func_dicts:
