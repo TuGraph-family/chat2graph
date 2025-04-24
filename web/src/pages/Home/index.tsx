@@ -319,7 +319,7 @@ const HomePage: React.FC = () => {
       } : undefined,
       typing: (message?.role === 'SYSTEM' && !isInit) ? { step: 3, interval: 50 } : false,
       messageRender: (text) => {
-        return message?.role === 'SYSTEM' ? <BubbleContent key={id} status={message?.status} message={message} content={text} /> : <div className={styles['user-conversation']}>
+        return message?.role === 'SYSTEM' ? <BubbleContent onRecoverSession={onRecoverSession} key={id} isLast={idx === all.length - 1} status={message?.status} message={message} content={text} /> : <div className={styles['user-conversation']}>
           <pre className={styles['user-conversation-question']}>{text}</pre>
           {
             <Flex vertical gap="middle">
@@ -329,13 +329,11 @@ const HomePage: React.FC = () => {
                   size: +item?.size,
                 }
                 return <Attachments.FileCard key={item.uid} item={fileItem} />
-
               })}
             </Flex>
           }
         </div>
       },
-      footer: idx === all.length - 1 && message?.role === 'SYSTEM' && message?.status === MESSAGE_TYPE.STOPPED ? <Button onClick={onRecoverSession} >{formatMessage('home.recover')}</Button> : null,
       onTypingComplete: () => {
         const newMessages = parsedMessages?.filter(item => !isEmpty(item?.message)).map((newItem, newIdx) => {
           if (newIdx === idx) {
@@ -426,6 +424,9 @@ const HomePage: React.FC = () => {
                   getSessionList();
                   message.success(formatMessage('home.deleteConversationSuccess'));
                   if (activeKey === conversation.key) {
+                    if (agent.isRequesting()) {
+                      setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)
+                    }
                     setState((draft) => {
                       draft.activeKey = ''
                     })
