@@ -16,7 +16,11 @@ from app.core.common.util import parse_jsons
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
-from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_PROMPT, subjob_required_keys
+from app.core.prompt.job_decomposition import (
+    JOB_DECOMPOSITION_OUTPUT_SCHEMA,
+    JOB_DECOMPOSITION_PROMPT,
+    subjob_required_keys,
+)
 
 
 class Leader(Agent):
@@ -75,7 +79,7 @@ class Leader(Agent):
         # else, the job is not assigned to an expert, then decompose the job
         # get the expert list
         expert_profiles = [e.get_profile() for e in self.state.list_experts()]
-        expert_names = [p.name for p in expert_profiles]  # Get list of names for validation
+        expert_names = [p.name for p in expert_profiles]  # get list of names for validation
         role_list = "\n".join(
             [
                 f"Expert name: {profile.name}\nDescription: {profile.description}"
@@ -134,7 +138,8 @@ class Leader(Agent):
                     f"all required keys are present: {subjob_required_keys}, dependencies are "
                     f"valid task IDs, and assigned_expert is one of {expert_names}. Do not forget "
                     " <decomposition> prefix and </decomposition> suffix when you generate the "
-                    "subtasks dict block in <final_output>...</final_output>. Error info: " + str(e)
+                    "subtasks dict block in <final_output>...</final_output>.\nExpected format: "
+                    f"{JOB_DECOMPOSITION_OUTPUT_SCHEMA}\nError info: " + str(e)
                 )
                 try:
                     workflow_message = self._workflow.execute(

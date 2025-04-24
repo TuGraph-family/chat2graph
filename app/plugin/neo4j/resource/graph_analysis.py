@@ -1,8 +1,12 @@
+import asyncio  # Added import
 import json
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
+from app.core.dal.dao.dao_factory import DaoFactory
+from app.core.dal.database import DbSession
 from app.core.service.graph_db_service import GraphDbService
+from app.core.service.service_factory import ServiceFactory
 from app.core.toolkit.tool import Tool
 
 
@@ -739,8 +743,8 @@ class ShortestPathExecutor(Tool):
             MATCH (source) WHERE source.id = 'loc123'
             MATCH (target) WHERE target.id = 'loc456'
             CALL gds.shortestPath.dijkstra.stream('shortestpath_graph_12345678', {
-                sourceNode: source,
-                targetNodes: [target],
+                sourceNode: elementId(source), // Use elementId()
+                targetNodes: [elementId(target)], // Use elementId()
                 relationshipWeightProperty: 'weight'
             })
             YIELD index, sourceNode, targetNode, totalCost, nodeIds, costs, path
@@ -756,8 +760,8 @@ class ShortestPathExecutor(Tool):
             MATCH (source) WHERE source.id = 'loc123'
             MATCH (target) WHERE target.id = 'loc456'
             CALL gds.shortestPath.dijkstra.stream('shortestpath_graph_12345678', {
-                sourceNode: source,
-                targetNodes: [target],
+                sourceNode: elementId(source), // Use elementId()
+                targetNodes: [elementId(target)], // Use elementId()
                 relationshipWeightProperty: 'weight'
             })
             YIELD totalCost
@@ -766,7 +770,7 @@ class ShortestPathExecutor(Tool):
           CALL gds.graph.drop('shortestpath_graph_123456')
 
         Args:
-            start_node_id (str): ID of the starting point node.
+            start_node_id (str): ID of the starting point node, not the elementId.
             end_node_id (Union[str, List[str]]): ID or list of IDs for destination point(s).
             vertex_label (str): Label of nodes to include in calculation, "*" for all nodes.
             relationship_type (str): Type of relationships to consider, "*" for all relationships.
@@ -825,24 +829,24 @@ class ShortestPathExecutor(Tool):
                 # convert end_node_id to list if it's a single value
                 target_ids = end_node_id if isinstance(end_node_id, list) else [end_node_id]
 
-                # find source node
+                # find source node using elementId()
                 source_node_query = f"""
                 MATCH (source)
                 WHERE source.id = '{start_node_id}'
-                RETURN id(source) AS sourceNodeId
+                RETURN elementId(source) AS sourceNodeId
                 """
                 source_result = session.run(source_node_query).data()
                 if not source_result:
                     raise ValueError(f"Source node with id '{start_node_id}' not found")
                 source_node_id = source_result[0]["sourceNodeId"]
 
-                # find target nodes
+                # find target nodes using elementId()
                 target_node_ids = []
                 for target_id in target_ids:
                     target_node_query = f"""
                     MATCH (target)
                     WHERE target.id = '{target_id}'
-                    RETURN id(target) AS targetNodeId
+                    RETURN elementId(target) AS targetNodeId
                     """
                     target_result = session.run(target_node_query).data()
                     if target_result:
@@ -852,7 +856,34 @@ class ShortestPathExecutor(Tool):
                     raise ValueError("No target nodes found with the provided IDs")
 
                 # step 3: build configuration for shortest path
-                config_params = [f"sourceNode: {source_node_id}", f"targetNodes: {target_node_ids}"]
+                # GDS requires the internal node ID, not the elementId string.
+                # We need to match the nodes again within the CALL block or pass the internal IDs.
+                # Passing internal IDs directly is cleaner if we fetch them first.
+                # However, GDS procedures often accept the node object itself or its elementId.
+                # Let's try passing elementId strings directly first, as it's simpler.
+                # If that fails, we'll need to adjust to pass internal IDs or node objects.
+
+                # re-fetch internal IDs for GDS call
+                source_internal_id_query = (
+                    f"MATCH (n) WHERE elementId(n) = '{source_node_id}' RETURN id(n) AS internalId"
+                )
+                source_internal_id = session.run(source_internal_id_query).single()["internalId"]
+
+                target_internal_ids = []
+                for target_node_id_str in target_node_ids:
+                    target_internal_id_query = (
+                        "MATCH (n) WHERE elementId(n) = "
+                        f"'{target_node_id_str}' RETURN id(n) AS internalId"
+                    )
+                    target_internal_id = session.run(target_internal_id_query).single()[
+                        "internalId"
+                    ]
+                    target_internal_ids.append(target_internal_id)
+
+                config_params = [
+                    f"sourceNode: {source_internal_id}",
+                    f"targetNodes: {target_internal_ids}",
+                ]
 
                 if weight_property:
                     config_params.append("relationshipWeightProperty: 'weight'")
@@ -1450,3 +1481,51 @@ class KMeansExecutor(Tool):
 
         # return results as json string
         return json.dumps(result, indent=2, ensure_ascii=False)
+
+
+# Added main function for testing ShortestPathExecutor
+async def main():
+    """Main function to test ShortestPathExecutor."""
+    graph_db_service = None  # Initialize to None
+    try:
+        # Initialize services needed for the test
+        # Assuming DbSession needs setup or can be default
+        DaoFactory.initialize(DbSession())
+        ServiceFactory.initialize()
+        graph_db_service = GraphDbService.instance
+        # Ensure the service is ready if it has an async init
+        # await graph_db_service.initialize() # Uncomment if needed
+
+        executor = ShortestPathExecutor()
+
+        start_node_id = "Romeo"
+        # end_node_id = "4:3641d659-da64-4b2a-8926-1377e9b7755a:2"
+        end_node_id = "Juliet"
+        vertex_label = "*"
+        relationship_type = "*"
+        weight_property = None
+        path_details = True
+
+        print(f"Executing shortest path from '{start_node_id}' to '{end_node_id}'...")
+
+        result_json = await executor.execute_shortest_path_algorithm(
+            graph_db_service=graph_db_service,
+            start_node_id=start_node_id,
+            end_node_id=end_node_id,
+            vertex_label=vertex_label,
+            relationship_type=relationship_type,
+            weight_property=weight_property,
+            path_details=path_details,
+        )
+        print("\nExecution Result:")
+        print(result_json)
+    except Exception as e:
+        print(f"\nAn error occurred during execution: {e}")
+
+
+if __name__ == "__main__":
+    # Requires a running Neo4j instance with the sample graph data (e.g., Shakespeare)
+    # and GDS plugin installed.
+    # Ensure environment variables for Neo4j connection are set if GraphDbService uses them.
+    print("Running Shortest Path Test...")
+    asyncio.run(main())

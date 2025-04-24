@@ -5,123 +5,10 @@ from uuid import uuid4
 
 from neo4j.graph import Node, Path, Relationship
 
-from app.core.model.artifact import (
-    Artifact,
-    ArtifactMetadata,
-    ArtifactStatus,
-    ContentType,
-    SourceReference,
-)
 from app.core.service.artifact_service import ArtifactService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
 from app.plugin.neo4j.resource.data_importation import update_graph_artifact
-
-
-def _get_node_alias(node: Node, node_schema: Dict[str, Any]) -> str:
-    """Determines the alias for a node based on the schema's primary key."""
-    node_id = node.element_id if hasattr(node, "element_id") else str(node.id)
-    alias = node_id  # default alias
-    properties = dict(node.items())
-    if node.labels:
-        label = list(node.labels)[0]
-        primary_key_prop = node_schema.get(label, {}).get("primary_key")
-        if primary_key_prop and primary_key_prop in properties:
-            alias = properties[primary_key_prop]
-    return str(alias)
-
-
-def _add_node_to_graph(
-    node: Node,
-    graph_data: Dict[str, List[Dict[str, Any]]],
-    node_schema: Dict[str, Any],
-    processed_nodes: Set[str],
-) -> None:
-    """Adds a node to the graph_data if not already present."""
-    node_id = node.element_id if hasattr(node, "element_id") else str(node.id)
-    if node_id not in processed_nodes:
-        label = list(node.labels)[0] if node.labels else ""
-        properties = dict(node.items())
-        alias = _get_node_alias(node, node_schema)
-        graph_data["vertices"].append(
-            {
-                "id": node_id,
-                "label": label,
-                "alias": alias,
-                "properties": properties,
-            }
-        )
-        processed_nodes.add(node_id)
-
-
-def _add_relationship_to_graph(
-    rel: Relationship,
-    graph_data: Dict[str, List[Dict[str, Any]]],
-    node_schema: Dict[str, Any],
-    processed_nodes: Set[str],
-    processed_rels: Set[str],
-) -> None:
-    """Adds a relationship and its nodes to graph_data if not already present."""
-    rel_id = rel.element_id if hasattr(rel, "element_id") else str(rel.id)
-    if rel_id not in processed_rels:
-        start_node = rel.start_node
-        end_node = rel.end_node
-
-        # check if start_node and end_node are valid Node objects
-        if start_node is None or end_node is None:
-            print(f"Warning: Skipping relationship {rel_id} due to missing start/end node.")
-            return
-
-        start_id = (
-            start_node.element_id if hasattr(start_node, "element_id") else str(start_node.id)
-        )
-        end_id = end_node.element_id if hasattr(end_node, "element_id") else str(end_node.id)
-        properties = dict(rel.items())
-        alias = str(properties.get("id", rel.type))  # default alias for relationship
-
-        # ensure start and end nodes are added
-        _add_node_to_graph(start_node, graph_data, node_schema, processed_nodes)
-        _add_node_to_graph(end_node, graph_data, node_schema, processed_nodes)
-
-        graph_data["edges"].append(
-            {
-                "id": rel_id,
-                "source": start_id,
-                "target": end_id,
-                "label": rel.type,
-                "alias": alias,
-                "properties": properties,
-            }
-        )
-        processed_rels.add(rel_id)
-
-
-def _process_value(
-    value: Any,
-    graph_data: Dict[str, List[Dict[str, Any]]],
-    node_schema: Dict[str, Any],
-    processed_nodes: Set[str],
-    processed_rels: Set[str],
-) -> None:
-    """Recursively processes values from query results to populate graph_data."""
-    if isinstance(value, Node):
-        _add_node_to_graph(value, graph_data, node_schema, processed_nodes)
-    elif isinstance(value, Relationship):
-        _add_relationship_to_graph(value, graph_data, node_schema, processed_nodes, processed_rels)
-    elif isinstance(value, Path):
-        for node in value.nodes:
-            _add_node_to_graph(node, graph_data, node_schema, processed_nodes)
-        for rel in value.relationships:
-            _add_relationship_to_graph(
-                rel, graph_data, node_schema, processed_nodes, processed_rels
-            )
-    elif isinstance(value, list):
-        for item in value:
-            _process_value(item, graph_data, node_schema, processed_nodes, processed_rels)
-    elif isinstance(value, dict):
-        for item_value in value.values():
-            _process_value(item_value, graph_data, node_schema, processed_nodes, processed_rels)
-    # ignore primitive types for graph_data
 
 
 class CypherExecutor(Tool):
@@ -243,194 +130,107 @@ class CypherExecutor(Tool):
                 )
 
 
-class VertexQuerier(Tool):
-    """Tool for querying vertices in Neo4j."""
+def _get_node_alias(node: Node, node_schema: Dict[str, Any]) -> str:
+    """Determines the alias for a node based on the schema's primary key."""
+    node_id = node.element_id if hasattr(node, "element_id") else str(node.id)
+    alias = node_id  # default alias
+    properties = dict(node.items())
+    if node.labels:
+        label = list(node.labels)[0]
+        primary_key_prop = node_schema.get(label, {}).get("primary_key")
+        if primary_key_prop and primary_key_prop in properties:
+            alias = properties[primary_key_prop]
+    return str(alias)
 
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id or str(uuid4()),
-            name=self.query_vertex.__name__,
-            description=self.query_vertex.__doc__ or "",
-            function=self.query_vertex,
+
+def _add_node_to_graph(
+    node: Node,
+    graph_data: Dict[str, List[Dict[str, Any]]],
+    node_schema: Dict[str, Any],
+    processed_nodes: Set[str],
+) -> None:
+    """Adds a node to the graph_data if not already present."""
+    node_id = node.element_id if hasattr(node, "element_id") else str(node.id)
+    if node_id not in processed_nodes:
+        label = list(node.labels)[0] if node.labels else ""
+        properties = dict(node.items())
+        alias = _get_node_alias(node, node_schema)
+        graph_data["vertices"].append(
+            {
+                "id": node_id,
+                "label": label,
+                "alias": alias,
+                "properties": properties,
+            }
         )
+        processed_nodes.add(node_id)
 
-    def _format_value(self, value: Any) -> str:
-        """Format value based on type."""
-        if value is None:
-            return ""
 
-        if isinstance(value, int | float):
-            return str(value)
+def _add_relationship_to_graph(
+    rel: Relationship,
+    graph_data: Dict[str, List[Dict[str, Any]]],
+    node_schema: Dict[str, Any],
+    processed_nodes: Set[str],
+    processed_rels: Set[str],
+) -> None:
+    """Adds a relationship and its nodes to graph_data if not already present."""
+    rel_id = rel.element_id if hasattr(rel, "element_id") else str(rel.id)
+    if rel_id not in processed_rels:
+        start_node = rel.start_node
+        end_node = rel.end_node
 
-        if isinstance(value, list | tuple):
-            return str(list(value))
+        # check if start_node and end_node are valid Node objects
+        if start_node is None or end_node is None:
+            print(f"Warning: Skipping relationship {rel_id} due to missing start/end node.")
+            return
 
-        return f"'{value}'"
-
-    async def query_vertex(
-        self,
-        graph_db_service: GraphDbService,
-        artifact_service: ArtifactService,
-        session_id: str,
-        job_id: str,
-        vertex_type: str,
-        conditions: List[Dict[str, str]],
-        distinct: bool = False,
-    ) -> str:
-        """Query vertices with conditions. The input must have been matched with the schema of the
-        graph database.
-
-        Args:
-            session_id (str): The session ID
-            job_id (str): The job ID
-            vertex_type (str): The vertex type to query
-            conditions (List[Dict[str, str]]): List of conditions to query, which is a dict with:
-                - field (str): Field name to query, should be a property of the vertex
-                - operator(str): Cypher operator, valid values include:
-                    General operators:
-                    - DISTINCT: Return unique results
-                    - . : Property access
-
-                    Mathematical operators:
-                    - +: Addition
-                    - -: Subtraction
-                    - *: Multiplication
-                    - /: Division
-                    - %: Modulo
-                    - ^: Power
-
-                    Comparison operators:
-                    - =: Equal to
-                    - <>: Not equal to
-                    - <: Less than
-                    - >: Greater than
-                    - <=: Less than or equal to
-                    - >=: Greater than or equal to
-                    - IS NULL: Check if value is null
-                    - IS NOT NULL: Check if value is not null
-
-                    String-specific operators:
-                    - STARTS WITH: String starts with
-                    - ENDS WITH: String ends with
-                    - CONTAINS: String contains
-                    - REGEXP: Regular expression match
-
-                    Boolean operators:
-                    - AND: Logical AND
-                    - OR: Logical OR
-                    - XOR: Logical XOR
-                    - NOT: Logical NOT
-
-                    List operators:
-                    - + : List concatenation
-                    - IN: Check element existence in list
-                    - []: List indexing
-                - value (str, optional): Value to compare against. Required for all operators except
-                    IS NULL/IS NOT NULL
-            distinct (bool): Whether to return distinct results
-
-        Returns:
-            str: Query results
-
-        Examples:
-            >>> conditions = [
-            ...     {"field": "name", "operator": "CONTAINS", "value": "Tech"},
-            ...     {"field": "age", "operator": ">", "value": "25"},
-            ...     {"field": "status", "operator": "IN", "value": ["active", "pending"]},
-            ...     {"field": "description", "operator": "IS NOT NULL"}
-            ... ]
-            >>> result = await querier.query_vertex("session_id_xxx", "job_id_xxx", "Person", conditions, True)
-        """  # noqa: E501
-        where_parts = []
-        for condition in conditions:
-            field = condition["field"]
-            operator = condition["operator"]
-            value = condition.get("value")
-
-            if operator in ("IS NULL", "IS NOT NULL"):
-                where_parts.append(f"n.{field} {operator}")
-            else:
-                formatted_value = self._format_value(value)
-                where_parts.append(f"n.{field} {operator} {formatted_value}")
-
-        where_clause = " AND ".join(where_parts)
-        distinct_keyword = "DISTINCT " if distinct else ""
-
-        query = f"""
-MATCH (n:{vertex_type})
-WHERE {where_clause}
-RETURN {distinct_keyword}n
-        """
-
-        store = graph_db_service.get_default_graph_db()
-        results = []
-        # initialize graph data following the standard structure
-        graph_data: Dict[str, List[Dict[str, Any]]] = {
-            "vertices": [],
-            "edges": [],  # vertex query only returns nodes
-        }
-
-        # fetch schema to determine primary key for alias
-        schema = graph_db_service.get_schema_metadata(
-            graph_db_config=graph_db_service.get_default_graph_db_config()
+        start_id = (
+            start_node.element_id if hasattr(start_node, "element_id") else str(start_node.id)
         )
-        node_schema = schema.get("nodes", {})
-        primary_key_prop = node_schema.get(vertex_type, {}).get("primary_key")
+        end_id = end_node.element_id if hasattr(end_node, "element_id") else str(end_node.id)
+        properties = dict(rel.items())
+        alias = str(properties.get("id", rel.type))  # default alias for relationship
 
-        with store.conn.session() as session:
-            result = session.run(query)
+        # ensure start and end nodes are added
+        _add_node_to_graph(start_node, graph_data, node_schema, processed_nodes)
+        _add_node_to_graph(end_node, graph_data, node_schema, processed_nodes)
 
-            # handle and format the results
-            for record in result:
-                node = record.get("n")
-                if node:
-                    # get properties of the vertex
-                    props = dict(node.items())
-                    # use element_id for Neo4j 4.0+ node ID
-                    node_id = node.element_id if hasattr(node, "element_id") else node.id
-                    # construct the string representation for text display
-                    node_str = f"({node_id}:{vertex_type} {props})"
-                    results.append(node_str)
+        graph_data["edges"].append(
+            {
+                "id": rel_id,
+                "source": start_id,
+                "target": end_id,
+                "label": rel.type,
+                "alias": alias,
+                "properties": properties,
+            }
+        )
+        processed_rels.add(rel_id)
 
-                    # determine alias based on schema's primary key
-                    alias = node_id  # default alias is element_id
-                    if primary_key_prop and primary_key_prop in props:
-                        alias = props[primary_key_prop]
 
-                    # construct the vertex object for Graph JSON
-                    vertex_obj = {
-                        "id": node_id,  # use element_id for the main ID
-                        "label": vertex_type,
-                        "alias": alias,  # set alias based on primary key value or element_id
-                        "properties": props,
-                    }
-                    # avoid adding duplicate vertices if DISTINCT was used in the query
-                    if not any(v["id"] == node_id for v in graph_data["vertices"]):
-                        graph_data["vertices"].append(vertex_obj)
-
-        if not results:
-            result_str = "没有查询到符合条件的节点。"
-        else:
-            # if distinct was requested, results might contain duplicates before this point
-            # but graph_data["vertices"] should be distinct based on id.
-            # for the text output, we might want unique strings too.
-            if distinct:
-                result_str = "\n".join(sorted(set(results)))
-            else:
-                result_str = "\n".join(results)
-
-        # save the Graph JSON artifact
-        if graph_data["vertices"] or graph_data["edges"]:
-            artifact = Artifact(
-                content_type=ContentType.GRAPH,
-                content=graph_data,
-                source_reference=SourceReference(job_id=job_id, session_id=session_id),
-                status=ArtifactStatus.FINISHED,
-                metadata=ArtifactMetadata(version=1, description="It is the queried data graph."),
+def _process_value(
+    value: Any,
+    graph_data: Dict[str, List[Dict[str, Any]]],
+    node_schema: Dict[str, Any],
+    processed_nodes: Set[str],
+    processed_rels: Set[str],
+) -> None:
+    """Recursively processes values from query results to populate graph_data."""
+    if isinstance(value, Node):
+        _add_node_to_graph(value, graph_data, node_schema, processed_nodes)
+    elif isinstance(value, Relationship):
+        _add_relationship_to_graph(value, graph_data, node_schema, processed_nodes, processed_rels)
+    elif isinstance(value, Path):
+        for node in value.nodes:
+            _add_node_to_graph(node, graph_data, node_schema, processed_nodes)
+        for rel in value.relationships:
+            _add_relationship_to_graph(
+                rel, graph_data, node_schema, processed_nodes, processed_rels
             )
-            artifact_service.save_artifact(artifact=artifact)
-
-        return (
-            f"查询图数据库成功。\n查询语句：\n{query}\n查询结果：\n{result_str}\n"
-            f"GraphJSON：\n{json.dumps(graph_data, indent=4, ensure_ascii=False)}"
-        )
+    elif isinstance(value, list):
+        for item in value:
+            _process_value(item, graph_data, node_schema, processed_nodes, processed_rels)
+    elif isinstance(value, dict):
+        for item_value in value.values():
+            _process_value(item_value, graph_data, node_schema, processed_nodes, processed_rels)
+    # ignore primitive types for graph_data
