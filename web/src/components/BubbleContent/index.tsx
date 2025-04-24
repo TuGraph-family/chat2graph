@@ -18,9 +18,11 @@ interface BubbleContentProps {
   status?: string,
   content: string;
   message: API.ChatVO;
+  isLast: boolean,
+  onRecoverSession: () => void
 }
 
-const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message }) => {
+const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message, isLast, onRecoverSession }) => {
   const { formatMessage } = useIntlConfig();
   const [thinks, setThinks] = useState<any>([]);
   const [state, setState] = useImmer<{
@@ -178,6 +180,17 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         }
       </div>
     }
+
+    {
+      isLast && status === MESSAGE_TYPE.STOPPED ? <div className={styles['bubble-content-footer']}><div className={styles['bubble-content-footer-recover']} onClick={onRecoverSession} >
+        <i className='iconfont icon-Chat2graphjixusikao' style={{
+          fontSize: 24,
+        }} />
+        <span>{formatMessage('home.recover')}</span>
+      </div></div> : null
+    }
+
+
   </div>
 }
 
