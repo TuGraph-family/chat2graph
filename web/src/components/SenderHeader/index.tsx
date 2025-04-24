@@ -1,9 +1,9 @@
 import { useKnowledgebaseEntity } from '@/domains/entities/knowledgebase-manager';
 import useIntlConfig from '@/hooks/useIntlConfig';
-import { CloudUploadOutlined } from '@ant-design/icons';
 import { Attachments, Sender } from '@ant-design/x';
 import { RcFile, UploadChangeParam } from 'antd/es/upload';
 import { GetProp, message, UploadFile } from 'antd/lib';
+import { Upload } from 'antd';
 import React from 'react';
 import styles from './index.less';
 
@@ -33,6 +33,10 @@ const SenderHeader: React.FC<Props> = (props) => {
       file: fileBlob,
       filename: name
     })
+    if (!res?.success) {
+      message.error(res?.message)
+      return Upload.LIST_IGNORE
+    }
 
     onAddUploadId({
       file_id: res?.data?.file_id || '',
