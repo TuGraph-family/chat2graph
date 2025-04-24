@@ -16,7 +16,7 @@ from app.core.common.util import parse_jsons
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
-from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_PROMPT, subjob_required_keys
 
 
 class Leader(Agent):
@@ -131,10 +131,10 @@ class Leader(Agent):
                 lesson = (
                     "LLM output format (<decomposition> format) specification is crucial "
                     "for reliable parsing and validation. Ensure the JSON structure is correct, "
-                    "all required keys are present, dependencies are valid task IDs, and "
-                    f"assigned_expert is one of {expert_names}. Do not forget <decomposition> "
-                    "prefix and </decomposition> suffix when you generate the subtasks dict block "
-                    "in <final_output>...</final_output>. Error info: " + str(e)
+                    f"all required keys are present: {subjob_required_keys}, dependencies are "
+                    f"valid task IDs, and assigned_expert is one of {expert_names}. Do not forget "
+                    " <decomposition> prefix and </decomposition> suffix when you generate the "
+                    "subtasks dict block in <final_output>...</final_output>. Error info: " + str(e)
                 )
                 try:
                     workflow_message = self._workflow.execute(
@@ -625,21 +625,13 @@ class Leader(Agent):
         if not job_dict:
             raise ValueError("Decomposition result dictionary cannot be empty.")
 
-        required_keys = {
-            "goal",
-            "context",
-            "completion_criteria",
-            "dependencies",
-            "assigned_expert",
-            "thinking",
-        }
         all_task_ids = set(job_dict.keys())
 
         for task_id, task_data in job_dict.items():
             if not isinstance(task_data, dict):
                 raise ValueError(f"Task '{task_id}' data must be a dictionary.")
 
-            missing_keys = required_keys - set(task_data.keys())
+            missing_keys = subjob_required_keys - set(task_data.keys())
             if missing_keys:
                 raise ValueError(f"Task '{task_id}' is missing required keys: {missing_keys}")
 

@@ -42,10 +42,6 @@ tools:
     name: "CypherExecutor"
     module_path: "app.plugin.neo4j.resource.graph_query"
 
-  - &vertex_querier_tool
-    name: "VertexQuerier"
-    module_path: "app.plugin.neo4j.resource.graph_query"
-
   - &algorithms_getter_tool
     name: "AlgorithmsGetter"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
@@ -210,7 +206,6 @@ actions:
     tools:
       - *schema_getter_tool
       - *cypher_executor_tool
-      - *vertex_querier_tool
 
   # graph analysis actions
   - &content_understanding_action_3

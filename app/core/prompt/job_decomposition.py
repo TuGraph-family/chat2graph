@@ -79,3 +79,12 @@ JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
         }
     </decomposition>
 """  # noqa: E501
+
+subjob_required_keys = {
+    "goal",
+    "context",
+    "completion_criteria",
+    "dependencies",
+    "assigned_expert",
+    "thinking",
+}
