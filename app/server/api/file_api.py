@@ -7,8 +7,8 @@ files_bp = Blueprint("files", __name__)
 
 
 # TODO: modify the url pattern to avoid the anbiguity of session_id and file_id
-@files_bp.route("/<string:session_id>", methods=["POST"])
-def upload_file(session_id: str):
+@files_bp.route("", methods=["POST"])
+def upload_file():
     """Upload a file to the server."""
     manager = FileManager()
 
