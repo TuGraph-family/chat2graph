@@ -53,27 +53,38 @@ JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
     // You must generate subtasks at the end of <final_output> section.
     // And the subtasks should be in the following format. Do not forget to use <decomposition>...</decomposition> to indicate the start of the decomposed subtasks dict, so that the external system can parse the <decomposition> content correctly.
     // The presence of <decomposition>...</decomposition> shows the completion of the decomposition, and you should use TASK_DONE to indicate the end of the task.
+    // The using language of the goal, context, completion_criteria, dependencies and thinking (except assigned_expert) should be the same as the language of the given task.
     // Here is the decomposition example template:
     <decomposition>
-    {
-        "task_idx_1": {
-            "goal": "subtask_description",
-            "context": "Input data, resources, etc.",
-            "completion_criteria": "Acceptance criteria, etc.",
-            "dependencies": ["task_idx_*", "task_idx_*", ...],
-            "assigned_expert": "Name of an expert (in English)",
-            "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
-        },
-        "task_idx_2": {
-            "goal": "subtask_description",
-            "context": "Input data, resources, etc.",
-            "completion_criteria": "Acceptance criteria, etc.",
-            "dependencies": ["task_idx_*", "task_idx_*", ...],
-            "language of the assigned_expert": "English",
-            "assigned_expert": "Name of an expert (in English)",
-            "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+        {
+            "subtask_1": {
+                "goal": "subtask_description",
+                "context": "Input data, resources, etc.",
+                "completion_criteria": "Acceptance criteria, etc.",
+                "dependencies": ["subtask_*", "subtask_*", ...],
+                "language of the assigned_expert": "English",
+                "assigned_expert": "Name of an expert (in English)",
+                "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+            },
+            "subtask_2": {
+                "goal": "subtask_description",
+                "context": "Input data, resources, etc.",
+                "completion_criteria": "Acceptance criteria, etc.",
+                "dependencies": ["subtask_*", "subtask_*", ...],
+                "language of the assigned_expert": "English",
+                "assigned_expert": "Name of an expert (in English)",
+                "thinking": "Please explain the thought process in the first person. Briefly outline the reasons for this sub-task, initial plans, key points or challenges. Reflect planning, with style referencing user examples. Note: The generated thought content should be concise and clear. Please do not include any information about any expert and role.",
+            }
+            ... // make sure the json format is correct
         }
-        ... // make sure the json format is correct
-    }
     </decomposition>
 """  # noqa: E501
+
+subjob_required_keys = {
+    "goal",
+    "context",
+    "completion_criteria",
+    "dependencies",
+    "assigned_expert",
+    "thinking",
+}

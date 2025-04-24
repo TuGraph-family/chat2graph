@@ -28,7 +28,7 @@ from app.plugin.neo4j.resource.graph_modeling import (
     GraphReachabilityGetter,
     VertexLabelAdder,
 )
-from app.plugin.neo4j.resource.graph_query import CypherExecutor, VertexQuerier
+from app.plugin.neo4j.resource.graph_query import CypherExecutor
 from app.plugin.neo4j.resource.question_answering import (
     InternetRetriever,
     KnowledgeBaseRetriever,
@@ -43,7 +43,6 @@ schema_getter_tool = SchemaGetter(id="schema_getter_tool")
 data_status_check_tool = DataStatusCheck(id="data_status_check_tool")
 data_import_tool = DataImport(id="data_import_tool")
 cypher_executor_tool = CypherExecutor(id="cypher_executor_tool")
-vertex_querier_tool = VertexQuerier(id="vertex_querier_tool")
 algorithms_getter_tool = AlgorithmsGetter(id="algorithms_getter_tool")
 page_rank_executor_tool = PageRankExecutor(id="page_rank_executor_tool")
 betweenness_centrality_executor_tool = BetweennessCentralityExecutor(
@@ -141,7 +140,7 @@ query_execution_action = Action(
     id="query_execution_action",
     name="query_execution",
     description="根据图查询语法、图现有 schema 和查询要求...",
-    tools=[schema_getter_tool, cypher_executor_tool, vertex_querier_tool],
+    tools=[schema_getter_tool, cypher_executor_tool],
 )
 content_understanding_action_3 = Action(
     id="content_understanding_action_3",

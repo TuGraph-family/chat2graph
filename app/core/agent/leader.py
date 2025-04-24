@@ -4,7 +4,6 @@ import time
 from typing import Dict, List, Optional, Set, Union
 
 import networkx as nx  # type: ignore
-from requests import HTTPError
 
 from app.core.agent.agent import Agent, AgentConfig
 from app.core.agent.builtin_leader_state import BuiltinLeaderState
@@ -17,7 +16,11 @@ from app.core.common.util import parse_jsons
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
-from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_PROMPT
+from app.core.prompt.job_decomposition import (
+    JOB_DECOMPOSITION_OUTPUT_SCHEMA,
+    JOB_DECOMPOSITION_PROMPT,
+    subjob_required_keys,
+)
 
 
 class Leader(Agent):
@@ -76,6 +79,7 @@ class Leader(Agent):
         # else, the job is not assigned to an expert, then decompose the job
         # get the expert list
         expert_profiles = [e.get_profile() for e in self.state.list_experts()]
+        expert_names = [p.name for p in expert_profiles]  # get list of names for validation
         role_list = "\n".join(
             [
                 f"Expert name: {profile.name}\nDescription: {profile.description}"
@@ -91,6 +95,8 @@ class Leader(Agent):
             context=job.context + f"\n\n{job_decomp_prompt}",
         )
 
+        job_dict: Optional[Dict[str, Dict[str, str]]] = None
+
         try:
             # decompose the job by the reasoner in the workflow
             workflow_message = self._workflow.execute(job=decomp_job, reasoner=self._reasoner)
@@ -98,68 +104,111 @@ class Leader(Agent):
             # extract the subjobs from the json block
             results: List[Union[Dict[str, Dict[str, str]], json.JSONDecodeError]] = parse_jsons(
                 text=workflow_message.scratchpad,
-                start_marker="<decomposition>",
+                start_marker=r"^\s*<decomposition>\s*",
                 end_marker="</decomposition>",
             )
 
             if len(results) == 0:
-                raise ValueError("The job is not decomposed.")
+                raise ValueError("The job decomposition result is empty.")
             result = results[0]
 
             # if parse_jsons returns a JSONDecodeError directly, raise it
             if isinstance(result, json.JSONDecodeError):
                 raise result
 
+            # Validate the parsed dictionary
+            self._validate_job_dict(result, expert_names)
             job_dict = result
-        except (ValueError, json.JSONDecodeError, HTTPError) as e:
-            # color: red
-            print(f"\033[38;5;196m[WARNING]: {e}\033[0m")
 
-            if isinstance(e, HTTPError):
-                # stop the job graph
-                self.fail_job_graph(
-                    job_id=job_id,
-                    error_info=(
-                        f"The job `{original_job_id}` is not executed, since there is an error "
-                        f"of http request. Error info: {e}"
-                    ),
-                )
-                job_dict = {}
-            else:
+        except (ValueError, json.JSONDecodeError, Exception) as e:
+            # color: red
+            print(
+                f"\033[38;5;196m[WARNING]: Initial decomposition failed or validation error: "
+                f"{e}\033[0m"
+            )
+
+            # check if it's a validation/parsing error eligible for retry
+            if isinstance(e, ValueError | json.JSONDecodeError):
                 # retry to decompose the job with the new lesson
-                workflow_message = self._workflow.execute(
-                    job=decomp_job,
-                    reasoner=self._reasoner,
-                    lesson="LLM output format (<decomposition> format) specification is crucial"
-                    "for reliable parsing. And do not forget <decomposition> prefix and "
-                    "</decomposition> suffix when you generate the subtasks dict block in "
-                    "<final_output>...</final_output>. Error info: " + str(e),
+                # color: orange
+                print("\033[38;5;208m[INFO]: Retrying decomposition with lesson...\033[0m")
+                lesson = (
+                    "LLM output format (<decomposition> format) specification is crucial "
+                    "for reliable parsing and validation. Ensure the JSON structure is correct, "
+                    f"all required keys are present: {subjob_required_keys}, dependencies are "
+                    f"valid task IDs, and assigned_expert is one of {expert_names}. Do not forget "
+                    " <decomposition> prefix and </decomposition> suffix when you generate the "
+                    "subtasks dict block in <final_output>...</final_output>.\nExpected format: "
+                    f"{JOB_DECOMPOSITION_OUTPUT_SCHEMA}\nError info: " + str(e)
                 )
                 try:
-                    # extract the subjobs from the json block
+                    workflow_message = self._workflow.execute(
+                        job=decomp_job,
+                        reasoner=self._reasoner,
+                        lesson=lesson,
+                    )
+                    # extract the subjobs from the json block after retry
                     results = parse_jsons(
                         text=workflow_message.scratchpad,
-                        start_marker="<decomposition>",
+                        start_marker=r"^\s*<decomposition>\s*",
                         end_marker="</decomposition>",
                     )
                     if len(results) == 0:
-                        raise ValueError("The job is not decomposed.") from e
+                        raise ValueError(
+                            "The job decomposition result is empty after retry."
+                        ) from e
                     result = results[0]
                     # if parse_jsons returns a JSONDecodeError directly, raise it
                     if isinstance(result, json.JSONDecodeError):
                         raise result from e
+
+                    # Validate the parsed dictionary after retry
+                    self._validate_job_dict(result, expert_names)
                     job_dict = result
-                except (ValueError, json.JSONDecodeError):
+
+                except (ValueError, json.JSONDecodeError) as retry_e:
+                    # Color: red
+                    print(
+                        f"\033[38;5;196m[ERROR]: Decomposition retry failed or validation error: "
+                        f"{retry_e}\033[0m"
+                    )
                     self.fail_job_graph(
                         job_id=job_id,
                         error_info=(
-                            f"The job `{original_job_id}` is not decomposed. "
-                            f"Retry it again please.\nError info: {e}"
+                            f"The job `{original_job_id}` could not be decomposed correctly "
+                            f"after retry. Please try again.\nError info: {retry_e}"
                         ),
                     )
-                    job_dict = {}  # fallback to empty dict to avoid further execution
+                    job_dict = {}
+            else:
+                # handle non-retryable exceptions (e.g., network errors during _workflow.execute)
+                # stop the job graph
+                self.fail_job_graph(
+                    job_id=job_id,
+                    error_info=(
+                        f"The job `{original_job_id}` could not be executed due to an "
+                        f"unexpected error during decomposition. Error info: {e}"
+                    ),
+                )
+                job_dict = {}
 
-        # init the decomposed job graph
+        # if decomposition failed and wasn't retried or retry failed, job_dict might be {}
+        if not job_dict:  # Check if job_dict is empty or None
+            print(
+                "\033[38;5;196m[ERROR]: job_dict is empty or None after decomposition attempts "
+                f"for job {job_id}. Halting graph creation.\033[0m"
+            )
+            # ensure the job status reflects failure if not already set by fail_job_graph
+            current_status = self._job_service.get_job_result(job_id=job_id).status
+            if current_status not in (JobStatus.FAILED, JobStatus.STOPPED):
+                # Use a generic error message if specific one wasn't set in except blocks
+                self.fail_job_graph(
+                    job_id,
+                    "Decomposition failed to produce a valid and non-empty subtask dictionary.",
+                )
+            return JobGraph()
+
+        # initialize the job graph
         job_graph = JobGraph()
 
         # check the current job (original job / subjob) status
@@ -168,39 +217,73 @@ class Leader(Agent):
 
         # create the subjobs, and add them to the decomposed job graph
         temp_to_unique_id_map: Dict[str, str] = {}  # id_generated_by_leader -> unique_id
-        for subjob_id, subjob_dict in job_dict.items():
-            subjob = SubJob(
-                original_job_id=original_job_id,
-                session_id=job.session_id,
-                goal=subjob_dict.get("goal", ""),
-                context=(
-                    subjob_dict.get("context", "")
-                    + "\nThe completion criteria is determined: "
-                    + subjob_dict.get("completion_criteria", "")
-                ),
-                expert_id=self.state.get_expert_by_name(
-                    subjob_dict.get("assigned_expert", "")
-                ).get_id(),
-                life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
-                thinking=subjob_dict.get("thinking", None),
-                assigned_expert_name=subjob_dict.get("assigned_expert", ""),
+        try:
+            # this loop assumes job_dict was validated successfully above
+            for subjob_id, subjob_dict in job_dict.items():
+                expert_name = subjob_dict["assigned_expert"]
+                expert = self.state.get_expert_by_name(
+                    expert_name
+                )  # Should succeed if validation passed
+                subjob = SubJob(
+                    original_job_id=original_job_id,
+                    session_id=job.session_id,
+                    goal=subjob_dict["goal"],
+                    context=(
+                        subjob_dict["context"]
+                        + "\nThe completion criteria is determined: "
+                        + subjob_dict["completion_criteria"]
+                    ),
+                    expert_id=expert.get_id(),
+                    life_cycle=life_cycle or SystemEnv.LIFE_CYCLE,
+                    thinking=subjob_dict["thinking"],
+                    assigned_expert_name=expert_name,
+                )
+                temp_to_unique_id_map[subjob_id] = subjob.id
+
+                self._job_service.save_job(job=subjob)
+                # add the subjob to the job graph
+                job_graph.add_vertex(subjob.id)
+
+            for subjob_id, subjob_dict in job_dict.items():
+                # add edges for dependencies (already validated)
+                current_unique_id = temp_to_unique_id_map[subjob_id]
+                for dep_id in subjob_dict.get(
+                    "dependencies", []
+                ):  # Use .get for safety, though validated
+                    dep_unique_id = temp_to_unique_id_map[dep_id]  # Already validated to exist
+                    job_graph.add_edge(
+                        dep_unique_id, current_unique_id
+                    )  # dep_id -> subjob_id shows dependency
+        except Exception as e:  # Catch unexpected errors during subjob creation/linking
+            # although validation passed, errors might occur during DB interaction or expert lookup
+            # color: red
+            print(
+                "\033[38;5;196m[ERROR]: Unexpected error creating/linking subjobs after "
+                f"validation: {e}\033[0m"
             )
-            temp_to_unique_id_map[subjob_id] = subjob.id
+            self.fail_job_graph(
+                job_id=job_id,
+                error_info=(
+                    f"The job `{original_job_id}` decomposition was validated, but an error "
+                    f"occurred during subjob creation or linking.\nError info: {e}"
+                ),
+            )
+            return JobGraph()
 
-            self._job_service.save_job(job=subjob)
-            # add the subjob to the job graph
-            job_graph.add_vertex(subjob.id)
-
-        for subjob_id, subjob_dict in job_dict.items():
-            # add edges for dependencies
-            for dep_id in subjob_dict.get("dependencies", []):
-                job_graph.add_edge(
-                    temp_to_unique_id_map[dep_id], temp_to_unique_id_map[subjob_id]
-                )  # dep_id -> subjob_id shows dependency
-
-        # the job graph should not be a directed acyclic graph (DAG)
+        # the job graph should be a directed acyclic graph (DAG)
         if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
-            raise ValueError("The job graph is not a directed acyclic graph.")
+            print(
+                f"\033[38;5;196m[ERROR]: Cycle detected in job graph for {original_job_id} despite "
+                "validation.\033[0m"
+            )
+            self.fail_job_graph(
+                job_id=job_id,
+                error_info=(
+                    f"The job `{original_job_id}` decomposition resulted in a cyclic graph, "
+                    f"indicating an issue with dependency logic despite validation."
+                ),
+            )
+            return JobGraph()
 
         return job_graph
 
@@ -536,6 +619,55 @@ class Leader(Agent):
                 old_subgraph=replaced_job_graph,
             )
         raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
+
+    def _validate_job_dict(
+        self, job_dict: Dict[str, Dict[str, str]], expert_names: List[str]
+    ) -> None:
+        """Validate the structure and content of the job_dict."""
+        if not isinstance(job_dict, dict):
+            raise ValueError("Decomposition result must be a dictionary.")
+
+        if not job_dict:
+            raise ValueError("Decomposition result dictionary cannot be empty.")
+
+        all_task_ids = set(job_dict.keys())
+
+        for task_id, task_data in job_dict.items():
+            if not isinstance(task_data, dict):
+                raise ValueError(f"Task '{task_id}' data must be a dictionary.")
+
+            missing_keys = subjob_required_keys - set(task_data.keys())
+            if missing_keys:
+                raise ValueError(f"Task '{task_id}' is missing required keys: {missing_keys}")
+
+            # validate types
+            for key in ["goal", "context", "completion_criteria", "assigned_expert", "thinking"]:
+                if not isinstance(task_data[key], str):
+                    raise ValueError(f"Task '{task_id}' key '{key}' must be a string.")
+
+            if not isinstance(task_data["dependencies"], list):
+                raise ValueError(f"Task '{task_id}' key 'dependencies' must be a list.")
+
+            # validate dependencies exist
+            for dep_id in task_data["dependencies"]:
+                if dep_id not in all_task_ids:
+                    raise ValueError(
+                        f"Task '{task_id}' has an invalid dependency: '{dep_id}' does not exist."
+                    )
+
+            # validate assigned expert
+            expert_name = task_data["assigned_expert"]
+            if expert_name not in expert_names:
+                raise ValueError(
+                    f"Task '{task_id}' assigned expert '{expert_name}' not found "
+                    f"in available experts: {expert_names}"
+                )
+
+            # optional: validate thinking is not empty or add more specific checks
+            if not task_data["thinking"].strip():
+                print(
+                    f"\033[38;5;208m[WARNING]: Task '{task_id}' has empty 'thinking' field.\033[0m"
+                )
 
     @property
     def state(self) -> LeaderState:

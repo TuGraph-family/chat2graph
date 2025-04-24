@@ -148,3 +148,41 @@ export async function getMessagesBySessionId(
     ...(options || {}),
   });
 }
+
+
+/**
+ * STOP Job Graph
+*/
+export async function stopSession(
+  params: {
+    session_id?: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.Result_Chat_>(`/api/sessions/${params.session_id}/stop`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...(options || {}),
+  });
+}
+
+
+/**
+ * Recover Job Graph
+*/
+export async function recoverSession(
+  params: {
+    session_id?: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.Result_Chat_>(`/api/sessions/${params.session_id}/recover`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...(options || {}),
+  });
+}

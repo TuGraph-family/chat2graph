@@ -12,6 +12,7 @@ from app.core.service.artifact_service import ArtifactService
 from app.core.service.file_service import FileService
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
+from app.plugin.neo4j.resource.data_importation import update_graph_artifact
 
 
 class DocumentReader(Tool):
@@ -144,26 +145,15 @@ class VertexLabelAdder(Tool):
             schema_graph_dict: Dict[str, Any] = graph_db_service.schema_to_graph_dict(
                 graph_db_config=graph_db_service.get_default_graph_db_config()
             )
-            # save the graph artifact
-            artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
-                job_id=job_id, content_type=ContentType.GRAPH
-            )
 
-            if len(artifacts) == 0:
-                artifact = Artifact(
-                    content_type=ContentType.GRAPH,
-                    content=schema_graph_dict,
-                    source_reference=SourceReference(job_id=job_id, session_id=session_id),
-                    status=ArtifactStatus.FINISHED,
-                    metadata=ArtifactMetadata(
-                        version=1, description="It is the database schema graph."
-                    ),
-                )
-                artifact_service.save_artifact(artifact=artifact)
-            else:
-                artifact_service.increment_and_save(
-                    artifact=artifacts[0], new_content=schema_graph_dict
-                )
+            # save the graph artifact
+            update_graph_artifact(
+                artifact_service=artifact_service,
+                session_id=session_id,
+                job_id=job_id,
+                data_graph_dict=schema_graph_dict,
+                description="It is the database schema graph.",
+            )
 
             return f"Successfully created label {label}"
 

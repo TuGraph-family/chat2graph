@@ -18,9 +18,11 @@ interface BubbleContentProps {
   status?: string,
   content: string;
   message: API.ChatVO;
+  isLast: boolean,
+  onRecoverSession: () => void
 }
 
-const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message }) => {
+const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message, isLast, onRecoverSession }) => {
   const { formatMessage } = useIntlConfig();
   const [thinks, setThinks] = useState<any>([]);
   const [state, setState] = useImmer<{
@@ -97,10 +99,9 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
       {
         title: <div className={styles['title']}>
           <div className={styles['title-content']}>{formatMessage('home.thinks.planning')}</div>
-          {
+          {/* {
             diffTime ? <div className={styles['title-extra']}>{2 + formatMessage('home.thinks.seconds')}</div> : null
-          }
-
+          } */}
         </div>,
         description: <div>{formatMessage('home.thinks.planningDesc')}</div>,
         icon: <img src={logoSrc} className={styles['step-icon']} />,
@@ -160,7 +161,7 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
                 <span className={styles['bubble-content-status-text']}>{formatMessage(MESSAGE_TYPE_TIPS[status])}</span>
               </div>
             </div>,
-            children: thinks?.length ? <Steps items={items} direction="vertical" /> : null
+            children: <Steps items={items} direction="vertical" />
           },
         ]}
       />
@@ -179,6 +180,17 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message 
         }
       </div>
     }
+
+    {
+      isLast && status === MESSAGE_TYPE.STOPPED ? <div className={styles['bubble-content-footer']}><div className={styles['bubble-content-footer-recover']} onClick={onRecoverSession} >
+        <i className='iconfont icon-Chat2graphjixusikao' style={{
+          fontSize: 24,
+        }} />
+        <span>{formatMessage('home.recover')}</span>
+      </div></div> : null
+    }
+
+
   </div>
 }
 

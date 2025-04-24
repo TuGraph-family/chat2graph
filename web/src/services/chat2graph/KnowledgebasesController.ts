@@ -69,9 +69,6 @@ export async function deleteKnowledgebases(
  * 上传文件
  */
 export async function uploadFile(
-    params: {
-        session_id?: string,
-    },
     body?: {
         file?: Blob;
         filename?: string;  // 添加文件名参数
@@ -83,7 +80,7 @@ export async function uploadFile(
         formData.append('file', body.file, body?.filename || 'untitled');  // 使用文件名
     }
 
-    return request<API.Result_Upload_>(`/api/files/${params?.session_id || undefined}`, {
+    return request<API.Result_Upload_>(`/api/files`, {
         method: 'POST',
         data: formData,  // 直接传递 FormData 对象
         ...(options || {}),

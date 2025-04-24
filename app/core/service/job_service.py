@@ -131,17 +131,13 @@ class JobService(metaclass=Singleton):
 
         # wait for creating the subjob by leader
         job_graph = self.get_job_graph(original_job_id)
-        # get the tail vertices of the job graph (DAG)
-        tail_vertices: List[str] = [
-            vertex for vertex in job_graph.vertices() if job_graph.out_degree(vertex) == 0
-        ]
 
         # collect and combine the content of the job results and the artifacts
-        # from the tail vertices
+        # from the job graph vertices
         multi_agent_payload = ""
         graph_messages: List[GraphMessage] = []
-        for tail_vertex in tail_vertices:
-            subjob_result: JobResult = self.get_job_result(tail_vertex)
+        for vertex in job_graph.vertices():
+            subjob_result: JobResult = self.get_job_result(vertex)
             if not subjob_result.has_result():
                 # not all the subjobs have been finished, so return the job result itself
                 return original_job_result
@@ -155,19 +151,21 @@ class JobService(metaclass=Singleton):
             assert len(agent_messages) == 1, (
                 f"One subjob is assigned to one agent, but {len(agent_messages)} messages found."
             )
-            assert agent_messages[0].get_payload() is not None, (
-                "The agent message payload is empty."
-            )
-            payload = cast(str, agent_messages[0].get_payload())
-            final_output_match = re.search(
-                r"<final_output>(.*?)</final_output>", payload, re.DOTALL
-            )
-            if final_output_match:
-                processed_payload = final_output_match.group(1).strip()
-            else:
-                # fallback to the original payload if no final_output tag found
-                processed_payload = payload.strip()
-            multi_agent_payload += processed_payload + "\n"
+
+            if job_graph.out_degree(vertex) == 0:
+                assert agent_messages[0].get_payload() is not None, (
+                    "The agent message payload is empty."
+                )
+                payload = cast(str, agent_messages[0].get_payload())
+                final_output_match = re.search(
+                    r"<final_output>(.*?)</final_output>", payload, re.DOTALL
+                )
+                if final_output_match:
+                    processed_payload = final_output_match.group(1).strip()
+                else:
+                    # fallback to the original payload if no final_output tag found
+                    processed_payload = payload.strip()
+                multi_agent_payload += processed_payload + "\n"
 
             # get the graph messages
             graph_message_ids = agent_messages[0].get_artifact_ids()
@@ -178,7 +176,9 @@ class JobService(metaclass=Singleton):
                 ]
             )
 
+        if len(job_graph.vertices()) > 0:
             # save the original job result
+            original_job_result = self.get_job_result(original_job_id)
             if not original_job_result.has_result():
                 original_job_result.status = JobStatus.FINISHED
                 self.save_job_result(job_result=original_job_result)

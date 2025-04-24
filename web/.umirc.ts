@@ -13,7 +13,7 @@ export default defineConfig({
   // },
   proxy: {
     '/api': {
-      'target': 'http://127.0.0.1:5000',
+      'target': 'http://127.0.0.1:5010',
       'changeOrigin': true,
       // 'pathRewrite': { '^/api' : '' },
     }
@@ -48,7 +48,7 @@ export default defineConfig({
   links: [
     {
       rel: 'stylesheet',
-      href: 'https://at.alicdn.com/t/a/font_4885401_wzayzeg1nb.css',
+      href: 'https://at.alicdn.com/t/a/font_4885401_er9xcihhq8.css',
     },
   ],
 });

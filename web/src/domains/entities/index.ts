@@ -81,6 +81,14 @@ export const useSessionEntity = () => {
     manual: true
   })
 
+  const { run: runStopSession } = useRequest(services.stopSession, {
+    manual: true
+  })
+
+  const { run: runRecoverSession } = useRequest(services.recoverSession, {
+    manual: true
+  })
+
   const getSessionList = (callback?: (res: any) => void) => {
     runGetSessions({
       page: 1,
@@ -91,6 +99,11 @@ export const useSessionEntity = () => {
       callback?.(data)
     })
   };
+
+
+
+
+
 
   return {
     sessionEntity,
@@ -111,6 +124,8 @@ export const useSessionEntity = () => {
     runGetJobResults,
     loadingGetJobResults,
     runGetMessagesBySessionId,
-    cancelGetJobResults
+    cancelGetJobResults,
+    runStopSession,
+    runRecoverSession
   };
 };

@@ -17,7 +17,7 @@
     }
 
     &-message {
-        padding: 4px 16px 16px;
+        padding: 4px 16px 0;
 
         p {
             white-space: pre-wrap;
@@ -70,6 +70,24 @@
 
         .ant-collapse-content {
             border-top: none;
+        }
+
+        .ant-collapse .ant-collapse-content>.ant-collapse-content-box {
+            padding: 16px 16px 0;
+        }
+    }
+
+    &-footer {
+        display: flex;
+        padding: 0 16px 16px;
+
+        &-recover {
+            display: flex;
+            font-size: 14px;
+            color: #98989d;
+            line-height: 24px;
+            cursor: pointer;
+            font-family: 'PingFangSC-Regular';
         }
     }
 }

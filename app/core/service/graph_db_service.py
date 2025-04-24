@@ -213,6 +213,7 @@ class GraphDbService(metaclass=Singleton):
                 vertex = {
                     "id": node_label,
                     "label": node_label,
+                    "alias": node_label,
                     "properties": {
                         "primary_key": node_info.get("primary_key", ""),
                         "property_definitions": [
@@ -235,6 +236,7 @@ class GraphDbService(metaclass=Singleton):
                             "source": source_label,
                             "target": target_label,
                             "label": rel_label,
+                            "alias": rel_label,
                             "properties": {
                                 "primary_key": rel_info.get("primary_key", ""),
                                 "property_definitions": [

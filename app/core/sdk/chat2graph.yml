@@ -42,10 +42,6 @@ tools:
     name: "CypherExecutor"
     module_path: "app.plugin.neo4j.resource.graph_query"
 
-  - &vertex_querier_tool
-    name: "VertexQuerier"
-    module_path: "app.plugin.neo4j.resource.graph_query"
-
   - &algorithms_getter_tool
     name: "AlgorithmsGetter"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
@@ -152,7 +148,7 @@ actions:
 
   - &schema_design_and_import_action
     name: "schema_design_and_import"
-    desc: "将概念模型转化为图数据库 labels，并使用相关工具在图数据库中创建图 schema（需要调用一个/些工具）"
+    desc: "将概念模型转化为图数据库 labels，并使用相关工具在图数据库中创建图 schema (如果需要的话，可以多次调用工具并在数据库中创建 labels，以确保完成给定的任务)（需要调用一个/些工具）"
     tools:
       - *schema_getter_tool
       - *vertex_label_adder_tool
@@ -210,7 +206,6 @@ actions:
     tools:
       - *schema_getter_tool
       - *cypher_executor_tool
-      - *vertex_querier_tool
 
   # graph analysis actions
   - &content_understanding_action_3
@@ -225,7 +220,11 @@ actions:
 
   - &algorithms_execution_action
     name: "algorithms_execution"
-    desc: "调用相关的算法执行工具，执行算法（需要调用一个/些工具）。当遇见棘手的算法工具使用问题时，可以查询当下图数据库的 schema 或者执行 Cypher 查询语句，从而帮助你更好地理解和配置算法工具的输入参数"
+    desc: |
+      调用相关的算法执行工具，执行算法（需要调用一个/些工具）。
+      当遇见棘手的算法工具使用问题时，可以查询当下图数据库的 schema 或者执行 Cypher 查询语句，从而帮助你更好地理解和配置算法工具的输入参数。
+      另一方面，由于图数据库算法对于输入的参数有严格要求，而在 LLMs 中，算法的输入参数通常模糊不清，尤其是数据节点和边的参数。比如，可能想要输入"Romeo"，但是图数据库中只有"romeo"。你可以通过查询图数据库的 schema 或者执行 Cypher 查询语句，来帮助你更好地理解和配置算法工具的输入参数。
+      注意：你不能够询问用户更多的信息。
     tools:
       - *page_rank_executor_tool
       - *betweenness_centrality_executor_tool
@@ -470,7 +469,7 @@ operators:
       - 如果回答中设计了来自知识库中的内容，提供回答中涉及的原文出处，给出一个List，其中包含markdown格式的原文链接
       - 如果没有检索到能帮助回答的相关文档，请你根据大模型自身的知识和经验，回答问题（避免你的 hallucination，不需要提供 reference）
     output_schema: |
-      针对用户问题的最终回答，如果无法有效回答，则明确说明自己无法回答用户的问题
+      针对用户问题的最终回答，如果没有搜索到相关的原文，则可以在说明没有搜索到相关原文后，自己直接回答，避免出现拒绝回答的情况
       references: 回答生成过程中参考的文档原文的markdown格式链接，比如 [1] ... [2] ...
     actions:
       - *reference_listing_action

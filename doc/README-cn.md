@@ -104,12 +104,13 @@ Init the Expert agents
  * Serving Flask app 'bootstrap'
  * Debug mode: off
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on http://127.0.0.1:5000
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5010
 Press CTRL+C to quit
 
 ```
 
-你可以在浏览器访问 [http://localhost:5000/](http://localhost:5000/) 使用 Chat2Graph。
+你可以在浏览器访问 [http://localhost:5010/](http://localhost:5010/) 使用 Chat2Graph。
 
 ![](img/index-cn.png)
 

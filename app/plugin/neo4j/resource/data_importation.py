@@ -254,7 +254,6 @@ class DataStatusCheck(Tool):
             )
 
             if not node_counts_found:
-                # --- Start Modification ---
                 if user_provided_node_labels:
                     # User specified labels, but none were found (or had count 0)
                     output.append(f"- 数据库中未找到与指定标签 {original_node_labels} 相关的节点")
@@ -264,7 +263,6 @@ class DataStatusCheck(Tool):
                 else:
                     # No labels specified, labels *might* exist, but all counts are 0
                     output.append("- 数据库中所有已检查的节点标签下均无节点")
-            # --- End Modification ---
             else:
                 for label, count in results["节点统计"].items():
                     if isinstance(count, int):
@@ -279,7 +277,6 @@ class DataStatusCheck(Tool):
             )
 
             if not rel_counts_found:
-                # --- Start Modification ---
                 if user_provided_relationship_labels:
                     # User specified types, but none were found (or had count 0)
                     output.append(
@@ -291,7 +288,6 @@ class DataStatusCheck(Tool):
                 else:
                     # No types specified, types *might* exist, but all counts are 0
                     output.append("- 数据库中所有已检查的关系类型下均无关系")
-                # --- End Modification ---
             else:
                 for rel_type, count in results["关系统计"].items():
                     if isinstance(count, int):
@@ -415,6 +411,53 @@ class DataImport(Tool):
                 processed, created, and updated.
         """  # noqa: E501
 
+        # arguments validation
+        if not all(
+            [
+                graph_db_service,
+                artifact_service,
+                session_id,
+                job_id,
+                source_label,
+                source_primary_key,
+                target_label,
+                target_primary_key,
+                relationship_label,
+            ]
+        ):
+            raise ValueError("Missing required arguments for data import.")
+
+        if not isinstance(source_label, str) or not source_label.strip():
+            raise ValueError("source_label must be a non-empty string.")
+        if not isinstance(target_label, str) or not target_label.strip():
+            raise ValueError("target_label must be a non-empty string.")
+        if not isinstance(relationship_label, str) or not relationship_label.strip():
+            raise ValueError("relationship_label must be a non-empty string.")
+
+        if not isinstance(source_primary_key, str) or not source_primary_key.strip():
+            raise ValueError("source_primary_key must be a non-empty string.")
+        if not isinstance(target_primary_key, str) or not target_primary_key.strip():
+            raise ValueError("target_primary_key must be a non-empty string.")
+
+        if not isinstance(source_properties, dict):
+            raise ValueError("source_properties must be a dictionary.")
+        if not isinstance(target_properties, dict):
+            raise ValueError("target_properties must be a dictionary.")
+        if not isinstance(relationship_properties, dict):
+            # allow None or empty dict for it, but enforce dict type if provided
+            raise ValueError("relationship_properties must be a dictionary.")
+
+        if source_primary_key not in source_properties:
+            raise ValueError(
+                f"Source primary key '{source_primary_key}' "
+                f"not found in source_properties: {source_properties}"
+            )
+        if target_primary_key not in target_properties:
+            raise ValueError(
+                f"Target primary key '{target_primary_key}' "
+                f"not found in target_properties: {target_properties}"
+            )
+
         def format_date(value: str) -> str:
             """Format date value to ensure it has a leading zero in the year."""
             date_pattern = r"^(\d{3})-(\d{2})-(\d{2})(T[\d:]+Z)?$"
@@ -508,88 +551,19 @@ class DataImport(Tool):
                         count(DISTINCT r) as total_relationships
                 """).single()
 
-            # fetch the schema first to determine primary keys for alias generation
-            schema = graph_db_service.get_schema_metadata(
-                graph_db_config=graph_db_service.get_default_graph_db_config()
+            # fetch the current graph state
+            data_graph_dict = fetch_and_construct_data_graph(graph_db_service)
+
+            # save the graph state as an artifact
+            update_graph_artifact(
+                artifact_service=artifact_service,
+                session_id=session_id,
+                job_id=job_id,
+                data_graph_dict=data_graph_dict,
+                description="It is the data graph.",
             )
-            node_schema = schema.get("nodes", {})  # Safely get node schema part
 
-            with store.conn.session() as session:
-                # fetch all nodes
-                all_nodes_result = session.run("MATCH (n) RETURN n")
-                # fetch edges along with their start and end nodes
-                all_edges_result = session.run(
-                    "MATCH (a)-[r]->(b) RETURN r, a AS start_node, b AS end_node"
-                )
-
-                # construct the data graph
-                vertices = []
-                for record in all_nodes_result:
-                    node = record.get("n")
-                    if node:
-                        node_labels = list(node.labels)
-                        label = node_labels[0] if node_labels else ""
-                        properties = dict(node.items())
-
-                        # determine alias using schema's primary key
-                        primary_key_prop = node_schema.get(label, {}).get("primary_key")
-                        alias = node.element_id  # default alias is element_id
-                        if primary_key_prop and primary_key_prop in properties:
-                            alias = properties[primary_key_prop]
-
-                        vertices.append(
-                            {
-                                "id": node.element_id,  # use element_id for the main ID
-                                "label": label,
-                                "alias": alias,  # set alias based on primary key value
-                                "properties": properties,
-                            }
-                        )
-
-                edges = []
-                for record in all_edges_result:
-                    relationship = record.get("r")
-                    start_node = record.get("start_node")
-                    end_node = record.get("end_node")
-
-                    if relationship and start_node and end_node:
-                        properties = dict(relationship.items())
-                        # determine alias: use 'id' property if exists, else use relationship type
-                        alias = properties.get("id", relationship.type)
-
-                        edges.append(
-                            {
-                                # use element_id of start/end nodes for source/target
-                                "source": start_node.element_id,
-                                "target": end_node.element_id,
-                                "label": relationship.type,
-                                "alias": alias,  # set alias based on 'id' property or type
-                                "properties": properties,
-                            }
-                        )
-
-                data_graph_dict = {"vertices": vertices, "edges": edges}
-
-                # save graph type artifact
-                artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
-                    job_id=job_id, content_type=ContentType.GRAPH
-                )
-
-                if len(artifacts) == 0:
-                    artifact = Artifact(
-                        content_type=ContentType.GRAPH,
-                        content=data_graph_dict,
-                        source_reference=SourceReference(job_id=job_id, session_id=session_id),
-                        status=ArtifactStatus.FINISHED,
-                        metadata=ArtifactMetadata(version=1, description="It is the data graph."),
-                    )
-                    artifact_service.save_artifact(artifact=artifact)
-                else:
-                    artifact_service.increment_and_save(
-                        artifact=artifacts[0], new_content=data_graph_dict
-                    )
-
-                return f"""数据导入成功！
+            return f"""数据导入成功！
 本次操作详情：
 - 创建/更新的节点：
 - 源节点: {details["source"]}
@@ -613,3 +587,98 @@ class DataImport(Tool):
 
         except Exception as e:
             raise Exception(f"Failed to import data: {str(e)}") from e
+
+
+def fetch_and_construct_data_graph(
+    graph_db_service: GraphDbService,
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Fetches all nodes and edges from the database and constructs a graph dictionary."""
+    store = graph_db_service.get_default_graph_db()
+    schema = graph_db_service.get_schema_metadata(
+        graph_db_config=graph_db_service.get_default_graph_db_config()
+    )
+    node_schema = schema.get("nodes", {})  # Safely get node schema part
+
+    with store.conn.session() as session:
+        # fetch all nodes
+        all_nodes_result = session.run("MATCH (n) RETURN n")
+        # fetch edges along with their start and end nodes
+        all_edges_result = session.run(
+            "MATCH (a)-[r]->(b) RETURN r, a AS start_node, b AS end_node"
+        )
+
+        # construct the data graph
+        vertices = []
+        for record in all_nodes_result:
+            node = record.get("n")
+            if node:
+                node_labels = list(node.labels)
+                label = node_labels[0] if node_labels else ""
+                properties = dict(node.items())
+
+                # determine alias using schema's primary key
+                primary_key_prop = node_schema.get(label, {}).get("primary_key")
+                alias = node.element_id  # default alias is element_id
+                if primary_key_prop and primary_key_prop in properties:
+                    alias = properties[primary_key_prop]
+
+                vertices.append(
+                    {
+                        "id": node.element_id,  # use element_id for the main ID
+                        "label": label,
+                        "alias": alias,  # set alias based on primary key value
+                        "properties": properties,
+                    }
+                )
+
+        edges = []
+        for record in all_edges_result:
+            relationship = record.get("r")
+            start_node = record.get("start_node")
+            end_node = record.get("end_node")
+
+            if relationship and start_node and end_node:
+                properties = dict(relationship.items())
+                # determine alias: use 'id' property if exists, else use relationship type
+                alias = properties.get("id", relationship.type)
+
+                edges.append(
+                    {
+                        # use element_id of start/end nodes for source/target
+                        "source": start_node.element_id,
+                        "target": end_node.element_id,
+                        "label": relationship.type,
+                        "alias": alias,  # set alias based on 'id' property or type
+                        "properties": properties,
+                    }
+                )
+
+        return {"vertices": vertices, "edges": edges}
+
+
+def update_graph_artifact(
+    artifact_service: ArtifactService,
+    session_id: str,
+    job_id: str,
+    data_graph_dict: Dict[str, List[Dict[str, Any]]],
+    description: str = "It is the data graph.",
+) -> None:
+    """Saves the graph data as an artifact."""
+    artifacts: List[Artifact] = artifact_service.get_artifacts_by_job_id_and_type(
+        job_id=job_id, content_type=ContentType.GRAPH
+    )
+
+    if len(artifacts) == 0:
+        artifact = Artifact(
+            content_type=ContentType.GRAPH,
+            content=data_graph_dict,
+            source_reference=SourceReference(job_id=job_id, session_id=session_id),
+            status=ArtifactStatus.FINISHED,
+            metadata=ArtifactMetadata(version=1, description=description),
+        )
+        artifact_service.save_artifact(artifact=artifact)
+    else:
+        artifact_service.increment_and_save(
+            artifact=artifacts[0],
+            new_content=data_graph_dict,
+        )
