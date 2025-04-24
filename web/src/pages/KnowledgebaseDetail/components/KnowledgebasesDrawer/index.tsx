@@ -67,6 +67,10 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
             file: fileBlob,
             filename: name
         })
+        if (!res?.success) {
+            message.error(res?.message)
+            return Upload.LIST_IGNORE
+        }
 
         setState((draft) => {
             draft.file_id = res?.data?.file_id || ''

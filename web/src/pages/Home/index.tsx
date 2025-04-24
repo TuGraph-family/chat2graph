@@ -137,10 +137,8 @@ const HomePage: React.FC = () => {
       runGetJobResults({
         job_id,
       }).then(res => {
-        console.log(job_id, getLocalStorage(LOCAL_STORAGE_STOP_KEY), 'lkm')
         const { status } = res?.data?.answer?.metrics || {};
         if (getLocalStorage(LOCAL_STORAGE_STOP_KEY) === "true") {
-          // clearTimeout(timer);
           onSuccess({})
           // TODO 停止思考逻辑
           // onSuccess({
