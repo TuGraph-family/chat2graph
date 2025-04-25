@@ -1,46 +1,5 @@
-#!/bin/bash
-
-check_command() {
-    local cmd_name=$1
-    local awk_col=$2
-    local awk_f=$3
-
-    local path=$(which "$cmd_name" 2>/dev/null)
-    if [[ -n $path ]]; then
-        local version_cmd="$cmd_name --version 2>/dev/null"
-        if [[ -n $awk_col ]]; then
-          awk_cmd="awk"
-          if [[ -n $awk_f ]]; then
-            awk_cmd="$awk_cmd -F '$awk_f'"
-          fi
-          awk_cmd="$awk_cmd '{print \$$awk_col}'"
-          version_cmd="$version_cmd | $awk_cmd"
-        fi
-        local version=$(eval $version_cmd)
-        echo -e "* $cmd_name \033[32m$version\033[0m $path"
-        return 0
-    else
-        echo -e "* $cmd_name \033[31m[NOT INSTALLED]\033[0m"
-        return 1
-    fi
-}
-
-info() {
-  if [[ -n $1 ]]; then
-    echo -e "\033[32m$1\033[0m"
-  fi
-}
-
-error() {
-  if [[ -n $1 ]]; then
-    echo -e "\033[31m$1\033[0m"
-  fi
-  return 1
-}
-
-fatal() {
-  error "$1"; exit 1
-}
+#!/usr/bin/env bash
+cd "$(dirname "$(readlink -f "$0")")" &> /dev/null && source utils.sh || exit
 
 check_env() {
   info "Checking environment:"
@@ -75,14 +34,13 @@ build_web() {
   || fatal "Failed to move web packages"
 }
 
-main() {
-  project_dir=$(cd $(dirname $(dirname $0)); pwd)
+project_root=$(dirname "$(pwd)")
+lock_file="/tmp/chat2graph.lock"
 
-  check_env
-  build_python $project_dir
-  build_web $project_dir
+acquire_lock $lock_file
+check_env
+build_python $project_root
+build_web $project_root
+release_lock $lock_file
 
-  info "Build success !"
-}
-
-main
+info "Build success !"

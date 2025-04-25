@@ -31,28 +31,34 @@ Chat2Graph 通过构建图数据库上的多智能体系统，实现智能化的
 
 Chat2Graph 目前提供了基础的智能体系统能力，仍有诸多特性需要和社区一起完善。
 
-- [x] 单主动多被动混合多智能体架构。
-- [x] 快&慢思考结合的双LLM推理机。
-- [x] 面向智能体链的任务分解与图规划器。
-- [x] 分层记忆系统。
-- [x] 工具知识图谱。
-- [x] 向量与图谱知识库。
-- [x] 简洁的智能体SDK。
-- [x] Web服务化与交互。
-- [x] 智能体一键配置。
-- [ ] 结构化智能体角色管理。
-- [ ] 工作流自动生成。
-- [ ] 算子动作推荐。
-- [ ] 工具图谱优化器。
-- [ ] 环境管理。
-- [ ] 智能体任务编译器。
-- [ ] 统一资源管理器。
-- [ ] 跟踪与管控能力。
-- [ ] 丰富的工具集与MCP集成。
-- [ ] Benchmark测试。
-- [ ] 开源生态集成。
-- [ ] 多模态能力。
-- [ ] 产品化增强。
+- 推理 && 规划
+  - [x] 单主动多被动混合多智能体架构。
+  - [x] 快&慢思考结合的双LLM推理机。
+  - [x] 面向智能体链（CoA）的任务分解与图规划器。
+  - [ ] 工作流自动生成。
+  - [ ] 算子动作推荐。
+  - [ ] 结构化智能体角色管理。
+  - [ ] 智能体任务编译器。
+- 记忆 && 知识
+  - [x] 分层记忆系统。
+  - [x] 向量与图谱知识库。
+  - [ ] 知识精炼机制。
+  - [ ] 环境管理。
+- 工具 && 系统
+  - [x] 工具知识图谱。
+  - [ ] 工具图谱优化器。
+  - [ ] 丰富的工具集与MCP集成。
+  - [ ] 统一资源管理器。
+  - [ ] 跟踪与管控能力。
+  - [ ] Benchmark测试。
+- 产品 && 生态
+  - [x] 简洁的智能体SDK。
+  - [x] Web服务化与交互。
+  - [x] 智能体一键配置。
+  - [ ] 多模态能力。
+  - [ ] 产品化增强。
+  - [ ] 开源生态集成。
+
 
 
 ## 快速开始
@@ -62,7 +68,7 @@ Chat2Graph 目前提供了基础的智能体系统能力，仍有诸多特性需
 准备符合要求的 Python 和 NodeJS 版本。
 
 * Install Python: 推荐 [Python == 3.10](https://www.python.org/downloads)。
-* Install NodeJS: 推荐 [NodeJS >= v20](https://nodejs.org/en/download)。
+* Install NodeJS: 推荐 [NodeJS >= v16](https://nodejs.org/en/download)。
 
 你也可以使用 [conda][conda] 等工具安装Python环境。
 
@@ -93,7 +99,6 @@ Loading AgenticService from app/core/sdk/chat2graph.yml with encoding utf-8
 Init application: Chat2Graph
 Init the Leader agent
 Init the Expert agents
-
   ____ _           _   ____   ____                 _     
  / ___| |__   __ _| |_|___ \ / ___|_ __ __ _ _ __ | |__  
 | |   | '_ \ / _` | __| __) | |  _| '__/ _` | '_ \| '_ \ 
@@ -106,8 +111,8 @@ Init the Expert agents
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5010
-Press CTRL+C to quit
-
+ * Running on http://192.168.1.1:5010
+Chat2Graph server started success ! (pid: 16483)
 ```
 
 你可以在浏览器访问 [http://localhost:5010/](http://localhost:5010/) 使用 Chat2Graph。

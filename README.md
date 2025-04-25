@@ -42,49 +42,33 @@ a deep integration of graph computing technology and artificial intelligence tec
 Chat2Graph currently provides basic capabilities of intelligent agent systems, but there are 
 still many features that need to be improved together with the community.
 
-&#9745; One-Active-Many-Passive hybrid multi-agent architecture.
- 
-&#9745; Dual-LLM reasoning machine combining fast & slow thinking.
-
-&#9745; Chain of agents (CoA) oriented task decomposition and graph planner.
- 
-&#9745; Hierarchical memory system.
- 
-&#9745; Toolkit knowledge graph.
- 
-&#9745; Vector and graph knowledge base.
- 
-&#9745; Concise intelligent agent SDK.
- 
-&#9745; Web Service and interaction.
- 
-&#9745; One-click configuration of agents.
- 
-&#9745;	Structured agent role management.
- 
-&#9744;	Workflow auto-generation.
-
-&#9744;	Action recommendation in operator.
-
-&#9744;	Toolkit graph optimizer.
-
-&#9744;	Environment management.
-
-&#9744;	Agent task compiler.
-
-&#9744;	Unified resource manager.
-
-&#9744;	Tracing and control capabilities.
-
-&#9744;	Rich toolkit/MCP integration.
-
-&#9744;	Benchmark.
-
-&#9744;	Integration with open-source ecosystems.
-
-&#9744;	Multimodal capabilities.
-
-&#9744;	Production enhancement.
+- Reasoning && Planning
+  - [x] One-Active-Many-Passive hybrid multi-agent architecture.
+  - [x] Dual-LLM reasoning machine combining fast & slow thinking.
+  - [x] Chain of agents (CoA) oriented task decomposition and graph planner.
+  - [ ] Workflow auto-generation.
+  - [ ] Action recommendation in operator.
+  - [ ] Structured agent role management.
+  - [ ] Agent task compiler.
+- Memory && Knowledge
+  - [x] Hierarchical memory system.
+  - [x] Vector and graph knowledge base.
+  - [ ] Knowledge refinement mechanism.
+  - [ ] Environment management.
+- Tool && System
+  - [x] Toolkit knowledge graph.
+  - [ ] Toolkit graph optimizer.
+  - [ ] Rich toolkit/MCP integration.
+  - [ ] Unified resource manager.
+  - [ ] Tracing and control capabilities.
+  - [ ] Benchmark.
+- Product && Ecosystem
+  - [x] Concise intelligent agent SDK.
+  - [x] Web Service and interaction.
+  - [x] One-click configuration of agents.
+  - [ ] Multimodal capabilities.
+  - [ ] Production enhancement.
+  - [ ] Integration with open-source ecosystems.
 
 ## Quick Start
 
@@ -93,7 +77,7 @@ still many features that need to be improved together with the community.
 Prepare the required versions of Python and NodeJS.
 
 * Install Python: [Python == 3.10](https://www.python.org/downloads) recommended.
-* Install NodeJS: [NodeJS >= v20](https://nodejs.org/en/download) recommended.
+* Install NodeJS: [NodeJS >= v16](https://nodejs.org/en/download) recommended.
 
 You can also use tools like [conda][conda] to install the python environment.
 
@@ -137,7 +121,8 @@ Init the Expert agents
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5010
-Press CTRL+C to quit
+ * Running on http://192.168.1.1:5010
+Chat2Graph server started success ! (pid: 16483)
 ```
 
 You can access Chat2Graph in the browser at [http://localhost:5010/](http://localhost:5010/):
