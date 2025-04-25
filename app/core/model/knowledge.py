@@ -23,10 +23,14 @@ class Knowledge:
         """Get the content of the knowledge."""
         global_knowledges = ""
         for chunk in self.global_chunks:
+            if chunk.chunk_name != "":
+                global_knowledges += f"chunk_name:{chunk.chunk_name}\n"
             global_knowledges += f"content:{chunk.content}\n"
             global_knowledges += "\n"
         local_knowledges = ""
         for chunk in self.local_chunks:
+            if chunk.chunk_name != "":
+                local_knowledges += f"chunk_name:{chunk.chunk_name}\n"
             local_knowledges += f"content:{chunk.content}\n"
             local_knowledges += "\n"
 

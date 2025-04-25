@@ -196,21 +196,21 @@ class ReferenceGenerator(Tool):
         )
 
     async def reference_listing(
-        self, knowledge_base_references: List[str], internet_references: List[str]
+        self, knowledge_base_quotes: List[str], internet_references: List[str]
     ) -> List[str]:
         """Return a rich text references list for better presentation given the list of references.
 
         Args:
-            knowledge_base_references (List[str]): references from knowledge base.
+            knowledge_base_quotes (List[str]): quotes from knowledge base.
             internet_references (List[str]): references from internet.
 
         Returns:
-            str: The rich text to demonstrate all references.
+            str: The rich text to demonstrate all quotes and references.
         """
 
         reference_list: List[str] = []
-        for knowledge_base_ref in knowledge_base_references:
-            reference_list.append(f"[{knowledge_base_ref}]()")
+        for knowledge_base_quote in knowledge_base_quotes:
+            reference_list.append(f"[{knowledge_base_quote}]()")
         for inernet_ref in internet_references:
             reference_list.append(f"[网页链接]({inernet_ref})")
 
