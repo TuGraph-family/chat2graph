@@ -52,7 +52,7 @@ check_command() {
 }
 
 get_pids() {
-  cmd="/chat2graph/app/server/bootstrap.py"
+  cmd="/app/server/bootstrap.py"
   pids=$(ps aux | grep $cmd | grep -v grep | awk '{print$2}' | xargs)
   echo $pids
 }
@@ -64,16 +64,16 @@ acquire_lock() {
   fi
 
   if [[ -e "$lock_file" ]]; then
-    fatal "File $lock_file is locked by $(cat $lock_file)"
-  fi
+fatal "File $lock_file is locked by $(cat $lock_file)"
+      fi
 
   if ! touch "$lock_file" 2>/dev/null; then
-    fatal "Failed to lock file $lock_file"
-  fi
-
-  echo $$ > $lock_file
-}
-
+fatal "Failed to lock file $lock_file"
+    fi
+  
+ echo $$ > $lock_file
+  }
+ 
 release_lock() {
   lock_file=$1
   if [[ -z $lock_file ]]; then
@@ -85,7 +85,7 @@ release_lock() {
     if [[ $$ == "$locked_pid" ]]; then
       rm $lock_file
     else
-      fatal "File $lock_file is locked by $locked_pid"
+fatal "File $lock_file is locked by $locked_pid"
+      fi
     fi
-  fi
 }
