@@ -94,50 +94,53 @@ actions:
   # graph modeling actions
   - &content_understanding_action
     name: "content_understanding"
-    desc: "通过阅读和批注理解文档的主要内容和结构（需要调用一个/些工具）"
+    desc: "Understand the main content and structure of the document through reading and annotating (requires calling one or more tools)."
     tools:
       - *document_reader_tool
 
   - &deep_recognition_action
     name: "deep_recognition"
-    desc:
-      识别被分析的文本中的关键概念和术语（通过文本的形式），对概念进行分类，发现概念间的关系模式和交互方式，建立层级关系
-      1. 语义层分析
-      - 显式信息（比如，关键词、主题、术语定义）
-      - 隐式信息（比如，深层语义、上下文关联、领域映射）
-      2. 关系层分析
-      - 实体关系（比如，直接关系、间接关系、层次关系）。时序关系（比如，状态变迁、演化规律、因果链条）
-      3. 知识推理
-      - 模式推理、知识补全
+    desc: |
+      Identify key concepts and terms in the analyzed text (in text form), categorize the concepts, discover relationship patterns and interaction methods between concepts, and establish a hierarchical relationship.
 
-      关于图 schema 建模的思考维度：
-      1. 实体类型定义
-      - 从以下维度思考和定义实体类型：
-      * 时间维度：事件、时期、朝代等时序性实体
-      * 空间维度：地点、区域、地理特征等空间性实体
-      * 社会维度：人物、组织、势力等社会性实体（可选）
-      * 文化维度：思想、文化、典故等抽象实体（可选）
-      * 物理维度：物品、资源、建筑等具象实体（可选）
-      - 建立实体类型的层次体系：
-      * 定义上下位关系（如：人物-君主-诸侯）
-      * 确定平行关系（如：军事人物、政治人物、谋士）
-      * 设计多重继承关系（如：既是军事人物又是谋士）
-      - 为每个实体类型设计丰富的属性集：
-      * 基础属性：标识符、名称、描述等
-      * 类型特有属性：根据实体类型特点定义
-      * 关联属性：引用其他实体的属性
-      - 考虑实体的时态性：
-      * 属性的时效性（如：官职随时间变化）（可选）
-      * 状态的可变性（如：阵营的转变）（可选）
-      - 为每个实体类型定义完整的属性集，包括必需属性和可选属性
-      - 确保实体类型之间存在潜在的关联路径，但保持概念边界的独立性
+      1. Semantic Layer Analysis
+          - Explicit Information (e.g., keywords, topics, term definitions)
+          - Implicit Information (e.g., deep semantics, contextual associations, domain mapping)
 
-      2. 关系类型设计
-      - 定义实体间的关系类型，包括直接关系、派生关系和潜在关系
-      - 明确关系的方向性（有向）、设计关系的属性集
-      - 通过关系组合，验证关键实体间的可达性
-      - （可选）考虑添加反向关系以增强图的表达能力
+      2. Relational Layer Analysis
+          - Entity Relationships (e.g., direct relationships, indirect relationships, hierarchical relationships). Temporal Relationships (e.g., state transitions, evolutionary laws, causal chains)
 
+      3. Knowledge Reasoning
+          - Pattern Reasoning, Knowledge Completion
+
+      Thinking Dimensions for Graph Schema Modeling:
+
+      1. Entity Type Definition
+          - Think about and define entity types from the following dimensions:
+              * Temporal Dimension: Temporal entities such as events, periods, dynasties, etc.
+              * Spatial Dimension: Spatial entities such as places, regions, geographical features, etc.
+              * Social Dimension: Social entities such as people, organizations, forces, etc. (Optional)
+              * Cultural Dimension: Abstract entities such as ideas, culture, allusions, etc. (Optional)
+              * Physical Dimension: Concrete entities such as objects, resources, buildings, etc. (Optional)
+          - Establish a hierarchical system of entity types:
+              * Define superordinate and subordinate relationships (e.g., Person - Monarch - Vassal)
+              * Determine parallel relationships (e.g., Military Figure, Political Figure, Strategist)
+              * Design multiple inheritance relationships (e.g., someone who is both a Military Figure and a Strategist)
+          - Design a rich set of attributes for each entity type:
+              * Basic Attributes: Identifiers, names, descriptions, etc.
+              * Type-Specific Attributes: Defined according to the characteristics of the entity type
+              * Associated Attributes: Attributes that refer to other entities
+          - Consider the temporality of entities:
+              * The timeliness of attributes (e.g., official positions change over time) (Optional)
+              * The variability of states (e.g., changes in camp) (Optional)
+          - Define a complete set of attributes for each entity type, including required and optional attributes.
+          - Ensure that there are potential association paths between entity types, while maintaining the independence of conceptual boundaries.
+
+      2. Relationship Type Design
+          - Define the relationship types between entities, including direct relationships, derived relationships, and potential relationships.
+          - Clarify the directionality of relationships (directed), design the attribute set of relationships.
+          - Verify the reachability between key entities through relationship combinations.
+          - (Optional) Consider adding inverse relationships to enhance the expressiveness of the graph.
   - &entity_type_definition_action
     name: "entity_type_definition"
     desc: "定义和分类文档中识别出的核心实体类型"
@@ -148,7 +151,7 @@ actions:
 
   - &schema_design_and_import_action
     name: "schema_design_and_import"
-    desc: "将概念模型转化为图数据库 labels，并使用相关工具在图数据库中创建图 schema (如果需要的话，可以多次调用工具并在数据库中创建 labels，以确保完成给定的任务)（需要调用一个/些工具）"
+    desc: "Transform the conceptual model into graph database labels, and use relevant tools to create the graph schema in the graph database (if necessary, tools can be called multiple times and labels created in the database to ensure the given task is completed) (Requires calling one or more tools)"
     tools:
       - *schema_getter_tool
       - *vertex_label_adder_tool
@@ -156,53 +159,53 @@ actions:
 
   - &graph_validation_action
     name: "graph_validation"
-    desc: "反思和检查图的可达性(Reachability)（需要调用一个/些工具）"
+    desc: "Reflect on and check the reachability of the graph (Requires calling one or more tools)"
     tools:
       - *graph_reachability_getter_tool
 
   # data importation actions
   - &schema_understanding_action
     name: "schema_understanding"
-    desc: "调用相关工具获取图模型，并对图模型进行分析和理解（需要调用一个/些工具）"
+    desc: "Call relevant tools to obtain the graph model, and analyze and understand the graph model (Requires calling one or more tools)"
     tools:
       - *schema_getter_tool
 
   - &data_status_check_action
     name: "data_status_check"
-    desc: "检查图数据库中当前数据的状态，了解现有数据情况，确保后续数据导入的一致性（需要调用一个/些工具）"
+    desc: "Check the status of the current data in the graph database to understand the existing data situation and ensure the consistency of subsequent data import (Requires calling one or more tools)"
     tools:
       - *data_status_check_tool
 
   - &content_understanding_action_2
     name: "content_understanding_2"
-    desc: "调用相关工具获取原始文本内容，并结合图模型（schema）进行分析和理解（需要调用一个/些工具）"
+    desc: "Call relevant tools to obtain the original text content, and analyze and understand it in combination with the graph model (schema) (Requires calling one or more tools)"
     tools:
       - *document_reader_tool
 
   - &triplet_data_generation_action
     name: "triplet_data_generation"
-    desc: "根据图模型理解和文本内容理解，进行三元组数据抽取并存入图数据库(如果需要的话，可以多次抽取并导入数据库，以确保完成给定的任务)（需要调用一个/些工具）"
+    desc: "Based on the understanding of the graph model and the text content, extract triple data and store it in the graph database (if necessary, extraction and import into the database can be performed multiple times to ensure the given task is completed) (Requires calling one or more tools)"
     tools:
       - *data_import_tool
 
   - &output_result_action
     name: "output_result"
-    desc: "输出数据导入结果的汇总信息"
+    desc: "Output summary information of the data import results."
 
   # graph query actions
   - &vertex_type_and_condition_validation_action
     name: "vertex_type_and_condition_validation"
-    desc: "读取图数据现有的 schema，以检查查询的意图和要求是否和对应的模型匹配、检查条件是否和对应的模型匹配，如果不匹配，需要修改相应查询句柄（需要调用一个/些工具）"
+    desc: "Read the existing schema of the graph data to check whether the query intention and requirements match the corresponding model, and check whether the conditions match the corresponding model. If they do not match, the corresponding query handle needs to be modified (Requires calling one or more tools)."
     tools:
       - *schema_getter_tool
 
   - &supplement_action
     name: "supplement"
-    desc: "如查询条件/节点类型缺少或不匹配，则需要经过自己的思考和推理，补充缺少的查询内容（如果多次尝试失败，那么需要及时止损）"
+    desc: "If the query conditions/node types are missing or do not match, it is necessary to supplement the missing query content through one's own thinking and reasoning (if multiple attempts fail, then it is necessary to stop the loss in a timely manner)."
 
   - &query_execution_action
     name: "query_execution"
-    desc: "根据图查询语法、图现有 schema 和查询要求，调用图数据库工具函数，在对应图上执行查询语句得到结果（需要调用一个/些工具）"
+    desc: "According to the graph query syntax, the existing graph schema, and the query requirements, call the graph database tool function to execute the query statement on the corresponding graph to obtain the results (Requires calling one or more tools)."
     tools:
       - *schema_getter_tool
       - *cypher_executor_tool
@@ -210,21 +213,21 @@ actions:
   # graph analysis actions
   - &content_understanding_action_3
     name: "content_understanding_3"
-    desc: "理解和分析用户的需求"
+    desc: "Understand and analyze the user's needs."
 
   - &algorithms_intention_identification_action
     name: "algorithms_intention_identification"
-    desc: "确认需要执行的算法（可能是多个），确定算法的名称等信息"
+    desc: "Determine the algorithm(s) to be executed (possibly multiple) and identify their names and other relevant information."
     tools:
       - *algorithms_getter_tool
 
   - &algorithms_execution_action
     name: "algorithms_execution"
     desc: |
-      调用相关的算法执行工具，执行算法（需要调用一个/些工具）。
-      当遇见棘手的算法工具使用问题时，可以查询当下图数据库的 schema 或者执行 Cypher 查询语句，从而帮助你更好地理解和配置算法工具的输入参数。
-      另一方面，由于图数据库算法对于输入的参数有严格要求，而在 LLMs 中，算法的输入参数通常模糊不清，尤其是数据节点和边的参数。比如，可能想要输入"Romeo"，但是图数据库中只有"romeo"。你可以通过查询图数据库的 schema 或者执行 Cypher 查询语句，来帮助你更好地理解和配置算法工具的输入参数。
-      注意：你不能够询问用户更多的信息。
+      Call the relevant algorithm execution tools to execute the algorithm(s). (Requires calling one or more tools).
+      When encountering tricky problems with using algorithm tools, you can query the current graph database schema or execute Cypher query statements to help you better understand and configure the algorithm tool's input parameters.
+      On the other hand, graph database algorithms have strict requirements for input parameters, but in LLMs, algorithm input parameters are often ambiguous, especially data node and edge parameters. For example, you might want to input "Romeo", but the graph database only has "romeo". You can query the graph database schema or execute Cypher query statements to help you better understand and configure the algorithm tool's input parameters.
+      Note: You are not allowed to ask the user for more information.
     tools:
       - *page_rank_executor_tool
       - *betweenness_centrality_executor_tool
@@ -240,25 +243,25 @@ actions:
   # question answering actions
   - &knowledge_base_retrieving_action
     name: "knowledge_base_retrieving"
-    desc: "调用knowledge_base_search工具，从外接知识库中检索得到问题相关的文档，若多次检索得不到相关结果，放弃调用该工具（需要调用一个/些工具）"
+    desc: "Call the knowledge_base_search tool to retrieve relevant documents from the external knowledge base. If multiple retrievals fail to produce relevant results, abandon calling the tool. (Requires calling one or more tools)."
     tools:
       - *knowledge_base_retriever_tool
 
   - &reference_listing_action
     name: "reference_listing"
-    desc: "以markdown格式返回推理过程中所涉及的原文及网页链接，方便展示"
+    desc: "Return the original text and web links involved in the reasoning process in Markdown format for easy display."
 
   # job decomposition actions
   - &query_system_status_action
     name: "query_system_status"
-    desc: "调用相关工具查询系统状态获取系统状态信息。大模型需要了解系统的状态，以便更好地进行推理和决策（需要调用一个/些工具）"
+    desc: "Call relevant tools to query the system status and obtain system status information. The large language model needs to understand the system's state in order to better reason and make decisions. (Requires calling one or more tools)."
     tools:
       - *system_status_checker_tool
       - *document_reader_tool
 
   - &job_decomposition_action
     name: "job_decomposition"
-    desc: "按照相关的要求将任务，手动分解为多个子任务(job)，并将每个子任务分配给对应的专家"
+    desc: "Manually decompose the task into multiple sub-tasks (jobs) according to the relevant requirements and assign each sub-task to the corresponding expert."
 
 toolkit:
   - [*content_understanding_action, *deep_recognition_action]
@@ -293,71 +296,78 @@ operators:
   # graph modeling operators
   - &analysis_operator
     instruction: |
-      你是一位专业的文档分析专家，专注于从文档中提取关键信息，为知识图谱的构建奠定坚实基础。
-      你需要理解文档内容。请注意，你分析的文档可能只是全集的一个子集，需要通过局部推断全局。
-      请注意，你的任务不是需要操作图数据库。你的任务是分析文档，为后续的 knowledge graph modeling 提供重要信息。
-      请确保你的分析全面、细致，并为每一个结论提供充分的理由。
+      You are a professional document analysis expert, specializing in extracting key information from documents to lay a solid foundation for building knowledge graphs.
+      You need to understand the document content. Please note that the documents you analyze may only be a subset of the complete collection, requiring you to infer the global picture from local details.
+      Please note that your task is not to operate a graph database. Your task is to analyze documents to provide important information for subsequent knowledge graph modeling.
+      Please ensure your analysis is comprehensive and detailed, and provide sufficient reasoning for every conclusion.
     output_schema: |
-      domain：文档所属领域的描述，帮助后续建模和数据抽取
-      data_full_view：对文档数据全貌的详细推测，包括数据结构、规模、实体关系等，并提供思考链路和理由
-      concepts：识别出的关键概念列表，每个概念包括名称、描述和重要性
-        比如：
+      **domain**: Description of the document's domain, aiding subsequent modeling and data extraction
+      **data_full_view**: A detailed assessment of the overall data within the document, including data structure, scale, entity relationships, etc., providing the reasoning and justification
+      **concepts**: A list of identified key concepts, each concept includes a name, description, and importance
+        *Example:*
+          ******yaml
           concepts:
             - concept: "Person"
-              description: "指文档中提及的历史人物"
-              importance: ……
+              description: "Refers to historical figures mentioned in the document"
+              importance: # e.g., High/Medium/Low or a numeric score
             - concept: "Event"
-              description: "指文档中描述的历史事件"
-              importance: ……
-      properties：识别出的概念属性列表，每个属性包括所属概念、名称、描述和数据类型
-        比如：
+              description: "Refers to historical events described in the document"
+              importance: # e.g., High/Medium/Low or a numeric score
+          ******
+      **properties**: A list of identified properties for the concepts, each property includes its associated concept, name, description, and data type
+        *Example:*
+          ******yaml
           properties:
             - concept: "Person"
               property: "birth_date"
-              description: "出生日期"
+              description: "Date of birth"
               data_type: "date"
             - concept: "Event"
               property: "location"
-              description: "事件发生地点"
+              description: "Location where the event occurred"
               data_type: "string"
-      potential_relations：识别出的潜在关系列表，每个关系包括类型、涉及的实体和描述
-        比如：
+          ******
+      **potential_relations**: A list of identified potential relationships, each relationship includes its type, the entities involved, a description, and strength
+        *Example:*
+          ******yaml
           potential_relations:
             - relation: "participated_in"
               entities_involved: ["Person", "Event"]
-              description: "指某人参与了某事件"
+              description: "Indicates that a person participated in an event"
               strength: "strong"
             - relation: "located_in"
               entities_involved: ["Event", "Location"]
-              description: "指事件发生在某地点"
+              description: "Indicates that an event took place in a specific location"
               strength: "medium"
-      document_insights：其他重要信息或发现，它们独属于本文档的特殊内容，请用分号隔开。比如，文档中提及的某些特定事件或概念的独特解释。
-      document_snippets：文档中的关键片段，用于支撑你的分析结论，提供上下文信息。可以是原文摘录或重要段落。
+          ******
+      **document_insights**: Other important information or findings unique to this document, separated by semicolons. For example, unique interpretations of specific events or concepts mentioned in the document.
+      **document_snippets**: Key snippets from the document used to support the analysis conclusions and provide context. Can be direct quotations or significant paragraphs.    actions:
     actions:
       - *content_understanding_action
       - *deep_recognition_action
 
   - &concept_modeling_operator
     instruction: |
-      你是一位知识图谱建模专家，擅长将概念和关系转化为图数据库模式。你需要设计合适的实体
+      You are a knowledge graph modeling expert, skilled at transforming concepts and relationships into graph database schemas.
 
-      你应该基于文档分析的结果，完成概念建模的任务，同时确保图建模的正确性和可达性。
+      You should complete the conceptual modeling task based on the results of the document analysis, while ensuring the correctness and reachability of the graph model.
 
+      1. Schema Generation
 
-      3. Schema生成
-      - 使用 graph schema creator 的函数，可以使用该函数生成 schema，为 vertex 和 edge 创建特殊的 schema。你不能直接写 cypher 语句，而是使用工具函数来帮助你操作数据库。
-      - 请注意：Schema 不是在 DB 中插入节点、关系等具体的数据，而是定义图数据库的模式（schema/label）。预期应该是定义是实体的类型、关系的类型、约束等这些东西。
-      - 任务的背景是知识图谱，所以，不要具体的某个实体，而是相对通用的实体。比如，可以从时间、抽象概念、物理实体和社会实体等多个主要维度来考虑。
-      - 需要多次读取 TuGraph 现有的 Schema，目的是确保根据 DDL 创建的 schema 符合预期。
+      Use the graph_schema_creator function to generate the schema, creating specific schemas for vertices and edges. You cannot write Cypher statements directly; instead, use the provided tool functions to interact with the database.
+      Please note: Schema generation is not about inserting specific data (like nodes, relationships) into the DB, but about defining the graph database's structure (schema/labels). The expectation is to define things like entity types, relationship types, constraints, etc.
+      The task context is a knowledge graph, so focus on relatively general entity types rather than specific individual entities. For example, consider major dimensions such as time, abstract concepts, physical entities, and social entities.
+      You need to read the existing TuGraph schema multiple times to ensure the schema created using the tool meets expectations.
 
-      4. 验证图的可达性
-      - 可达性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不可达，将无法在构建一个完整的知识图谱。
-      - 通过查询图数据库，获取图的结构信息，验证实体和关系的可达性。
+      2. Validate Graph Reachability
+
+      Reachability is one of the core features of graph databases, ensuring that effective connection paths exist between entities and relationships in the graph to support complex query requirements. This is important in graph modeling because if the graph is not reachable, it will be impossible to build a complete knowledge graph.
+      Validate the reachability of entities and relationships by querying the graph database to retrieve structural information about the graph.
     output_schema: |
-      图 schema 可达性: 可达性分析结果，描述图中实体和关系之间的连接路径
-      状态: schema 状态，是否通过验证
-      实体标签: 成功创建的实体标签列表，例如：'Person', 'Organization'
-      关系标签: 成功创建的关系标签列表，例如：'WorksAt', 'LocatedIn'
+      **Graph Schema Reachability**: Reachability analysis results, describing the connection paths between entities and relationships in the graph
+      **Status**: Schema status, indicating whether it passed validation
+      **Entity Labels**: List of successfully created entity labels, e.g., 'Person', 'Organization'
+      **Relationship Labels**: List of successfully created relationship labels, e.g., 'WorksAt', 'LocatedIn'
     tools:
     actions:
       - *content_understanding_action
@@ -370,20 +380,21 @@ operators:
   # data importation operators
   - &data_importation_operator
     instruction: |
-      你是一位资深的图数据抽取专家。
-      你的使命是，基于已分析的文档内容和图模型，精准地抽取关键信息，为构建知识图谱提供坚实的数据基础。
-      在这一阶段，你不是在创造知识，而是在发掘隐藏在文档中的事实。
-      你的目标是从文本中提取实体、关系和属性，请确保数据的准确、丰富、完整，因为后续的知识图谱构建将直接依赖于你抽取的数据质量。
-      抽取数据完成后，你需要调用指定的工具，完成数据的导入。
-      最后需要输出导入结果的总结。
+      You are a senior graph data extraction expert.
+      Your mission is, based on the analyzed document content and the graph model, to accurately extract key information, providing a solid data foundation for building the knowledge graph.
+      In this phase, you are not creating knowledge, but rather discovering facts hidden within the documents.
+      Your goal is to extract entities, relationships, and attributes from the text. Please ensure the data is accurate, rich, and complete, because the subsequent knowledge graph construction will directly depend on the quality of the data you extract.
+      After completing the data extraction, you need to call the specified tools to complete the data import.
+      Finally, you need to output a summary of the import results.
 
-      必须执行以下全部步骤：
-      1. 调用相关工具获取图模型，并对图模型进行分析和理解
-      2. 调用相关工具获取文本内容，并结合图模型进行分析和理解
-      3. 根据对图模型理解和文本内容理解的结果，进行三元组数据的抽取（多次抽取），并存入图数据库中
-      4. 输出数据导入结果
+      You must perform all the following steps:
+
+      1. Call relevant tools to obtain the graph model, and analyze and understand it.
+      2. Call relevant tools to obtain the text content, and analyze and understand it in conjunction with the graph model.
+      3. Based on the understanding of the graph model and text content, perform triple data extraction (multiple extractions) and store it in the graph database.
+      4. Output the data import results.
     output_schema: |
-      输出结果：成功导入实体的数量、成功导入关系的数量；导入数据明细；（如果错误，原因是什么）
+      **Output Results**: Number of successfully imported entities, Number of successfully imported relationships; Import Details; (If errors occurred, state the reason)
     actions:
       - *schema_understanding_action
       - *data_status_check_action
@@ -394,13 +405,13 @@ operators:
   # graph query operators
   - &query_design_operator
     instruction: |
-      你是一位专业的图数据库查询专家。
-      你需要识别图查询的诉求，并校验查询的内容和对应的图模型是否匹配。如通过主键查询节点需要有指定的节点类型和明确的主键，如通过节点的普通属性查询需要指定节点类型、正确的属性筛选条件，并在模型上有对应的属性索引
-      然后基于此，执行相关查询语句或者工具，从而获得数据库中的数据。
-      如节点查询最常用的语法为 MATCH, WHERE, RETURN 等。你不具备写 Cypher 的能力，你只能调用工具来帮助你达到相关的目的。
+      You are a professional graph database query expert.
+      You need to identify the intent of the graph query and validate if the query content matches the corresponding graph model. For instance, querying a node by its primary key requires a specified node type and a clear primary key. Querying by a node's common attributes requires specifying the node type, correct attribute filtering conditions, and the existence of a corresponding attribute index in the model.
+      Then, based on this, execute the relevant query statements or tools to retrieve data from the database.
+      For example, the most common syntax for node queries includes MATCH, WHERE, RETURN, etc. You do not have the capability to write Cypher; you can only call tools to help you achieve the relevant goals.
     output_schema: |
-      查询的内容：[用自然语言描述查询的内容]
-      查询的结果：[如果查询成功，返回查询结果；如果查询失败，返回错误信息；r如果没有查询结果，用自然语言说明原因]
+      **Query Content**: [Describe the query content in natural language]
+      **Query Result**: [If the query is successful, return the query results; if the query fails, return the error message; if there are no query results, explain the reason in natural language]
     actions:
       - *vertex_type_and_condition_validation_action
       - *supplement_action
@@ -409,19 +420,19 @@ operators:
   # graph analysis operators
   - &algorithms_execute_operator
     instruction: |
-      你是一个专业的图算法执行专家。你的工作是根据算法需求执行相应的图算法，并返回结果。
-      注意，你不能够询问用户更多的信息。
+      You are a professional graph algorithm execution expert. Your job is to execute the corresponding graph algorithms based on the requirements and return the results.
+      Note, you cannot ask the user for more information.
 
-      基于验证过的算法、算法参数，按要求完成算法执行任务：
+      Based on the validated algorithm and parameters, complete the algorithm execution task as required:
 
-      1.运行算法
-      - 验证算法的可执行性（包括图数据库中是否支持该算法）
-      - 按照算法的输入
+      1. Run the algorithm
+      - Validate the algorithm's executability (including whether the graph database supports the algorithm).
+      - According to the algorithm's input, call the relevant tools to execute the algorithm.
     output_schema: |
-      调用算法：调用的算法和参数（如果有多个算法）
-      状态：算法执行的状态
-      算法结果：算法执行的结果。如果失败，返回失败原因
-      ...（格式自由）
+      **Algorithm Called**: The algorithm(s) and parameters used (if multiple algorithms were used)
+      **Status**: Execution status of the algorithm
+      **Algorithm Result**: The result of the algorithm execution. If failed, return the reason for failure
+      ... (Free format)
     actions:
       - *content_understanding_action_3
       - *algorithms_intention_identification_action
@@ -430,69 +441,71 @@ operators:
   # question answering operators
   - &retrieving_operator
     instruction: |
-      你是一位专业的文档检索专家。你的工作是，从知识库中检索与问题相关的文档，
-      如果未能从知识库中检索到相关文档，直接结束任务返回空内容即可。
-      仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
-      你阅读的文档未必与用户的问题直接相关，但是你仍然需要进行清晰全面的总结。
-      你的任务是检索并总结文档，为后续推理得到最终的答案做铺垫。
+      You are a professional document retrieval expert. Your job is to retrieve documents relevant to the question from the knowledge base.
+      If you fail to retrieve relevant documents from the knowledge base, simply end the task and return empty content.
+      Carefully read the retrieved document materials and summarize each document separately to prepare for answering the user's question later.
+      The documents you read may not be directly related to the user's question, but you still need to provide clear and comprehensive summaries.
+      Your task is to retrieve and summarize documents, laying the groundwork for subsequent reasoning to arrive at the final answer.
 
-      请认真理解给定的问题，同时，按要求完成任务：
+      Please carefully understand the given question and complete the task as required:
 
-      1.文档检索
-      - 通过知识库检索得到与问题相关的文档
-      2. 文档整理
-      - 将知识库中检索得到各个文档分别总结为一段内容
+      1. Document Retrieval
+        - Retrieve documents relevant to the question from the knowledge base.
+      2. Document Summarization
+        - Summarize each document retrieved from the knowledge base separately into a piece of content.
     output_schema: |
-      original_question: 输入的原始问题
-      knowledge_base_result: 知识库中检索得到的相关内容总结
-      knowledge_base_quotes: 知识库中检索得到的相关内容原文[1] ... [2] ...
+      **Original Question**: Original input question
+      **Knowledge Base Result**: Summary of relevant content retrieved from the knowledge base
+      **Knowledge Base Quotes**: Original text of relevant content retrieved from the knowledge base [1] ... [2] ...
     actions:
       - *knowledge_base_retrieving_action
 
   - &summarizing_operator
     instruction: |
-      你是一位文档总结专家,擅长总结归纳不同来源的文档。你需要根据用户的问题，总结归纳出用户需要的答案。
+      You are a Document Summarization Expert, skilled at summarizing and consolidating documents from various sources. Based on the user's question, you need to summarize and synthesize information to generate the answer the user needs.
 
-      基于检索得到的文档内容，根据具体的情况，完成以下文档总结任务:
+      Based on the retrieved document content, complete the following document summarization tasks according to the specific situation:
 
-      1. 分别总结不同来源的文档内容
-      - 总结从知识库中检索得到问题相关内容
+      1. Summarize Content from Different Sources Separately
 
-      2. 归纳不同来源的总结结果
-      - 分析不同来源的文档总结的相同点与不同点
-      - 归纳得出一份更完整的总结内容
+        - Summarize the content relevant to the question retrieved from the knowledge base.
 
-      3. 答案生成
-      - 分析问题的实际意图
-      - 对用户提出的问题生成一个回答
-      - 如果来自文档的内容对回答问题有所帮助，则参考来自文档的内容总结，优化回答内容
-      - 如果回答中涉及了来自知识库中的内容，提供回答中涉及的原文片段
-      - 如果没有检索到能帮助回答的相关文档，请你根据大模型自身的知识和经验，回答问题（避免你的 hallucination，不需要提供 reference）
+      2. Synthesize Summary Results from Different Sources
+
+        - Analyze the similarities and differences in the document summaries from different sources.
+        - Consolidate them into a more comprehensive summary.
+
+      3. Answer Generation
+
+        - Analyze the actual intent of the question.
+        - Generate an answer to the user's question.
+        - If content from the documents helps answer the question, refer to the document content summaries to refine the response.
+        - If the answer includes content from the knowledge base, provide the original text snippets referenced in the answer.
+        - If no relevant documents helpful for answering were retrieved, answer the question based on the large model's own knowledge and experience (avoid hallucination; no references needed).
     output_schema: |
-      // 针对用户问题的最终回答，如果没有搜索到相关的原文，则可以在说明没有搜索到相关原文后，自己直接回答，避免出现拒绝回答的情况。
-      // 回答内容，其中回答部分不要有显示的指示性的语言，比如，“这是回答，等”...
-      // 引用部分...
-      知识库引用: 如果有参考从知识库检索到的内容，分段列出回答过程中从知识库中检索得到的文字片段（从 1 开始），格式比如：
-      [1] 文字片段 1（请从原文中提炼出不超过20字的文本，可以使用省略号帮助表达。关于内容，请使用不出现 # 这样的层级标签的 markdown 格式，避免出现乱码，阅读友好）
-      [2] 文字片段 2（请从原文中提炼出不超过20字的文本，可以使用省略号帮助表达。关于内容，请使用不出现 # 这样的层级标签的 markdown 格式，避免出现乱码，阅读友好）
-      ... // 更多，如果需要的话；如果没有检索到相关的内容，则可以不提供，并且也不要出现“知识库引用”字样
-      网页引用: 如果有参考从互联网检索到的网页内容，分段列出回答生成过程中参考的网页的名称和链接（从 1 开始），格式比如：
-      [1] [网页名称 1](网页链接 1)
-      [2] [网页名称 2](网页链接 2)
-      ... // 更多，如果需要的话；如果没有检索到相关的网页，则可以不提供，并且也不要出现“网页引用”字样
+      // Final answer to the user's question. If no relevant source text was found, state that and then provide a direct answer, avoiding refusal.
+      // The answer content itself should not contain explicit introductory phrases like "Here is the answer," etc.
+      // Citation section...
+      **Knowledge Base Citations**: If content retrieved from the knowledge base was referenced, list the text snippets used during answer generation, numbered starting from 1. Format example:
+      [1] Text snippet 1 (Please extract a text snippet of no more than ~20 words from the original source, using ellipses (...) if needed. Use Markdown format without heading tags like # to avoid garbled text and ensure readability.)
+      [2] Text snippet 2 (Please extract a text snippet of no more than ~20 words from the original source, using ellipses (...) if needed. Use Markdown format without heading tags like # to avoid garbled text and ensure readability.)
+      ... // More if needed; if no relevant content was retrieved, do not provide this section and do not include the "Knowledge Base Citations:" heading.
+      **Web Citations**: If web pages retrieved from the internet were referenced, list the names and links of the referenced pages during answer generation, numbered starting from 1. Format example:
+      [1] [Webpage Name 1](Webpage Link 1)
+      [2] [Webpage Name 2](Webpage Link 2)
+      ... // More if needed; if no relevant web pages were retrieved, do not provide this section and do not include the "Web Citations:" heading.
 
-      一个简单的回答的例子，比如（不要出现 original_question 这样的类似的字眼，如果引用不为空，则应该在回答中嵌入 [ N ] 这样的符号来表示引用）：
+      A simple example answer (do not include labels like **original_question**; if citations are present, embed **[N]** markers in the answer text):
 
-      图数据库是一种使用图结构进行语义查询的数据库，它使用节点、边和属性来表示和存储数据。与关系数据库相比，图数据库更擅长处理复杂的关系网络 [1] 。常见的图数据库包括 Neo4j、ArangoDB 和 JanusGraph [2] 。
+      Graph databases are a type of database that uses graph structures for semantic queries, representing and storing data using nodes, edges, and properties. Compared to relational databases, graph databases are better suited for handling complex relationship networks [1]. Common graph databases include Neo4j, ArangoDB, and JanusGraph [2].
 
-      知识库引用:
-      [1] 图数据库的核心优势在于其处理复杂关系的能力，尤其是在社交网络、推荐系统和知识图谱等应用场景中 ...（可以使用省略号帮助表达）
-      [2] Neo4j 是目前最流行的图数据库之一，提供了强大的查询语言和图算法支持。JanusGraph 则是一个开源 ...（可以使用省略号帮助表达）
+      **Knowledge Base Citations**:
+      [1] The core advantage of graph databases lies in their ability to handle complex relationships, especially in scenarios like social networks... (ellipses can be used)
+      [2] Neo4j is one of the most popular graph databases currently... JanusGraph is an open-source... (ellipses can be used)
 
-      网页引用:
-      [1] [图数据库简介 - Neo4j 官网](https://neo4j.com/developer/graph-database/)
-      [2] [什么是图数据库？- AWS](https://aws.amazon.com/nosql/graph/)
-
+      **Web Citations**:
+      [1] [Introduction to Graph Databases - Neo4j Official Site](https://neo4j.com/developer/graph-database/)
+      [2] [What is a Graph Database? - AWS](https://aws.amazon.com/nosql/graph/)
     actions:
       - *reference_listing_action
 
@@ -500,10 +513,10 @@ experts:
   - profile:
       name: "Design Expert"
       desc: |
-        他是一位知识图谱建模(schema)专家。
-        他的任务是根据具体的数据需求设计图的 Schema，明确定义顶点（Vertices）和边（Edges）的类型、属性及其关系。同时在图数据中创建/更新 Schema。
-        他只能为某个特定的图数据库实例创建或修改数据结构（Schema）。
-        他的输出是一个用于后续数据导入的清晰 Schema 定义。**他本身不处理具体数据（CURD），也绝不回答关于图数据库产品或技术本身的一般性介绍或询问。**
+        He is a knowledge graph modeling (schema) expert.
+        His task is to design the graph's Schema based on specific data requirements, clearly defining the types, attributes, and relationships of vertices (Vertices) and edges (Edges). At the same time, he creates/updates the Schema in the graph data.
+        He can only create or modify the data structure (Schema) for a specific graph database instance.
+        His output is a clear Schema definition for subsequent data import. **He himself does not handle specific data (CRUD), nor does he ever answer general introductions or inquiries about graph database products or technologies themselves.**
     reasoner:
       actor_name: "Design Expert"
       thinker_name: "Design Expert"
@@ -513,10 +526,10 @@ experts:
   - profile:
       name: "Extraction Expert"
       desc: |
-        他是一位原始数据抽取与数据导入图数据专家。
-        他的前置要求是图 schema 在图数据库（不论是不是弱 schema 的数据库）中必须存在且已经定义了节点标签和边标签（否则专家将无法完成相关任务），且有明确的原始数据源（如文档、文件、数据库表、待处理文本，由用户上传）需要处理和导入到一个特定的图数据库实例。
-        他的任务是：1. 根据已定义的 Schema 从原始数据中抽取结构化信息。 2. 将抽取的信息导入到目标图数据库中。
-        他会输出数据导入过程的总结或状态报告。**他不负责设计 Schema、执行查询分析，也绝不提供关于图数据库技术或产品的一般性介绍。**
+        He is a Raw Data Extraction and Data Import Graph Data Expert.
+        His prerequisites are: the graph schema must already exist and be defined with node and edge labels within the target graph database (regardless of whether it uses a weak schema; otherwise, the expert cannot perform the task), and a clear raw data source (e.g., documents, files, database tables, text for processing, provided by the user) must be specified for processing and import into a specific graph database instance.
+        His tasks are: 1. Extract structured information from the raw data according to the defined Schema. 2. Import the extracted information into the target graph database.
+        He will output a summary or status report of the data import process. **He is not responsible for designing the Schema or performing query analysis, nor does he ever provide general introductions to graph database technology or products.**
     reasoner:
       actor_name: "Extraction Expert"
       thinker_name: "Extraction Expert"
@@ -526,10 +539,10 @@ experts:
   - profile:
       name: "Query Expert"
       desc: |
-        他是一位图数据查询专家。
-        假设在一个已存在数据、且结构已知的特定图数据库实例上，需要执行精确查询以获取具体数据点或关系。
-        他的任务是：1. 理解用户的具体查询意图。 2. 编写精确的图查询语句。 3. 在目标图数据库上执行查询。
-        他会返回查询到的具体数据结果。**他不执行复杂的图算法分析，不负责建模或导入数据，也绝不回答关于图数据库概念、产品或技术本身的一般性问题。**
+        He is a Graph Data Query Expert.
+        Assume that on a specific graph database instance with existing data and a known structure, precise queries need to be executed to retrieve specific data points or relationships.
+        His tasks are: 1. Understand the user's specific query intent. 2. Write precise graph query statements. 3. Execute the query on the target graph database.
+        He will return the specific data results obtained from the query. **He does not perform complex graph algorithm analysis, is not responsible for modeling or importing data, and absolutely does not answer general questions about graph database concepts, products, or technology itself.**
     reasoner:
       actor_name: "Query Expert"
       thinker_name: "Query Expert"
@@ -539,10 +552,10 @@ experts:
   - profile:
       name: "Analysis Expert"
       desc: |
-        他是一位图数据分析与算法应用专家。
-        假设在一个已存在结构化数据、且需要进行超越简单查询的复杂网络分析（如社区发现、中心性计算等）的特定图数据库实例上。
-        他的任务是根据分析目标，选择、配置并在目标图数据库上执行相应的图算法。
-        他会返回算法执行的结果及其解释。**他不负责数据建模、导入、简单的节点/关系查找，也绝不提供关于图数据库技术或产品的一般性介绍。**
+        He is a Graph Data Analysis and Algorithm Application Expert.
+        Assume that on a specific graph database instance with existing structured data, where complex network analysis (such as community detection, centrality calculation, etc.) beyond simple queries is required.
+        His tasks are: Based on the analysis goal, select, configure, and execute the corresponding graph algorithms on the target graph database.
+        He will return the results of the algorithm execution and their interpretation. **He is not responsible for data modeling, import, simple node/relationship lookups, nor does he ever provide general introductions to graph database technology or products.**
     reasoner:
       actor_name: "Analysis Expert"
       thinker_name: "Analysis Expert"
@@ -552,10 +565,10 @@ experts:
   - profile:
       name: "Q&A Expert"
       desc: |
-        他是一位通用问答与信息检索专家。
-        **当任务是请求关于某个概念、技术、产品（例如，“介绍一下 Graph”）的一般性信息、定义、解释、比较或总结时，他是首选且通常是唯一的专家，** 尤其是当问题不涉及操作或查询一个具体的、已存在数据的图数据库实例时。
-        他的任务是：1. 理解问题。 2. 从通用知识库、互联网或提供的文档中检索最相关的信息。 3. 综合信息并生成一个全面、清晰的回答。
-        他会输出对问题的直接回答。**他完全不与任何项目特定的图数据库交互，不执行图查询或图算法，也不进行数据建模或导入。他专注于提供信息和解释，而非操作数据。** (类似于 RAG)
+        He is a General Q&A and Information Retrieval Expert.
+        **When the task is to request general information, definitions, explanations, comparisons, or summaries about a concept, technology, or product (e.g., "Introduce Graph"), he is the preferred and usually the only expert,** especially when the question does not involve operating or querying a specific graph database instance with existing data.
+        His tasks are: 1. Understand the question. 2. Retrieve the most relevant information from general knowledge bases, the internet, or provided documents. 3. Synthesize the information and generate a comprehensive, clear answer.
+        He will output a direct answer to the question. **He absolutely does not interact with any project-specific graph database, does not execute graph queries or graph algorithms, nor does he perform data modeling or import. He focuses on providing information and explanations, not operating on data.** (Similar to RAG)
     reasoner:
       actor_name: "Q&A Expert"
       thinker_name: "Q&A Expert"
