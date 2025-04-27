@@ -82,6 +82,10 @@ release_lock() {
 
   if [[ -f "$lock_file" ]]; then
     locked_pid=$(cat $lock_file)
+    if [[ $$ == "$locked_pid" ]]; then
+      rm $lock_file
+    else
+      fatal "File $lock_file is locked by $locked_pid"
     fi
   fi
 }
