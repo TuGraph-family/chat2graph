@@ -52,7 +52,7 @@ check_command() {
 }
 
 get_pids() {
-  cmd="/chat2graph/app/server/bootstrap.py"
+  cmd="/app/server/bootstrap.py"
   pids=$(ps aux | grep $cmd | grep -v grep | awk '{print$2}' | xargs)
   echo $pids
 }

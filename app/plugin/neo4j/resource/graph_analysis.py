@@ -1,12 +1,8 @@
-import asyncio  # Added import
 import json
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 from app.core.service.graph_db_service import GraphDbService
-from app.core.service.service_factory import ServiceFactory
 from app.core.toolkit.tool import Tool
 
 
@@ -1481,51 +1477,3 @@ class KMeansExecutor(Tool):
 
         # return results as json string
         return json.dumps(result, indent=2, ensure_ascii=False)
-
-
-# Added main function for testing ShortestPathExecutor
-async def main():
-    """Main function to test ShortestPathExecutor."""
-    graph_db_service = None  # Initialize to None
-    try:
-        # Initialize services needed for the test
-        # Assuming DbSession needs setup or can be default
-        DaoFactory.initialize(DbSession())
-        ServiceFactory.initialize()
-        graph_db_service = GraphDbService.instance
-        # Ensure the service is ready if it has an async init
-        # await graph_db_service.initialize() # Uncomment if needed
-
-        executor = ShortestPathExecutor()
-
-        start_node_id = "Romeo"
-        # end_node_id = "4:3641d659-da64-4b2a-8926-1377e9b7755a:2"
-        end_node_id = "Juliet"
-        vertex_label = "*"
-        relationship_type = "*"
-        weight_property = None
-        path_details = True
-
-        print(f"Executing shortest path from '{start_node_id}' to '{end_node_id}'...")
-
-        result_json = await executor.execute_shortest_path_algorithm(
-            graph_db_service=graph_db_service,
-            start_node_id=start_node_id,
-            end_node_id=end_node_id,
-            vertex_label=vertex_label,
-            relationship_type=relationship_type,
-            weight_property=weight_property,
-            path_details=path_details,
-        )
-        print("\nExecution Result:")
-        print(result_json)
-    except Exception as e:
-        print(f"\nAn error occurred during execution: {e}")
-
-
-if __name__ == "__main__":
-    # Requires a running Neo4j instance with the sample graph data (e.g., Shakespeare)
-    # and GDS plugin installed.
-    # Ensure environment variables for Neo4j connection are set if GraphDbService uses them.
-    print("Running Shortest Path Test...")
-    asyncio.run(main())
