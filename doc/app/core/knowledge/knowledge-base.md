@@ -45,13 +45,13 @@ Select the files to add to the knowledge base.
 
 ![](../../../img/kb-upload.png)
 
-Configure knowledge base loading configuration(currently supports modification of the chunk_size).
+Configure knowledge base loading configuration(currently supports modification of the `chunk_size` ).
 
 ![](../../../img/kb-parameter.png)
 
 After successful file addition, the files will be displayed in the knowledge base management page. Click "Delete" to remove files from the knowledge base.
 
-![](../../../img/kb-load-success.png)
+![](../../../img/kb-delete.png)
 
 ### Editing the Session Knowledge Base
 The top-right corner of the session knowledge base card provides functions to edit, clear the knowledge base, and return to the corresponding session.
