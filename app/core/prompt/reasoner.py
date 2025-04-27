@@ -36,7 +36,7 @@ We share a common interest in collaborating to successfully complete the task th
 9. Final Deliverable Trigger: Instruct me to provide the final task delivery using the <deliverable> tag and include 'TASK_DONE' within that final response. Do not forget it!
 10. Conversation Turn Limit: Aim to complete the task efficiently. Our conversation should ideally not exceed approximately {max_reasoning_rounds} turns (your response + my response = 1 turn). If the conversation seems to be approaching this limit (around 80 percent of the turns based on the history) and the task is not complete, prioritize reaching a logical stopping point and issue the "TASK_DONE" instruction on the next turn for me to summarize progress. You MUST issue "TASK_DONE" by what you estimate to be the limited turn if the task is not finished.
 
-(Answer in Chinese)
+(Answer in English)
 
 ===== TASK =====
 {task}
@@ -87,7 +87,8 @@ We share a common interest in collaborating to successfully complete the task th
 8. Deliverable Content: IMPORTANT: When providing the final deliverable, you MUST include ALL relevant information from our previous conversation, as the previous context will NOT be available for later processing. Your deliverable should be completely self-contained and independently understandable. When <deliverable> appears in the response, the current conversation will be closed by system, indicating that this task is complete.
 9. Deliverable Trigger: IMPORTANT: When I provided you TASK_DONE, you must use <deliverable> and TASK_DONE in your response to indicate task completion. If I did not provide you TASK_DONE, you should never use <deliverable> in your response.
 
-(Answer in Chinese)
+(Answer in English)
+
 ===== TASK =====
 {task}
 
@@ -110,6 +111,7 @@ The external system will then execute the function. The results will be added to
 <deliverable>
     // When I provided you TASK_DONE, you must use <deliverable> and TASK_DONE in your response to indicate task completion.
     // If I did not provide you TASK_DONE, you should never use <deliverable> in your response.
+    // Use English only in the <deliverable> section.
     <task_objective>
     [should be the same as the TASK, but avoiding mentioning specific roles]
     </task_objective>
@@ -123,6 +125,7 @@ The external system will then execute the function. The results will be added to
     </key_reasoning_points>
     <final_output>
     [should be the long and verbose]
+    [Use English only in the <final_output> section]
     {output_schema}
     </final_output>
     TASK_DONE
@@ -171,7 +174,8 @@ You complete the task through role-playing, selfishly using role-playing to do s
 12. Deliverable Trigger (Self): IMPORTANT: When You think the task is done, you must use <deliverable> and TASK_DONE in your response to indicate task completion. If not completed, you should never use <deliverable> in your response.
 13. Conversation Turn Limit: Aim to complete the task efficiently. Our conversation should ideally not exceed approximately {max_reasoning_rounds} turns (your response + my response = 2 turns). If the conversation seems to be approaching this limit (around 80 percent of the turns based on the history) and the task is not complete, prioritize reaching a logical stopping point and issue the "TASK_DONE" instruction on the next turn for me to summarize progress. You MUST issue "TASK_DONE" by what you estimate to be the limited turn if the task is not finished.
 
-(Answer in Chinese)
+(Answer in English)
+
 ===== TASK =====
 {task}
 
@@ -198,6 +202,7 @@ The external system will then execute the function. The results will be added to
 <deliverable>
     // When You think the task is done, you must use <deliverable> and TASK_DONE in your response to indicate task completion.
     // If not completed, you should never use <deliverable> in your response.
+    // Use English only in the <deliverable> section.
     <task_objective>
     [should be the same as the TASK, but avoiding mentioning specific roles]
     </task_objective>
@@ -211,6 +216,7 @@ The external system will then execute the function. The results will be added to
     </key_reasoning_points>
     <final_output>
     [should be the long and verbose]
+    [Use English only in the <final_output> section]
     {output_schema}
     </final_output>
 </deliverable>

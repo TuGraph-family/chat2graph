@@ -298,41 +298,47 @@ operators:
       请注意，你的任务不是需要操作图数据库。你的任务是分析文档，为后续的 knowledge graph modeling 提供重要信息。
       请确保你的分析全面、细致，并为每一个结论提供充分的理由。
     output_schema: |
-      domain：文档所属领域的描述，帮助后续建模和数据抽取
-      data_full_view：对文档数据全貌的详细推测，包括数据结构、规模、实体关系等，并提供思考链路和理由
-      concepts：识别出的关键概念列表，每个概念包括名称、描述和重要性
-        比如：
+      **domain**: Description of the document's domain, aiding subsequent modeling and data extraction
+      **data_full_view**: A detailed assessment of the overall data within the document, including data structure, scale, entity relationships, etc., providing the reasoning and justification
+      **concepts**: A list of identified key concepts, each concept includes a name, description, and importance
+        *Example:*
+          ******yaml
           concepts:
             - concept: "Person"
-              description: "指文档中提及的历史人物"
-              importance: ……
+              description: "Refers to historical figures mentioned in the document"
+              importance: # e.g., High/Medium/Low or a numeric score
             - concept: "Event"
-              description: "指文档中描述的历史事件"
-              importance: ……
-      properties：识别出的概念属性列表，每个属性包括所属概念、名称、描述和数据类型
-        比如：
+              description: "Refers to historical events described in the document"
+              importance: # e.g., High/Medium/Low or a numeric score
+          ******
+      **properties**: A list of identified properties for the concepts, each property includes its associated concept, name, description, and data type
+        *Example:*
+          ******yaml
           properties:
             - concept: "Person"
               property: "birth_date"
-              description: "出生日期"
+              description: "Date of birth"
               data_type: "date"
             - concept: "Event"
               property: "location"
-              description: "事件发生地点"
+              description: "Location where the event occurred"
               data_type: "string"
-      potential_relations：识别出的潜在关系列表，每个关系包括类型、涉及的实体和描述
-        比如：
+          ******
+      **potential_relations**: A list of identified potential relationships, each relationship includes its type, the entities involved, a description, and strength
+        *Example:*
+          ******yaml
           potential_relations:
             - relation: "participated_in"
               entities_involved: ["Person", "Event"]
-              description: "指某人参与了某事件"
+              description: "Indicates that a person participated in an event"
               strength: "strong"
             - relation: "located_in"
               entities_involved: ["Event", "Location"]
-              description: "指事件发生在某地点"
+              description: "Indicates that an event took place in a specific location"
               strength: "medium"
-      document_insights：其他重要信息或发现，它们独属于本文档的特殊内容，请用分号隔开。比如，文档中提及的某些特定事件或概念的独特解释。
-      document_snippets：文档中的关键片段，用于支撑你的分析结论，提供上下文信息。可以是原文摘录或重要段落。
+          ******
+      **document_insights**: Other important information or findings unique to this document, separated by semicolons. For example, unique interpretations of specific events or concepts mentioned in the document.
+      **document_snippets**: Key snippets from the document used to support the analysis conclusions and provide context. Can be direct quotations or significant paragraphs.    actions:
     actions:
       - *content_understanding_action
       - *deep_recognition_action
@@ -354,10 +360,10 @@ operators:
       - 可达性是图数据库的核心特性之一，确保图中的实体和关系之间存在有效的连接路径，以支持复杂的查询需求。这在图建模中很重要，因为如果图不可达，将无法在构建一个完整的知识图谱。
       - 通过查询图数据库，获取图的结构信息，验证实体和关系的可达性。
     output_schema: |
-      图 schema 可达性: 可达性分析结果，描述图中实体和关系之间的连接路径
-      状态: schema 状态，是否通过验证
-      实体标签: 成功创建的实体标签列表，例如：'Person', 'Organization'
-      关系标签: 成功创建的关系标签列表，例如：'WorksAt', 'LocatedIn'
+      **Graph Schema Reachability**: Reachability analysis results, describing the connection paths between entities and relationships in the graph
+      **Status**: Schema status, indicating whether it passed validation
+      **Entity Labels**: List of successfully created entity labels, e.g., 'Person', 'Organization'
+      **Relationship Labels**: List of successfully created relationship labels, e.g., 'WorksAt', 'LocatedIn'
     tools:
     actions:
       - *content_understanding_action
@@ -383,7 +389,7 @@ operators:
       3. 根据对图模型理解和文本内容理解的结果，进行三元组数据的抽取（多次抽取），并存入图数据库中
       4. 输出数据导入结果
     output_schema: |
-      输出结果：成功导入实体的数量、成功导入关系的数量；导入数据明细；（如果错误，原因是什么）
+      **Output Results**: Number of successfully imported entities, Number of successfully imported relationships; Import Details; (If errors occurred, state the reason)
     actions:
       - *schema_understanding_action
       - *data_status_check_action
@@ -399,8 +405,8 @@ operators:
       然后基于此，执行相关查询语句或者工具，从而获得数据库中的数据。
       如节点查询最常用的语法为 MATCH, WHERE, RETURN 等。你不具备写 Cypher 的能力，你只能调用工具来帮助你达到相关的目的。
     output_schema: |
-      查询的内容：[用自然语言描述查询的内容]
-      查询的结果：[如果查询成功，返回查询结果；如果查询失败，返回错误信息；r如果没有查询结果，用自然语言说明原因]
+      **Query Content**: [Describe the query content in natural language]
+      **Query Result**: [If the query is successful, return the query results; if the query fails, return the error message; if there are no query results, explain the reason in natural language]
     actions:
       - *vertex_type_and_condition_validation_action
       - *supplement_action
@@ -418,10 +424,10 @@ operators:
       - 验证算法的可执行性（包括图数据库中是否支持该算法）
       - 按照算法的输入
     output_schema: |
-      调用算法：调用的算法和参数（如果有多个算法）
-      状态：算法执行的状态
-      算法结果：算法执行的结果。如果失败，返回失败原因
-      ...（格式自由）
+      **Algorithm Called**: The algorithm(s) and parameters used (if multiple algorithms were used)
+      **Status**: Execution status of the algorithm
+      **Algorithm Result**: The result of the algorithm execution. If failed, return the reason for failure
+      ... (Free format)
     actions:
       - *content_understanding_action_3
       - *algorithms_intention_identification_action
@@ -443,9 +449,9 @@ operators:
       2. 文档整理
       - 将知识库中检索得到各个文档分别总结为一段内容
     output_schema: |
-      original_question: 输入的原始问题
-      knowledge_base_result: 知识库中检索得到的相关内容总结
-      knowledge_base_quotes: 知识库中检索得到的相关内容原文[1] ... [2] ...
+      **Original Question**: Original input question
+      **Knowledge Base Result**: Summary of relevant content retrieved from the knowledge base
+      **Knowledge Base Quotes**: Original text of relevant content retrieved from the knowledge base [1] ... [2] ...
     actions:
       - *knowledge_base_retrieving_action
 
@@ -469,30 +475,29 @@ operators:
       - 如果回答中涉及了来自知识库中的内容，提供回答中涉及的原文片段
       - 如果没有检索到能帮助回答的相关文档，请你根据大模型自身的知识和经验，回答问题（避免你的 hallucination，不需要提供 reference）
     output_schema: |
-      // 针对用户问题的最终回答，如果没有搜索到相关的原文，则可以在说明没有搜索到相关原文后，自己直接回答，避免出现拒绝回答的情况。
-      // 回答内容，其中回答部分不要有显示的指示性的语言，比如，“这是回答，等”...
-      // 引用部分...
-      知识库引用: 如果有参考从知识库检索到的内容，分段列出回答过程中从知识库中检索得到的文字片段（从 1 开始），格式比如：
-      [1] 文字片段 1（请从原文中提炼出不超过20字的文本，可以使用省略号帮助表达。关于内容，请使用不出现 # 这样的层级标签的 markdown 格式，避免出现乱码，阅读友好）
-      [2] 文字片段 2（请从原文中提炼出不超过20字的文本，可以使用省略号帮助表达。关于内容，请使用不出现 # 这样的层级标签的 markdown 格式，避免出现乱码，阅读友好）
-      ... // 更多，如果需要的话；如果没有检索到相关的内容，则可以不提供，并且也不要出现“知识库引用”字样
-      网页引用: 如果有参考从互联网检索到的网页内容，分段列出回答生成过程中参考的网页的名称和链接（从 1 开始），格式比如：
-      [1] [网页名称 1](网页链接 1)
-      [2] [网页名称 2](网页链接 2)
-      ... // 更多，如果需要的话；如果没有检索到相关的网页，则可以不提供，并且也不要出现“网页引用”字样
+      // Final answer to the user's question. If no relevant source text was found, state that and then provide a direct answer, avoiding refusal.
+      // The answer content itself should not contain explicit introductory phrases like "Here is the answer," etc.
+      // Citation section...
+      **Knowledge Base Citations**: If content retrieved from the knowledge base was referenced, list the text snippets used during answer generation, numbered starting from 1. Format example:
+      [1] Text snippet 1 (Please extract a text snippet of no more than ~20 words from the original source, using ellipses (...) if needed. Use Markdown format without heading tags like # to avoid garbled text and ensure readability.)
+      [2] Text snippet 2 (Please extract a text snippet of no more than ~20 words from the original source, using ellipses (...) if needed. Use Markdown format without heading tags like # to avoid garbled text and ensure readability.)
+      ... // More if needed; if no relevant content was retrieved, do not provide this section and do not include the "Knowledge Base Citations:" heading.
+      **Web Citations**: If web pages retrieved from the internet were referenced, list the names and links of the referenced pages during answer generation, numbered starting from 1. Format example:
+      [1] [Webpage Name 1](Webpage Link 1)
+      [2] [Webpage Name 2](Webpage Link 2)
+      ... // More if needed; if no relevant web pages were retrieved, do not provide this section and do not include the "Web Citations:" heading.
 
-      一个简单的回答的例子，比如（不要出现 original_question 这样的类似的字眼，如果引用不为空，则应该在回答中嵌入 [ N ] 这样的符号来表示引用）：
+      A simple example answer (do not include labels like **original_question**; if citations are present, embed **[N]** markers in the answer text):
 
-      图数据库是一种使用图结构进行语义查询的数据库，它使用节点、边和属性来表示和存储数据。与关系数据库相比，图数据库更擅长处理复杂的关系网络 [1] 。常见的图数据库包括 Neo4j、ArangoDB 和 JanusGraph [2] 。
+      Graph databases are a type of database that uses graph structures for semantic queries, representing and storing data using nodes, edges, and properties. Compared to relational databases, graph databases are better suited for handling complex relationship networks [1]. Common graph databases include Neo4j, ArangoDB, and JanusGraph [2].
 
-      知识库引用:
-      [1] 图数据库的核心优势在于其处理复杂关系的能力，尤其是在社交网络、推荐系统和知识图谱等应用场景中 ...（可以使用省略号帮助表达）
-      [2] Neo4j 是目前最流行的图数据库之一，提供了强大的查询语言和图算法支持。JanusGraph 则是一个开源 ...（可以使用省略号帮助表达）
+      **Knowledge Base Citations**:
+      [1] The core advantage of graph databases lies in their ability to handle complex relationships, especially in scenarios like social networks... (ellipses can be used)
+      [2] Neo4j is one of the most popular graph databases currently... JanusGraph is an open-source... (ellipses can be used)
 
-      网页引用:
-      [1] [图数据库简介 - Neo4j 官网](https://neo4j.com/developer/graph-database/)
-      [2] [什么是图数据库？- AWS](https://aws.amazon.com/nosql/graph/)
-
+      **Web Citations**:
+      [1] [Introduction to Graph Databases - Neo4j Official Site](https://neo4j.com/developer/graph-database/)
+      [2] [What is a Graph Database? - AWS](https://aws.amazon.com/nosql/graph/)
     actions:
       - *reference_listing_action
 
