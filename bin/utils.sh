@@ -77,11 +77,11 @@ acquire_lock() {
 release_lock() {
   lock_file=$1
   if [[ -z $lock_file ]]; then
-	@@ -85,7 +85,7 @@ release_lock() {
-    if [[ $$ == "$locked_pid" ]]; then
-      rm $lock_file
-    else
-      fatal "File $lock_file is locked by $locked_pid"
+    fatal "Argument 'lock_file' is required"
+  fi
+
+  if [[ -f "$lock_file" ]]; then
+    locked_pid=$(cat $lock_file)
     fi
   fi
 }
