@@ -32,35 +32,35 @@ GRAPH_KNOWLEDGE_STORE_PORT=17687
 ### 知识库文档添加
 点击全局知识库或会话知识库的卡片
 
-![](../img/kb-management-cn.png)
+![](../../../img/kb-management-cn.png)
 
 点击新建按钮
 
-![](../img/kb-detail-cn.png)
+![](../../../img/kb-detail-cn.png)
 
 选择添加进入知识库的文件
 
-![](../img/kb-upload-cn.png)
+![](../../../img/kb-upload-cn.png)
 
 配置知识库载入参数，当前支持chunk_size参数的修改
 
-![](../img/kb-parameter-cn.png)
+![](../../../img/kb-parameter-cn.png)
 
 文件添加成功后，会在知识库管理页面中显示，点击删除则可以将文件从知识库中删去
 
-![](../img/kb-load-success-cn.png)
+![](../../../img/kb-load-success-cn.png)
 
 ### 会话知识库编辑
 会话知识库卡片的右上角具有编辑、清空知识库及返回对应会话的功能
 
-![](../img/kb-edit-cn.png)
+![](../../../img/kb-edit-cn.png)
 
 编辑功能支持对知识库名称及描述的编辑
 
-![](../img/kb-edit-name-cn.png)
+![](../../../img/kb-edit-name-cn.png)
 
 ### 知识库辅助问答
 在知识库中添加知识后，Chat2Graph可以根据知识库中的领域知识回答基础模型无法回答的领域专业问题，并列出知识库中的原文引用，下图是问题“AWEL是什么？”的回答
 
-![](../img/kb-QA-cn.png)
+![](../../../img/kb-QA-cn.png)
 
