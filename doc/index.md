@@ -6,8 +6,8 @@ This document provides an index to the documentation for different components of
 
 ### Chat User Guide
 
-* 
-* 
+* [Chat User Guide (English)](./chat_ui/chat-user-guide.md)
+* [聊天使用指导（中文）](./chat_ui/chat-user-guide.md)
 
 ## App
 
