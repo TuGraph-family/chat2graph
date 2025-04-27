@@ -64,28 +64,24 @@ acquire_lock() {
   fi
 
   if [[ -e "$lock_file" ]]; then
-fatal "File $lock_file is locked by $(cat $lock_file)"
-      fi
+    fatal "File $lock_file is locked by $(cat $lock_file)"
+  fi
 
   if ! touch "$lock_file" 2>/dev/null; then
-fatal "Failed to lock file $lock_file"
-    fi
-  
- echo $$ > $lock_file
-  }
- 
+    fatal "Failed to lock file $lock_file"
+  fi
+
+  echo $$ > $lock_file
+}
+
 release_lock() {
   lock_file=$1
   if [[ -z $lock_file ]]; then
-    fatal "Argument 'lock_file' is required"
-  fi
-
-  if [[ -f "$lock_file" ]]; then
-    locked_pid=$(cat $lock_file)
+	@@ -85,7 +85,7 @@ release_lock() {
     if [[ $$ == "$locked_pid" ]]; then
       rm $lock_file
     else
-fatal "File $lock_file is locked by $locked_pid"
-      fi
+      fatal "File $lock_file is locked by $locked_pid"
     fi
+  fi
 }
