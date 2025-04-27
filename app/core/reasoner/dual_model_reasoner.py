@@ -232,6 +232,7 @@ class DualModelReasoner(Reasoner):
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
             max_reasoning_rounds=SystemEnv.MAX_REASONING_ROUNDS,
+            language=SystemEnv.LANGUAGE,
             task=reasoning_task,
             functions=func_description,
             output_schema=output_schema,
@@ -296,6 +297,7 @@ class DualModelReasoner(Reasoner):
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
             max_reasoning_rounds=SystemEnv.MAX_REASONING_ROUNDS,
+            language=SystemEnv.LANGUAGE,
             task=reasoning_task,
             functions=func_description,
         )

@@ -53,6 +53,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "GRAPH_DB_NAME": (str, "Default Graph DB"),
     "SCHEMA_FILE_NAME": (str, "graph.db.schema.json"),
     "SCHEMA_FILE_ID": (str, "schema_file_id"),
+    "LANGUAGE": (str, "en-US"),
 }
 
 # system environment variable value cache.

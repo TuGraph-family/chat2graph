@@ -209,6 +209,7 @@ class MonoModelReasoner(Reasoner):
 
         return MONO_PROMPT_TEMPLATE.format(
             max_reasoning_rounds=SystemEnv.MAX_REASONING_ROUNDS,
+            language=SystemEnv.LANGUAGE,
             task=reasoning_task,
             functions=func_description,
             output_schema=output_schema,
