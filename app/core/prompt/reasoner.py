@@ -87,8 +87,6 @@ We share a common interest in collaborating to successfully complete the task th
 9. Deliverable Trigger: IMPORTANT: When I provided you TASK_DONE, you must use <deliverable> and TASK_DONE in your response to indicate task completion. If I did not provide you TASK_DONE, you should never use <deliverable> in your response.
 10. Answer Language: Use {language} only in the <shallow_thinking>, <action>, <deliverable>, <final_output> section and other sections.
 
-(Answer in English)
-
 ===== TASK =====
 {task}
 
@@ -212,7 +210,6 @@ The external system will then execute the function. The results will be added to
     </key_reasoning_points>
     <final_output>
     [should be the long and verbose]
-    [Use English only in the <final_output> section]
     {output_schema}
     </final_output>
 </deliverable>
