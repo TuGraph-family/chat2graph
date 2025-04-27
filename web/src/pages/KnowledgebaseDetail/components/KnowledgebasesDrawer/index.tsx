@@ -42,14 +42,16 @@ const KnowledgebasesDrawer: React.FC<KnowledgebasesDrawerProps> = ({ open, onClo
                 config: values?.config
             })
 
-            if (res?.success) {
-                setState((draft) => {
-                    draft.current = 0
-                })
-                message.success(res?.message)
-                form.resetFields()
-                onClose(true)
+            if (!res?.success) {
+                message.error(res?.message)
+                return
             }
+            setState((draft) => {
+                draft.current = 0
+            })
+            message.success(res?.message)
+            form.resetFields()
+            onClose(true)
 
 
         })
