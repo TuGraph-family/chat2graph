@@ -164,7 +164,7 @@ to your intelligent system.
 You can quickly converse with the built-in Chat2Graph in the following ways.
 
 ```python
-SystemEnv.LLM_NAME="gemini-2.0-flash" # or gemini-2.5-flash recommended
+SystemEnv.LLM_NAME="gemini-2.0-flash" # or gemini-2.5-flash-preview-04-17 recommended
 SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai/"
 SystemEnv.LLM_APIKEY="<YOUR-GEMINI-API-KEY>"
 
