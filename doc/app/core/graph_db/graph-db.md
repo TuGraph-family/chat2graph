@@ -17,3 +17,28 @@ Chat2Graph can interact with multiple graph databases and supports the managemen
         * **Delete:** Remove the database connection.
         * **Set as Default:** Mark this database connection as the default one to use.
 + **Please note** that in the conversation, if you want Chat2Graph to operate smoothly with the graph database, please ensure that a default graph database has been created.
+
+
+## Graph Database installation
+
+Make sure to install and set up the graph database locally or remotely before Chat2Graph interacts with the default graph database.
+
+The graph databases currently supported by Docker are:
+
+* Neo4j
+
+```bash
+docker pull neo4j:latest
+docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none \
+  --env NEO4J_PLUGINS='["apoc", "graph-data-science"]' neo4j:latest
+```
+
+* TuGraph-DB
+
+**Note**: we will support TuGraph-DB connectivity in the future.
+
+```bash
+docker pull tugraph/tugraph-runtime-centos7:4.5.1
+docker run -d -p 7070:7070 -p 7687:7687 -p 9090:9090 --name tugraph-server \
+  tugraph/tugraph-runtime-centos7:latest lgraph_server -d run --enable_plugin true
+```

@@ -17,3 +17,27 @@ Chat2Graph 可以与多个图数据库进行交互，并支持对它们的连接
         * **删除**： 移除数据库连接。
         * **设为默认**： 将此数据库连接标记为默认使用的连接。
 + **注意事项**： 在对话中，如需 Chat2Graph 与图数据库顺畅协作，请确保已创建默认图数据库。
+
+## 图数据库安装
+
+在 Chat2Graph 与默认图数据库交互之前，请确保在本地或远程安装并设置好图数据库。
+
+当前 Docker 支持的图数据库有：
+
+* Neo4j
+
+```bash
+docker pull neo4j:latest
+docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none \
+  --env NEO4J_PLUGINS='["apoc", "graph-data-science"]' neo4j:latest
+```
+
+* TuGraph-DB
+
+**注意**：我们将在未来支持 TuGraph-DB 的连接。
+
+```bash
+docker pull tugraph/tugraph-runtime-centos7:4.5.1
+docker run -d -p 7070:7070 -p 7687:7687 -p 9090:9090 --name tugraph-server \
+  tugraph/tugraph-runtime-centos7:latest lgraph_server -d run --enable_plugin true
+```
