@@ -164,9 +164,9 @@ to your intelligent system.
 You can quickly converse with the built-in Chat2Graph in the following ways.
 
 ```python
-SystemEnv.LLM_NAME="gpt-4o-mini"
-SystemEnv.LLM_ENDPOINT="https://api.openai.com/v1"
-SystemEnv.LLM_APIKEY="<YOUR-OPENAI-API-KEY>"
+SystemEnv.LLM_NAME="gemini-2.0-flash" # or gemini-2.5-flash recommended
+SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai/"
+SystemEnv.LLM_APIKEY="<YOUR-GEMINI-API-KEY>"
 
 mas = AgenticService.load()
 question = TextMessage(payload = "What is TuGraph ?")
