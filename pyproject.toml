@@ -50,7 +50,7 @@ pytest-cov = "*"
 pytest-mock = "^3.14.0"
 
 [tool.poetry.group.db-gpt.dependencies]
-dbgpt = { version = "0.7.0", extras = ["agent", "simple_framework"] }
+dbgpt = { version = "0.7.0", extras = ["agent", "simple_framework", "framework"] }
 dbgpt-ext = { version = "0.7.0", extras = ["rag", "graph_rag", "storage_chromadb"] }
 
 [tool.ruff]
