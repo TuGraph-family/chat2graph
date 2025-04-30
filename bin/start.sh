@@ -18,7 +18,7 @@ ln -sf "$new_server_log_path" "${SERVER_LOG_PATH}"
 # startup python server
 project_root=$(dirname "$(pwd)")
 cd ${project_root} || exit 1
-nohup python ${project_root}/app/server/bootstrap.py >> "${new_server_log_path}" 2>&1 </dev/null &
+nohup python ${project_root}/app/server/bootstrap.py > "${new_server_log_path}" 2>&1 </dev/null &
 
 # print startup logs
 tail -f "${new_server_log_path}" | while IFS= read -r line
