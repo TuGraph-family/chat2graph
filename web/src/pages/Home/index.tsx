@@ -13,7 +13,7 @@ import {
 } from '@ant-design/x';
 import { useImmer } from 'use-immer';
 import NameEditor from '@/components/NameEditor';
-import { CURRENT_PREFIXES, FRAMEWORK, FRAMEWORK_CONFIG, LOCAL_STORAGE_SESSION_KEY, LOCAL_STORAGE_STOP_KEY, MESSAGE_TYPE, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
+import { CURRENT_PREFIXES, FRAMEWORK_CONFIG, LOCAL_STORAGE_SESSION_KEY, LOCAL_STORAGE_STOP_KEY, MESSAGE_TYPE, MOCK_placeholderPromptsItems, ROLES } from '@/constants';
 import Placeholder from '@/components/Placeholder';
 import SenderHeader from '@/components/SenderHeader';
 import { useCallback, useEffect } from 'react';
