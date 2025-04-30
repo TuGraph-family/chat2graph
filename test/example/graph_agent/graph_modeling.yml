@@ -177,7 +177,7 @@ operators:
     output_schema: |
       {
           "reachability": "说明实体和关系之间的可达性，是否存在有效的连接路径",
-          "stauts": "模型状态，是否通过验证等",
+          "status": "模型状态，是否通过验证等",
           "entity_label": "成功创建的实体标签",
           "relation_label": "成功创建的关系标签",
       }
