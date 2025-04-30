@@ -9,18 +9,23 @@ fi
 
 # prepare log path
 mkdir -p "$(dirname ${SERVER_LOG_PATH})"
+   
+# create a new log file with a timestamp
+timestamp=$(date +"%Y%m%d_%H%M%S")
+new_log_file="$(dirname ${SERVER_LOG_PATH})/server_${timestamp}.log"
+ln -sf "$new_log_file" "${SERVER_LOG_PATH}"  # Update the symbolic link to point to the new log file
 
 # startup python server
 project_root=$(dirname "$(pwd)")
 cd ${project_root} || exit 1
-nohup python ${project_root}/app/server/bootstrap.py &> ${SERVER_LOG_PATH} </dev/null &
+nohup python ${project_root}/app/server/bootstrap.py >> "${new_log_file}" 2>&1 </dev/null &
 
 # print startup logs
-tail -f "${SERVER_LOG_PATH}" | while IFS= read -r line
+tail -f "${new_log_file}" | while IFS= read -r line
 do
   if [[ "$line" == *"Press CTRL+C to quit"* ]]; then
       pkill -P $$ tail
-      echo "Detail logs in ${SERVER_LOG_PATH}"
+      echo "Detail logs in ${new_log_file}"
   else
     echo "$line"
   fi
@@ -31,5 +36,5 @@ pids=$(get_pids)
 if [[ -n $pids ]]; then
   info "Chat2Graph server started success ! (pid: $pids)"
 else
-  fatal "Chat2Graph server started failed, logs in ${SERVER_LOG_PATH}"
+  fatal "Chat2Graph server started failed, logs in ${new_log_file}"
 fi
