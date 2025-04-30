@@ -13,7 +13,7 @@ mkdir -p "$(dirname ${SERVER_LOG_PATH})"
 # create a new log file with a timestamp
 timestamp=$(date +"%Y%m%d_%H%M%S")
 new_server_log_path="$(dirname ${SERVER_LOG_PATH})/server_${timestamp}.log"
-ln -sf "$new_server_log_path" "${SERVER_LOG_PATH}"  # Update the symbolic link to point to the new log file
+ln -sf "$new_server_log_path" "${SERVER_LOG_PATH}"
 
 # startup python server
 project_root=$(dirname "$(pwd)")
