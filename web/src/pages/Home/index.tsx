@@ -33,7 +33,7 @@ const HomePage: React.FC = () => {
   const { getLocalStorage, setLocalStorage, removeLocalStorage } = useLocalStorage()
 
   const [state, setState] = useImmer<{
-    selectedFramework?: FRAMEWORK;
+    selectedFramework?: string;
     conversationsItems: ConversationsProps['items'];
     headerOpen: boolean;
     activeKey: string;
@@ -60,7 +60,7 @@ const HomePage: React.FC = () => {
   });
 
 
-  const { editing, isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen, uplodaFileIds, closeTag } = state;
+  const { editing, isInit, conversationsItems, activeKey, collapse, placeholderPromptsItems, content, attachedFiles, headerOpen, uplodaFileIds, closeTag, selectedFramework } = state;
 
   const { formatMessage } = useIntlConfig();
 
@@ -198,6 +198,7 @@ const HomePage: React.FC = () => {
         instruction_message: {
           payload,
           message_type: 'TEXT',
+          assigned_expert_name: selectedFramework || null
         },
         attached_messages,
       }).then((res: API.Result_Chat_) => {
@@ -253,6 +254,10 @@ const HomePage: React.FC = () => {
     if (agent.isRequesting()) {
       setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)
     }
+
+    setState((draft) => {
+      draft.selectedFramework = undefined;
+    })
 
     runGetSessionById({
       session_id: key,
@@ -357,6 +362,9 @@ const HomePage: React.FC = () => {
   // 新增会话
   const onAddConversation = () => {
     setMessages([]);
+    setState((draft) => {
+      draft.selectedFramework = undefined;
+    })
     if (agent.isRequesting()) {
       setLocalStorage(LOCAL_STORAGE_STOP_KEY, true)
     }
@@ -649,7 +657,7 @@ const HomePage: React.FC = () => {
             footer={({ components }) => {
               const { SendButton, LoadingButton } = components;
               return (
-                <Flex justify="space-between" align="center">
+                <Flex justify="space-between" align="start">
                   <Flex gap="small" align="center" className={styles['framework']}>
                     {FRAMEWORK_CONFIG.map(item => <Button
                       key={item.key}
@@ -662,7 +670,7 @@ const HomePage: React.FC = () => {
                     >
                       <i className={`iconfont  ${item.icon}`} style={{
                         fontSize: '20px'
-                      }} />{formatMessage(item.textId)}
+                      }} />{formatMessage(`home.expert.${item.textId}`)}
                     </Button>)}
 
                   </Flex>

@@ -113,7 +113,7 @@ export async function getJobIdsBySessionId(
     instruction_message?: {
       payload?: string;
       message_type?: string;
-      assigned_expert_name?: string;
+      assigned_expert_name?: string | null;
     },
     attached_messages?: {
       file_id?: string,
