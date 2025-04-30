@@ -37,7 +37,7 @@ of graph data structures in relationship modeling, interpretability, etc., can e
 capabilities of intelligent agents such as reasoning, planning, memory, and tools, to achieve 
 a deep integration of graph computing technology and artificial intelligence technology.
 
-<video controls src="https://github.com/user-attachments/assets/4cab237d-368e-42e7-a439-9322b8ccf213" style="max-width: 100%;">
+<video controls src="https://github.com/user-attachments/assets/7c859d37-cd1e-431f-8e81-8459bc605879" style="max-width: 100%;">
   Your browser does not support the video tag.
 </video>
 

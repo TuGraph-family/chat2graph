@@ -70,4 +70,4 @@ The "Edit" function allows modification of the knowledge base name and descripti
 
 After adding knowledge to the knowledge base, Chat2Graph can answer domain-specific questions that the base model cannot handle using the knowledge base's domain knowledge. It also lists references to original documents from the knowledge base. Below is an example response to the question "Introduce Chat2Graph.":
 
-![alt text](../img/kb-QA.png)
+![alt text](../img/kb-qa.png)

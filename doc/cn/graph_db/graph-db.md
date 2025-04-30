@@ -2,7 +2,7 @@
 
 Chat2Graph 可以与多个图数据库进行交互，并支持对它们的连接进行管理。
 
-![alt text](../img/graph-db-management-cn.png)
+![alt text](../img/graph-db-management.png)
 
 + **导航**： 通过管理侧边栏中的“图数据库管理”链接访问。
 + **搜索栏**： 可按名称或其他条件过滤数据库列表。
