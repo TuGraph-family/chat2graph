@@ -8,23 +8,49 @@ export enum FRAMEWORK {
   QUERY = 'QUERY',
 };
 
+
+enum EXPERT_ENUM {
+  MODELLING = 'Design Expert',
+  IMPORT = 'Extraction Expert',
+  QUERY = 'Query Expert',
+  ANALYSIS = 'Analysis Expert',
+  ANSWERING = 'Q&A Expert',
+}
+
+export const EXPERTS = {
+  [EXPERT_ENUM.MODELLING]: 'MODELING',
+  [EXPERT_ENUM.IMPORT]: 'IMPORT',
+  [EXPERT_ENUM.QUERY]: 'QUERY',
+  [EXPERT_ENUM.ANALYSIS]: 'ANALYSIS',
+  [EXPERT_ENUM.ANSWERING]: 'ANSWERING',
+}
+
 export const ENGLISH_LOCALE = 'en-US';
 export const ZH_CN_LOCALE = 'zh-CN';
 export const ENGLISH_LANG_PARAM = 'en';
 
 export const FRAMEWORK_CONFIG = [{
-  key: FRAMEWORK.MODEL,
-  textId: 'home.model',
+  key: EXPERT_ENUM.MODELLING,
+  textId: EXPERTS[EXPERT_ENUM.MODELLING],
   icon: 'icon-Chat2graphjianmokuangjia'
 }, {
-  key: FRAMEWORK.EXPORT_DATA,
-  textId: 'home.exportData',
+  key: EXPERT_ENUM.IMPORT,
+  textId: EXPERTS[EXPERT_ENUM.IMPORT],
   icon: 'icon-Chat2graphbianzu'
 }, {
-  key: FRAMEWORK.QUERY,
-  textId: 'home.query',
+  key: EXPERT_ENUM.QUERY,
+  textId: EXPERTS[EXPERT_ENUM.QUERY],
   icon: 'icon-Chat2graphchaxunkuangjia'
-}];
+}, {
+  key: EXPERT_ENUM.ANALYSIS,
+  textId: EXPERTS[EXPERT_ENUM.ANALYSIS],
+  icon: 'icon-Chat2graphfenxi'
+}, {
+  key: EXPERT_ENUM.ANSWERING,
+  textId: EXPERTS[EXPERT_ENUM.ANSWERING],
+  icon: 'icon-Chat2graphwenda'
+},
+];
 
 export const MOCK_placeholderPromptsItems = [
   {
@@ -78,21 +104,6 @@ export const MESSAGE_TYPE_TIPS = {
 export const CURRENT_PREFIXES = ['[当前会话]', '[Current]'];
 
 
-enum EXPERT_ENUM {
-  MODELLING = 'Design Expert',
-  IMPORT = 'Extraction Expert',
-  QUERY = 'Query Expert',
-  ANALYSIS = 'Analysis Expert',
-  ANSWERING = 'Q&A Expert',
-}
-
-export const EXPERTS = {
-  [EXPERT_ENUM.MODELLING]: 'MODELING',
-  [EXPERT_ENUM.IMPORT]: 'IMPORT',
-  [EXPERT_ENUM.QUERY]: 'QUERY',
-  [EXPERT_ENUM.ANALYSIS]: 'ANALYSIS',
-  [EXPERT_ENUM.ANSWERING]: 'ANSWERING',
-}
 
 
 export const LOCAL_STORAGE_STOP_KEY = 'MESSAGE_TOP';
