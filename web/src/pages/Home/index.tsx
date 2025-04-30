@@ -184,7 +184,7 @@ const HomePage: React.FC = () => {
 
   const [agent] = useXAgent<API.ChatVO>({
     request: async ({ message: msg }, { onSuccess, onUpdate }) => {
-      const { payload = '', session_id = '', attached_messages, isRunning } = msg || {};
+      const { payload = '', session_id = '', attached_messages, isRunning, assigned_expert_name } = msg || {};
 
       // 继续思考
       if (isRunning) {
@@ -198,7 +198,7 @@ const HomePage: React.FC = () => {
         instruction_message: {
           payload,
           message_type: 'TEXT',
-          assigned_expert_name: selectedFramework || null
+          assigned_expert_name,
         },
         attached_messages,
       }).then((res: API.Result_Chat_) => {
@@ -475,7 +475,8 @@ const HomePage: React.FC = () => {
           onRequest({
             payload: nextContent,
             session_id: res?.data?.id,
-            attached_messages: getAttached()
+            attached_messages: getAttached(),
+            assigned_expert_name: selectedFramework || null
           });
           updateContent('');
         }
@@ -487,7 +488,8 @@ const HomePage: React.FC = () => {
     onRequest({
       payload: nextContent,
       session_id: state.activeKey,
-      attached_messages: getAttached()
+      attached_messages: getAttached(),
+      assigned_expert_name: selectedFramework || null
     });
     updateContent('');
   };
