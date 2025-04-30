@@ -48,7 +48,7 @@ export default defineConfig({
   links: [
     {
       rel: 'stylesheet',
-      href: 'https://at.alicdn.com/t/a/font_4885401_er9xcihhq8.css',
+      href: 'https://at.alicdn.com/t/a/font_4885401_0nj0i854xmuc.css',
     },
   ],
 });
