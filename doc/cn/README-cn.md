@@ -1,7 +1,7 @@
 🌐️ 中文 | [English](../README.md)
 
 <p align="center">
-  <img src="img/head.png" width=800/>
+  <img src="../head.png" width=800/>
 </p>
 
 [![Star](https://shields.io/github/stars/tugraph-family/chat2graph?logo=startrek&label=Star&color=yellow)](https://github.com/TuGraph-family/chat2graph/stargazers)
@@ -26,6 +26,10 @@ Chat2Graph 通过构建图数据库上的多智能体系统，实现智能化的
 用户、开发者、产品经理、解决方案架构师、运维工程师等高效使用图数据库，降低用图门槛，加速内容生成，
 实现与图对话。同时利用图数据结构的关系建模、可解释性等天然优势，可以对智能体的推理、规划、记忆、工具等
 关键能力进行增强，做到图计算技术与人工智能技术的深度融合。
+
+<video controls src="https://github.com/user-attachments/assets/b2ca2fa3-dac2-4030-845b-5fc4a2c72c0f" style="max-width: 100%;">
+  您的浏览器不支持 video 标签。
+</video>
 
 ## 关键特性
 
@@ -129,7 +133,8 @@ Chat2Graph server started success ! (pid: 16483)
 
 ```bash
 docker pull neo4j:latest
-docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none neo4j:latest
+docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none \
+  --env NEO4J_PLUGINS='["apoc", "graph-data-science"]' neo4j:latest
 ```
 
 * TuGraph
@@ -178,6 +183,9 @@ mas.expert(name="Design Expert").workflow(
 ```python
 mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 ```
+
+## 用户手册
+详细使用请参考[用户手册](user-manual.md)
 
 ## 贡献
 您可以参考[贡献文档][contrib]，提交 GitHub Issue/PR 提供反馈建议对 Chat2Graph 继续改进。

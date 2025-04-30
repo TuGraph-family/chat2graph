@@ -1,7 +1,7 @@
-🌐️ English | [中文](doc/README-cn.md)
+🌐️ English | [中文](doc/cn/README-cn.md)
 
 <p align="center">
-  <img src="doc/img/head.png" width=800/>
+  <img src="doc/head.png" width=800/>
 </p>
 
 
@@ -36,6 +36,10 @@ generation, implement dialogue with graphs. At the same time, leveraging the inh
 of graph data structures in relationship modeling, interpretability, etc., can enhance the key 
 capabilities of intelligent agents such as reasoning, planning, memory, and tools, to achieve 
 a deep integration of graph computing technology and artificial intelligence technology.
+
+<video controls src="https://github.com/user-attachments/assets/4cab237d-368e-42e7-a439-9322b8ccf213" style="max-width: 100%;">
+  Your browser does not support the video tag.
+</video>
 
 ## Key Features
 
@@ -195,6 +199,10 @@ using a YAML file and load it directly.
 ```python
 mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 ```
+
+## User Manual
+
+For details, please refer to [User Manual](doc/en/user-manual.md).
 
 ## Contributing
 
