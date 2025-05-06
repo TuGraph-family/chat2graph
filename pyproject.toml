@@ -10,7 +10,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 openai = "^1.54.3"
-aisuite = {extras = ["all"], version = "0.1.10"}
+aisuite = {extras = ["all"], version = "^0.1.10"}
 docstring-parser = "^0.16"  # used by aisuite
 pydantic = "^2.9.2"
 typing-inspect = ">=0.8.0"
@@ -50,8 +50,8 @@ pytest-cov = "*"
 pytest-mock = "^3.14.0"
 
 [tool.poetry.group.db-gpt.dependencies]
-dbgpt = { version = "0.7.0", extras = ["agent", "simple_framework", "framework"] }
-dbgpt-ext = { version = "0.7.0", extras = ["rag", "graph_rag", "storage_chromadb"] }
+dbgpt = { version = "^0.7.0", extras = ["agent", "simple_framework", "framework"] }
+dbgpt-ext = { version = "^0.7.0", extras = ["rag", "graph_rag", "storage_chromadb"] }
 
 [tool.ruff]
 line-length = 100

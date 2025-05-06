@@ -1,7 +1,7 @@
-🌐️ English | [中文](doc/README-cn.md)
+🌐️ English | [中文](doc/cn/README-cn.md)
 
 <p align="center">
-  <img src="doc/img/head.png" width=800/>
+  <img src="doc/head.png" width=800/>
 </p>
 
 
@@ -36,6 +36,10 @@ generation, implement dialogue with graphs. At the same time, leveraging the inh
 of graph data structures in relationship modeling, interpretability, etc., can enhance the key 
 capabilities of intelligent agents such as reasoning, planning, memory, and tools, to achieve 
 a deep integration of graph computing technology and artificial intelligence technology.
+
+<video controls src="https://github.com/user-attachments/assets/7c859d37-cd1e-431f-8e81-8459bc605879" style="max-width: 100%;">
+  Your browser does not support the video tag.
+</video>
 
 ## Key Features
 
@@ -136,7 +140,7 @@ After registering the graph database to Chat2Graph in "Backend Manager", you can
 of "chat to graph".
 ![](doc/img/gdb-mng.png)
 
-The currently supported graph databases are:
+The graph databases currently supported by Docker are:
 
 * Neo4j
 
@@ -146,7 +150,9 @@ docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=non
   --env NEO4J_PLUGINS='["apoc", "graph-data-science"]' neo4j:latest
 ```
 
-* TuGraph
+* TuGraph-DB
+
+**Note**: we will support TuGraph-DB connectivity in the future.
 
 ```bash
 docker pull tugraph/tugraph-runtime-centos7:4.5.1
@@ -162,9 +168,9 @@ to your intelligent system.
 You can quickly converse with the built-in Chat2Graph in the following ways.
 
 ```python
-SystemEnv.LLM_NAME="gpt-4o-mini"
-SystemEnv.LLM_ENDPOINT="https://api.openai.com/v1"
-SystemEnv.LLM_APIKEY="<YOUR-OPENAI-API-KEY>"
+SystemEnv.LLM_NAME="gemini-2.0-flash" # or gemini-2.5-flash-preview-04-17 recommended
+SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai/"
+SystemEnv.LLM_APIKEY="<YOUR-GEMINI-API-KEY>"
 
 mas = AgenticService.load()
 question = TextMessage(payload = "What is TuGraph ?")
@@ -193,6 +199,10 @@ using a YAML file and load it directly.
 ```python
 mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 ```
+
+## User Manual
+
+For details, please refer to [User Manual](doc/en/user-manual.md).
 
 ## Contributing
 
