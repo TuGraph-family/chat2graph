@@ -99,7 +99,7 @@ const HomePage: React.FC = () => {
 
   let timer: any = null;
 
-  const transformMessage = (answer: any) => {
+  const transformMessage = (answer: any, question: any) => {
     if (!answer) return null;
     const { message: { instruction_message, attached_messages }, thinking, metrics } = answer || {};
 
@@ -120,7 +120,8 @@ const HomePage: React.FC = () => {
       role: instruction_message?.role,
       attached_messages,
       thinking: thinkingList,
-      status: metrics?.status
+      status: metrics?.status,
+      assigned_expert_name: question?.message?.instruction_message?.assigned_expert_name
     }
   }
 
@@ -137,28 +138,20 @@ const HomePage: React.FC = () => {
       runGetJobResults({
         job_id,
       }).then(res => {
-        const { status } = res?.data?.answer?.metrics || {};
+        const { answer, question } = res?.data || {}
         if (getLocalStorage(LOCAL_STORAGE_STOP_KEY) === "true") {
           onSuccess({})
-          // TODO 停止思考逻辑
-          // onSuccess({
-          //   payload: 'STOP',
-          //   session_id: res?.data?.answer?.message?.session_id,
-          //   job_id,
-          //   role: res?.data?.answer?.message?.role,
-          //   thinking: []
-          // });
           removeLocalStorage(LOCAL_STORAGE_STOP_KEY)
           return;
         }
 
-        if (['RUNNING', 'CREATED'].includes(status)) {
-          onUpdate(transformMessage(res?.data?.answer))
+        if (['RUNNING', 'CREATED'].includes(answer?.metrics?.status)) {
+          onUpdate(transformMessage(answer, question))
           getMessage(job_id, onSuccess, onUpdate);
           return;
         }
         clearTimeout(timer);
-        onSuccess(transformMessage(res?.data?.answer));
+        onSuccess(transformMessage(answer, question));
       });
     }, 2000)
   }, [closeTag])
@@ -241,7 +234,7 @@ const HomePage: React.FC = () => {
       },
       {
         id: answer?.message?.id,
-        message: transformMessage(answer),
+        message: transformMessage(answer, question),
         status: 'success',
       }
     ]

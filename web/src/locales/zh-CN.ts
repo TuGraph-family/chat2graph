@@ -117,6 +117,7 @@ export default {
       finished: '思考完成',
       planning: '策划',
       planningDesc: 'Graph 专家们将合作解决您的问题',
+      expertPlanDesc: '{expert}将解决您的问题',
       answer: '回答',
       minutes: '分',
       seconds: '秒',

@@ -117,6 +117,7 @@ export default {
       finished: 'Thinking finished',
       planning: 'Planning',
       planningDesc: 'Graph experts will be working on your instruction',
+      expertPlanDesc: '{expert} will solve your problem',
       answer: 'Answer',
       minutes: 'm',
       seconds: 's',

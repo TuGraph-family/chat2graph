@@ -6,7 +6,7 @@ import logoSrc from '@/assets/logo.png';
 import styles from './index.less';
 import { useImmer } from "use-immer";
 import { getTimeDifference } from "@/utils/getTimeDifference";
-import { MESSAGE_TYPE, MESSAGE_TYPE_TIPS } from "@/constants";
+import { EXPERTS, MESSAGE_TYPE, MESSAGE_TYPE_TIPS } from "@/constants";
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
 import ThinkCollapse from "@/components/ThinkCollapse";
@@ -23,6 +23,7 @@ interface BubbleContentProps {
 }
 
 const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message, isLast, onRecoverSession }) => {
+  const { assigned_expert_name } = message
   const { formatMessage } = useIntlConfig();
   const [thinks, setThinks] = useState<any>([]);
   const [state, setState] = useImmer<{
@@ -98,12 +99,18 @@ const BubbleContent: React.FC<BubbleContentProps> = ({ status, content, message,
     const steps = [
       {
         title: <div className={styles['title']}>
-          <div className={styles['title-content']}>{formatMessage('home.thinks.planning')}</div>
+          <div className={styles['title-content']}>
+            {formatMessage('home.thinks.planning')}
+          </div>
           {/* {
             diffTime ? <div className={styles['title-extra']}>{2 + formatMessage('home.thinks.seconds')}</div> : null
           } */}
         </div>,
-        description: <div>{formatMessage('home.thinks.planningDesc')}</div>,
+        description: <div>
+          {assigned_expert_name && assigned_expert_name !== 'None' ? formatMessage('home.thinks.expertPlanDesc', {
+            expert: formatMessage(`home.expert.${EXPERTS[assigned_expert_name]}`),
+          }) : formatMessage('home.thinks.planningDesc')}
+        </div>,
         icon: <img src={logoSrc} className={styles['step-icon']} />,
       },
       {
