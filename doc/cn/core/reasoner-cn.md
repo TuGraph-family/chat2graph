@@ -55,8 +55,6 @@
 
 ## 3. SDK Wrapper 参考: Reasoner (SDK Wrapper Reference: Reasoner)
 
-   (主要通过 `app.core.sdk.wrapper.reasoner_wrapper.ReasonerWrapper` 提供)
-
 ### 3.1. `ReasonerWrapper`
 
 - **描述**: 为 `Reasoner` 模块（包括 `MonoModelReasoner` 和 `DualModelReasoner`）提供了一个便捷的SDK接口，便于推理器的创建、配置和调用。
