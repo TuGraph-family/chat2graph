@@ -79,8 +79,6 @@ The effectiveness of the `DualModelReasoner` benefits from its "special" prompt 
   * **Action Execution (`<action>`)**: The Actor executes specific operations in the `<action>` part, which may include generating text, performing analysis, or calling tools (functions). Tool calls must strictly adhere to the `<function_call>...</function_call>` format.
   * **Stop Conditions and Deliverables**: When the Thinker issues a `TASK_DONE` instruction, the Actor is responsible for integrating information and generating the final deliverable (`<deliverable>`), which includes the task objective, context, key reasoning points, and the final output.
 
-#### 2.3.2. Dual-Model Reasoner API
-
 | Method Signature                             | Description                                                                                                                                                             |
 | :------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `async infer(self, task: Task) -> str`                  | Asynchronously executes the core reasoning process of the dual-model reasoner, coordinating the interaction between Thinker and Actor LLMs. Receives a `Task` object, alternately calls the Thinker and Actor models, processes tool calls from the Actor, until stopping conditions are met, and finally extracts the result via `conclude`. |
