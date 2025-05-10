@@ -14,8 +14,6 @@ In terms of tool calling, the Model Service relies on specific tag formats (e.g.
 
 The Reasoner utilizes the generic `ModelService` to invoke LLMs.
 
-#### 2.1.1. Model Service API
-
 | Method Signature                                                                 | Description                                                                                                                                                                                                                           |
 | :------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `async generate(self, sys_prompt: str, messages: List[ModelMessage], tools: Optional[List[Tool]] = None) -> ModelMessage` | This is the core interface for interacting with the LLM. Subclasses must implement this method to define how to send the system prompt (`sys_prompt`), history messages (`messages`), and an optional list of available tools (`tools`) to the underlying LLM, and asynchronously return the model's response (`ModelMessage`).                                                              |
@@ -78,6 +76,8 @@ The effectiveness of the `DualModelReasoner` benefits from its "special" prompt 
   * **Shallow Thinking (`<shallow_thinking>`)**: The Actor performs relatively "shallow" thinking, primarily focusing on how to accurately execute the current instruction and explaining its action plan.
   * **Action Execution (`<action>`)**: The Actor executes specific operations in the `<action>` part, which may include generating text, performing analysis, or calling tools (functions). Tool calls must strictly adhere to the `<function_call>...</function_call>` format.
   * **Stop Conditions and Deliverables**: When the Thinker issues a `TASK_DONE` instruction, the Actor is responsible for integrating information and generating the final deliverable (`<deliverable>`), which includes the task objective, context, key reasoning points, and the final output.
+
+#### 2.3.2. Dual-Model Reasoner API
 
 | Method Signature                             | Description                                                                                                                                                             |
 | :------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
