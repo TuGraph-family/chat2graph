@@ -1,4 +1,4 @@
-QUANTUM_THINKER_PROPMT_TEMPLATE = """
+META_THINKER_PROMPT_TEMPLATE = """
 ===== QUANTUM COGNITIVE FRAMEWORK =====
 Core States:
 - <Field State ψ>: Foundation for standard interactions and the status of the function call if there is any

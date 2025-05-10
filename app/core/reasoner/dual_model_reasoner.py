@@ -7,7 +7,7 @@ from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemor
 from app.core.model.message import ModelMessage
 from app.core.model.task import Task
 from app.core.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
-from app.core.prompt.reasoner import ACTOR_PROMPT_TEMPLATE, QUANTUM_THINKER_PROPMT_TEMPLATE
+from app.core.prompt.reasoner import ACTOR_PROMPT_TEMPLATE, META_THINKER_PROMPT_TEMPLATE
 from app.core.reasoner.model_service import ModelService
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.reasoner.reasoner import Reasoner
@@ -293,7 +293,7 @@ class DualModelReasoner(Reasoner):
             func_description = "No function calling in this round."
 
         # TODO: The prompt template comes from the <system-name>.config.yaml
-        return QUANTUM_THINKER_PROPMT_TEMPLATE.format(
+        return META_THINKER_PROMPT_TEMPLATE.format(
             actor_name=self._actor_name,
             thinker_name=self._thinker_name,
             max_reasoning_rounds=SystemEnv.MAX_REASONING_ROUNDS,
