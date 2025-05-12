@@ -2,7 +2,7 @@
 
 ## 1. 工具图谱介绍
 
-Toolkit（工具图谱）模块是 Chat2Graph 的核心组成部分之一，其主要职责是为框架中的 Operator 提供执行具体执行指示（`Action`）以及与外部世界交互（`Tool`）的能力。它通过精心管理一个由“行动” (`Action`) 和“工具” (`Tool`) 构成的有向图——即 Toolkit ——来实现这一目标。这个图不仅精确地定义了不同工具之间的调用关系，还明确了它们之间潜在的执行顺序，从而拓宽了 Operator 执行的能力边界。
+Toolkit（工具图谱）模块是 Chat2Graph 的核心组成部分之一，其主要职责是为框架中的 Operator 推荐具体执行指示（`Action`）以及与外部世界交互（`Tool`）的能力。它通过精心管理一个由“行动” (`Action`) 和“工具” (`Tool`) 构成的有向图——即 `Toolkit` ——来实现这一目标。这个图不仅精确地定义了不同工具之间的调用关系，还明确了它们之间潜在的执行顺序，从而拓宽了 Operator 执行的能力边界。
 
 该模块致力于解决工具调用的问题。首先，它实现了高级的工具管理机制：通过一个包含 Action & Tool 的有向图，清晰地描述了工具调用间的依赖和转换关系，这远胜于传统的简单工具列表。基于这种图结构，系统能够更智能地向大型语言模型 (LLM) 推荐当前情境下可调用的工具及相关的“行动”，显著提高了推荐的准确率。同时，图的精确性有效约束了 LLM 选择工具的范围，从而降低了工具调用的不确定性和潜在的错误率。对于开发者而言，Toolkit 提供了统一的工具注册和推荐机制，使得工具 (Tool) 和行动 (Action) 可以方便地被复用，简化了开发流程。未来，该模块还将支持 MCP (模型上下文协议) 以及通过强化学习增强 `ToolkitService` 推荐能力的离线学习功能。
 
@@ -12,7 +12,9 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 
 ## 2. 工具图谱设计
 
-### 2.1. **相关元素介绍**
+### 2.1. **工具图谱的结构与结构**
+
+  `Toolkit` 的核心机制在于其有向图结构。图中的节点主要是 `Action`，每个 `Action` 节点可以关联一组 `Tool`，代表在该 `Action` 下可执行的操作。同时，`Action` 通过其 `next_action_ids` 属性指向后续可能的 `Action` 节点。在 `Toolkit` 的这张图中，`Action` 之间通过**带权重**的 `Next` 边连接，表明了行为序列的顺序关系及其关联强度；而 `Action` 与其关联的 `Tool` 之间则通过**带权重**的 `Call` 边连接，表明了行为调用工具的逻辑关系及可能性。这种图结构清晰地定义了任务执行过程中的不同阶段（即 `Action`）、每个阶段可用的工具（即 `Tool`），以及它们之间潜在的转换路径，从而为任务执行提供了明确的流程引导。
 
 1. `Tool` 代表一个独立的、可执行的工具。每个工具包含其名称、功能描述、输入参数的 JSON Schema 定义以及具体的执行逻辑。在 `Toolkit` 中，`Tool` 是被 `Action` 调用的基本执行单元。`Tool` 可以被 `Reasoner` 调用（详见 `doc/cn/principle/reasoner.md`）。此外，它还支持通过 `app.core.reasoner.injection_mapping` 定义的模块服务（例如 `GraphDbService`）作为工具调用时的参数，自动注入到目标工具中（即，你不需要在 docstring 中声明服务模块参数。因为 `Reasoner` 调用工具时会自动检测和导入对应模块），从而增强了工具的灵活性和功能。
 
@@ -22,7 +24,21 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 
 4. `ToolkitService` 负责管理 `Toolkit` 实例，并根据当前上下文向 LLM 推荐合适的 `Action` 和 `Tool`。
 
-#### 2.1.1. Toolkit API
+  ![tookit](../../en/img/toolkit.png)
+
+  这种基于图的 Toolkit 机制带来了显著优势。首先，它实现了上下文感知的工具推荐：系统能够根据当前所处的 `Action` 节点在图中的位置，更精确地向 LLM 推荐当前 `Action` 下可用的 `Tool` 或可能的下一个 `Action`，这远比提供一个扁平、无上下文关联的工具列表更为智能和高效。其次，通过预定义的图结构，`Toolkit` 有效地缩小了 LLM 在选择工具或决定下一步行动时的搜索空间，显著降低了选择的随意性和不确定性，从而提升了工具调用的准确性和任务执行的整体效率。最后，这种结构化的方法使得复杂流程的建模更为自然和直观，能够清晰地表达包含多个步骤、存在依赖关系或特定条件的复杂工具调用流程。
+
+### 2.2. **推荐流程**
+
+1. **确定当前状态**: 当 `Operator` 开始执行一项任务时，系统首先会确定 `Operator` 当前所处的 `Action` 状态。这个状态由一个或多个先前已在 `Operator` 中配置好的 `Action` 节点来表示。
+
+2. **获取推荐**: 基于 `Operator` 当前的 `Action` 状态，`ToolkitService` 会在 Toolkit 中进行图上探索。它会查找与当前 `Action` 相关联的其他 `Action` 和可用的 `Tool`，并将它们作为推荐项提供出来。推荐的范围（例如，探索的深度或关联强度）可以通过配置阈值和图遍历的跳数来控制。
+
+3. **工具调用**: `Reasoner` (通常结合 LLM 的决策能力) 从 `ToolkitService` 推荐的 `Action` 和 `Tool` 列表中选择最合适的 `Tool`。选定后，`Reasoner` 会执行该 `Tool` 并获取其执行结果，用于后续的任务处理。
+
+### 2.3. **API**
+
+#### 2.3.1. 工具图谱 API
 
 `Toolkit` 类继承自 `Graph`，专门用于构建和管理由 `Action` 和 `Tool` 构成的有向图。
 
@@ -38,7 +54,7 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 | `get_score(self, u: str, v: str) -> float`                       | 获取连接顶点 `u` 和 `v` 的边的分数。如果边不存在，默认返回 1.0。                                                                                             |
 | `set_score(self, u: str, v: str, score: float) -> None`          | 设置连接顶点 `u` 和 `v` 的边的分数。                                                                                                                             |
 
-#### 2.1.2. ToolkitService API
+#### 2.3.2. 工具图谱服务 API
 
 `ToolkitService` 是一个单例服务，负责管理 `Toolkit` 实例，并提供工具和行为的注册、推荐及可视化功能。
 
@@ -54,30 +70,7 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 | `recommend_tools_actions(self, actions: List[Action], threshold: float = 0.5, hops: int = 0) -> Tuple[List[Tool], List[Action]]` | 基于 `recommend_subgraph` 的结果，将推荐的子图中的 `Tool` 和 `Action` 分别提取出来，返回一个包含 `Tool` 列表和 `Action` 列表的元组。                                                                                             |
 | `visualize(self, graph: Toolkit, title: str, show=False)`                                   | 将给定的 `Toolkit` 图 (`graph`) 可视化。`Action` 节点和 `Tool` 节点会以不同颜色和形状展示，边也会根据类型（Action-Action 或 Action-Tool）有所区分，并显示关联分数。`title` 为图表标题，`show`决定是否立即显示图像。返回 `matplotlib.pyplot.Figure` 对象。 |
 
-### 2.2. **工具图谱的结构**
-
-  `Toolkit` 的核心机制在于其有向图结构。图中的节点主要是 `Action`，每个 `Action` 节点可以关联一组 `Tool`，代表在该 `Action` 下可执行的操作。同时，`Action` 通过其 `next_action_ids` 属性指向后续可能的 `Action` 节点。在 `Toolkit` 的这张图中，`Action` 之间通过**带权重**的 `Next` 边连接，表明了行为序列的顺序关系及其关联强度；而 `Action` 与其关联的 `Tool` 之间则通过**带权重**的 `Call` 边连接，表明了行为调用工具的逻辑关系及可能性。这种图结构清晰地定义了任务执行过程中的不同阶段（即 `Action`）、每个阶段可用的工具（即 `Tool`），以及它们之间潜在的转换路径，从而为任务执行提供了明确的流程引导。
-
-  ![tookit](../../en/img/toolkit.png)
-
-  这种基于图的 Toolkit 机制带来了显著优势。首先，它实现了上下文感知的工具推荐：系统能够根据当前所处的 `Action` 节点在图中的位置，更精确地向 LLM 推荐当前 `Action` 下可用的 `Tool` 或可能的下一个 `Action`，这远比提供一个扁平、无上下文关联的工具列表更为智能和高效。其次，通过预定义的图结构，Toolkit 有效地缩小了 LLM 在选择工具或决定下一步行动时的搜索空间，显著降低了选择的随意性和不确定性，从而提升了工具调用的准确性和任务执行的整体效率。最后，这种结构化的方法使得复杂流程的建模更为自然和直观，能够清晰地表达包含多个步骤、存在依赖关系或特定条件的复杂工具调用流程。
-
-### 2.3. **推荐流程**
-
-1. **确定当前状态**: 当 `Operator` 开始执行一项任务时，系统首先会确定 `Operator` 当前所处的“行动”状态。这个状态由一个或多个先前已在 `Operator` 中配置好的 `Action` 节点来表示。
-
-2. **获取推荐**: 基于 `Operator` 当前的 `Action` 状态，`ToolkitService` 会在 Toolkit 中进行图上探索。它会查找与当前 `Action` 相关联的其他 `Action` 和可用的 `Tool`，并将它们作为推荐项提供出来。推荐的范围（例如，探索的深度或关联强度）可以通过配置阈值和图遍历的跳数来控制。
-
-3. **选择与执行**: `Reasoner` (通常结合 LLM 的决策能力) 从 `ToolkitService` 推荐的 `Action` 和 `Tool` 列表中选择最合适的 `Tool`。选定后，`Reasoner` 会执行该 `Tool` 并获取其执行结果，用于后续的任务处理。
-
 ## 3. 使用示例
 
-### 3.1. Toolkit 的工具和行为注册
-
-- 直接运行和测试 Toolkit 中的工具和 Action 流程
-- 代码参考: 请查看位于 `test/example/run_toolkit.py` 的示例代码。
-
-### 3.2. Operator 基于 Toolkit 执行任务
-
-- 此示例展示了 `Operator` 在其执行流程中如何利用 Toolkit 来引导任务步骤和工具调用。
-- 代码参考: 请查看位于 `test/example/run_operator.py` 的示例代码。
+* `Toolkit` 的 `Action` 和 `Tool` 注册：`test/example/run_toolkit.py` 的示例代码。
+* `ToolkitService` 向 `Operator` 推荐 `Action` 和 `Tool`：`test/example/run_operator.py`
