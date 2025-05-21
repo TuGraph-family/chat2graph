@@ -640,6 +640,14 @@ class Leader(Agent):
             if missing_keys:
                 raise ValueError(f"Task '{task_id}' is missing required keys: {missing_keys}")
 
+            # convert list/dict to string for specific fields before type validation
+            for key_to_convert in ["goal", "context", "completion_criteria", "thinking"]:
+                if key_to_convert in task_data:
+                    if isinstance(task_data[key_to_convert], list):
+                        task_data[key_to_convert] = "\n".join(map(str, task_data[key_to_convert]))
+                    elif isinstance(task_data[key_to_convert], dict):
+                        task_data[key_to_convert] = json.dumps(task_data[key_to_convert])
+
             # validate types
             for key in ["goal", "context", "completion_criteria", "assigned_expert", "thinking"]:
                 if not isinstance(task_data[key], str):
