@@ -10,9 +10,13 @@ The Reasoner module is the core component in Chat2Graph responsible for interact
 
 The Model Service (`ModelService`) in Chat2Graph acts as the underlying interface and implementation layer for interacting with Large Language Models (LLMs). It encapsulates the calling details for different LLM platforms (e.g., DB-GPT, AiSuite) and supports all OpenAI API-compatible models (e.g., Gemini, Qwen, DeepSeek, with configuration examples available in the `.env.template` file).
 
-In terms of tool calling, the Model Service relies on specific tag formats (e.g., `<function_call>...</function_call>`) to extract tool call requests from the LLM's output. Furthermore, it supports the automatic injection of module services (e.g., `GraphDbService`), defined via `app.core.reasoner.injection_mapping`, as parameters into target tools during tool calls, thereby enhancing the flexibility and functionality of the tools. The standard format for tool calls is detailed in: `FUNC_CALLING_PROMPT`.
+In terms of tool calling, the Model Service relies on specific tag formats (e.g., `<function_call>...</function_call>`) to extract tool call requests from the LLM's output. Furthermore, it supports the automatic injection of inner system services (e.g., `GraphDbService`), defined via `app.core.reasoner.injection_mapping`, as parameters into target tools during tool calls, thereby enhancing the flexibility and functionality of the tools. The standard format for tool calls is detailed in: `FUNC_CALLING_PROMPT`.
 
 The Reasoner utilizes the generic `ModelService` to invoke LLMs.
+
+To clearly present the workflow of `Reasoner` and its interaction with `ModelServices`, tools, and environments, we designed the "Reasoner Enhancement" architecture, as shown in the figure below:
+
+![reasoner enhancement](../../en/img/reasoner-enhancement.png)
 
 | Method Signature                                                                 | Description                                                                                                                                                                                                                           |
 | :------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
