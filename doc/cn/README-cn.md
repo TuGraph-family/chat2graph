@@ -158,8 +158,7 @@ SystemEnv.LLM_ENDPOINT="https://api.openai.com/v1"
 SystemEnv.LLM_APIKEY="<YOUR-OPENAI-API-KEY>"
 
 mas = AgenticService.load()
-question = TextMessage(payload = "What is TuGraph ?")
-answer = mas.execute(question).get_payload()
+answer = mas.execute("What is TuGraph ?").get_payload()
 ```
 
 同时，SDK也提供了异步对话能力。

@@ -173,8 +173,7 @@ SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai/
 SystemEnv.LLM_APIKEY="<YOUR-GEMINI-API-KEY>"
 
 mas = AgenticService.load()
-question = TextMessage(payload = "What is TuGraph ?")
-answer = mas.execute(question).get_payload()
+answer = mas.execute("What is TuGraph ?").get_payload()
 ```
 
 At the same time, the SDK also provides asynchronous dialogue capabilities.

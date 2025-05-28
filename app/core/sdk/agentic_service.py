@@ -57,8 +57,11 @@ class AgenticService(metaclass=Singleton):
         """Get the session, if not exists or session_id is None, create a new one."""
         return SessionWrapper(self._session_service.get_session(session_id=session_id))
 
-    def execute(self, message: TextMessage) -> ChatMessage:
+    def execute(self, message: Union[TextMessage, str]) -> ChatMessage:
         """Execute the service synchronously."""
+        if isinstance(message, str):
+            message = TextMessage(message)
+
         job = Job(
             goal=message.get_payload(),
             assigned_expert_name=message.get_assigned_expert_name(),
