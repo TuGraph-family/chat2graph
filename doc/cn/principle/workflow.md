@@ -8,7 +8,7 @@
   <img src="../../asset/image/op-dag.png" alt="operatoer-dag" width="50%">
 </div>
 
-每个 `Agent` 必须内置一个 `Workflow`，该 `Workflow` 规定了 `Agent` 为完成特定类型任务所应遵循的标准化流程。此外，`Workflow` 模块支持集成一个可选的评估算子（`EvalOperator`）。该评估算子在工作流执行完毕后启动，负责对结果进行评估，并可能生成反馈（`lesson`），供后续的 `Operator` 或 `Expert` 参考和使用。
+每个 `Agent` 必须内置一个 `Workflow`，该 `Workflow` 规定了 `Agent` 为完成特定类型任务所应遵循的标准化流程。此外，`Workflow` 模块支持集成一个可选的评估算子（`Evaluator`）。该评估算子在工作流执行完毕后启动，负责对结果进行评估，并可能生成反馈（`lesson`），供后续的 `Operator` 或 `Expert` 参考和使用。
 
 算子（Operator）在 Chat2Graph 框架内，作为 `Workflow` 的基本执行单元。其职责是将一个具体的作业（`Job`）与执行该作业所必需的工具、动作以及相关的上下文信息（例如：先前 `Operator` 及 `Expert` 的输出、知识库信息、环境状态等）封装成一个可执行的 `Task` 对象。随后，`Operator` 将此 `Task` 提交给 `Reasoner` 模块进行处理，并最终返回执行结果。
 
@@ -20,7 +20,7 @@
 
 当 `Operator` 被调用执行时，其主要流程如下：
 
-1. **构建任务**:
+1. **构建任务（build task)**:
     * 接收一个 `Job` 对象，其中包含任务的目标和上下文。
     * 工具 (`Tool`) 和动作 (`Action`)。
     * 整合来自先前算子或其他 `Expert` 的输出信息 (`WorkflowMessage`)。
@@ -28,7 +28,7 @@
     * 将所有这些信息以及经验教训 (如果不为空) 、文件描述符（如果不为空）等组装成一个 `Task` 对象。
     * `Task` 对象详见：`app/core/model/task.py`。
 
-2. **执行任务**:
+2. **执行任务（execute）**:
     * 将构建好的 `Task` 对象传递给 `Reasoner`，让其推理。
     * 返回 `WorkflowMessage`，供工作流中的后续步骤使用。
 
@@ -59,7 +59,7 @@
     | `workflow_messages` | 一个可选的 `WorkflowMessage` 对象列表。这些消息通常包含了**同一 `Agent` 内部**，当前 `Operator` 的前序 `Operator`(s) 的输出。这些输出可以作为当前 `Operator` 执行的上下文或输入数据。对于工作流中的第一个 `Operator`，此参数通常为 `None`。                                                 |
     | `lesson`            | 一个可选的字符串，代表从先前或其他 `Agent`（通常是后续 `Agent` 对当前 `Agent` 输出的评估反馈，或者重试时产生的 `lesson`）执行中获得的经验教训。这个 `lesson` 可以指导当前 `Workflow` 的行为，帮助它们更好地完成任务或避免之前的错误。例如，如果一个 `Expert` 返回了 `INPUT_DATA_ERROR`，它可能会附带一个 `lesson` 给前一个 `Expert`，指出输入数据的问题。 |
 
-3. **结果**: 执行完毕后，返回一个 `WorkflowMessage` 对象。该对象包含了工作流的执行状态（`WorkflowStatus`）、评估结果（如果配置了 `EvalOperator`），以及可能的 `lesson`。若未配置 `EvalOperator`，默认情况下，成功执行的 `Workflow` 会将状态设置为 `SUCCESS`。
+3. **结果**: 执行完毕后，返回一个 `WorkflowMessage` 对象。该对象包含了工作流的执行状态（`WorkflowStatus`）、评估结果（如果配置了 `Evaluator`），以及可能的 `lesson`。若未配置 `Evaluator`，默认情况下，成功执行的 `Workflow` 会将状态设置为 `SUCCESS`。
 
 ## 3. API
 
@@ -79,23 +79,23 @@
 | `execute(self, job: Job, reasoner: Reasoner, workflow_messages: Optional[List[WorkflowMessage]] = None, lesson: Optional[str] = None) -> WorkflowMessage` | 执行工作流。接收任务、推理器、先前专家的输出和经验教训，返回工作流执行结果。                                                                                                                                                           |
 | `add_operator(self, operator: Operator, previous_ops: Optional[List[Operator]] = None, next_ops: Optional[List[Operator]] = None)`    | 向工作流中添加一个算子，并可以指定其前驱和后继算子，从而构建算子图。                                                                                                                                                                       |
 | `remove_operator(self, operator: Operator) -> None`                                                                                    | 从工作流中移除指定的算子。                                                                                                                                                                                                         |
-| `set_evaluator(self, evaluator: EvalOperator)`                                                                                         | 为工作流设置一个评估算子 (`EvalOperator`)。该算子会在工作流主要算子执行完毕后运行，对结果进行评估。                                                                                                                                                 |
+| `set_evaluator(self, evaluator: Evaluator)`                                                                                         | 为工作流设置一个评估算子 (`Evaluator`)。该算子会在工作流主要算子执行完毕后运行，对结果进行评估。                                                                                                                                                 |
 | `get_operator(self, operator_id: str) -> Optional[Operator]`                                                                           | 根据算子 ID 获取工作流中的算子实例。                                                                                                                                                                                                 |
 | `get_operators(self) -> List[Operator]`                                                                                                | 获取工作流中所有的算子实例列表。                                                                                                                                                                                                   |
 | `update_operator(self, operator: Operator) -> None`                                                                                    | 更新工作流中已存在的算子。算子 ID 必须匹配。                                                                                                                                                                                             |
 
 ## 4. 使用示例
 
-本节提供了如何通过代码直接构建和执行 `Operator`、`EvalOperator` 以及 `DbgptWorkflow` 的示例。
+本节提供了如何通过代码直接构建和执行 `Operator`、`Evaluator` 以及 `DbgptWorkflow` 的示例。
 
 * 算子 (Operator) 使用示例：
   * 初始化和执行一个基本的 `Operator`，包括配置指令、动作，并与 `Reasoner` 和 `ToolkitService` 交互。
   * 详情参见：`test/example/run_operator.py`
 
-* 评估算子 (EvalOperator) 使用示例:
-  * 配置和使用 `EvalOperator` 来评估先前操作的输出，并生成反馈。
+* 评估算子 (Evaluator) 使用示例:
+  * 配置和使用 `Evaluator` 来评估先前操作的输出，并生成反馈。
   * 详情参见：`test/example/run_eval_operator.py`
 
 * 工作流 (DbgptWorkflow) 使用示例:
-  * 允许通过代码直接构建和执行一个 `DbgptWorkflow`，包括添加 `Operator`、设置 `EvalOperator` 以及执行工作流。
+  * 允许通过代码直接构建和执行一个 `DbgptWorkflow`，包括添加 `Operator`、设置 `Evaluator` 以及执行工作流。
   * 详情参见：`test/example/run_workflow.py`
