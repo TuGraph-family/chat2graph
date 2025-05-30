@@ -2,7 +2,7 @@
 
 ## 1. 逻辑架构图
 
-Chat2Graph 采用分层设计的逻辑架构，从下到上分为数据层、引擎层、智能体层和交互层四个核心层次，形成一个**高内聚、低耦合**的图原生（Graph Native）的系统。
+Chat2Graph 采用分层设计的逻辑架构，从下到上分为数据层、引擎层、智能体层和交互层四个核心层次，形成一个**高内聚、低耦合**的图原生（Graph Native）系统。
 
 ![logical-diagram](../en/img/architecture.png)
 
