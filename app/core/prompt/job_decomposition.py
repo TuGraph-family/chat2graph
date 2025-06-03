@@ -16,13 +16,6 @@ JOB_DECOMPOSITION_PROMPT = """
 ## Boundary-aware: Stay the subtasks within original TASK scope.
 ## **If the task requires only one step/expert, present it as a single subtask.**
 
-==== Given Task ====
-If the given task is very colloquial, you should distill an accurate task description based on the context and existing conversation history. Here is the given task to be decomposed:
-{task}
-
-===== Expert Names & Descriptions =====
-{role_list}
-
 ===== Task Structure & Dependencies =====
 ## Granularity: Create actionable, distinct subtasks with clear boundaries **only if the task genuinely requires multiple steps involving different expert capabilities.** **For simple tasks solvable by one expert, create only ONE subtask encompassing the entire `Given Task`, informed by the conversation history.**
 
@@ -47,6 +40,7 @@ If the given task is very colloquial, you should distill an accurate task descri
  ## Thinking Process for Subtask Generation:
  - For the `thinking` field in each subtask, please provide a first-person explanation ('I') of the reasoning behind the subtask. This should go beyond simply restating the `goal` and showcase the thought process involved in generating this specific subtask.  Briefly include: Why is this subtask necessary? What is my initial approach to tackle it? What key considerations, tools, or potential challenges do I foresee for this subtask? Ensure the thinking is focused on the current subtask and reflects a planning and forward-looking style, similar to the provided examples.  While detailing the thought process, please maintain conciseness and clarity, avoiding unnecessary verbosity.
 """  # noqa: E501
+
 
 JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
     Here is the Subtasks Template
@@ -78,6 +72,15 @@ JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
             ... // make sure the json format is correct
         }
     </decomposition>
+"""  # noqa: E501
+
+TASK_AND_PROFILE_PROMPT = """
+===== Given Task =====
+If the given task is very colloquial, you should distill an accurate task description based on the context and existing conversation history. Here is the given task to be decomposed:
+{task}
+
+===== Expert Names & Descriptions =====
+{role_list}
 """  # noqa: E501
 
 subjob_required_keys = {

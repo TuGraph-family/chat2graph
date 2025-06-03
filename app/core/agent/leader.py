@@ -18,7 +18,7 @@ from app.core.model.job_graph import JobGraph
 from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
 from app.core.prompt.job_decomposition import (
     JOB_DECOMPOSITION_OUTPUT_SCHEMA,
-    JOB_DECOMPOSITION_PROMPT,
+    TASK_AND_PROFILE_PROMPT,
     subjob_required_keys,
 )
 
@@ -87,7 +87,7 @@ class Leader(Agent):
             ]
         )
 
-        job_decomp_prompt = JOB_DECOMPOSITION_PROMPT.format(task=job.goal, role_list=role_list)
+        job_decomp_prompt = TASK_AND_PROFILE_PROMPT.format(task=job.goal, role_list=role_list)
         decomp_job = Job(
             id=job.id,
             session_id=job.session_id,

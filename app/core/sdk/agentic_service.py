@@ -12,7 +12,10 @@ from app.core.model.agentic_config import AgenticConfig
 from app.core.model.graph_db_config import GraphDbConfig
 from app.core.model.job import Job
 from app.core.model.message import ChatMessage, MessageType, TextMessage
-from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_OUTPUT_SCHEMA
+from app.core.prompt.job_decomposition import (
+    JOB_DECOMPOSITION_OUTPUT_SCHEMA,
+    JOB_DECOMPOSITION_PROMPT,
+)
 from app.core.sdk.wrapper.agent_wrapper import AgentWrapper
 from app.core.sdk.wrapper.graph_db_wrapper import GraphDbWrapper
 from app.core.sdk.wrapper.job_wrapper import JobWrapper
@@ -182,9 +185,7 @@ class AgenticService(metaclass=Singleton):
         )
         job_decomposition_operator = (
             OperatorWrapper()
-            .instruction(
-                "Please check the current status of the system, and then decompose the task."
-            )
+            .instruction(JOB_DECOMPOSITION_PROMPT)
             .output_schema(JOB_DECOMPOSITION_OUTPUT_SCHEMA)
             .actions(leader_actions)
             .build()
