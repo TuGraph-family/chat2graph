@@ -8,11 +8,11 @@
 * **主聊天区：** 显示正在进行的对话和您的请求状态。
 * **输入区：** 您在此处输入指令并选择专家模式。
 
-    ![alt text](../img/chat-layout-2.png)
+    ![](../img/chat-layout-2.png)
 
 * **图表显示：** 在使用 Chat2Graph 操作图数据库的过程中，它甚至可以渲染所涉及的图，提供了非常好的可视化功能。
 
-    ![alt text](../img/chat-layout-3.png)
+    ![](../img/chat-layout-3.png)
 
 ## 如何使用
 

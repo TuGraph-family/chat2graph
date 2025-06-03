@@ -4,7 +4,7 @@
 欢迎使用 Chat2Graph！该应用程序允许您通过聊天界面与图专家互动，执行各种与图相关的任务，
 包括建模、导数、查询、分析、问答等。本手册将指导您了解 Chat2Graph 的功能和用法。
 
-![alt text](./img/chat-layout-1.png)
+![](./img/chat-layout-1.png)
 
 # 目录
 

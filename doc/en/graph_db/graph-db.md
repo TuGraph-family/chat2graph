@@ -2,7 +2,7 @@
 
 Chat2Graph can interact with multiple graph databases and supports the management of the connections to them.
 
-![alt text](../img/graph-db-management.png)
+![](../img/graph-db-management.png)
 
 + **Navigation:** Accessed via the "Graph Database Management" link in the manager's sidebar.
 + **Search Bar:** Allows filtering the list of databases by name or other criteria.

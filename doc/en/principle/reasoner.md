@@ -1,10 +1,10 @@
 # Reasoner Module
 
-## 1. Introduction to the Reasoner
+## 1. Introduction
 
 The Reasoner module is the core component in Chat2Graph responsible for interacting with Large Language Models (LLMs). Its primary responsibilities include processing prompts, executing reasoning tasks, and providing the Agent with robust tool-calling capabilities. By offering a unified LLM interaction interface, the Reasoner encapsulates the underlying LLM Client API, enabling developers to concentrate on higher-level development. It supports (semi-)structured output, tool calling, and dual (or mono) model reasoning. Consequently, it provides two core reasoner implementations: `MonoModelReasoner` and `DualModelReasoner`, to adapt to the needs of different scenarios.
 
-## 2. Reasoner Design
+## 2. Design
 
 ### 2.1. Model Service
 
@@ -16,7 +16,7 @@ The Reasoner utilizes the generic `ModelService` to invoke LLMs.
 
 To clearly present the workflow of `Reasoner` and its interaction with `ModelServices`, tools, and environments, we designed the "Reasoner Enhancement" architecture, as shown in the figure below:
 
-![reasoner enhancement](../../en/img/reasoner-enhancement.png)
+![](../../en/img/reasoner-enhancement.png)
 
 | Method Signature                                                                 | Description                                                                                                                                                                                                                           |
 | :------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -60,7 +60,7 @@ The `DualModelReasoner` (Dual-Model Reasoner) typically employs a "Thinker" LLM 
 
 The core advantage of this dual-model design lies in task specialization and enhanced tool usage capabilities. It allows for configuring specially optimized role Prompts for specific sub-tasks (like code generation or natural language dialogue), thereby improving overall effectiveness. The Actor can focus on handling tool call requests and response formatting, allowing the Thinker to concentrate more on core reasoning and planning. Compared to `MonoModelReasoner`, the potential of `DualModelReasoner` lies in intelligently assigning tasks to models with different roles, aiming for superior overall performance. For example, the Thinker handles complex logic, while the Actor quickly processes tool calls with fixed formats.
 
-![Dual Reasoner](../../en/img/dual-reasoner.png)
+![](../../en/img/dual-reasoner.png)
 
 #### 2.3.1. Dual-Model Reasoner Prompt
 
@@ -89,7 +89,7 @@ The effectiveness of the `DualModelReasoner` benefits from its "special" prompt 
 | `async conclude(self, reasoner_memory: ReasonerMemory) -> str` | Functionality and logic are basically consistent with the `conclude` method in `MonoModelReasoner`. Asynchronous method used to extract and format the final reasoning result from the payload of the last message in `ReasonerMemory`. Typically called internally by the `infer` method.                               |
 | `static stopped(message: ModelMessage) -> bool`         | Functionality and logic are completely consistent with the `stopped` method in `MonoModelReasoner`. Static method to determine if the reasoning process should stop, by checking if the Actor's latest response contains the `<deliverable>` tag. Typically called internally by the `infer` method.                 |
 
-## 3. Usage Examples
+## 3. Examples
 
 * Model Service Invocation (`ModelService`)
 

@@ -8,11 +8,11 @@ The main interface is divided into three primary sections:
 * **Main Chat Area:** Displays the ongoing conversation and the status of your requests.
 * **Input Area:** Where you type your instructions and select the expert mode.
 
-    ![alt text](../img/chat-layout-2.png)
+    ![](../img/chat-layout-2.png)
 
 * **Graph Display:** During the process of operating the graph database with Chat2Graph, it can even render the involved graph, providing a very good visualization feature.
 
-    ![alt text](../img/chat-layout-3.png)
+    ![](../img/chat-layout-3.png)
 
 ## How to Use
 

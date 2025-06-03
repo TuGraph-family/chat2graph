@@ -1,6 +1,6 @@
-# Toolkit Module
+# Toolkit
 
-## 1. Toolkit Introduction
+## 1. Introduction
 
 The Toolkit module is a core component of Chat2Graph, primarily responsible for recommending specific execution instructions to `Operator` within the framework and enabling interaction with the external world. It achieves this by meticulously managing a directed graph composed of "Actions" and "Tools" — the `Toolkit`. This graph not only precisely defines the invocation relationships between different tools but also clarifies their potential execution sequences, thereby expanding the operational capabilities of `Operator`.
 
@@ -14,7 +14,7 @@ Key features of the Toolkit module include:
 
 The Toolkit is shared across the entire system, making its Actions and Tools reusable.
 
-## 2. Toolkit Design
+## 2. Design
 
 ### 2.1. **Tool Graph Design**
 
@@ -28,25 +28,25 @@ The Toolkit is shared across the entire system, making its Actions and Tools reu
 
 4. `ToolkitService` manages `Toolkit` instances and recommends appropriate `Actions` and `Tools` to LLMs based on current context.
 
-  ![tookit](../../en/img/toolkit.png)
+  ![](../../en/img/toolkit.png)
 
   This graph-based Toolkit mechanism offers significant advantages. First, it enables context-aware tool recommendations: the system can more precisely recommend available `Tools` under the current `Action` or potential next `Actions` based on the current node's position in the graph, far more intelligent and efficient than providing a flat, context-free tool list. Second, the predefined graph structure effectively narrows the LLM's search space when selecting tools or deciding next actions, significantly reducing randomness and uncertainty, thereby improving invocation accuracy and overall task execution efficiency. Finally, this structured approach makes complex workflow modeling more natural and intuitive, clearly expressing multi-step processes with dependencies or conditional tool invocation flows.
 
 ### 2.2. **Toolkit Implementation**
 
-1. **Initial Configuration**: The system presets `Actions`, `Tools`, and `Operator`-bound `Action` collections via YAML configuration. Dynamic tool registration capability is under development.
+1. **Initial Configuration**: The system presets `Actions`, `Tools`, and `Operator`-bound `Action` collections via YAML configuration. The operational tools for the graph database have been integrated into the system as built-in capabilities, and can be registered through the [GraphDB](../graph_db/graph-db.md) service. Additionally, dynamic tool registration capability is under development.
 
 2. **Tool Recommendation**: Based on `Operator`-bound `Action` collections, `ToolkitService` performs graph exploration in the Toolkit. It discovers `Actions` and `Tools` related to the current `Action` and offers them as recommendations. Recommendation scope (e.g., exploration depth or association strength) can be controlled via threshold configuration and graph traversal hops.
 
-![tool-recommendation](../../en/img/tool-recommendation.png)
+![](../../en/img/tool-recommendation.png)
 
 3. **Tool Calling**: `Reasoner` (typically combined with LLM decision-making) selects the most suitable `Tool` from `ToolkitService` recommendations. Upon selection, `Reasoner` executes the `Tool` and obtains results for subsequent task processing.
 
-![tool-use](../../en/img/tool-use.png)    
+![](../../en/img/reasoner-enhancement.png)    
 
 4. **Toolkit Optimization**: Toolkit capabilities continue to improve, such as one-click toolset registration and graph optimization via reinforcement learning.
 
-![toolkit-enhancement](../../en/img/toolkit-enhancement.png)
+![](../../en/img/toolkit-enhancement.png)
 
 ### 2.3. **API**
 
@@ -82,7 +82,7 @@ The `Toolkit` class inherits from `Graph`, specifically designed to build and ma
 | `recommend_tools_actions(self, actions: List[Action], threshold: float = 0.5, hops: int = 0) -> Tuple[List[Tool], List[Action]]` | Based on `recommend_subgraph` results, extracts recommended `Tools` and `Actions` from the subgraph, returning a tuple containing a `Tool` list and an `Action` list.                                                                                    |
 | `visualize(self, graph: Toolkit, title: str, show=False)`                                   | Visualizes the given `Toolkit` graph (`graph`). `Action` and `Tool` nodes are displayed with different colors/shapes; edges are differentiated by type (Action-Action or Action-Tool) with displayed connection scores. `title` sets the chart title; `show` determines whether to display the image immediately. Returns a `matplotlib.pyplot.Figure` object. |
 
-## 3. Usage Examples
+## 3. Examples
 
 * `Toolkit` `Action` and `Tool` registration: See sample code in `test/example/run_toolkit.py`.
 * `ToolkitService` recommending `Actions` and `Tools` to `Operator`: See `test/example/run_operator.py`.
