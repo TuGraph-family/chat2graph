@@ -41,7 +41,6 @@ JOB_DECOMPOSITION_PROMPT = """
  - For the `thinking` field in each subtask, please provide a first-person explanation ('I') of the reasoning behind the subtask. This should go beyond simply restating the `goal` and showcase the thought process involved in generating this specific subtask.  Briefly include: Why is this subtask necessary? What is my initial approach to tackle it? What key considerations, tools, or potential challenges do I foresee for this subtask? Ensure the thinking is focused on the current subtask and reflects a planning and forward-looking style, similar to the provided examples.  While detailing the thought process, please maintain conciseness and clarity, avoiding unnecessary verbosity.
 """  # noqa: E501
 
-
 JOB_DECOMPOSITION_OUTPUT_SCHEMA = """
     Here is the Subtasks Template
     // You must generate subtasks at the end of <final_output> section.
