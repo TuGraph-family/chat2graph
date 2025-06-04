@@ -28,9 +28,9 @@ LLMs and intelligent agents in improving reasoning capabilities and generation q
 
 ## Introduction
 
-Chat2Graph builds a multi-agent system (MAS) on top of a graph database to achieve intelligent 
-capabilities in research and development, operations and maintenance, Q&A, generation, and more, 
-helping users, developers, product managers, solution architects, operations engineers, and others 
+Chat2Graph is a graph native agentic system, which builds a multi-agents system (MAS) on top of 
+a graph database to achieve intelligent R&D, O&M, Q&A, generation, and more, helping users, 
+developers, product managers, solution architects, operations engineers, and others 
 to efficiently use graph databases, lower the barriers to using graphs, and accelerate content 
 generation, implement dialogue with graphs. At the same time, leveraging the inherent advantages 
 of graph data structures in relationship modeling, interpretability, etc., can enhance the key 
