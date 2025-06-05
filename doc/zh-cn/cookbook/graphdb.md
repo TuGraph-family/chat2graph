@@ -18,7 +18,7 @@ Chat2Graph 可以与多个图数据库进行交互，并支持对它们的连接
     + **设为默认**： 将此数据库连接标记为默认使用的连接。
 + **注意事项**： 在对话中，如需 Chat2Graph 与图数据库顺畅协作，请确保已创建默认图数据库。
 
-## 图数据库安装
+## 1. 图数据库安装
 
 在 Chat2Graph 与默认图数据库交互之前，请确保在本地或远程安装并设置好图数据库。
 
@@ -41,3 +41,9 @@ docker pull tugraph/tugraph-runtime-centos7:4.5.1
 docker run -d -p 7070:7070 -p 7687:7687 -p 9090:9090 --name tugraph-server \
   tugraph/tugraph-runtime-centos7:latest lgraph_server -d run --enable_plugin true
 ```
+
+## 2. 图数据库注册
+
+图数据库安装启动完成后，点击“新建”按钮即可注册图数据库使用。
+
+![](../../asset/image/gdb-register.png)

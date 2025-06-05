@@ -10,7 +10,7 @@ Leader 通过 `AgentConfig` 初始化，并通过 `LeaderState` 管理 Expert �
 
 ![](../../asset/image/leader.png)
 
-## 2.1 规划
+## 2.1. 规划
 
 智能体规划器主要负责智能体任务的规划与拆解，不同于传统智能体系统的线性规划器，Chat2Graph 采用基于图结构的规划器，在将智能体任务拆分为可执行单元的同时，保留了子任务间的依赖关系，以更好地应对任务执行的不确定性。
 
@@ -34,7 +34,7 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 | `thinking`            | 思考过程，要求 LLM 以第一人称解释生成该子任务的思考过程，包括其必要性、初步方法及关键考量。                                                          |
 
 
-## 2.2 分配
+## 2.2. 分配
 
 任务分配阶段，`Leader` 根据 `JobGraph` 组织的子任务关系，分配对应的专家执行。
 
@@ -44,7 +44,7 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 ![](../../asset/image/leader-assign.png)
 
 
-## 2.3 执行
+## 2.3. 执行
 
 我们借助状态机来解释 `Job/SubJob` 与 `Agent` 之间的传递、转换机制。
  ![](../../asset/image/leader-execute.png)

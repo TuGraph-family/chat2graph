@@ -10,7 +10,7 @@ The Leader is initialized via `AgentConfig` and manages Expert lifecycles throug
 
 ![](../../asset/image/leader.png)
 
-## 2.1 Planning
+## 2.1. Planning
 
 The agent planner primarily handles job planning and decomposition. Unlike traditional linear planners in agent systems, Chat2Graph employs a graph-based planner that breaks down agent jobs into executable units while preserving dependencies between subjobs, better accommodating execution uncertainties.
 
@@ -34,7 +34,7 @@ Chat2Graph explicitly defines subjob fields (see `JOB_DECOMPOSITION_OUTPUT_SCHEM
 | `thinking`            | Reasoning process, requiring the LLM to explain in first-person why this subjob is necessary, its preliminary approach, and key considerations.    |
 
 
-## 2.2 Assignment
+## 2.2. Assignment
 
 During job assignment, the `Leader` assigns subjobs organized in the `JobGraph` to corresponding experts for execution.
 
@@ -44,7 +44,7 @@ During job assignment, the `Leader` assigns subjobs organized in the `JobGraph` 
 ![](../../asset/image/leader-assign.png)
 
 
-## 2.3 Execution
+## 2.3. Execution
 
 We use a state machine to explain the transfer and transition mechanism between `Job/SubJob` and `Agent`.
  ![](../../asset/image/leader-execute.png)

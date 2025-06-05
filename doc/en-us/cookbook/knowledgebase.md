@@ -10,20 +10,18 @@ The knowledge base module of Chat2Graph is designed to support multi-source and 
 + **DB-GPT Vector Knowledge Base**: A vector knowledge base based on ChromaDB. During retrieval, it matches the most relevant document chunks based on vector similarity.
 + **DB-GPT Graph Knowledge Base**: A graph knowledge base based on TuGraph-DB. During retrieval, it matches subgraphs and community summaries related to the query within the knowledge graph.
 
-## Operation Workflow
-
-### Knowledge Base Configuration
+### 1. System Configuration
 
 Chat2Graph uses the vector knowledge base by default. To specify a different knowledge base type, add the following configuration items to the `.env` file before start:
 
-#### Vector Knowledge Base Configuration
+### 1.1. Vector Knowledge Base
 
 ```toml
 # Vector Knowledge Base
 KNOWLEDGE_STORE_TYPE=VECTOR
 ```
 
-#### Graph Knowledge Base Configuration
+### 1.2. Graph Knowledge Base
 
 ```toml
 # Graph Knowledge Base
@@ -34,7 +32,7 @@ GRAPH_KNOWLEDGE_STORE_HOST=127.0.0.1
 GRAPH_KNOWLEDGE_STORE_PORT=17687
 ```
 
-### Knowledge Base Documents Loading
+## 2. Load Documents
 
 Click the card of the global knowledge base or session knowledge base.
 
@@ -52,7 +50,7 @@ After successful file addition, the files will be displayed in the knowledge bas
 
 ![](../../asset/image/kb-delete.png)
 
-### Editing the Session Knowledge Base
+## 3. Edit Session Knowledge Base
 
 The top-right corner of the session knowledge base card provides functions to edit, clear the knowledge base, and return to the corresponding session.
 
@@ -62,7 +60,7 @@ The "Edit" function allows modification of the knowledge base name and descripti
 
 ![](../../asset/image/kb-rename.png)
 
-### Knowledge Base-Assisted Q&A
+## 4. Q&A on Knowledge Base
 
 After adding knowledge to the knowledge base, Chat2Graph can answer domain-specific questions that the base model cannot handle using the knowledge base's domain knowledge. It also lists references to original documents from the knowledge base. Below is an example response to the question "Introduce Chat2Graph.":
 

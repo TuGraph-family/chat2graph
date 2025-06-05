@@ -1,6 +1,6 @@
 # Chat
 
-## Interface Overview
+## 1. Interface Overview
 
 The main interface is divided into three primary sections:
 
@@ -14,7 +14,7 @@ The main interface is divided into three primary sections:
 
     ![](../../asset/image/chat-graph.png)
 
-## How to Use
+## 2. How to Use
 
 1. **Start a Conversation:** Click "+ Open New Conversation" or select an existing one from the history.
 2. **Select Expert Mode:** Choose the expert (Design, Extraction, or Query) best suited for your task (supported next release version).

@@ -34,7 +34,7 @@ The Toolkit is shared across the entire system, making its Actions and Tools reu
 
 ### 2.2. **Toolkit Implementation**
 
-1. **Initial Configuration**: The system presets `Actions`, `Tools`, and `Operator`-bound `Action` collections via YAML configuration. The operational tools for the graph database have been integrated into the system as built-in capabilities, and can be registered through the [GraphDB](../cookbook/graphdb.md) service. Additionally, dynamic tool registration capability is under development.
+1. **Initial Configuration**: The system presets `Actions`, `Tools`, and `Operator`-bound `Action` collections via YAML configuration. The operational tools for the graph database have been integrated into the system as built-in capabilities, and can be registered through the [Graph Database](../cookbook/graphdb.md) service. Additionally, dynamic tool registration capability is under development.
 
 2. **Tool Recommendation**: Based on `Operator`-bound `Action` collections, `ToolkitService` performs graph exploration in the Toolkit. It discovers `Actions` and `Tools` related to the current `Action` and offers them as recommendations. Recommendation scope (e.g., exploration depth or association strength) can be controlled via threshold configuration and graph traversal hops.
 

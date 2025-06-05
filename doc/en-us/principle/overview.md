@@ -37,7 +37,7 @@ Chat2Graph adopts a "[Single-Active-Many-Passive](https://arxiv.org/abs/2409.113
 
 Key components of the system include:
 
-* **Graph System**: Provides a unified abstraction for graph systems, managed via [GraphDB](../cookbook/graphdb.md) service, with support for future extensions to more graph computing systems.
+* **Graph System**: Provides a unified abstraction for graph systems, managed via [Graph Database](../cookbook/graphdb.md) service, with support for future extensions to more graph computing systems.
 * **AI System**: Abstracts AI infrastructure, such as agent frameworks, RAG, memory tools, and model service tools, offering foundational agent capabilities and ecosystem expansion.
 * **Storage**: Stores persistent agent data, including metadata, memory, knowledge, and files.
 * **[Reasoner](reasoner.md)**: Encapsulates LLM services, enhances reasoning, and provides tool invocation capabilities.
@@ -53,10 +53,3 @@ Key components of the system include:
 Chat2Graph intelligently transforms user natural language instructions into precise, automated steps for graph data construction, processing, algorithm application, and iterative optimization. This significantly lowers the technical barrier for complex graph analysis, enabling non-technical users to leverage the expressive power of graphs for deep exploration and knowledge discovery.
 
 ![](../../asset/image/arch-deploy.png)
-
-Current applicable scenarios include:
-
-- **Knowledge Graph Construction & Interactive Exploration**: Automatically builds domain-specific knowledge graphs from vast text, reports, or diverse data sources, allowing users to query, analyze, and visualize via natural language.
-- **Deep Analysis of Complex Relationship Networks**: Reveals deep connections, key nodes, and community structures in fields like social network analysis, financial risk control (e.g., anti-fraud, related transaction identification), supply chain optimization, bioinformatics (e.g., protein interaction networks), and intelligence analysis.
-- **Intelligent Q&A & Decision Support**: Provides context-aware advanced Q&A services based on dynamically built and updated knowledge graphs, delivering data-driven insights for complex decision-making.
-- **High-Quality Reasoning & Content Generation**: Deeply integrates symbolic strengths for high-quality task planning and memory recall, enabling precise tool invocation. We will continue to improve this capability.
