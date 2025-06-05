@@ -38,15 +38,15 @@ The Toolkit is shared across the entire system, making its Actions and Tools reu
 
 2. **Tool Recommendation**: Based on `Operator`-bound `Action` collections, `ToolkitService` performs graph exploration in the Toolkit. It discovers `Actions` and `Tools` related to the current `Action` and offers them as recommendations. Recommendation scope (e.g., exploration depth or association strength) can be controlled via threshold configuration and graph traversal hops.
 
-![](../../asset/image/tool-recommendation.png)
+![](../../asset/image/toolkit-recommend.png)
 
 3. **Tool Calling**: `Reasoner` (typically combined with LLM decision-making) selects the most suitable `Tool` from `ToolkitService` recommendations. Upon selection, `Reasoner` executes the `Tool` and obtains results for subsequent task processing.
 
-![](../../asset/image/reasoner-enhancement.png)    
+![](../../asset/image/reasoner-enhance.png)    
 
 4. **Toolkit Optimization**: Toolkit capabilities continue to improve, such as one-click toolset registration and graph optimization via reinforcement learning.
 
-![](../../asset/image/toolkit-enhancement.png)
+![](../../asset/image/toolkit-enhance.png)
 
 ### 2.3. **API**
 

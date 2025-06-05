@@ -52,7 +52,7 @@ Key components of the system include:
 
 Chat2Graph intelligently transforms user natural language instructions into precise, automated steps for graph data construction, processing, algorithm application, and iterative optimization. This significantly lowers the technical barrier for complex graph analysis, enabling non-technical users to leverage the expressive power of graphs for deep exploration and knowledge discovery.
 
-![](../../asset/image/arch-deployment.png)
+![](../../asset/image/arch-deploy.png)
 
 Current applicable scenarios include:
 

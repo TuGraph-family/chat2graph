@@ -41,13 +41,13 @@ During job assignment, the `Leader` assigns subjobs organized in the `JobGraph` 
 1. **Parallel Task Scheduling**: The `Leader` uses a thread pool to parallelize subjobs without dependencies or whose dependencies are already met. It continuously monitors job status, submitting subjobs for execution once all their predecessors complete.
 2. **Expert Assignment**: Each `SubJob` is dispatched to its designated `Expert`. The `Expert` executes its internal `Workflow` to process the subjob.
 
-![](../../asset/image/leader-assignment.png)
+![](../../asset/image/leader-assign.png)
 
 
 ## 2.3 Execution
 
 We use a state machine to explain the transfer and transition mechanism between `Job/SubJob` and `Agent`.
- ![](../../asset/image/leader-execution.png)
+ ![](../../asset/image/leader-execute.png)
 
 After an `Expert` completes a `SubJob`, it returns a `WorkflowMessage` containing `workflow_status`, which determines subsequent actions:
   - `SUCCESS`: The subjob completes successfully. The `Leader` records the result, updates the `JobGraph` state, and may trigger execution of dependent jobs.

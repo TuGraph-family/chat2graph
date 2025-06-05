@@ -52,7 +52,7 @@ Chat2Graph 整体采用了「[单主动-多被动](https://arxiv.org/abs/2409.11
 
 Chat2Graph 能够将用户的自然语言指令智能地转化为一系列精确、自动化的图数据构建、数据处理、算法应用和迭代优化的步骤。这极大地降低了用户进行复杂图分析的技术门槛，使得非技术背景的用户也能利用图的强大表达能力进行深度探索和知识发现。
 
-![](../../asset/image/arch-deployment.png)
+![](../../asset/image/arch-deploy.png)
 
 当前适用的场景有：
 

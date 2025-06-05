@@ -121,7 +121,7 @@ Chat2Graph server started success ! (pid: 16483)
 
 你可以在浏览器访问 [http://localhost:5010/](http://localhost:5010/) 使用 Chat2Graph。
 
-![](../asset/image/index.png)
+![](../asset/image/chat.png)
 
 ## 注册图数据库
 

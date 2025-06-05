@@ -38,19 +38,15 @@ GRAPH_KNOWLEDGE_STORE_PORT=17687
 
 Click the card of the global knowledge base or session knowledge base.
 
-![](../../asset/image/kb-management.png)
+![](../../asset/image/kb-mng.png)
 
-Click the "New" button.
-
-![](../../asset/image/kb-detail.png)
-
-Select the files to add to the knowledge base.
+Click the "New" button, select the files to add to the knowledge base.
 
 ![](../../asset/image/kb-upload.png)
 
 Configure knowledge base loading configuration(currently supports modification of the `chunk_size` ).
 
-![](../../asset/image/kb-parameter.png)
+![](../../asset/image/kb-config.png)
 
 After successful file addition, the files will be displayed in the knowledge base management page. Click "Delete" to remove files from the knowledge base.
 
@@ -64,7 +60,7 @@ The top-right corner of the session knowledge base card provides functions to ed
 
 The "Edit" function allows modification of the knowledge base name and description.
 
-![](../../asset/image/kb-edit-name.png)
+![](../../asset/image/kb-rename.png)
 
 ### Knowledge Base-Assisted Q&A
 

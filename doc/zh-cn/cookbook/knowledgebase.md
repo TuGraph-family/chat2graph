@@ -38,19 +38,15 @@ GRAPH_KNOWLEDGE_STORE_PORT=17687
 
 点击全局知识库或会话知识库的卡片。
 
-![](../../asset/image/kb-management.png)
+![](../../asset/image/kb-mng.png)
 
-点击“新建“按钮
-
-![](../../asset/image/kb-detail.png)
-
-选择添加进入知识库的文件。
+点击“新建“按钮，选择添加进入知识库的文件。
 
 ![](../../asset/image/kb-upload.png)
 
 配置知识库载入参数，当前支持 `chunk_size` 参数的修改。
 
-![](../../asset/image/kb-parameter.png)
+![](../../asset/image/kb-config.png)
 
 文件添加成功后，会在知识库管理页面中显示，点击删除则可以将文件从知识库中删去。
 
@@ -64,7 +60,7 @@ GRAPH_KNOWLEDGE_STORE_PORT=17687
 
 编辑功能支持对知识库名称及描述的编辑。
 
-![](../../asset/image/kb-edit-name.png)
+![](../../asset/image/kb-rename.png)
 
 ### 知识库辅助问答
 

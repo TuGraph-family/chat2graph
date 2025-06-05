@@ -131,14 +131,14 @@ Chat2Graph server started success ! (pid: 16483)
 
 You can access Chat2Graph in the browser at [http://localhost:5010/](http://localhost:5010/):
 
-![](doc/img/index.png)
+![](doc/asset/image/chat.png)
 
 
 ## Register Graph Database
 
 After registering the graph database to Chat2Graph in "Backend Manager", you can experience the complete ability 
 of "chat to graph".
-![](doc/img/gdb-mng.png)
+![](doc/asset/image/gdb-mng.png)
 
 The graph databases currently supported by Docker are:
 

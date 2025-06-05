@@ -41,13 +41,13 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 1. **并行任务调度**：`Leader` 使用线程池并行调度无前置依赖或所有前置依赖已完成的子任务。它会持续监控任务状态，一旦任何某个子任务的所有前置任务完成，该子任务即被提交执行。
 2. **分配 Expert 处理**：每个子任务 `SubJob` 被分派给指定的 `Expert`。`Expert` 执行其内部工作流（`Workflow`）来处理子任务。
 
-![](../../asset/image/leader-assignment.png)
+![](../../asset/image/leader-assign.png)
 
 
 ## 2.3 执行
 
 我们借助状态机来解释 `Job/SubJob` 与 `Agent` 之间的传递、转换机制。
- ![](../../asset/image/leader-execution.png)
+ ![](../../asset/image/leader-execute.png)
 
 当 `Expert` 执行完 `SubJob` 后，会返回一个 `WorkflowMessage`，其中包含 `workflow_status`，该状态决定了后续流程：
   - `SUCCESS`：子任务成功完成。`Leader` 会记录结果，并更新 `JobGraph` 的状态，进而可能触发后续依赖任务的执行。
