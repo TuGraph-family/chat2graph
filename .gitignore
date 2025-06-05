@@ -7,6 +7,9 @@ dist
 venv
 __pycache__
 
+# ignore npm modules
+node_modules
+
 # ignore db instances
 **/*.db
 
