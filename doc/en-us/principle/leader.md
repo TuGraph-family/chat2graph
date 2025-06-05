@@ -79,3 +79,8 @@ The `Leader` Agent provides the following core APIs.
 Below demonstrates a typical graph data job processing scenario:
 
 ![](../../asset/image/leader-demo.png)
+
+Here are some code examples:
+
+* Leader executes string processing tasks: `test/example/agent/run_leader_v1.py`
+* Leader executes natural language processing tasks: `test/example/agent/run_leader_v2.py`

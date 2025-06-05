@@ -30,8 +30,8 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 | `context`             | 上下文，需包含对话历史摘要、用户反馈以及这些上下文如何塑造当前任务。                                                              |
 | `completion_criteria` | 完成标准，需明确且可衡量，直接回应对话历史中突显的需求或修正。                                                                |
 | `dependencies`        | 依赖关系，仅在生成多个子任务时定义，用于确定子任务之间的依赖关系，形成一张 `JobGraph`，由 `JobService` 负责管理。                               |
-| `assigned_expert`     | 分配的专家名，制定该子任务由哪位专家完成。                                                                        |
-| `thinking`            | 思考过程，要求 LLM 以第一人称解释生成该子任务的思考过程，包括其必要性、初步方法及关键考量。                                                          |
+| `assigned_expert`     | 分配的专家名，Leader 指定该子任务由哪位专家完成。                                                                        |
+| `thinking`            | 思考过程，要求 LLM 以第一人称解释生成该子任务的思考过程，包括其必要性、初步方法及关键考量（冗余字段）。                                                          |
 
 
 ## 2.2. 分配
@@ -42,7 +42,6 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 2. **分配 Expert 处理**：每个子任务 `SubJob` 被分派给指定的 `Expert`。`Expert` 执行其内部工作流（`Workflow`）来处理子任务。
 
 ![](../../asset/image/leader-assign.png)
-
 
 ## 2.3. 执行
 
@@ -80,3 +79,8 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 
 ![](../../asset/image/leader-demo.png)
 
+
+以下是一些代码示例：
+
+* Leader 执行字符串处理任务：`test/example/agent/run_leader_v1.py`
+* Leader 执行自然语言处理任务：`test/example/agent/run_leader_v2.py`
