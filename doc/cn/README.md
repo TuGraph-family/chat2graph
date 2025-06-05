@@ -1,7 +1,7 @@
 🌐️ 中文 | [English](../../README.md)
 
 <p align="center">
-  <img src="../head.png" width=800/>
+  <img src="../asset/image/head.png" width=800/>
 </p>
 
 [![Star](https://shields.io/github/stars/tugraph-family/chat2graph?logo=startrek&label=Star&color=yellow)](https://github.com/TuGraph-family/chat2graph/stargazers)
@@ -121,12 +121,12 @@ Chat2Graph server started success ! (pid: 16483)
 
 你可以在浏览器访问 [http://localhost:5010/](http://localhost:5010/) 使用 Chat2Graph。
 
-![](img/index.png)
+![](../asset/image/index.png)
 
 ## 注册图数据库
 
 在「管理后台」注册图数据库到Chat2Graph后，可以体验完整的「与图对话」的能力。
-![](img/gdb-mng.png)
+![](../asset/image/gdb-mng.png)
 
 当前支持的图数据库类型有：
 * Neo4j
@@ -184,7 +184,7 @@ mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 ```
 
 ## 用户手册
-详细使用请参考[用户手册](user-manual.md)。
+详细使用请参考[用户手册](cookbook/overview.md)。
 
 ## 贡献
 您可以参考[贡献文档][contrib]，提交 GitHub Issue/PR 提供反馈建议对 Chat2Graph 继续改进。

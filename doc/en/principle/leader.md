@@ -8,13 +8,13 @@ As the core component and main entry point of the Chat2Graph system, the Leader 
 
 The Leader is initialized via `AgentConfig` and manages Expert lifecycles through `LeaderState`. After receiving a job, the Leader processes it through three phases: job planning, job assignment, and job execution.
 
-![](../../en/img/leader.png)
+![](../../asset/image/leader.png)
 
 ## 2.1 Planning
 
 The agent planner primarily handles job planning and decomposition. Unlike traditional linear planners in agent systems, Chat2Graph employs a graph-based planner that breaks down agent jobs into executable units while preserving dependencies between subjobs, better accommodating execution uncertainties.
 
-![](../../en/img/leader-plan.png)
+![](../../asset/image/leader-plan.png)
 
 The planner's core lies in a carefully designed prompt, `JOB_DECOMPOSITION_PROMPT`, which guides the `Leader` to decompose a main job (`Given Task`) into executable subjobs. The `Leader` first combines conversation history with the current system state to infer the user's true intent and expected next logical step. Based on this inference, the `Leader` determines the target expert (`Expert`) and actions required to complete this step. Task decomposition is its sole output—even with incomplete information (e.g., if the user forgot to upload a file), it must create subjobs for relevant experts and note potential issues in the subjob context. During decomposition, the LLM should aim for the minimal necessary logical subjobs while ensuring assignments are limited to predefined experts. Each subjob must contain all essential information, remain role-neutral, and strictly adhere to the original job scope. For simple jobs or those requiring only one expert, a single subjob should be generated.
 
@@ -41,13 +41,13 @@ During job assignment, the `Leader` assigns subjobs organized in the `JobGraph` 
 1. **Parallel Task Scheduling**: The `Leader` uses a thread pool to parallelize subjobs without dependencies or whose dependencies are already met. It continuously monitors job status, submitting subjobs for execution once all their predecessors complete.
 2. **Expert Assignment**: Each `SubJob` is dispatched to its designated `Expert`. The `Expert` executes its internal `Workflow` to process the subjob.
 
-![](../../en/img/leader-assignment.png)
+![](../../asset/image/leader-assignment.png)
 
 
 ## 2.3 Execution
 
 We use a state machine to explain the transfer and transition mechanism between `Job/SubJob` and `Agent`.
- ![](../../en/img/leader-execution.png)
+ ![](../../asset/image/leader-execution.png)
 
 After an `Expert` completes a `SubJob`, it returns a `WorkflowMessage` containing `workflow_status`, which determines subsequent actions:
   - `SUCCESS`: The subjob completes successfully. The `Leader` records the result, updates the `JobGraph` state, and may trigger execution of dependent jobs.
@@ -78,4 +78,4 @@ The `Leader` Agent provides the following core APIs.
 
 Below demonstrates a typical graph data job processing scenario:
 
-![](../../en/img/leader-demo.png)
+![](../../asset/image/leader-demo.png)

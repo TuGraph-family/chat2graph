@@ -16,7 +16,7 @@ The Reasoner utilizes the generic `ModelService` to invoke LLMs.
 
 To clearly present the workflow of `Reasoner` and its interaction with `ModelServices`, tools, and environments, we designed the "Reasoner Enhancement" architecture, as shown in the figure below:
 
-![](../../en/img/reasoner-enhancement.png)
+![](../../asset/image/reasoner-enhancement.png)
 
 | Method Signature                                                                 | Description                                                                                                                                                                                                                           |
 | :------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -60,7 +60,7 @@ The `DualModelReasoner` (Dual-Model Reasoner) typically employs a "Thinker" LLM 
 
 The core advantage of this dual-model design lies in task specialization and enhanced tool usage capabilities. It allows for configuring specially optimized role Prompts for specific sub-tasks (like code generation or natural language dialogue), thereby improving overall effectiveness. The Actor can focus on handling tool call requests and response formatting, allowing the Thinker to concentrate more on core reasoning and planning. Compared to `MonoModelReasoner`, the potential of `DualModelReasoner` lies in intelligently assigning tasks to models with different roles, aiming for superior overall performance. For example, the Thinker handles complex logic, while the Actor quickly processes tool calls with fixed formats.
 
-![](../../en/img/dual-reasoner.png)
+![](../../asset/image/dual-reasoner.png)
 
 #### 2.3.1. Dual-Model Reasoner Prompt
 

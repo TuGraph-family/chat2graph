@@ -8,13 +8,13 @@
 
 Leader 通过 `AgentConfig` 初始化，并通过 `LeaderState` 管理 Expert 生命周期。任务提交给 Leader 后，会经历任务规划、任务分配与任务执行三个阶段。
 
-![](../../en/img/leader.png)
+![](../../asset/image/leader.png)
 
 ## 2.1 规划
 
 智能体规划器主要负责智能体任务的规划与拆解，不同于传统智能体系统的线性规划器，Chat2Graph 采用基于图结构的规划器，在将智能体任务拆分为可执行单元的同时，保留了子任务间的依赖关系，以更好地应对任务执行的不确定性。
 
-![](../../en/img/leader-plan.png)
+![](../../asset/image/leader-plan.png)
 
 规划器的核心在于一个精心设计的 Prompt，即 `JOB_DECOMPOSITION_PROMPT`，它指导 `Leader` 将一个主任务（`Given Task`）分解为一系列可执行的子任务。`Leader` 将首先结合对话历史与系统当前状态，来主动推断用户的真实意图和期望的下一个逻辑步骤。基于此推断，`Leader` 需确定完成该步骤所需的目标专家（`Expert`）及其行动。任务分解是其唯一输出，即使在信息不完整的情况下（例如用户提及忘记上传文件），也必须为相关专家制定子任务，并在子任务上下文中注明潜在问题。分解时，LLM 应力求最少的必要逻辑子任务，同时确保子任务的分配仅限于先前确定的专家。每个子任务需包含所有必要信息，保持角色中立，并严格限制在原始任务范围内。对于简单或仅需单一专家的任务，则应生成单个子任务。
 
@@ -41,13 +41,13 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 1. **并行任务调度**：`Leader` 使用线程池并行调度无前置依赖或所有前置依赖已完成的子任务。它会持续监控任务状态，一旦任何某个子任务的所有前置任务完成，该子任务即被提交执行。
 2. **分配 Expert 处理**：每个子任务 `SubJob` 被分派给指定的 `Expert`。`Expert` 执行其内部工作流（`Workflow`）来处理子任务。
 
-![](../../en/img/leader-assignment.png)
+![](../../asset/image/leader-assignment.png)
 
 
 ## 2.3 执行
 
 我们借助状态机来解释 `Job/SubJob` 与 `Agent` 之间的传递、转换机制。
- ![](../../en/img/leader-execution.png)
+ ![](../../asset/image/leader-execution.png)
 
 当 `Expert` 执行完 `SubJob` 后，会返回一个 `WorkflowMessage`，其中包含 `workflow_status`，该状态决定了后续流程：
   - `SUCCESS`：子任务成功完成。`Leader` 会记录结果，并更新 `JobGraph` 的状态，进而可能触发后续依赖任务的执行。
@@ -78,5 +78,5 @@ Chat2Graph 明确定义子任务包含的字段，参考 `JOB_DECOMPOSITION_OUTP
 
 以下展示了一个典型的图数据任务的处理场景：
 
-![](../../en/img/leader-demo.png)
+![](../../asset/image/leader-demo.png)
 

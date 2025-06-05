@@ -1,7 +1,7 @@
-🌐️ English | [中文](doc/cn/README-cn.md)
+🌐️ English | [中文](doc/cn/README.md)
 
 <p align="center">
-  <img src="doc/head.png" width=800/>
+  <img src="doc/asset/image/head.png" width=800/>
 </p>
 
 
@@ -201,7 +201,7 @@ mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 
 ## User Manual
 
-For details, please refer to [User Manual](doc/en/user-manual.md).
+For details, please refer to [User Manual](doc/en/cookbook/overview.md).
 
 ## Contributing
 

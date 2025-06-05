@@ -28,25 +28,25 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 
 4. `ToolkitService` 负责管理 `Toolkit` 实例，并根据当前上下文向 LLM 推荐合适的 `Action` 和 `Tool`。
 
-  ![](../../en/img/toolkit.png)
+  ![](../../asset/image/toolkit.png)
 
   这种基于图的 Toolkit 机制带来了显著优势。首先，它实现了上下文感知的工具推荐：系统能够根据当前所处的 `Action` 节点在图中的位置，更精确地向 LLM 推荐当前 `Action` 下可用的 `Tool` 或可能的下一个 `Action`，这远比提供一个扁平、无上下文关联的工具列表更为智能和高效。其次，通过预定义的图结构，`Toolkit` 有效地缩小了 LLM 在选择工具或决定下一步行动时的搜索空间，显著降低了选择的随意性和不确定性，从而提升了工具调用的准确性和任务执行的整体效率。最后，这种结构化的方法使得复杂流程的建模更为自然和直观，能够清晰地表达包含多个步骤、存在依赖关系或特定条件的复杂工具调用流程。
 
 ### 2.2. **工具库实现**
 
-1. **初始配置**: 系统通过YAML配置预设的 `Action`，`Tool` 集合，以及 `Operator` 绑定的 `Action` 集合。其中图数据库的操作工具已作为内置能力集成到系统内部，只需要通过 [GraphDB](../graph_db/graph-db.md) 服务注册即可。另外，动态工具注册能力还在建设当中。
+1. **初始配置**: 系统通过YAML配置预设的 `Action`，`Tool` 集合，以及 `Operator` 绑定的 `Action` 集合。其中图数据库的操作工具已作为内置能力集成到系统内部，只需要通过 [GraphDB](../cookbook/graphdb.md) 服务注册即可。另外，动态工具注册能力还在建设当中。
 
 2. **工具推荐**: 基于 `Operator` 绑定的 `Action` 集合，`ToolkitService` 会在 Toolkit 中进行图上探索。它会查找与当前 `Action` 相关联的其他 `Action` 和可用的 `Tool`，并将它们作为推荐项提供出来。推荐的范围（例如，探索的深度或关联强度）可以通过配置阈值和图遍历的跳数来控制。
 
-![](../../en/img/tool-recommendation.png)
+![](../../asset/image/tool-recommendation.png)
 
 3. **工具调用**: `Reasoner` (通常结合 LLM 的决策能力) 从 `ToolkitService` 推荐的 `Action` 和 `Tool` 列表中选择最合适的 `Tool`。选定后，`Reasoner` 会执行该 `Tool` 并获取其执行结果，用于后续的任务处理。
 
-![](../../en/img/reasoner-enhancement.png)    
+![](../../asset/image/reasoner-enhancement.png)    
 
 4. **工具库优化**: 工具库的能力还在持续优化中，比如支持工具集的一键注册，以及基于强化学习思路的工具图谱优化等。
 
-![](../../en/img/toolkit-enhancement.png)
+![](../../asset/image/toolkit-enhancement.png)
 
 ### 2.3. **API**
 

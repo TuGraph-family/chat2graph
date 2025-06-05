@@ -5,15 +5,15 @@ Welcome to Chat2Graph! This application allows you to interact with graph expert
 chat interface to perform various graph-related tasks, including design, extraction, query,
 analysis and Q&A. This manual will guide you through the features and usage of the Chat2Graph.
 
-![](./img/chat-layout-1.png)
+![](../../asset/image/chat-layout-1.png)
 
 # Index
 
-* [Chat](./chat/chat.md)
+* [Chat](chat.md)
 
-* [Graph Database](./graph_db/graph-db.md)
+* [GraphDB](graphdb.md)
 
-* [Knowledge Base](./knowledge/knowledge-base.md)
+* [KnowledgeBase](knowledgebase.md)
 
 <!-- Add links to other module documentation as they become available -->
 <!--
