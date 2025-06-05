@@ -1,0 +1,11 @@
+{
+  "title": "Getting Started",
+  "pages": [
+    "---Getting Started---",
+    "chat",
+    "installation",
+    "quickstart",
+    "---Additional Resources---",
+    "roadmap"
+  ]
+}

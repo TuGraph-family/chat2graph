@@ -38,36 +38,36 @@ GRAPH_KNOWLEDGE_STORE_PORT=17687
 
 Click the card of the global knowledge base or session knowledge base.
 
-![](../img/kb-management.png)
+![Knowledge Base Management](../img/kb-management.png){width="600"}
 
 Click the "New" button.
 
-![](../img/kb-detail.png)
+![Knowledge Base Detail](../img/kb-detail.png){width="600"}
 
 Select the files to add to the knowledge base.
 
-![](../img/kb-upload.png)
+![File Upload](../img/kb-upload.png){width="600"}
 
 Configure knowledge base loading configuration(currently supports modification of the `chunk_size` ).
 
-![](../img/kb-parameter.png)
+![Parameter Configuration](../img/kb-parameter.png){width="600"}
 
 After successful file addition, the files will be displayed in the knowledge base management page. Click "Delete" to remove files from the knowledge base.
 
-![](../img/kb-delete.png)
+![Delete File](../img/kb-delete.png){width="600"}
 
 ### Editing the Session Knowledge Base
 
 The top-right corner of the session knowledge base card provides functions to edit, clear the knowledge base, and return to the corresponding session.
 
-![](../img/kb-edit.png)
+![Edit Knowledge Base](../img/kb-edit.png){width="600"}
 
 The "Edit" function allows modification of the knowledge base name and description.
 
-![](../img/kb-edit-name.png)
+![Edit Name](../img/kb-edit-name.png){width="600"}
 
 ### Knowledge Base-Assisted Q&A
 
 After adding knowledge to the knowledge base, Chat2Graph can answer domain-specific questions that the base model cannot handle using the knowledge base's domain knowledge. It also lists references to original documents from the knowledge base. Below is an example response to the question "Introduce Chat2Graph.":
 
-![](../img/kb-qa.png)
+![Knowledge Base Q&A](../img/kb-qa.png){width="800"}
