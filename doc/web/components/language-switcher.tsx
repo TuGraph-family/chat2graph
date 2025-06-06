@@ -29,8 +29,8 @@ export function LanguageSwitcher() {
     }
   };
 
-  const currentLanguageName = languages.find(lang => lang.code === currentLanguage)?.name || 'English';
-  const targetLanguageName = languages.find(lang => lang.code !== currentLanguage)?.name || '中文';
+  const currentLanguageName = languages.find(lang => lang.code === currentLanguage)?.name || 'Eng';
+  const targetLanguageName = currentLanguage === 'en' ? '中' : 'Eng';
 
   return (
     <button
