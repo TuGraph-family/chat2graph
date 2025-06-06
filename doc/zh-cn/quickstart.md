@@ -41,7 +41,7 @@ cp .env.template .env
 
 ```bash
 LLM_NAME=gemini-2.0-flash
-LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai/
+LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai
 LLM_APIKEY={your-llm-api-key}
 
 EMBEDDING_MODEL_NAME=text-embedding-004
@@ -112,7 +112,7 @@ Chat2Graph 提供了清晰简洁的 SDK API，让你轻松定制智能体系统�
 
 ```python
 SystemEnv.LLM_NAME="gemini-2.0-flash"
-SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai/"
+SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai"
 SystemEnv.LLM_APIKEY="{your-llm-api-key}"
 
 SystemEnv.EMBEDDING_MODEL_NAME="text-embedding-004"

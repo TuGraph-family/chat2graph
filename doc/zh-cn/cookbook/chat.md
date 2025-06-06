@@ -24,4 +24,4 @@
 6. **监控进度：** 在主聊天区观察状态更新（运行中、规划中、分析中等）。
 7. **查看结果：** 处理完成后，结果将显示在主聊天区。然后您可以提出后续问题或开始新的请求。
 
-[file]:../../asset/data/罗密欧与朱丽叶.txt
+[file]: https://github.com/TuGraph-family/chat2graph/blob/master/doc/asset/data/罗密欧与朱丽叶.txt

@@ -35,7 +35,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "SYSTEM_PATH": (str, "/system"),
     "FILE_PATH": (str, "/files"),
     "KNOWLEDGE_STORE_PATH": (str, "/knowledge_bases"),
-    "EMBEDDING_MODEL_NAME": (str, "text-embedding-3-small"),
+    "EMBEDDING_MODEL_NAME": (str, "text-embedding-004"),
     "EMBEDDING_MODEL_ENDPOINT": (str, None),
     "EMBEDDING_MODEL_APIKEY": (str, None),
     "GLOBAL_KNOWLEDGE_BASE_NAME": (str, "Global Knowledge Base"),

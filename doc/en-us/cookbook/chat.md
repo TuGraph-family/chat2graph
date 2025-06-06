@@ -24,4 +24,4 @@ The main interface is divided into three primary sections:
 6. **Monitor Progress:** Observe the status updates (Running, Planning, Analyze, etc.) in the main chat area.
 7. **Review Results:** Once processing is complete, the results will be displayed in the main chat area. You can then ask follow-up questions or start a new request.
 
-[file]: ../../asset/data/Romeo%20and%20Juliet.txt
+[file]: https://github.com/TuGraph-family/chat2graph/blob/master/doc/asset/data/Romeo%20and%20Juliet.txt

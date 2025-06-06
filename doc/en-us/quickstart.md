@@ -41,7 +41,7 @@ Configure environment variables (e.g., LLM parameters), model `gemini-2.0-flash`
 
 ```bash
 LLM_NAME=gemini-2.0-flash
-LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai/
+LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai
 LLM_APIKEY={your-llm-api-key}
 
 EMBEDDING_MODEL_NAME=text-embedding-004
@@ -113,7 +113,7 @@ Chat2Graph provides a clean and simple SDK API, allowing you to easily customize
 
 ```python
 SystemEnv.LLM_NAME="gemini-2.0-flash"
-SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai/"
+SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai"
 SystemEnv.LLM_APIKEY="{your-llm-api-key}"
 
 SystemEnv.EMBEDDING_MODEL_NAME="text-embedding-004"
