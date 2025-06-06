@@ -29,13 +29,13 @@ export default async function Layout({ children, params }: LayoutProps) {
         footer: (
           <div className="flex items-center justify-center p-4 border-t border-border">
             <a
-              href="https://github.com/memfuse/memfuse"
+              href="https://github.com/TuGraph-family/chat2graph"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <img
-                src="/assets/images/github-icon.svg"
+                src="/asset/img/github-icon.svg"
                 alt="GitHub"
                 className="w-5 h-5"
               />

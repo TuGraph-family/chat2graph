@@ -13,11 +13,11 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <>
         <img
-          src="/assets/images/memfuse-logo.svg"
-          alt="MemFuse Logo"
+          src="/asset/img/logo.png"
+          alt="Chat2Graph Logo"
           className="w-8 h-8"
         />
-        <span className="text-lg font-bold">MemFuse</span>
+        <span className="text-lg font-bold">Chat2Graph</span>
       </>
     ),
     children: <LanguageSwitcher />,
