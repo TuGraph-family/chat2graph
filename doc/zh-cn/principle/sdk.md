@@ -1,6 +1,6 @@
 # SDK
 
-Chat2Graph SDK 提供了一套分层 API，用于构建和扩展智能体（`Agent`）系统。该设计旨在分离组件职责，以支持模块化和可扩展性，帮助开发者构建智能体的特定能力。
+Chat2Graph SDK 提供了一套简洁的 API，用于构建和扩展智能体系统。其设计旨在分离组件职责，支持模块化和可扩展性，帮助开发者高效构建自己的智能体系统。
 
 ## 1. SDK 的分层设计
 
@@ -14,7 +14,9 @@ Chat2Graph SDK 提供了一套分层 API，用于构建和扩展智能体（`Age
 * **知识库（`KnowledgeBase`）** 为智能体提供持久化记忆和知识管理功能。它整合了记忆（`Memory`）、结构化知识（`Knowledge`），并能感知和利用系统**环境（`Environment`）** 信息。
 * **工具包（`Toolkit`）** 则为智能体提供与外部世界交互和执行具体操作的机制。它通过定义一系列**工具（`Tool`）** 和**动作（`Action`）**，使得智能体能够调用外部 API、访问环境（`Environment`）或执行特定的计算（`Compute`）任务。
 
-![](../../asset/image/sdk-yml.png)
+<div style="text-align: center;">
+  <img src="../../asset/image/sdk-yml.png" alt="memory-architecture" width="50%">
+</div>
 
 通过这种层层支持的架构，Chat2Graph SDK 允许开发者组合和配置这些组件。高层组件定义任务目标和流程，而底层组件提供执行所需的能力。这种设计思路旨在将大语言模型的认知能力与软件工程中的数据处理、计算资源利用和流程控制等实践相结合，构建一个更加全面的智能体应用。
 
