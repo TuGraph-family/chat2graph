@@ -52,9 +52,9 @@ Your evaluation should be based on the following error patterns. Please categori
 EVAL_OPERATION_OUTPUT_PROMPT = """
 ```json
 {
-   “status": "SUCCESS | EXECUTION_ERROR | INPUT_DATA_ERROR | JOB_TOO_COMPLICATED_ERROR", // uppercase
-   "evaluation": "The evaluation of the PREVIOUS INPUT, based on previous instructions.",
-   "lesson": "The lesson of the evaluation and the experience learned.",
+  "status": "SUCCESS | EXECUTION_ERROR | INPUT_DATA_ERROR | JOB_TOO_COMPLICATED_ERROR", // uppercase
+  "evaluation": "The evaluation of the PREVIOUS INPUT, based on previous instructions.",
+  "lesson": "The lesson of the evaluation and the experience learned.",
 }
 ```
 
@@ -62,9 +62,9 @@ for example:
 <deliverable>
 ```json
 {
-   "status": "SUCCESS",
-   "evaluation": "The previous input is complete and valid, with no obvious error patterns.",
-   "lesson": "Ensuring information completeness and logical consistency is key in the analysis process."
+  "status": "SUCCESS",
+  "evaluation": "The previous input is complete and valid, with no obvious error patterns.",
+  "lesson": "Ensuring information completeness and logical consistency is key in the analysis process."
 }
 ```
 </deliverable>
