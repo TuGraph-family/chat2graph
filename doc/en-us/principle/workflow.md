@@ -1,4 +1,6 @@
-# Workflow
+---
+title: Workflow
+---
 
 ## 1. Introduction
 

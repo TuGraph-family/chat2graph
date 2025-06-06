@@ -1,4 +1,6 @@
-# Quickstart
+---
+title: Quickstart
+---
 
 ## 1. Preparation
 

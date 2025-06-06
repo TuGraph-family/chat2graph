@@ -1,4 +1,6 @@
-# Cookbook
+---
+title: Cookbook
+---
 
 Welcome to Chat2Graph! This application allows you to interact with graph experts through a 
 chat interface to perform various graph-related tasks, including design, extraction, query,

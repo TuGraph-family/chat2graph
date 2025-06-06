@@ -1,4 +1,6 @@
-# Chat
+---
+title: Chat
+---
 
 ## 1. Interface Overview
 

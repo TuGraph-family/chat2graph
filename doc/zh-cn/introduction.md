@@ -1,4 +1,6 @@
-# Chat2Graph 简介
+---
+title: Chat2Graph 简介
+---
 
 ## 1. Graph + AI 背景
 
