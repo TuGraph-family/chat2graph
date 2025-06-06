@@ -5,7 +5,7 @@
 工作流（Workflow）模块是 Chat2Graph 框架中 `Agent`（`Leader` 和 `Expert`）执行其任务的核心逻辑单元。它负责编排和执行一系列定义好的 `Operator`（算子）。通过将多个 `Operator` 组织成一个有向无环图（DAG），`Workflow` 明确了这些算子之间的执行顺序和依赖关系。
 
 <div style="text-align  : center;">
-  <img src="../../asset/image/op-dag.png" alt="operatoer-dag" width="50%">
+  <img src="../../asset/image/op-dag.png" alt="op-dag" width="50%">
 </div>
 
 每个 `Agent` 必须内置一个 `Workflow`，该 `Workflow` 规定了 `Agent` 为完成特定类型任务所应遵循的标准化流程。此外，`Workflow` 模块支持集成一个可选的评估算子（`Evaluator`）。该评估算子在工作流执行完毕后启动，负责对结果进行评估，并可能生成反馈（`lesson`），供后续的 `Operator` 或 `Expert` 参考和使用。
