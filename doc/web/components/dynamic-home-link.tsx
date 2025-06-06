@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getLanguageFromPath } from "@/lib/i18n";
 
-export function HomeLink() {
+export function DynamicHomeLink() {
   const pathname = usePathname();
   const currentLanguage = getLanguageFromPath(pathname);
   
@@ -13,12 +13,14 @@ export function HomeLink() {
   
   return (
     <Link href={homeUrl} className="flex items-center gap-2">
-      <img
-        src="/asset/image/logo.png"
-        alt="Chat2Graph Logo"
-        className="w-8 h-8"
-      />
-      <span className="text-lg font-bold">Chat2Graph</span>
+        <>
+            <img
+                src="/asset/image/logo.png"
+                alt="Chat2Graph Logo"
+                className="w-8 h-8"
+            />
+            <span className="text-lg font-bold">Chat2Graph</span>
+        </>
     </Link>
   );
 }
