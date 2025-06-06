@@ -68,9 +68,9 @@ function rehypeLinkDefaults(options: { basePath?: string, docRoot?: string } = {
     function visit(node: any) {
       if (node.type === 'element' && node.tagName === 'a' && node.properties?.href) {
         const href = node.properties.href;
-        const isRelativeMdLink = (href.startsWith('./') || href.startsWith('../')) && href.endsWith('.md');
+        const isProcessableLink = !/^(https?:|#|\/)/.test(href) && href.endsWith('.md');
 
-        if (isRelativeMdLink) {
+        if (isProcessableLink) {
           const filePath = file?.history?.[0] || file?.path;
           if (!filePath) {
             console.warn(`[rehypeLinkDefaults] 无法解析链接 "${href}"，文件路径不可用。`);
