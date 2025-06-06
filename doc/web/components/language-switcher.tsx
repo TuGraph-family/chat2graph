@@ -25,7 +25,7 @@ export function LanguageSwitcher() {
       router.push(newPath);
     } else {
       // 如果不在文档页面，重定向到文档首页
-      router.push(`/chat2graph/${newLanguage}`);
+      router.push(`/chat2graph/${newLanguage}/principle/overview`);
     }
   };
 

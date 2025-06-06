@@ -5,7 +5,7 @@ import {
   DocsDescription,
   DocsTitle,
 } from 'fumadocs-ui/page';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { Metadata } from 'next';
 
@@ -22,6 +22,11 @@ export default async function Page({ params }: PageProps) {
   // 验证语言
   if (lang !== 'en' && lang !== 'cn') {
     notFound();
+  }
+  
+  // 如果是语言根路径，重定向到 overview 页面
+  if (slug.length === 0) {
+    redirect(`/chat2graph/${lang}/principle/overview`);
   }
   
   // 查找对应语言的页面
