@@ -68,6 +68,7 @@ function rehypeLinkDefaults(options: { basePath?: string, docRoot?: string } = {
     function visit(node: any) {
       if (node.type === 'element' && node.tagName === 'a' && node.properties?.href) {
         const href = node.properties.href;
+        
         const isProcessableLink = !/^(https?:|#|\/)/.test(href) && href.endsWith('.md');
 
         if (isProcessableLink) {

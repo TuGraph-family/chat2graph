@@ -1,0 +1,9 @@
+{
+  "title": "食谱",
+  "pages": [
+    "overview",
+    "chat",
+    "graphdb",
+    "knowledgebase"
+  ]
+}

@@ -29,7 +29,7 @@ export function LanguageSwitcher() {
     }
   };
 
-  const targetLanguageName = currentLanguage === 'en-us' ? '中' : 'Eng';
+  const targetLanguageName = currentLanguage === 'en-us' ? '中文' : 'English';
 
   return (
     <button

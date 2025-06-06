@@ -1,0 +1,9 @@
+{
+  "title": "cookbook",
+  "pages": [
+    "overview",
+    "chat",
+    "graphdb",
+    "knowledgebase"
+  ]
+}
