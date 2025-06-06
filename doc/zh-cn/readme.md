@@ -23,12 +23,12 @@
 
 ## 文档地图
 
-* [产品简介](../introduction.md)：了解 Chat2Graph 产品技术背景。
-* [快速开始](../quickstart.md)：从源码安装体验 Chat2Graph。
-* [技术原理](../principle/overview.md)：介绍 Chat2Graph 架构设计与实现原理。
-* [使用手册](../cookbook/overview.md)：介绍 Chat2Graph 产品功能与操作。
-* [开发指南](../development/overview.md)：Chat2Graph SDK 设计与系统集成指南。
-* [运维手册](../deployment/overview.md)：Chat2Graph 系统运维指南。
+* [产品简介](introduction.md)：了解 Chat2Graph 产品技术背景。
+* [快速开始](quickstart.md)：从源码安装体验 Chat2Graph。
+* [技术原理](principle/overview.md)：介绍 Chat2Graph 架构设计与实现原理。
+* [使用手册](cookbook/overview.md)：介绍 Chat2Graph 产品功能与操作。
+* [开发指南](development/overview.md)：Chat2Graph SDK 设计与系统集成指南。
+* [运维手册](deployment/overview.md)：Chat2Graph 系统运维指南。
 
 ## 参与贡献
 
