@@ -1,4 +1,3 @@
-
 # Cookbook
 
 Welcome to Chat2Graph! This application allows you to interact with graph experts through a 

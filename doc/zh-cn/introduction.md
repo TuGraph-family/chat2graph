@@ -11,7 +11,7 @@ Chat2Graph 是一个图原生（Graph Native）的智能体系统。通过利用
 
 ![](../asset/image/graph-ai.png)
 
-详细了解 Chat2Graph 的设计和实现细节，请参考「[技术原理](../principle/overview.md)」。
+详细了解 Chat2Graph 的设计和实现细节，请参考「[技术原理](principle/overview.md)」。
 
 ## 3. 应用场景
 
@@ -22,4 +22,4 @@ Chat2Graph当前适用的场景有：
 - **智能问答与决策支持**: 基于动态构建和更新的知识图谱，提供上下文感知的高级问答服务，为复杂决策提供数据驱动的洞察。
 - **高质量推理与内容生成**: 深度结合符号主义优势，提供高质量的任务规划和记忆召回，实现精确工具调用。我们将持续改进这块能力。
 
-参考「[快速开始](../quickstart.md)」开始体验 Chat2Graph。 同时，「[使用手册](cookbook/overview.md)」详细介绍了 Chat2Graph 产品功能设计与操作方式。
+参考「[快速开始](quickstart.md)」开始体验 Chat2Graph。 同时，「[使用手册](cookbook/overview.md)」详细介绍了 Chat2Graph 产品功能设计与操作方式。
