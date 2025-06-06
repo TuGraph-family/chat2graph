@@ -1,12 +1,29 @@
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import type { ReactNode } from "react";
+import { notFound } from "next/navigation";
 import { baseOptions } from "@/app/layout.config";
-import { source } from "@/lib/source";
+import { getLanguagePageTree } from "@/lib/source";
+import { isValidLanguage } from "@/lib/i18n";
 
-export default function Layout({ children }: { children: ReactNode }) {
+interface LayoutProps {
+  children: ReactNode;
+  params: Promise<{ lang: string }>;
+}
+
+export default async function Layout({ children, params }: LayoutProps) {
+  const { lang } = await params;
+  
+  // 验证语言参数
+  if (!isValidLanguage(lang)) {
+    notFound();
+  }
+
+  // 获取当前语言的页面树
+  const languagePageTree = getLanguagePageTree(lang) as any;
+
   return (
     <DocsLayout
-      tree={source.pageTree}
+      tree={languagePageTree}
       {...baseOptions}
       sidebar={{
         footer: (
@@ -18,7 +35,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <img
-                src="/asset/image/github-icon.svg"
+                src="/assets/images/github-icon.svg"
                 alt="GitHub"
                 className="w-5 h-5"
               />

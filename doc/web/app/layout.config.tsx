@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 /**
  * Shared layout configurations
@@ -12,13 +13,14 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <>
         <img
-          src="/asset/image/memfuse-logo.svg"
+          src="/assets/images/memfuse-logo.svg"
           alt="MemFuse Logo"
           className="w-8 h-8"
         />
         <span className="text-lg font-bold">MemFuse</span>
       </>
     ),
+    children: <LanguageSwitcher />,
   },
   links: [],
 };
