@@ -1,10 +1,10 @@
 {
   "title": "快速开始",
   "pages": [
-    "user-manual",
+    "introduction",
     "principle",
-    "knowledge",
-    "graph_db",
-    "chat"
+    "deployment",
+    "development",
+    "cookbook"
   ]
 }

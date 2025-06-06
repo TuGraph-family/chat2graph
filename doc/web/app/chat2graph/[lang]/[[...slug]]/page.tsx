@@ -20,13 +20,13 @@ export default async function Page({ params }: PageProps) {
   const { lang, slug = [] } = await params;
   
   // 验证语言
-  if (lang !== 'en' && lang !== 'cn') {
+  if (lang !== 'en-us' && lang !== 'zh-cn') {
     notFound();
   }
   
-  // 如果是语言根路径，重定向到 overview 页面
+  // 如果是语言根路径，重定向到 introduction 页面
   if (slug.length === 0) {
-    redirect(`/chat2graph/${lang}/principle/overview`);
+    redirect(`/chat2graph/${lang}/introduction`);
   }
   
   // 查找对应语言的页面
@@ -60,7 +60,7 @@ export async function generateStaticParams() {
   const params: { lang: string; slug?: string[] }[] = [];
   
   // 为每种语言生成参数
-  const languages = ['en', 'cn'];
+  const languages = ['en-us', 'zh-cn'];
   const allParams = source.generateParams();
   
   for (const param of allParams) {

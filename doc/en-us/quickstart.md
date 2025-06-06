@@ -83,7 +83,7 @@ Chat2Graph server started success ! (pid: 16483)
 
 ### 3. Use Chat2Graph
 
-You can access Chat2Graph in the browser at [http://localhost:5010/](http://localhost:5010/). For detailed usage, refer to the「[Cookbook](cookbook/overview.md)」。
+You can access Chat2Graph in the browser at [http://localhost:5010/](http://localhost:5010/). For detailed usage, refer to the「[Cookbook](../cookbook/overview.md)」。
 
 ![](../asset/image/chat.png)
 
@@ -93,7 +93,7 @@ Register a graph database instance in advance to experience the full "Chat to Gr
 
 ![](../asset/image/gdb-mng.png)
 
-For details, refer to the [Graph Database](cookbook/graphdb.md) documentation.
+For details, refer to the [Graph Database](../cookbook/graphdb.md) documentation.
 
 #### 3.2. Chat to Graph
 
@@ -107,7 +107,7 @@ Supports real-time rendering of graph models and data.
 
 ### 4. Integrate Chat2Graph
 
-Chat2Graph provides a clean and simple SDK API, allowing you to easily customize the agent system. For details, refer to the「[SDK Reference](development/sdk-reference.md)」。
+Chat2Graph provides a clean and simple SDK API, allowing you to easily customize the agent system. For details, refer to the「[SDK Reference](../development/sdk-reference.md)」。
 
 #### 4.1. Configure LLM Parameters
 

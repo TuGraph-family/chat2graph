@@ -1,5 +1,6 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { HomeLink } from "@/components/home-link";
 
 /**
  * Shared layout configurations
@@ -10,16 +11,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
  */
 export const baseOptions: BaseLayoutProps = {
   nav: {
-    title: (
-      <>
-        <img
-          src="/asset/img/logo.png"
-          alt="Chat2Graph Logo"
-          className="w-8 h-8"
-        />
-        <span className="text-lg font-bold">Chat2Graph</span>
-      </>
-    ),
+    title: <HomeLink />,
     children: <LanguageSwitcher />,
   },
   links: [],

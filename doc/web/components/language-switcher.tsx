@@ -12,7 +12,7 @@ export function LanguageSwitcher() {
   const currentLanguage = getLanguageFromPath(pathname);
 
   const switchLanguage = () => {
-    const newLanguage = currentLanguage === 'en' ? 'cn' : 'en';
+    const newLanguage = currentLanguage === 'en-us' ? 'zh-cn' : 'en-us';
     
     // 解析当前路径
     const segments = pathname.split('/').filter(Boolean);
@@ -25,12 +25,12 @@ export function LanguageSwitcher() {
       router.push(newPath);
     } else {
       // 如果不在文档页面，重定向到文档首页
-      router.push(`/chat2graph/${newLanguage}/principle/overview`);
+      router.push(`/chat2graph/${newLanguage}/introduction`);
     }
   };
 
   const currentLanguageName = languages.find(lang => lang.code === currentLanguage)?.name || 'Eng';
-  const targetLanguageName = currentLanguage === 'en' ? '中' : 'Eng';
+  const targetLanguageName = currentLanguage === 'en-us' ? '中' : 'Eng';
 
   return (
     <button

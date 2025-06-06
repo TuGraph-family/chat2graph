@@ -2,4 +2,4 @@
 
 ## Index
 
-* [SDK Reference](sdk-reference.md)
+* [SDK Reference](../development/sdk-reference.md)

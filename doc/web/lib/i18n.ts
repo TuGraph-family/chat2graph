@@ -1,8 +1,8 @@
-export const defaultLanguage = 'en';
+export const defaultLanguage = 'en-us';
 
 export const languages = [
-  { code: 'en', name: 'English' },
-  { code: 'cn', name: '中文' },
+  { code: 'en-us', name: 'English' },
+  { code: 'zh-cn', name: '中文' },
 ] as const;
 
 export type Language = typeof languages[number]['code'];

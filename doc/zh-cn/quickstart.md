@@ -83,7 +83,7 @@ Chat2Graph server started success ! (pid: 16483)
 
 ### 3. 使用 Chat2Graph
 
-你可以在浏览器访问 [http://localhost:5010/](http://localhost:5010/) 使用 Chat2Graph。产品使用细节可参考「[使用手册](cookbook/overview.md)」。
+你可以在浏览器访问 [http://localhost:5010/](http://localhost:5010/) 使用 Chat2Graph。产品使用细节可参考「[使用手册](../cookbook/overview.md)」。
 
 ![](../asset/image/chat.png)
 
@@ -92,7 +92,7 @@ Chat2Graph server started success ! (pid: 16483)
 
 ![](../asset/image/gdb-mng.png)
 
-具体请参考文档「[图数据库](cookbook/graphdb.md)」文档。
+具体请参考文档「[图数据库](../cookbook/graphdb.md)」文档。
 
 #### 3.2. 与图对话
 
@@ -106,7 +106,7 @@ Chat2Graph server started success ! (pid: 16483)
 
 ### 4. 集成 Chat2Graph
 
-Chat2Graph 提供了清晰简洁的 SDK API，让你轻松定制智能体系统。详情请参考「[SDK 开发手册](development/sdk-reference.md)」。
+Chat2Graph 提供了清晰简洁的 SDK API，让你轻松定制智能体系统。详情请参考「[SDK 开发手册](../development/sdk-reference.md)」。
 
 #### 4.1. 配置 LLM 参数
 

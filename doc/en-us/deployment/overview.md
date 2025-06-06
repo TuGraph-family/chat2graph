@@ -2,6 +2,6 @@
 
 # Index
 
-* [Installation](installation.md)
+* [Installation](../deployment/installation.md)
 
 

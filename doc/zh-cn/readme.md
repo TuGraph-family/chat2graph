@@ -12,7 +12,7 @@
 [![Release](https://shields.io/github/v/release/tugraph-family/chat2graph.svg?logo=stackblitz&label=Version&color=red)](https://github.com/TuGraph-family/chat2graph/releases)
 
 
-[Chat2Graph](introduction.md) 是一个**图原生的智能体系统**（Graph Native Agentic System）。
+[Chat2Graph](../introduction.md) 是一个**图原生的智能体系统**（Graph Native Agentic System）。
 
 <video controls src="https://github.com/user-attachments/assets/a9680f87-16d2-47b6-843c-7659c7f4a8a2" style="max-width: 100%;">
   您的浏览器不支持 video 标签。
@@ -23,12 +23,12 @@
 
 ## 文档地图
 
-* [产品简介](introduction.md)：了解 Chat2Graph 产品技术背景。
-* [快速开始](quickstart.md)：从源码安装体验 Chat2Graph。
-* [技术原理](principle/overview.md)：介绍 Chat2Graph 架构设计与实现原理。
-* [使用手册](cookbook/overview.md)：介绍 Chat2Graph 产品功能与操作。
-* [开发指南](development/overview.md)：Chat2Graph SDK 设计与系统集成指南。
-* [运维手册](deployment/overview.md)：Chat2Graph 系统运维指南。
+* [产品简介](../introduction.md)：了解 Chat2Graph 产品技术背景。
+* [快速开始](../quickstart.md)：从源码安装体验 Chat2Graph。
+* [技术原理](../principle/overview.md)：介绍 Chat2Graph 架构设计与实现原理。
+* [使用手册](../cookbook/overview.md)：介绍 Chat2Graph 产品功能与操作。
+* [开发指南](../development/overview.md)：Chat2Graph SDK 设计与系统集成指南。
+* [运维手册](../deployment/overview.md)：Chat2Graph 系统运维指南。
 
 ## 参与贡献
 

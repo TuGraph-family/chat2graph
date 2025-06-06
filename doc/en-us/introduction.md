@@ -10,7 +10,7 @@ Chat2Graph is a Graph Native Agentic System. By leveraging the inherent advantag
 
 ![](../asset/image/graph-ai.png)
 
-For detailed information on the design and implementation of Chat2Graph, please refer to "[Principle](principle/overview.md)".
+For detailed information on the design and implementation of Chat2Graph, please refer to "[Principle](../principle/overview.md)".
 
 ## 3. Applications
 
@@ -21,4 +21,4 @@ Current applicable scenarios include:
 - **Intelligent Q&A & Decision Support**: Provides context-aware advanced Q&A services based on dynamically built and updated knowledge graphs, delivering data-driven insights for complex decision-making.
 - **High-Quality Reasoning & Content Generation**: Deeply integrates symbolic strengths for high-quality task planning and memory recall, enabling precise tool invocation. We will continue to improve this capability.
 
-Refer to the "[Quickstart](quickstart.md)" to start experiencing Chat2Graph. At the same time, the "[Cookbook](cookbook/overview.md)" provides a detailed introduction to the product features and operation methods of Chat2Graph.
+Refer to the "[Quickstart](../quickstart.md)" to start experiencing Chat2Graph. At the same time, the "[Cookbook](../cookbook/overview.md)" provides a detailed introduction to the product features and operation methods of Chat2Graph.
