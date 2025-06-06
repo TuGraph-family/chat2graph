@@ -1,5 +1,4 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { DynamicHomeLink } from "@/components/dynamic-home-link";
 
 /**
@@ -16,9 +15,12 @@ export const baseOptions: BaseLayoutProps = {
     children: (
       <>
         <DynamicHomeLink />
-        <LanguageSwitcher />
       </>
     ),
   },
   links: [],
+  // 禁用系统默认的主题切换器
+  themeSwitch: {
+    enabled: false,
+  },
 };

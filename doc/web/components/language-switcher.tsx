@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { Globe } from 'lucide-react';
-import { languages, getLanguageFromPath, defaultLanguage } from '@/lib/i18n';
+import { getLanguageFromPath } from '@/lib/i18n';
 
 export function LanguageSwitcher() {
   const pathname = usePathname();
@@ -29,16 +29,15 @@ export function LanguageSwitcher() {
     }
   };
 
-  const currentLanguageName = languages.find(lang => lang.code === currentLanguage)?.name || 'Eng';
   const targetLanguageName = currentLanguage === 'en-us' ? '中' : 'Eng';
 
   return (
     <button
       onClick={switchLanguage}
-      className="gap-2 h-8 px-2 bg-transparent border border-border rounded-md hover:bg-accent hover:text-accent-foreground flex items-center text-sm font-medium transition-colors"
+      className="gap-1 h-6 px-2 bg-background/80 backdrop-blur-sm border border-border rounded-md hover:bg-accent hover:text-accent-foreground flex items-center text-xs font-medium transition-colors shadow-sm"
     >
-      <Globe className="h-4 w-4" />
-      <span className="text-sm">
+      <Globe className="h-3 w-3" />
+      <span className="text-xs">
         {targetLanguageName}
       </span>
     </button>
