@@ -34,7 +34,7 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 
 ### 2.2. **工具库实现**
 
-1. **初始配置**: 系统通过YAML配置预设的 `Action`，`Tool` 集合，以及 `Operator` 绑定的 `Action` 集合。其中图数据库的操作工具已作为内置能力集成到系统内部，只需要通过 [Graph DataBase](../cookbook/graphdb.md) 服务注册即可。另外，动态工具注册能力还在建设当中。
+1. **初始配置**: 系统通过YAML配置预设的 `Action`，`Tool` 集合，以及 `Operator` 绑定的 `Action` 集合。其中图数据库的操作工具已作为内置能力集成到系统内部，只需要通过 [Graph DataBase](graphdb.md) 服务注册即可。另外，动态工具注册能力还在建设当中。
 
 2. **工具推荐**: 基于 `Operator` 绑定的 `Action` 集合，`ToolkitService` 会在 Toolkit 中进行图上探索。它会查找与当前 `Action` 相关联的其他 `Action` 和可用的 `Tool`，并将它们作为推荐项提供出来。推荐的范围（例如，探索的深度或关联强度）可以通过配置阈值和图遍历的跳数来控制。
 

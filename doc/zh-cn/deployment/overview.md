@@ -2,6 +2,6 @@
 
 # 目录
 
-* [安装指南](../deployment/installation.md)
+* [安装指南](installation.md)
 
 

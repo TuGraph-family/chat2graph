@@ -37,16 +37,16 @@ Chat2Graph 整体采用了「[单主动-多被动](https://arxiv.org/abs/2409.11
 
 系统的核心组件有：
 
-* **图系统层**：构建了面向图系统的统一抽象，使用 [Graph Database](../cookbook/graphdb.md) 服务统一管理，并支持未来更多图计算系统的扩展。
+* **图系统层**：构建了面向图系统的统一抽象，使用 [Graph Database](graphdb.md) 服务统一管理，并支持未来更多图计算系统的扩展。
 * **AI 系统层**：构建 AI 基础设施抽象，如智能体框架、RAG、记忆工具、模型服务工具等，提供智能体能力基建和生态扩展。
 * **存储服务层**：存储智能体的持久化数据，包括元数据、记忆、知识、文件等。
-* **[推理机](../principle/reasoner.md)**：提供 LLM 服务封装、推理增强、工具调用等基础能力。
-* **[工作流](../principle/workflow.md)**：负责智能体内部的算子（Operator）编排与SOP抽象，定义智能体工作流程。
-* **[记忆系统](../principle/memory.md)**：构建分层的知识精练体系，负责智能体系统的信息存储、检索，包括记忆管理、[知识库](../cookbook/knowledgebase.md)、环境等。
-* **[工具库](../principle/toolkit.md)**：基于图谱的方式描述工具和智能体行动的关联关系，实现工具的自动化管理和推荐。
-* **[智能体](../principle/agent.md)**：智能体系统执行单元的统一抽象，使用角色定义（Profile）描述工作职责，使用工作流描述工作流程。主要包括 [Leader](../principle/leader.md) 智能体和 Expert 智能体两大类型。
+* **[推理机](reasoner.md)**：提供 LLM 服务封装、推理增强、工具调用等基础能力。
+* **[工作流](workflow.md)**：负责智能体内部的算子（Operator）编排与SOP抽象，定义智能体工作流程。
+* **[记忆系统](memory.md)**：构建分层的知识精练体系，负责智能体系统的信息存储、检索，包括记忆管理、[知识库](knowledgebase.md)、环境等。
+* **[工具库](toolkit.md)**：基于图谱的方式描述工具和智能体行动的关联关系，实现工具的自动化管理和推荐。
+* **[智能体](agent.md)**：智能体系统执行单元的统一抽象，使用角色定义（Profile）描述工作职责，使用工作流描述工作流程。主要包括 [Leader](leader.md) 智能体和 Expert 智能体两大类型。
 * **自动化**：系统智能体化能力的抽象，「Less Structure」理念的实践手段。包括自动的任务规划、工作流生成、工具库优化、知识精练、资源调度等能力。
-* **系统集成**：提供 Web UI、Restful API、[SDK](../principle/sdk.md) 的集成方式，通过 YAML 一键配置智能体系统，方便开发者快速接入 Chat2Graph 的能力。
+* **系统集成**：提供 Web UI、Restful API、[SDK](sdk.md) 的集成方式，通过 YAML 一键配置智能体系统，方便开发者快速接入 Chat2Graph 的能力。
 
 ## 4. 部署形态
 

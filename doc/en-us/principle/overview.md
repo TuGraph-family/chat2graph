@@ -40,13 +40,13 @@ Key components of the system include:
 * **Graph System**: Provides a unified abstraction for graph systems, managed via [Graph Database](../cookbook/graphdb.md) service, with support for future extensions to more graph computing systems.
 * **AI System**: Abstracts AI infrastructure, such as agent frameworks, RAG, memory tools, and model service tools, offering foundational agent capabilities and ecosystem expansion.
 * **Storage**: Stores persistent agent data, including metadata, memory, knowledge, and files.
-* **[Reasoner](../principle/reasoner.md)**: Encapsulates LLM services, enhances reasoning, and provides tool invocation capabilities.
-* **[Workflow](../principle/workflow.md)**: Handles internal operator orchestration and SOP abstraction, defining agent workflows.
-* **[Memory](../principle/memory.md)**: Builds a hierarchical knowledge refinement system for information storage and retrieval, including memory management, [knowledge base](../cookbook/knowledgebase.md), environment.
-* **[Toolkit](../principle/toolkit.md)**: Describes tool and action relationships using graphs, enabling automated tool management and recommendation.
-* **[Agent](../principle/agent.md)**: A unified abstraction for agent execution units, using role definitions (Profile) to describe responsibilities and workflows to define processes. Includes [Leader](../principle/leader.md) and Expert agents.
+* **[Reasoner](reasoner.md)**: Encapsulates LLM services, enhances reasoning, and provides tool invocation capabilities.
+* **[Workflow](workflow.md)**: Handles internal operator orchestration and SOP abstraction, defining agent workflows.
+* **[Memory](memory.md)**: Builds a hierarchical knowledge refinement system for information storage and retrieval, including memory management, [knowledge base](knowledgebase.md), environment.
+* **[Toolkit](toolkit.md)**: Describes tool and action relationships using graphs, enabling automated tool management and recommendation.
+* **[Agent](agent.md)**: A unified abstraction for agent execution units, using role definitions (Profile) to describe responsibilities and workflows to define processes. Includes [Leader](leader.md) and Expert agents.
 * **Automation**: Abstracts agent automation capabilities, embodying the "Less Structure" philosophy. Includes automated task planning, workflow generation, toolkit optimization, knowledge refinement, and resource scheduling.
-* **Integrability**: Offers Web UI, Restful API, and [SDK](../development/sdk-reference.md) integration, with YAML-based one-click agent configuration for easy developer integration.
+* **Integrability**: Offers Web UI, Restful API, and [SDK](sdk.md) integration, with YAML-based one-click agent configuration for easy developer integration.
 
 ## 4. Deployment
 

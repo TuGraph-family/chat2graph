@@ -1,4 +1,4 @@
-🌐️ 中文 | [English](../../README.md)
+🌐️ 中文 | [English](README.md)
 
 <p align="center">
   <img src="../asset/image/head.png" width=800/>
@@ -12,7 +12,7 @@
 [![Release](https://shields.io/github/v/release/tugraph-family/chat2graph.svg?logo=stackblitz&label=Version&color=red)](https://github.com/TuGraph-family/chat2graph/releases)
 
 
-[Chat2Graph](../introduction.md) 是一个**图原生的智能体系统**（Graph Native Agentic System）。
+[Chat2Graph](introduction.md) 是一个**图原生的智能体系统**（Graph Native Agentic System）。
 
 <video controls src="https://github.com/user-attachments/assets/a9680f87-16d2-47b6-843c-7659c7f4a8a2" style="max-width: 100%;">
   您的浏览器不支持 video 标签。

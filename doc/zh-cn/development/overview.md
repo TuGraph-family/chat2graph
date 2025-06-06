@@ -2,4 +2,4 @@
 
 ## 目录
 
-* [SDK 开发手册](../development/sdk-reference.md)
+* [SDK 开发手册](sdk-reference.md)

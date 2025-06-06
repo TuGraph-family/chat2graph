@@ -9,8 +9,8 @@ analysis and Q&A. This manual will guide you through the features and usage of t
 
 ## Index
 
-* [Chat](../cookbook/chat.md)
+* [Chat](chat.md)
 
-* [Graph Database](../cookbook/graphdb.md)
+* [Graph Database](graphdb.md)
 
-* [Knowledge Base](../cookbook/knowledgebase.md)
+* [Knowledge Base](knowledgebase.md)

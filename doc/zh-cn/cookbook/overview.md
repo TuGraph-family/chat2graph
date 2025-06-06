@@ -7,11 +7,11 @@
 
 ## 目录
 
-* [聊天](../cookbook/chat.md)
+* [聊天](chat.md)
 
-* [图数据库](../cookbook/graphdb.md)
+* [图数据库](graphdb.md)
 
-* [知识库](../cookbook/knowledgebase.md)
+* [知识库](knowledgebase.md)
 
 <!-- 其他模块文档可用时在此处添加链接 -->
 <!--
