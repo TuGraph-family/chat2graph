@@ -1,16 +1,10 @@
 {
   "title": "Getting Started",
   "pages": [
-    "---Getting Started---",
-    "index",
     "user-manual",
-    "---Chat Features---",
-    "chat",
-    "---Graph Database---",
-    "graph_db",
-    "---Knowledge Base---",
+    "principle",
     "knowledge",
-    "---Core Principles---",
-    "principle"
+    "graph_db",
+    "chat"
   ]
 }

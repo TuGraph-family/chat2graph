@@ -1,16 +1,10 @@
 {
   "title": "快速开始",
   "pages": [
-    "---快速开始---",
-    "index",
     "user-manual",
-    "---聊天功能---",
-    "chat",
-    "---图数据库---",
-    "graph_db",
-    "---知识库---",
+    "principle",
     "knowledge",
-    "---核心原理---",
-    "principle"
+    "graph_db",
+    "chat"
   ]
 }
