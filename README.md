@@ -1,7 +1,7 @@
-🌐️ English | [中文](doc/cn/README-cn.md)
+🌐️ English | [中文](doc/zh-cn/readme.md)
 
 <p align="center">
-  <img src="doc/head.png" width=800/>
+  <img src="doc/asset/image/head.png" width=800/>
 </p>
 
 
@@ -12,39 +12,28 @@
 [![License](https://shields.io/github/license/tugraph-family/chat2graph?logo=apache&label=License&color=blue)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Release](https://shields.io/github/v/release/tugraph-family/chat2graph.svg?logo=stackblitz&label=Version&color=red)](https://github.com/TuGraph-family/chat2graph/releases)
 
-## Background
-
-Traditional tabular data processing technologies, such as distributed databases, data warehouses, 
-and data lakes, have been continuously evolving and gradually maturing. In comparison, graph-based 
-data processing technologies (graph databases, graph computing engines) provide new ideas and 
-methods, but also face issues such as low ecological maturity and high barriers to product usage. 
-With the rise of large language models (LLMs), how to effectively combine artificial intelligence 
-technology with graph computing technology (Graph + AI) will be a very worthwhile direction to 
-explore. On one hand, we can leverage cutting-edge technologies like LLMs and agents to 
-lower the barriers to using graph computing products and enhance the user experience with graphs. 
-On the other hand, graph computing technology can fully utilize the performance and 
-interpretability advantages of graph data structures in relational analysis scenarios, assisting 
-LLMs and intelligent agents in improving reasoning capabilities and generation quality.
-
-## Introduction
-
-Chat2Graph is a graph native agentic system, which builds a multi-agents system (MAS) on top of 
-a graph database to achieve intelligent R&D, O&M, Q&A, generation, and more, helping users, 
-developers, product managers, solution architects, operations engineers, and others 
-to efficiently use graph databases, lower the barriers to using graphs, and accelerate content 
-generation, implement dialogue with graphs. At the same time, leveraging the inherent advantages 
-of graph data structures in relationship modeling, interpretability, etc., can enhance the key 
-capabilities of intelligent agents such as reasoning, planning, memory, and tools, to achieve 
-a deep integration of graph computing technology and artificial intelligence technology.
+[Chat2Graph](doc/en-us/introduction.md) is a **Graph Native Agentic System**.
 
 <video controls src="https://github.com/user-attachments/assets/7c859d37-cd1e-431f-8e81-8459bc605879" style="max-width: 100%;">
   Your browser does not support the video tag.
 </video>
 
-## Key Features
+Using agents as a blueprint, and exploring the technological innovation of "Graph + AI" is our value proposition.
 
-Chat2Graph currently provides basic capabilities of intelligent agent systems, but there are 
-still many features that need to be improved together with the community.
+## Documentation
+
+* [Introduction](doc/en-us/introduction.md): Learn about the technical background of Chat2Graph.
+* [Quickstart](doc/en-us/quickstart.md): Install and experience Chat2Graph from source code.
+* [Principle](doc/en-us/principle/overview.md): Introduction to Chat2Graph's architecture design and implementation principles.
+* [Cookbook](doc/en-us/cookbook/overview.md): Introduction to Chat2Graph's features and operations.
+* [Development](doc/en-us/development/overview.md): Chat2Graph SDK design and system integration guide.
+* [Deployment](doc/en-us/deployment/overview.md): Chat2Graph system operations guide.
+
+## Contributing
+
+Chat2Graph currently only provides basic agent system capabilities. We look forward to your participation in co-building graph native agentic system.
+
+This is our technical roadmap:
 
 - Reasoning && Planning
   - [x] One-Active-Many-Passive hybrid multi-agent architecture.
@@ -74,150 +63,16 @@ still many features that need to be improved together with the community.
   - [ ] Production enhancement.
   - [ ] Integration with open-source ecosystems.
 
-## Quick Start
+You can reference [Contributing][contrib] document and submit GitHub Issues/PRs to provide feedback and suggest improvements for Chat2Graph.
 
-### Preparation
-
-Prepare the required versions of Python and NodeJS.
-
-* Install Python: [Python == 3.10](https://www.python.org/downloads) recommended.
-* Install NodeJS: [NodeJS >= v16](https://nodejs.org/en/download) recommended.
-
-You can also use tools like [conda][conda] to install the python environment.
-
-### Build & Start
-
-Build Chat2Graph as follows.
-
-```bash
-git clone https://github.com/TuGraph-family/chat2graph.git
-cd chat2graph
-./bin/build.sh
-```
-
-Then configure environment variables (e.g., LLM parameters) based on 
-[.env.template](.env.template), startup Chat2Graph.
-
-```bash
-cp .env.template .env && vim .env
-./bin/start.sh
-```
-
-When you see the following log:
-
-```text
-Starting server...
-Web resources location: /Users/florian/code/chat2graph/app/server/web
-System database url: sqlite:////Users/florian/.chat2graph/system/chat2graph.db
-Loading AgenticService from app/core/sdk/chat2graph.yml with encoding utf-8
-Init application: Chat2Graph
-Init the Leader agent
-Init the Expert agents
-  ____ _           _   ____   ____                 _     
- / ___| |__   __ _| |_|___ \ / ___|_ __ __ _ _ __ | |__  
-| |   | '_ \ / _` | __| __) | |  _| '__/ _` | '_ \| '_ \ 
-| |___| | | | (_| | |_ / __/| |_| | | | (_| | |_) | | | |
- \____|_| |_|\__,_|\__|_____|\____|_|  \__,_| .__/|_| |_|
-                                            |_|          
-
- * Serving Flask app 'bootstrap'
- * Debug mode: off
-WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5010
- * Running on http://192.168.1.1:5010
-Chat2Graph server started success ! (pid: 16483)
-```
-
-You can access Chat2Graph in the browser at [http://localhost:5010/](http://localhost:5010/):
-
-![](doc/img/index.png)
-
-
-## Register Graph Database
-
-After registering the graph database to Chat2Graph in "Backend Manager", you can experience the complete ability 
-of "chat to graph".
-![](doc/img/gdb-mng.png)
-
-The graph databases currently supported by Docker are:
-
-* Neo4j
-
-```bash
-docker pull neo4j:latest
-docker run -d -p 7474:7474 -p 7687:7687 --name neo4j-server --env NEO4J_AUTH=none \
-  --env NEO4J_PLUGINS='["apoc", "graph-data-science"]' neo4j:latest
-```
-
-* TuGraph-DB
-
-**Note**: we will support TuGraph-DB connectivity in the future.
-
-```bash
-docker pull tugraph/tugraph-runtime-centos7:4.5.1
-docker run -d -p 7070:7070 -p 7687:7687 -p 9090:9090 --name tugraph-server \
-  tugraph/tugraph-runtime-centos7:latest lgraph_server -d run --enable_plugin true
-```
-
-### Use SDK
-
-The SDK of Chat2Graph provides a very clear and concise API, allowing you to easily build access 
-to your intelligent system.
-
-You can quickly converse with the built-in Chat2Graph in the following ways.
-
-```python
-SystemEnv.LLM_NAME="gemini-2.0-flash" # or gemini-2.5-flash-preview-04-17 recommended
-SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai/"
-SystemEnv.LLM_APIKEY="<YOUR-GEMINI-API-KEY>"
-
-mas = AgenticService.load()
-answer = mas.execute("What is TuGraph ?").get_payload()
-```
-
-At the same time, the SDK also provides asynchronous dialogue capabilities.
-
-```python
-job = mas.session().submit(question)
-answer = job.wait().get_payload()
-```
-
-Of course, customizing your own intelligent agent is also allowed.
-
-```python
-mas = AgenticService("Chat2Graph")
-mas.expert(name="Design Expert").workflow(
-        (analysis_operator, concept_modeling_operator)
-    ).build()
-```
-
-To facilitate the rapid configuration of agents, you can describe the details of the agent 
-using a YAML file and load it directly.
-
-```python
-mas = AgenticService.load("app/core/sdk/chat2graph.yml")
-```
-
-## User Manual
-
-For details, please refer to [User Manual](doc/en/user-manual.md).
-
-## Contributing
-
-You can reference [Contributing][contrib] document and submit GitHub Issues/PRs 
-to provide feedback and suggest improvements for Chat2Graph.
-
-TuGraph establishes a clear [Architecture][arch] and [Roles][roles] for the community, and will 
-invite outstanding contributors to join [SIGs][sigs].
+TuGraph establishes a clear [Architecture][arch] and [Roles][roles] for the community, and will invite outstanding contributors to join [SIGs][sigs].
 
 ## Contact
 
 You can contact with us directly through TuGraph Discord and WeChat group provided below.
 
 - Discord：https://discord.gg/KBCFbNFj
-- WeChat：
-![](https://github.com/TuGraph-family/community/blob/master/assets/contacts.png)
+- WeChat：![](https://github.com/TuGraph-family/community/blob/master/assets/contacts.png)
 
 [conda]: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
 [contrib]: https://github.com/TuGraph-family/community/blob/master/docs/CONTRIBUTING.md
