@@ -42,7 +42,7 @@ Key components of the system include:
 * **Storage**: Stores persistent agent data, including metadata, memory, knowledge, and files.
 * **[Reasoner](reasoner.md)**: Encapsulates LLM services, enhances reasoning, and provides tool invocation capabilities.
 * **[Workflow](workflow.md)**: Handles internal operator orchestration and SOP abstraction, defining agent workflows.
-* **[Memory](memory.md)**: Builds a hierarchical knowledge refinement system for information storage and retrieval, including memory management, [knowledge base](../cookbook/knowledgebase.md), environment.
+* **[Memory](memory.md)**: Builds a hierarchical knowledge refinement system for information storage and retrieval, including memory management, [knowledge Base](../cookbook/knowledgebase.md), environment.
 * **[Toolkit](toolkit.md)**: Describes tool and action relationships using graphs, enabling automated tool management and recommendation.
 * **[Agent](agent.md)**: A unified abstraction for agent execution units, using role definitions (Profile) to describe responsibilities and workflows to define processes. Includes [Leader](leader.md) and Expert agents.
 * **Automation**: Abstracts agent automation capabilities, embodying the "Less Structure" philosophy. Includes automated task planning, workflow generation, toolkit optimization, knowledge refinement, and resource scheduling.
