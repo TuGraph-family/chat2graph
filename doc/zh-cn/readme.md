@@ -1,4 +1,4 @@
-🌐️ 中文 | [English](README.md)
+🌐️ 中文 | [English](../../README.md)
 
 <p align="center">
   <img src="../asset/image/head.png" width=800/>
