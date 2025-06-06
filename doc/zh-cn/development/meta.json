@@ -3,5 +3,6 @@
   "pages": [
     "overview",
     "sdk-reference"
-  ]
+  ],
+  "defaultOpen": true
 }

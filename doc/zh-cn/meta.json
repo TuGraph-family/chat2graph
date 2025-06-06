@@ -6,5 +6,6 @@
     "deployment",
     "development",
     "cookbook"
-  ]
+  ],
+  "defaultOpen": true
 }

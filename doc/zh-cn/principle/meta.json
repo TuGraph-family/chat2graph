@@ -6,5 +6,6 @@
     "reasoner",
     "toolkit",
     "sdk"
-  ]
+  ],
+  "defaultOpen": true
 }
