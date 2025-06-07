@@ -29,9 +29,7 @@ title: 记忆系统
 
 不同记忆层级存取的内容差异极大，为了简化描述，这里统一称之为「知识」。
 
-<div style="text-align: center;">
-  <img src="../../asset/image/memory-arch.png" alt="memory-architecture" width="80%">
-</div>
+![memory-architecture](../../asset/image/memory-arch.png){width="80%"}
 
 对于传统记忆系统来说，一般采用单一的存储架构，主要解决知识生产和知识消费的问题。相比而言，分层记忆系统引入了多级的知识抽象，从更精细的粒度对知识进行管理。总的来看包含三个方面：
 
