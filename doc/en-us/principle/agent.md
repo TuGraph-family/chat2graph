@@ -1,4 +1,6 @@
-# Agent
+---
+title: Agent
+---
 
 ## 1. Introduction
 

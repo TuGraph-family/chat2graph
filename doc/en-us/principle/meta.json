@@ -1,10 +1,12 @@
 {
-  "title": "principle",
+  "title": "Principle",
   "pages": [
     "overview",
+    "agent",
     "leader",
     "reasoner",
-    "toolkit"
+    "toolkit",
+    "memory"
   ],
   "defaultOpen": true
 }
