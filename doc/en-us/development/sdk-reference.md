@@ -1,2 +1,4 @@
-# SDK Reference
+---
+title: SDK Reference
+---
 

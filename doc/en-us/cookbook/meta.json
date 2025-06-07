@@ -1,0 +1,10 @@
+{
+  "title": "Cookbook",
+  "pages": [
+    "overview",
+    "chat",
+    "graphdb",
+    "knowledgebase"
+  ],
+  "defaultOpen": true
+}

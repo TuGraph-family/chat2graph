@@ -1,4 +1,6 @@
-# Memory System
+---
+title: Memory System
+---
 
 ## 1. Introduction
 
@@ -23,9 +25,7 @@ Inspired by the [DIKW](https://en.wikipedia.org/wiki/DIKW_pyramid) pyramid model
 
 The content accessed at different memory levels varies significantly. For simplicity, we uniformly refer to it as "knowledge."
 
-<div style="text-align: center;">
-  <img src="../../asset/image/memory-arch.png" alt="memory-architecture" width="80%">
-</div>
+![memory-architecture](../../asset/image/memory-arch.png){width="80%"}
 
 Traditional memory systems typically employ a single storage architecture, primarily addressing knowledge production and consumption. In contrast, the layered memory system introduces multi-level knowledge abstraction, managing knowledge at a finer granularity. Overall, it encompasses three aspects:
 

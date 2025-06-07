@@ -1,4 +1,6 @@
-# Principle
+---
+title: Overview
+---
 
 Chat2Graph is a **Graph Native Agent System** focused on the exploration and implementation of "Graph + AI" technology. It leverages the interpretability of symbolism and the autonomous learning capabilities of connectionism to explore the deep integration of graph computing and artificial intelligence technologies.
 

@@ -1,4 +1,6 @@
-# Knowledge Base
+---
+title: Knowledge Base
+---
 
 The knowledge base in Chat2Graph is divided into two parts for usage: the global knowledge base and the session knowledge base.
 

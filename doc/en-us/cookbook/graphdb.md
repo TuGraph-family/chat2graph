@@ -1,4 +1,6 @@
-# Graph Database
+---
+title: Graph Database
+---
 
 Chat2Graph can interact with multiple graph databases and supports the management of the connections to them.
 

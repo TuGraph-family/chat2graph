@@ -1,0 +1,8 @@
+{
+  "title": "开发指南",
+  "pages": [
+    "overview",
+    "sdk-reference"
+  ],
+  "defaultOpen": true
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Chat2Graph Documentation",
+  "pages": [
+    "introduction",
+    "principle",
+    "deployment",
+    "development",
+    "quickstart",
+    "cookbook"
+  ],
+  "defaultOpen": true
+}

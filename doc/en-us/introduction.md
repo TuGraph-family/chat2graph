@@ -1,4 +1,6 @@
-# Introduction
+---
+title: Introduction
+---
 
 ## 1. Background of "Graph + AI"
 

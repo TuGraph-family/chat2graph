@@ -1,0 +1,10 @@
+{
+  "title": "使用手册",
+  "pages": [
+    "overview",
+    "chat",
+    "graphdb",
+    "knowledgebase"
+  ],
+  "defaultOpen": true
+}

@@ -1,4 +1,6 @@
-# Leader
+---
+title: Leader
+---
 
 ## 1. Introduction
 

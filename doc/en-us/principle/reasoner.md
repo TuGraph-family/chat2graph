@@ -1,4 +1,6 @@
-# Reasoner Module
+---
+title: Reasoner
+---
 
 ## 1. Introduction
 
