@@ -19,17 +19,17 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { lang, slug = [] } = await params;
   
-  // 验证语言
+  // Validate language
   if (lang !== 'en-us' && lang !== 'zh-cn') {
     notFound();
   }
   
-  // 如果是语言根路径，重定向到 introduction 页面
+  // If it's language root path, redirect to introduction page
   if (slug.length === 0) {
     redirect(`/chat2graph/${lang}/introduction`);
   }
   
-  // 查找对应语言的页面
+  // Find page for corresponding language
   const page = getPageByLanguage(slug, lang);
   
   if (!page) {
@@ -59,17 +59,17 @@ export default async function Page({ params }: PageProps) {
 export async function generateStaticParams() {
   const params: { lang: string; slug?: string[] }[] = [];
   
-  // 为每种语言生成参数
+  // Generate parameters for each language
   const languages = ['en-us', 'zh-cn'];
   const allParams = source.generateParams();
   
   for (const param of allParams) {
     for (const lang of languages) {
-      // 检查是否存在对应语言的页面
+      // Check if page exists for corresponding language
       if (param.slug && param.slug.length > 0) {
         const firstSegment = param.slug[0];
         if (firstSegment === lang) {
-          // 如果第一个段是语言代码，移除它并生成对应的路由
+          // If first segment is language code, remove it and generate corresponding route
           const slug = param.slug.slice(1);
           params.push({
             lang,
@@ -80,7 +80,7 @@ export async function generateStaticParams() {
     }
   }
   
-  // 添加语言根路径
+  // Add language root paths
   for (const lang of languages) {
     params.push({
       lang,

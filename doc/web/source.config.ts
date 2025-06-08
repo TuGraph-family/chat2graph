@@ -4,17 +4,17 @@ import { z } from "zod";
 import path from "path";
 import { URL } from 'url';
 
-// 1. 配置中心
+// 1. Configuration Center
 const config = {
   basePath: '/chat2graph',
   docRoot: 'doc',
   publicAssetPrefix: '/asset/image',
 };
 
-// 2. 自定义 Rehype 插件
+// 2. Custom Rehype Plugins
 
 /**
- * Rehype 插件：处理图片路径和默认属性。
+ * Rehype plugin: Handles image paths and default attributes.
  */
 function rehypeImageDefaults(options: { publicAssetPrefix?: string } = {}) {
   const { publicAssetPrefix = config.publicAssetPrefix } = options;
@@ -48,7 +48,7 @@ function rehypeImageDefaults(options: { publicAssetPrefix?: string } = {}) {
 }
 
 /**
- * Rehype 插件：处理多语言文档中的内部 Markdown 链接。
+ * Rehype plugin: Handles internal Markdown links in multilingual documents.
  */
 function rehypeLinkDefaults(options: { basePath?: string, docRoot?: string } = {}) {
   const { basePath = config.basePath, docRoot = config.docRoot } = options;
@@ -74,7 +74,7 @@ function rehypeLinkDefaults(options: { basePath?: string, docRoot?: string } = {
         if (isProcessableLink) {
           const filePath = file?.history?.[0] || file?.path;
           if (!filePath) {
-            console.warn(`[rehypeLinkDefaults] 无法解析链接 "${href}"，文件路径不可用。`);
+            console.warn(`[rehypeLinkDefaults] Unable to resolve link "${href}", file path unavailable.`);
             return;
           }
 
@@ -87,7 +87,7 @@ function rehypeLinkDefaults(options: { basePath?: string, docRoot?: string } = {
             const finalBasePath = basePath.endsWith('/') ? basePath : `${basePath}/`;
             node.properties.href = `${finalBasePath}${targetPath}`;
           } else {
-            console.warn(`[rehypeLinkDefaults] 在路径 "${filePath}" 中找不到 docRoot ("${docRoot}")。`);
+            console.warn(`[rehypeLinkDefaults] Could not find docRoot ("${docRoot}") in path "${filePath}".`);
           }
         }
       }
@@ -100,7 +100,7 @@ function rehypeLinkDefaults(options: { basePath?: string, docRoot?: string } = {
   };
 }
 
-// 3. Fumadocs 配置导出
+// 3. Fumadocs Configuration Export
 export const docs = defineDocs({
   dir: path.resolve(process.cwd(), config.docRoot),
   docs: {

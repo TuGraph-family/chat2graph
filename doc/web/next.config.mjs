@@ -6,7 +6,7 @@ const withMDX = createMDX();
 const config = {
   reactStrictMode: true,
   images: {
-    unoptimized: true, // 禁用图片优化
+    unoptimized: true, // Disable image optimization
     remotePatterns: [
       {
         protocol: 'https',

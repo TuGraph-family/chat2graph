@@ -14,7 +14,7 @@ export const isValidLanguage = (lang: string): lang is Language => {
 export const getLanguageFromPath = (pathname: string): Language => {
   const segments = pathname.split('/').filter(Boolean);
   
-  // 检查是否是文档路径格式：/chat2graph/[lang]/...
+  // Check if this is a documentation path format: /chat2graph/[lang]/...
   if (segments.length >= 2 && segments[0] === 'chat2graph') {
     const langSegment = segments[1];
     if (isValidLanguage(langSegment)) {
@@ -22,7 +22,7 @@ export const getLanguageFromPath = (pathname: string): Language => {
     }
   }
   
-  // 检查第一个段是否是语言代码（用于其他路径格式）
+  // Check if the first segment is a language code (for other path formats)
   const firstSegment = segments[0];
   if (isValidLanguage(firstSegment)) {
     return firstSegment;

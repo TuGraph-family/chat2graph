@@ -10,7 +10,7 @@ import { DynamicHomeLink } from "@/components/dynamic-home-link";
  */
 export const baseOptions: BaseLayoutProps = {
   nav: {
-    // 直接设置为 null 或者 false 来禁用默认的 title 链接行为
+    // Set to null or false to disable default title link behavior
     title: null,
     children: (
       <>
@@ -19,7 +19,7 @@ export const baseOptions: BaseLayoutProps = {
     ),
   },
   links: [],
-  // 禁用系统默认的主题切换器
+  // Disable system default theme switcher
   themeSwitch: {
     enabled: false,
   },

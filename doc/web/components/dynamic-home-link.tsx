@@ -8,7 +8,7 @@ export function DynamicHomeLink() {
   const pathname = usePathname();
   const currentLanguage = getLanguageFromPath(pathname);
   
-  // 根据当前语言决定首页链接
+  // Determine home link based on current language
   const homeUrl = `/chat2graph/${currentLanguage}/introduction`;
   
   return (

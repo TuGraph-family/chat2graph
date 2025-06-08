@@ -16,12 +16,12 @@ interface LayoutProps {
 export default async function Layout({ children, params }: LayoutProps) {
   const { lang } = await params;
   
-  // 验证语言参数
+  // Validate language parameter
   if (!isValidLanguage(lang)) {
     notFound();
   }
 
-  // 获取当前语言的页面树
+  // Get page tree for current language
   const languagePageTree = getLanguagePageTree(lang) as any;
 
   return (
