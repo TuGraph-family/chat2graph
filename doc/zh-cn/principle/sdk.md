@@ -23,8 +23,10 @@ Chat2Graph SDK 提供了一套简洁的 API，用于构建和扩展智能体系�
 ## 2. SDK API
 
 ### 2.1. Reasoner SDK
+<!-- WIP: Reasoner's API will be refined soon, and the documentation will be updated here. --> 
 
 ### 2.2. Toolkit SDK
+<!-- WIP: Reasoner's API will be refined soon, and the documentation will be updated here. -->
 
 ### 2.3. Agentic Service SDK
 
