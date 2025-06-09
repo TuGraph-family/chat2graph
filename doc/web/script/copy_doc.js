@@ -1,21 +1,14 @@
-// Function: Copy specified directories from source location to `public` directory before build.
-// Features:
-//   - Automatically handle symlinks (copy actual files that links point to).
-//   - Simple configuration, just add directory names to DIRS_TO_COPY array.
-//   - Clean old directories before copying to ensure latest content.
-//   - Clear logging for easy debugging on platforms like Vercel.
+// Copy directories from source to public directory before build
 
 const fs = require('fs');
 const path = require('path');
 
-// --- Configuration Center ---
-// Add all folder names that need to be copied from `doc/` directory to `public/` directory in this array.
+// Directories to copy from doc/ to public/
 const DIRS_TO_COPY = [
   'asset',
   'en-us',
   'zh-cn'
 ];
-// --- Configuration End ---
 
 const projectRoot = path.resolve(__dirname, '..');
 const sourceBaseDir = path.join(projectRoot, '..');
@@ -30,20 +23,19 @@ try {
 
     console.log(`\nProcessing directory: "${dirName}"`);
 
-    // 1. Check if source directory exists, skip with warning if not found
+    // Check if source exists
     if (!fs.existsSync(sourcePath)) {
       console.warn(`  ⚠️  Warning: Source directory not found, skipping: ${sourcePath}`);
-      return; // Skip to next directory to copy
+      return;
     }
 
-    // 2. Clean up old version in `public` directory to ensure fresh copy
+    // Clean old directory
     if (fs.existsSync(destinationPath)) {
       console.log(`  - Cleaning up old directory: ${destinationPath}`);
       fs.rmSync(destinationPath, { recursive: true, force: true });
     }
 
-    // 3. Recursively copy entire directory.
-    //    fs.cpSync will automatically resolve symlinks and copy the actual files/directories they point to.
+    // Copy directory
     console.log(`  - Copying from "${sourcePath}"`);
     console.log(`    to "${destinationPath}"`);
     fs.cpSync(sourcePath, destinationPath, { recursive: true });
@@ -56,6 +48,5 @@ try {
 } catch (error) {
   console.error('\n❌ Fatal error during asset copy process:');
   console.error(error);
-  // Exit with error code, this will cause Vercel build to fail so you can discover issues promptly.
   process.exit(1);
 }
