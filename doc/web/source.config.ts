@@ -7,7 +7,7 @@ import { URL } from 'url';
 // 1. Configuration Center
 const config = {
   basePath: '/chat2graph',
-  docRoot: 'doc',
+  docRoot: 'public',
   publicAssetPrefix: '/asset/image',
 };
 

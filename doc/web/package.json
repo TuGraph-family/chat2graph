@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "prebuild": "node script/copy_doc.js",
     "dev": "next dev --turbopack",
     "start": "next start",
     "postinstall": "fumadocs-mdx"
