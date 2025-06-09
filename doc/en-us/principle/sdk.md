@@ -16,9 +16,7 @@ The operation of these upper-level components depends on foundational capabiliti
 * **KnowledgeBase** provides the agent with persistent memory and knowledge management functions. It integrates Memory, structured Knowledge, and can perceive and utilize **Environment** information.
 * **Toolkit** equips the agent with mechanisms to interact with the external world and perform specific operations. By defining a series of **Tools** and **Actions**, it enables the agent to call external APIs, access the Environment, or execute specific computational tasks.
 
-<div style="text-align: center;">
-  <img src="../../asset/image/sdk-yml.png" alt="memory-architecture" width="50%">
-</div>
+![](../../asset/image/sdk-yml.png)
 
 Through this layered architecture, the Chat2Graph SDK allows developers to combine and configure these components. High-level components define task objectives and flows, while lower-level components provide execution capabilities. This design aims to integrate the cognitive abilities of LLMs with software engineering practices like data processing, computational resource utilization, and workflow control to build more comprehensive agent applications.
 
