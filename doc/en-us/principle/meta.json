@@ -4,6 +4,7 @@
     "overview",
     "agent",
     "leader",
+    "workflow",
     "reasoner",
     "toolkit",
     "memory"
