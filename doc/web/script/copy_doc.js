@@ -1,5 +1,3 @@
-// scripts/copy-assets.js
-//
 // Function: Copy specified directories from source location to `public` directory before build.
 // Features:
 //   - Automatically handle symlinks (copy actual files that links point to).
