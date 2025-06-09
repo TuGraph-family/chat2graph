@@ -6,7 +6,7 @@ title: Workflow
 
 The Workflow module is the core component for task execution by `Agent` (`Leader` and `Expert`) in Chat2Graph. It orchestrates and executes a series of predefined operators. By organizing multiple operators into a Directed Acyclic Graph (DAG), the `Workflow` clarifies the execution order and dependencies among these operators.
 
-![op-dag](../../asset/image/op-dag.png){width="50%"}
+![op-dag](../../asset/image/op-dag.png)
 
 Each `Agent` must have a built-in `Workflow`, which defines the standard operating procedure (SOP) that the `Agent` should follow to complete specific types of tasks. Additionally, the `Workflow` module supports the integration of an optional evaluation operator (`Evaluator`). The evaluator is triggered after the workflow execution completes and is responsible for evaluating the results, potentially generating feedback (`lesson`) for subsequent operators or experts to reference and use.
 
