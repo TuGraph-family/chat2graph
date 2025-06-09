@@ -2,7 +2,7 @@
 title: Overview
 ---
 
-# Index
+## Index
 
 * [Installation](installation.md)
 
