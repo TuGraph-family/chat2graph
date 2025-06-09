@@ -24,13 +24,13 @@ Chat2Graph SDK 提供了一套简洁的 API，用于构建和扩展智能体系�
 
 ## 2. SDK API
 
-### 2.1. Reasoner SDK
+### 2.1. Reasoner
 <!-- WIP: Reasoner's API will be refined soon, and the documentation will be updated here. --> 
 
-### 2.2. Toolkit SDK
+### 2.2. Toolkit
 <!-- WIP: Reasoner's API will be refined soon, and the documentation will be updated here. -->
 
-### 2.3. Agentic Service SDK
+### 2.3. Agentic Service
 
 Agentic Service 是 Chat2Graph SDK 的核心服务层，提供了完整的多代理系统管理和执行能力。该服务负责协调各个组件的初始化、配置和运行时交互。它在内部集成了多个服务组件，包括消息服务（`MessageService`）、会话服务（`SessionService`）、智能体服务（`AgentService`）、任务管理服务（`JobService`）、工具包服务（`ToolkitService`）和推理机服务（`ReasonerService`）。每个服务专注于特定的业务逻辑，同时通过统一的 Agentic Service 接口对外提供服务。
 

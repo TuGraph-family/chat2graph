@@ -4,10 +4,11 @@
     "overview",
     "agent",
     "leader",
-    "workflow",
     "reasoner",
+    "workflow",
+    "memory",
     "toolkit",
-    "memory"
+    "sdk"
   ],
   "defaultOpen": true
 }

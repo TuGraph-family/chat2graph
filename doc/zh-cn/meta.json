@@ -2,11 +2,11 @@
   "title": "Chat2Graph 文档",
   "pages": [
     "introduction",
-    "principle",
-    "deployment",
-    "development",
     "quickstart",
-    "cookbook"
+    "principle",
+    "cookbook",
+    "development",
+    "deployment"
   ],
   "defaultOpen": true
 }
