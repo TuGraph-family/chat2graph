@@ -9,6 +9,8 @@ __pycache__
 
 # ignore npm modules
 node_modules
+package-lock.json
+yarn.lock
 
 # ignore db instances
 **/*.db
