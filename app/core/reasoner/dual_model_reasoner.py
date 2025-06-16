@@ -1,6 +1,9 @@
 import re
-from typing import Any
+from typing import Any, List
 
+from mcp.types import Tool as McpBaseTool
+
+from app.core.common.async_func import run_async_function
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
@@ -11,6 +14,7 @@ from app.core.prompt.reasoner import ACTOR_PROMPT_TEMPLATE, META_THINKER_PROMPT_
 from app.core.reasoner.model_service import ModelService
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.reasoner.reasoner import Reasoner
+from app.core.toolkit.mcp_tool import McpTool
 
 
 class DualModelReasoner(Reasoner):
@@ -211,12 +215,22 @@ class DualModelReasoner(Reasoner):
 
         # set the function docstrings
         if len(task.tools) > 0:
-            func_description = "\n".join(
-                [
-                    f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n"
-                    for i, tool in enumerate(task.tools)
-                ]
-            )
+            func_description = ""
+            for i, tool in enumerate(task.tools):
+                if isinstance(tool, McpTool):
+                    mcp_tools: List[McpBaseTool] = run_async_function(tool.list_functions)
+                    func_description += "\n".join(
+                        [
+                            f"({i + 1}.{j + 1}) Function {mcp_tool.name}():\n"
+                            f"\tDescription: {mcp_tool.description}\n"
+                            f"\tInputSchema: {mcp_tool.inputSchema}\n"
+                            for j, mcp_tool in enumerate(mcp_tools)
+                        ]
+                    )
+                else:
+                    func_description += (
+                        f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n\n"
+                    )
         else:
             func_description = "No function calling in this round."
 
