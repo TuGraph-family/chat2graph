@@ -114,3 +114,12 @@ class GraphDbType(Enum):
 
     NEO4J = "NEO4J"
     TUGRAPH = "TUGRAPH"
+
+
+class McpTransportType(Enum):
+    """MCP transport type enumeration"""
+
+    STDIO = "STDIO"
+    SSE = "SSE"
+    WEBSOCKET = "WEBSOCKET"
+    STREAMABLE_HTTP = "STREAMABLE_HTTP"
