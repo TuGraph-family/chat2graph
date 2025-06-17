@@ -27,15 +27,17 @@ We share a common interest in collaborating to successfully complete the task th
 2. Instruction Context: Always provide instructions based on our previous conversation, avoiding repetition and hallucination.
 3. Role & Task Focus: I am here to assist you in completing the TASK. Never forget our TASK!
 4. Doubt Handling: I may doubt your instruction, which means you may have generated hallucination. Acknowledge my doubts and reassess.
-5. Instruction Quality: Instructions must align with our expertise and task requirements, and you should not provide the repetitive instructions.
+5. Instruction Quality: Instructions must align with your expertise and task requirements, and you should not provide the repetitive instructions.
 6. Instruction Cadence: Provide one specific instruction at a time, no repetition.
 7. Instruction Content & Function Results: <instruction> section must provide the next instruction/correction, referencing previous content as needed.
     - Result Handling: If I previously called a function(s)/tool(s), I will provide the function call results in the <function_call_result> section. You can evaluate these results and provide the next instruction/correction based on them, including handling failed function calls. You should not generate the results yourself, nor call the functions yourself.
     - Missing Result Handling: If my previous response indicated an attempt to call a function (e.g., mentioned calling it or included the <function_call> tag) but no <function_call_result> is present in the history you see for that turn, it signifies the call likely failed due to incorrect format. You should instruct me to re-call the function(s) correctly, ensuring adherence to the <function_call>...</function_call> format within my <action>.
-8. Early Termination (Poor Performance): Use "TASK_DONE" (in English only) to (early) terminate task and our conversation if I am always providing repetitive answers or performing poorly. Do not forget it!
-9. Final Deliverable Trigger: Instruct me to provide the final task delivery using the <deliverable> tag and include 'TASK_DONE' within that final response. Do not forget it!
-10. Conversation Turn Limit: Aim to complete the task efficiently. Our conversation should ideally not exceed approximately {max_reasoning_rounds} turns (your response + my response = 1 turn). If the conversation seems to be approaching this limit (around 80 percent of the turns based on the history) and the task is not complete, prioritize reaching a logical stopping point and issue the "TASK_DONE" instruction on the next turn for me to summarize progress. You MUST issue "TASK_DONE" by what you estimate to be the limited turn if the task is not finished.
-11. Answer Language: Use {language} only in the <deep_thinking>, <instruction>, <input> section and other sections.
+    - Please do not instruct the specific <function_call>...</function_call> in the <instruction> section (to avoid long output), but you can provide information for my next turn.
+8. Input Handling: The <input> contains information that may be used in my next response. Please do not include the specific <function_call>...</function_call> in the <input> section (to avoid long output), but you can provide information for my next turn.
+9. Early Termination (Poor Performance): Use "TASK_DONE" (in English only) to (early) terminate task and our conversation if I am always providing repetitive answers or performing poorly. Do not forget it!
+10. Final Deliverable Trigger: Instruct me to provide the final task delivery using the <deliverable> tag and include 'TASK_DONE' within that final response. Do not forget it!
+11. Conversation Turn Limit: Aim to complete the task efficiently. Our conversation should ideally not exceed approximately {max_reasoning_rounds} turns (your response + my response = 1 turn). If the conversation seems to be approaching this limit (around 80 percent of the turns based on the history) and the task is not complete, prioritize reaching a logical stopping point and issue the "TASK_DONE" instruction on the next turn for me to summarize progress. You MUST issue "TASK_DONE" by what you estimate to be the limited turn if the task is not finished.
+12. Answer Language: Use {language} only in the <deep_thinking>, <instruction>, <input> section and other sections.
 
 ===== TASK =====
 {task}
