@@ -227,7 +227,8 @@ class McpTool(ToolSet):
     ) -> Any:
         """Call a tool through the established MCP session."""
         await self.connect()
-        assert self._session is not None, f"The {self.name} MCP is not connected."
+        if self._session is None:
+            raise RuntimeError("MCP session was not properly initialized.")
 
         result = await self._session.call_tool(tool_name, params or {})
         return result.content
