@@ -297,12 +297,22 @@ class DualModelReasoner(Reasoner):
 
         # set the function docstrings
         if len(task.tools) > 0:
-            func_description = "\n".join(
-                [
-                    f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n"
-                    for i, tool in enumerate(task.tools)
-                ]
-            )
+            func_description = ""
+            for i, tool in enumerate(task.tools):
+                if isinstance(tool, McpTool):
+                    mcp_tools: List[McpBaseTool] = run_async_function(tool.list_functions)
+                    func_description += "\n".join(
+                        [
+                            f"({i + 1}.{j + 1}) Function {mcp_tool.name}():\n"
+                            f"\tDescription: {mcp_tool.description}\n"
+                            f"\tInputSchema: {mcp_tool.inputSchema}\n"
+                            for j, mcp_tool in enumerate(mcp_tools)
+                        ]
+                    )
+                else:
+                    func_description += (
+                        f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n\n"
+                    )
         else:
             func_description = "No function calling in this round."
 

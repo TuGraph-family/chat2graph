@@ -71,10 +71,23 @@ class ModelService(ABC):
                 if len(tools) == 0:
                     available_funcs_desc = "No function calling available now."
                 else:
-                    available_funcs_desc = (
-                        "The available functions/tools that can be called by <function_call>: ["
-                        f"{', '.join([tool.function.__name__ for tool in tools])}]"
-                    )
+                    available_funcs_desc = ""
+                    for tool in tools:
+                        if isinstance(tool, McpTool):
+                            available_mcp_tools: List[McpBaseTool] = run_async_function(
+                                tool.list_functions
+                            )
+                            mcp_tool_names = [mcp_tool.name for mcp_tool in available_mcp_tools]
+                            if mcp_tool_names:
+                                available_funcs_desc += (
+                                    f"The available MCP tools from {tool.name} are: "
+                                    f"[{', '.join(mcp_tool_names)}]. "
+                                )
+                        else:
+                            available_funcs_desc += (
+                                f"The available function from {tool.name} is: "
+                                f"[{tool.function.__name__}]. "
+                            )
                 func_call_results.append(
                     FunctionCallResult(
                         func_name=func_name,
