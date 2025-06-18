@@ -12,7 +12,7 @@
 [![License](https://shields.io/github/license/tugraph-family/chat2graph?logo=apache&label=License&color=blue)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Release](https://shields.io/github/v/release/tugraph-family/chat2graph.svg?logo=stackblitz&label=Version&color=red)](https://github.com/TuGraph-family/chat2graph/releases)
 
-[Chat2Graph](doc/en-us/introduction.md) is a **Graph Native Agentic System**.
+[Chat2Graph](https://chat2graph.vercel.app) is a **Graph Native Agentic System**.
 
 <video controls src="https://github.com/user-attachments/assets/7c859d37-cd1e-431f-8e81-8459bc605879" style="max-width: 100%;">
   Your browser does not support the video tag.
