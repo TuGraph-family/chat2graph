@@ -19,6 +19,8 @@ class AiSuiteLlmClient(ModelService):
 
     def __init__(self):
         super().__init__()
+        # if using OpenAI API capabilities,
+        # the model alias should be in the format "openai:<model_name>"
         self._llm_client: Client = Client(
             provider_configs={
                 "openai": {
@@ -29,15 +31,11 @@ class AiSuiteLlmClient(ModelService):
                     "api_key": SystemEnv.LLM_APIKEY,
                     "base_url": SystemEnv.LLM_ENDPOINT,
                 },
-                "google": {
-                    "api_key": SystemEnv.LLM_APIKEY,
-                    "project_id": SystemEnv.GOOGLE_PROJECT_ID,  # required by Google Vertex AI
-                    "region": SystemEnv.GOOGLE_CLOUD_REGION,  # required by Google Vertex AI
-                    "application_credentials": SystemEnv.GOOGLE_APPLICATION_CREDENTIALS,  # absolute path  # noqa: E501
-                },
             }
         )
         self._model_alias = SystemEnv.LLM_NAME  # ex. "anthropic:claude-3-5-sonnet-20240620"
+        self._max_tokens: int = SystemEnv.MAX_TOKENS
+        self._max_completion_tokens: int = SystemEnv.MAX_COMPLETION_TOKENS
 
     async def generate(
         self,
@@ -56,6 +54,8 @@ class AiSuiteLlmClient(ModelService):
             model=self._model_alias,
             messages=aisuite_messages,
             temperature=SystemEnv.TEMPERATURE,
+            max_tokens=self._max_tokens,
+            max_completion_tokens=self._max_completion_tokens,
         )
 
         # call functions based on the model output
@@ -93,7 +93,7 @@ class AiSuiteLlmClient(ModelService):
         base_messages: List[Dict[str, str]] = [{"role": "system", "content": sys_message}]
 
         # convert the conversation messages for AiSuite LLM
-        for message in messages:
+        for i, message in enumerate(messages):
             # handle the func call information in the agent message
             base_message_content = message.get_payload()
             func_call_results = message.get_function_calls()
@@ -112,11 +112,11 @@ class AiSuiteLlmClient(ModelService):
                     + "\n</function_call_result>"
                 )
 
-            # Chat2Graph <-> AISuite msg: actor <-> ai & thinker <-> user
-            if message.get_source_type() == MessageSourceType.ACTOR:
-                base_messages.append({"role": "assistant", "content": base_message_content.strip()})
-            else:
+            # Chat2Graph <-> AISuite's last message role should be "user"
+            if (len(messages) + i) % 2 == 1:
                 base_messages.append({"role": "user", "content": base_message_content.strip()})
+            else:
+                base_messages.append({"role": "assistant", "content": base_message_content.strip()})
 
         return base_messages
 
@@ -137,7 +137,12 @@ class AiSuiteLlmClient(ModelService):
             source_type = MessageSourceType.ACTOR
 
         response = ModelMessage(
-            payload=cast(str, model_response.choices[0].message.content.strip()),
+            payload=cast(
+                str,
+                (
+                    model_response.choices[0].message.content or "The LLM response was missing."
+                ).strip(),
+            ),
             job_id=messages[-1].get_job_id(),
             step=messages[-1].get_step() + 1,
             source_type=source_type,

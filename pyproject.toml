@@ -9,13 +9,15 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-openai = "^1.54.3"
-aisuite = {extras = ["all"], version = "^0.1.10"}
+openai = "^1.86.0"
+aisuite = {extras = ["all"], version = "0.1.11"}
+litellm = {extras = ["proxy"], version = "1.72.6"} # pip install "aiohttp==3.12.13" # litellm has conflict with dbgpt which requires aiohttp = "3.8.4"
 docstring-parser = "^0.16"  # used by aisuite
-pydantic = "^2.9.2"
-typing-inspect = ">=0.8.0"
-pytest-asyncio = "^0.24.0"
-neo4j = "^5.27.0"
+pydantic = "^2.11.7"
+typing-inspect = ">=0.9.0"
+pytest-asyncio = "^1.0.0"
+chromadb = "^1.0.12"
+neo4j = "^5.28.1"
 sqlalchemy-utils = "^0.41.2"
 matplotlib = "^3.10.1"
 networkx = "^3.4.2"

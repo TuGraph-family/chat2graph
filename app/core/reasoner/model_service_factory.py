@@ -2,6 +2,7 @@ from app.core.common.type import ModelPlatformType
 from app.core.reasoner.model_service import ModelService
 from app.plugin.aisuite.aisuite_llm_client import AiSuiteLlmClient
 from app.plugin.dbgpt.dbgpt_llm_client import DbgptLlmClient
+from app.plugin.lite_llm.lite_llm_client import LiteLlmClient
 
 
 class ModelServiceFactory:
@@ -12,6 +13,8 @@ class ModelServiceFactory:
         """Create a model service."""
         if model_platform_type == ModelPlatformType.DBGPT:
             return DbgptLlmClient()
+        if model_platform_type == ModelPlatformType.LITELLM:
+            return LiteLlmClient()
         if model_platform_type == ModelPlatformType.AISUITE:
             return AiSuiteLlmClient()
         # TODO: add more platforms, so the **kwargs can be used to pass the necessary parameters

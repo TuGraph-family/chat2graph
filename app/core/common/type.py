@@ -5,6 +5,7 @@ class ModelPlatformType(Enum):
     """Model platform type enum."""
 
     DBGPT = "DBGPT"
+    LITELLM = "LITELLM"
     AISUITE = "AISUITE"
 
 
