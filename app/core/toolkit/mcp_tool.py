@@ -46,6 +46,41 @@ class McpTransportConfig:
     timeout: float = 5.0
     sse_read_timeout: float = 300.0
 
+    @classmethod
+    def from_dict(cls, config: Dict[str, Any]) -> "McpTransportConfig":
+        """Create an instance from a dictionary."""
+        transport_type = McpTransportType(config.get("transport_type", "stdio"))
+        url = config.get("url", "http://localhost:8931")
+        command = config.get("command", "npx")
+        args = config.get("args", None)
+        env = config.get("env", {})
+        headers = config.get("headers", {})
+        timeout = config.get("timeout", 5.0)
+        sse_read_timeout = config.get("sse_read_timeout", 300.0)
+
+        return cls(
+            transport_type=transport_type,
+            url=url,
+            command=command,
+            args=args,
+            env=env,
+            headers=headers,
+            timeout=timeout,
+            sse_read_timeout=sse_read_timeout,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the instance to a dictionary."""
+        return {
+            "transport_type": self.transport_type.value,
+            "url": self.url,
+            "command": self.command,
+            "args": self.args,
+            "env": self.env,
+            "headers": self.headers,
+            "timeout": self.timeout,
+            "sse_read_timeout": self.sse_read_timeout,
+        }
 
 class McpTool(ToolSet):
     """MCP client supports multiple transport methods, including Stdio, SSE, WebSocket,
