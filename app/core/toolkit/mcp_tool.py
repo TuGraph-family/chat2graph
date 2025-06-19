@@ -49,7 +49,7 @@ class McpTransportConfig:
     @classmethod
     def from_dict(cls, config: Dict[str, Any]) -> "McpTransportConfig":
         """Create an instance from a dictionary."""
-        transport_type = McpTransportType(config.get("transport_type", "stdio"))
+        transport_type = McpTransportType(config.get("transport_type", "STDIO"))
         url = config.get("url", "http://localhost:8931")
         command = config.get("command", "npx")
         args = config.get("args", None)
