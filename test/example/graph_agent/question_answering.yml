@@ -12,14 +12,17 @@ reasoner:
 tools:
   - &knowledge_base_retriever_tool
     name: "KnowledgeBaseRetriever"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.question_answering"
 
   - &internet_retriever_tool
     name: "InternetRetriever"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.question_answering"
 
   - &reference_generator_tool
     name: "ReferenceGenerator"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.question_answering"
 
 actions:

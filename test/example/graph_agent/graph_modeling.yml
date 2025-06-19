@@ -12,18 +12,22 @@ reasoner:
 tools:
   - &document_reader_tool
     name: "DocumentReader"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_modeling"
 
   - &vertex_label_adder_tool
     name: "VertexLabelAdder"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_modeling"
 
   - &edge_label_adder_tool
     name: "EdgeLabelAdder"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_modeling"
 
   - &graph_reachability_getter_tool
     name: "GraphReachabilityGetter"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_modeling"
 
 actions:

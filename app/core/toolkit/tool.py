@@ -36,9 +36,28 @@ class FunctionCallResult:
 
 @dataclass
 class Tool:
-    """Tool in the toolkit."""
+    """Tool in the toolkit.
+
+    Attributes:
+        name: Name of the tool.
+        description: Description of the tool, will be shown to the LLM.
+        function: Callable function that can be invoked by the LLM.
+        id: Unique identifier for the tool, auto-generated if not provided.
+    """
 
     name: str
     description: str
     function: Callable
     id: str = field(default_factory=lambda: str(uuid4()))
+
+
+@dataclass
+class ToolSet(Tool):
+    """Base class for tools set, representing the tools that can be called through some protocol.
+
+    Attributes:
+        ...
+        list_functions: Callable that returns a list of available functions in the tool set.
+    """
+
+    list_functions: Callable = lambda: []

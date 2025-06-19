@@ -12,14 +12,17 @@ reasoner:
 tools:
   - &schema_getter_tool
     name: "SchemaGetter"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.data_importation"
 
   - &document_reader_tool
     name: "DocumentReader"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.data_importation"
 
   - &data_import_tool
     name: "DataImport"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.data_importation"
 
 actions:

@@ -16,78 +16,97 @@ tools:
 
   - &vertex_label_adder_tool
     name: "VertexLabelAdder"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &edge_label_adder_tool
     name: "EdgeLabelAdder"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &graph_reachability_getter_tool
     name: "GraphReachabilityGetter"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_modeling"
 
   - &schema_getter_tool
     name: "SchemaGetter"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.data_importation"
 
   - &data_status_check_tool
     name: "DataStatusCheck"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.data_importation"
 
   - &data_import_tool
     name: "DataImport"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.data_importation"
 
   - &cypher_executor_tool
     name: "CypherExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_query"
 
   - &algorithms_getter_tool
     name: "AlgorithmsGetter"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &page_rank_executor_tool
     name: "PageRankExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &betweenness_centrality_executor_tool
     name: "BetweennessCentralityExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &louvain_executor_tool
     name: "LouvainExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &label_propagation_executor_tool
     name: "LabelPropagationExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &shortest_path_executor_tool
     name: "ShortestPathExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &node_similarity_executor_tool
     name: "NodeSimilarityExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &common_neighbors_executor_tool
     name: "CommonNeighborsExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &kmeans_executor_tool
     name: "KMeansExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.graph_analysis"
 
   - &knowledge_base_retriever_tool
     name: "KnowledgeBaseRetriever"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.question_answering"
 
   - &internet_retriever_tool
     name: "InternetRetriever"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.question_answering"
 
   - &system_status_checker_tool
     name: "SystemStatusChecker"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.system_checking"
 
 actions:

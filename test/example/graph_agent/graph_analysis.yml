@@ -12,10 +12,12 @@ reasoner:
 tools:
   - &algorithms_getter_tool
     name: "AlgorithmsGetter"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_analysis"
 
   - &algorithms_executor_tool
     name: "AlgorithmsExecutor"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_analysis"
 
 actions:

@@ -12,14 +12,17 @@ reasoner:
 tools:
   - &schema_getter_tool
     name: "SchemaGetter"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_query"
 
   - &grammer_reader_tool
     name: "GrammerReader"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_query"
 
   - &vertex_querier_tool
     name: "VertexQuerier"
+    type: "LOCAL_TOOL"
     module_path: "app.core.resource.graph_query"
 
 actions:
