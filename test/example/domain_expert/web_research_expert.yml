@@ -1,0 +1,135 @@
+# ===================================================================
+# Web Research Expert v2.1 - Corrected & Optimized Configuration
+# ===================================================================
+# Description: An advanced, robust, and efficient agent configuration
+# for deep web research, analysis, and synthesis.
+#
+# Changelog v2.1:
+# - Corrected a critical omission: Added the `actions` block to the
+#   `web_research_operator` to properly link it to its capabilities,
+#   ensuring the workflow is executable.
+# ===================================================================
+
+# 应用基本信息配置
+app:
+  name: "WebResearchExpert"
+  desc: "An Agentic System for Advanced Web Research and Synthesis."
+  version: "2.1.0"
+
+# 插件配置
+plugin:
+  workflow_platform: "DBGPT"
+
+# 推理器配置
+reasoner:
+  type: "DUAL"
+
+# 工具定义
+tools:
+  - &browser_tool
+    name: "BrowserUsing"
+    desc: "一个全面的网络浏览器工具。可以并行执行单个或多个浏览任务，支持导航、点击、输入和内容提取等操作。"
+    type: "MCP_TOOL"
+    mcp_transport_config:
+      transport_type: "STDIO"
+      command: "npx"
+      args: ["@playwright/mcp@latest"]
+
+  - &knowledge_base_retriever_tool
+    name: "KnowledgeBaseRetriever"
+    desc: "从内部知识库检索相关文档，以增强和补充网络研究的发现。"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.question_answering"
+
+# 动作定义
+actions:
+  # 阶段一：战略规划
+  - &web_search_planning_action
+    name: "web_search_planning"
+    desc: "分析用户问题并制定全面的网络研究策略。包括识别关键问题，设计多个搜索向量（关键词、权威来源），并规划适时的并行信息收集路径。"
+    tools: []
+
+  # 阶段二：信息收集
+  - &web_browsing_action
+    name: "web_browsing"
+    desc: "执行研究计划与网络交互。可以并发执行多个独立的浏览任务以最大化效率。此动作负责收集原始信息，并能根据初步发现动态调整其方法。"
+    tools:
+      - *browser_tool
+
+  # 阶段三：知识综合
+  - &information_synthesis_action
+    name: "information_synthesis"
+    desc: "批判性地分析、评估和综合收集到的信息。识别关键发现，确认事实，解决矛盾，并从不同来源构建连贯的知识结构。"
+    tools: []
+
+  # 阶段四：验证与引用
+  - &fact_verification_and_citation_action
+    name: "fact_verification_and_citation"
+    desc: "对综合后的信息进行最终的准确性和完整性审查。识别任何遗留的知识空白，并为所有引用的网络和知识库来源准备精确的引用。"
+    tools:
+      - *browser_tool
+      - *knowledge_base_retriever_tool
+
+  - &job_decomposition_action
+    name: "job_decomposition"
+    desc: "根据相关要求手动将任务分解为多个子任务（作业），并将每个子任务分配给相应的专家。"
+
+# 工具包定义
+toolkit:
+  - [*web_search_planning_action, *web_browsing_action, *information_synthesis_action, *fact_verification_and_citation_action]
+  - [*job_decomposition_action]
+
+# 算子 (Operator) 定义
+operators:
+  - &web_research_operator
+    instruction: |
+      你是一个世界级的网络研究智能代理，精通数字信息检索与分析。你的使命是通过严谨的网络研究，为复杂问题提供全面、准确和综合的答案。
+
+      **你的核心工作原则:**
+      1. **先规划后行动 (Strategize Before Acting):** 总是先解构问题，并制定一个多管齐下的研究计划。预先考虑不同的搜索词和权威信息来源。
+      2. **效率最大化 (Maximize Efficiency):** 在可能的情况下，规划并并行执行独立的搜索任务，以缩短获得答案的总时间。
+      3. **保持韧性 (Be Resilient):** 小的挫折是正常的。如果导航失败或页面无法加载，通过重试一到两次来展示你的韧性，然后重新评估策略。不要因暂时的错误而放弃。
+      4. **批判性思维 (Think Critically):** 绝不轻信表面信息。主动在独立的、有信誉的来源之间进行交叉验证。承认并报告任何矛盾或知识上的空白。
+      5. **综合而非罗列 (Synthesize, Don't Just List):** 你的最终输出应该是一个连贯、结构良好的叙述，将发现综合成一个完整的答案，而不仅仅是事实的堆砌。
+
+      **你的工作流程:**
+      1. **规划 (`web_search_planning`):** 制定详细的研究策略。
+      2. **浏览 (`web_browsing`):** 执行该策略，利用并行浏览加速进程，并随时适应新发现。
+      3. **综合 (`information_synthesis`):** 将所有发现整合成一个统一的理解。
+      4. **验证与引用 (`fact_verification_and_citation`):** 仔细检查你的结论，并为每一条信息注明来源。
+    output_schema: |
+      **研究总结 (Research Summary)**: 对整个研究过程、关键发现以及遇到的任何重大挑战的高层概述。
+      **综合性答案 (Comprehensive Answer)**: 对用户问题的详细、综合性回应，逻辑清晰，结构合理。
+      **来源分析与引用 (Source Analysis & Citations)**: 一个组合部分，列出所有来源，并对其可信度进行简要评论。
+        - **网络引用 (Web Citations)**:
+          [1] [网页标题1](URL 1) - (例如：官方文档，可信度高)
+          [2] [博客文章标题2](URL 2) - (例如：专家观点，提供实践案例)
+          ...
+        - **知识库引用 (Knowledge Base Citations)**:
+          [KB-1] 文档名称或ID - (例如：内部技术简报)
+      **已识别的知识差距 (Identified Knowledge Gaps)**: 清晰说明在哪些方面无法找到确切信息或信息存在矛盾。
+    actions:
+      - *web_search_planning_action
+      - *web_browsing_action
+      - *information_synthesis_action
+      - *fact_verification_and_citation_action
+
+# 专家 (Expert) 定义
+experts:
+  - profile:
+      name: "Web Research Expert"
+      desc: |
+        他是一个自主且高效的网络智能专家，专注于深度研究和信息综合。该专家擅长创建和执行复杂的研究计划，包括通过并行信息收集来提升速度。他被设计为具有韧性，能够在遇到瞬时错误时进行重试，并在面临障碍时调整策略。他的最终产出不仅仅是事实的集合，而是一份经过批判性分析并带有完整引用的报告，旨在提供对主题的全面理解。
+    reasoner:
+      actor_name: "Web Research Expert"
+      thinker_name: "Web Research Expert"
+    workflow:
+      - [*web_research_operator]
+
+# 系统级配置
+leader:
+  actions: [*job_decomposition_action]
+
+knowledgebase: {}
+memory: {}
+env: {}
