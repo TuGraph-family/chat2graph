@@ -16,7 +16,7 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 class TestReasoner(Reasoner):
     """Test reasoner"""
 
-    def infer(
+    def _infer(
         self,
         task: Task,
         tools: Optional[List[Tool]] = None,

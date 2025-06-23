@@ -8,7 +8,7 @@ def main():
 
     # set a question that requires web research
     user_message = TextMessage(
-        payload="Investigate which public products have been open-sourced by the Ant Group's Graph Computing team as of June 2025.",  # noqa: E501
+        payload="Investigate which public products have been open-sourced by the Ant Group's TuGraph team as of June 2025.",  # noqa: E501
     )
 
     # submit the job

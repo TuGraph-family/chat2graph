@@ -15,7 +15,7 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 class TestReasoner(Reasoner):
     """Test reasoner"""
 
-    async def infer(self, task: Task) -> str:
+    async def _infer(self, task: Task) -> str:
         """Infer by the reasoner."""
         return "Test inference"
 

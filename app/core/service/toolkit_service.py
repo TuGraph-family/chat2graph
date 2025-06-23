@@ -5,8 +5,10 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import networkx as nx  # type: ignore
 
+from app.core.common.async_func import run_async_function
 from app.core.common.singleton import Singleton
 from app.core.toolkit.action import Action
+from app.core.toolkit.mcp_tool import McpTool
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.toolkit import Toolkit
 
@@ -95,11 +97,23 @@ class ToolkitService(metaclass=Singleton):
 
     def remove_tool(self, id: str, tool_id: str):
         """Remove tool from the toolkit graph."""
+        tool: Optional[Tool] = self.get_toolkit().get_tool(tool_id)
+        if isinstance(tool, McpTool) and tool.is_connected:
+            run_async_function(tool.disconnect())
+
         self.get_toolkit().remove_vertex(tool_id)
 
     def remove_action(self, id: str, action_id: str):
         """Remove action from the toolkit graph."""
         self.get_toolkit().remove_vertex(action_id)
+
+    async def close_mcp_tools(self, mcp_tools: List[McpTool]) -> None:
+        """Gracefully disconnects all McpTool instances found in the task's tools."""
+        if len(mcp_tools) == 0:
+            return
+        for tool in mcp_tools:
+            if tool.is_connected:
+                await tool.disconnect()
 
     def recommend_subgraph(
         self, actions: List[Action], threshold: float = 0.5, hops: int = 0

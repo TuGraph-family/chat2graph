@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from app.core.memory.reasoner_memory import ReasonerMemory
 from app.core.model.task import Task
+from app.core.service.toolkit_service import ToolkitService
+from app.core.toolkit.mcp_tool import McpTool
 
 
 class Reasoner(ABC):
@@ -13,8 +15,18 @@ class Reasoner(ABC):
             str, Dict[str, Dict[str, ReasonerMemory]]
         ] = {}  # session_id -> job_id -> operator_id -> memory
 
-    @abstractmethod
     async def infer(self, task: Task) -> str:
+        """Infer by the reasoner with cleanup."""
+        try:
+            return await self._infer(task)
+        finally:
+            # close the MCP tools if they are used in the task
+            toolkit_service: ToolkitService = ToolkitService.instance
+            mcp_tools: List[McpTool] = [tool for tool in task.tools if isinstance(tool, McpTool)]
+            await toolkit_service.close_mcp_tools(mcp_tools=mcp_tools)
+
+    @abstractmethod
+    async def _infer(self, task: Task) -> str:
         """Infer by the reasoner."""
 
     @abstractmethod

@@ -44,7 +44,7 @@ class DualModelReasoner(Reasoner):
             model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
 
-    async def infer(self, task: Task) -> str:
+    async def _infer(self, task: Task) -> str:
         """Infer by the reasoner.
 
         Args:
