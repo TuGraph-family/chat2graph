@@ -39,7 +39,7 @@ The `MonoModelReasoner` uses a unified Prompt template (`MONO_PROMPT_TEMPLATE`) 
 
 The Prompt for the Mono-Model Reasoner is parsed as follows:
 
-* **Metacognitive Framework**: Inspired by the state transitions in quantum mechanics. Similar to the Thinker in `DualModelReasoner`, the `MonoModelReasoner` is required to use the Metacognitive Framework for deep thinking (`<deep_thinking>`). This includes utilizing thinking states (`<Basic State>`, `<Superposition State>`, `<Transition State>`, and `<Field State>`) and thinking mode markers to organize and present its reasoning process and depth.
+* **Metacognitive Framework**: Inspired by the state transitions in quantum mechanics. Similar to the Thinker in `DualModelReasoner`, the `MonoModelReasoner` is required to use the Metacognitive Framework for deep thinking (`<deep_thinking>`). This includes utilizing thinking mode markers to organize and present its reasoning process and depth.
 
 * **Integrated Thinking and Action (`<deep_thinking>` & `<action>`) in One Model**:
   * `<deep_thinking>`: This section is used to record the LLM's cognitive process, requiring it to demonstrate specific, decisive, comprehensive, and direct thinking.

@@ -39,7 +39,7 @@ title: 推理机
 
 单模推理机的 Prompt 的解析如下：
 
-* **元认知框架**: 灵感来源于量子力学中的状态的转换。与 `DualModelReasoner` 中的 Thinker 类似，`MonoModelReasoner` 被要求使用元认知框架进行深度思考 (`<deep_thinking>`)。这包括利用思考状态（`<Basic State>`, `<Superposition State>`, `<Transition State>`和`<Field State>`）和思考模式标记来组织和展现其推理过程和深度。
+* **元认知框架**: 灵感来源于量子力学中的状态的转换。与 `DualModelReasoner` 中的 Thinker 类似，`MonoModelReasoner` 被要求使用元认知框架进行深度思考 (`<deep_thinking>`)。这包括利用思考模式标记来组织和展现其推理过程和深度。
 
 * **集思考与行动一体 (`<deep_thinking>` & `<action>`)**:
   * `<deep_thinking>`: 此部分用于记录 LLM 的认知过程，要求其展示具体、果断、全面且直接的思考。
