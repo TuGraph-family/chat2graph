@@ -8,7 +8,7 @@ from app.core.common.singleton import Singleton
 from app.core.common.type import ReasonerType, WorkflowPlatformType
 from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
-from app.core.model.agentic_config import AgenticConfig
+from app.core.model.agentic_config import AgenticConfig, LocalToolConfig, McpToolConfig
 from app.core.model.graph_db_config import GraphDbConfig
 from app.core.model.job import Job
 from app.core.model.message import ChatMessage, MessageType, TextMessage
@@ -30,6 +30,7 @@ from app.core.service.service_factory import ServiceFactory
 from app.core.service.session_service import SessionService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
+from app.core.toolkit.mcp_tool import McpTool, McpTransportConfig
 from app.core.toolkit.tool import Tool
 
 
@@ -148,10 +149,28 @@ class AgenticService(metaclass=Singleton):
             chain: List[Action] = []
             for action_config in action_chain:
                 for tool_config in action_config.tools:
-                    module = importlib.import_module(tool_config.module_path)
-                    tool_class = getattr(module, tool_config.name)
-                    tool = tool_class(id=tool_config.id)
-                    tools_dict[tool_config.name] = tool
+                    if isinstance(tool_config, LocalToolConfig):
+                        module = importlib.import_module(tool_config.module_path)
+                        tool_class = getattr(module, tool_config.name)
+                        tool = tool_class(id=tool_config.id)
+                        tools_dict[tool_config.name] = tool
+                    elif isinstance(tool_config, McpToolConfig):
+                        tool = McpTool(
+                            id=tool_config.id,
+                            transport_config=McpTransportConfig(
+                                transport_type=tool_config.mcp_transport_config.transport_type,
+                                url=tool_config.mcp_transport_config.url,
+                                command=tool_config.mcp_transport_config.command,
+                                args=tool_config.mcp_transport_config.args,
+                                env=tool_config.mcp_transport_config.env,
+                                headers=tool_config.mcp_transport_config.headers,
+                                timeout=tool_config.mcp_transport_config.timeout,
+                                sse_read_timeout=tool_config.mcp_transport_config.sse_read_timeout,
+                            ),
+                        )
+                        tools_dict[tool_config.name] = tool
+                    else:
+                        raise ValueError(f"Unsupported tool config type: {type(tool_config)}")
 
                 action = Action(
                     id=action_config.id,
