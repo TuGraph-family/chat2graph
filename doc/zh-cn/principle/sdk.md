@@ -73,46 +73,66 @@ plugin:
 
 # 推理器配置
 reasoner:
-  type: "DUAL" # 指定推理器的类型，例如："SINGLE" (单推理器) 或 "DUAL" (双推理器，通常包含一个执行者 Actor 和一个思考者 Thinker)
+  type: "DUAL" # 指定推理器的类型，例如："MONO" (单推理器) 或 "DUAL" (双推理器，通常包含一个执行者 Actor 和一个思考者 Thinker，推理能力更强，推理时间更长，适合异常复杂任务)
 
-# 工具定义：定义了一系列可供 Agent 使用的工具
-# 每个工具通常包含名称 (name) 和模块路径 (module_path)
-# "&tool_alias" 是一种 YAML 锚点，方便后续在 actions 中通过 "*tool_alias" 引用
+# 工具定义 (Tools)：定义了一系列可供 Agent 使用的、原子化的功能模块。
+# 每个工具通过 "&tool_alias" 定义锚点，方便后续在 actions 中通过 "*tool_alias" 引用。
 
-# 关于工具 (Tools) 的说明：
-# 1. 功能定位：工具主要用于执行那些大语言模型（LLM）自身无法直接完成的具体操作，或者和外界环境交互的具体操作。
-#    这些工具内蕴含的操作通常是确定性的、易于通过代码实现的，例如：读取/写入文件、调用外部 API、执行数据库查询、进行精确计算等。
-# 2. 实现方式：每个工具本质上是一个由代码（例如 Python 函数）实现的模块。
-#    `module_path` 指向的就是这些代码实现。我们假设这些路径下的工具实现已经存在并且是可用的。
-# 3. 系统的局限性限制了工具的可能集合：由于工具是基于预先编写的代码逻辑，它们不适合执行开放式的“生成”任务（如撰写文章、生成复杂图像、直接生成复杂的业务逻辑代码）
-#    或那些难以用简单、确定性代码逻辑实现的工作。
-#    如果，遇见必要的创造性或高度复杂的推理任务（例如，生成 HTML/CSS/JavaScript游戏代码），一般建议交给 LLM（即 Reasoner）自身承担。工具则辅助这些生成任务的后续步骤，如将生成的内容保存到文件。
-# 此配置文件主要关注这些组件的编排和逻辑流程，而  非工具本身的开发。
+# 1. 工具的核心理念
+#    - 功能定位: 工具是 Agent 与外部世界交互或执行确定性任务的桥梁。它们封装了那些大语言模型（LLM）
+#      自身无法直接完成的操作，如文件读写、API调用、数据库查询、精确计算等。
+#    - 非创造性任务: 工具执行的是预定义的、由代码实现的确定性逻辑。它们不适合执行开放式的创造性任务
+#      （如撰写文章、生成复杂业务代码）。这类任务应由 LLM（即 Reasoner）直接负责，工具则可以辅助
+#      处理生成结果（例如，将生成的代码保存到文件）。
+# 2. 工具的类型与实现
+#    此配置文件关注工具的编排与使用，而非其底层开发。系统主要支持以下两种工具类型：
+#    - LOCAL_TOOL: 本地工具，直接在 Agent 运行的 Python 环境中通过函数调用执行。
+#      `module_path` 指向包含该工具实现的 Python 模块。
+#    - MCP_TOOL (A Client connected to MCP Server): 跨进程通信工具，用于与独立的外部进程或服务进行交互。
+#      这对于集成非 Python 实现的或需要隔离环境的复杂工具（如 Playwright 浏览器自动化）至关重要。一般需要确定外部有MCP Server支持。
+#      其行为由 `mcp_transport_config` 定义：
+#        - transport_type: 通信协议，如 "STDIO" (标准输入输出)、"SSE" (服务器发送事件)、"WebSocket" 等。
+#        - command / args: 当 type 为 "STDIO" 时，用于启动外部进程的命令和参数。
+#        - url: 当 type 为 "SSE" 或 "WebSocket" 时，用于连接外部服务的网络地址。
+
 tools:
-  - &document_reader_tool # 工具锚点，方便后续引用
-    name: "DocumentReader" # 工具的唯一名称
-    module_path: "app.plugin.neo4j.resource.graph_modeling" # 工具的Python模块路径
+  # 示例1: 文档读取工具
+  - &document_reader_tool
+    name: "DocumentReader"
+    desc: "从指定路径读取并返回文档内容。" # 工具的功能描述
+    type: "LOCAL_TOOL" # (可选) 默认为本地工具
+    module_path: "app.plugin.resource.common.document_reader" # 工具的Python模块路径
 
+  # 示例2: 文件写入工具
+  - &file_writer_tool
+    name: "FileWriter"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.resource.common.file_writer"
+
+  # 示例3: 数据库Schema获取工具 (领域相关)
   - &schema_getter_tool
     name: "SchemaGetter"
+    desc: "连接到图数据库并获取其当前的Schema（模型）信息。"
+    type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.data_importation"
 
-  - &file_writer_tool # HTML Tool Example
-    name: "FileWriter"
-    module_path: "app.tool_resource.html_tool"
+  # 示例4: 浏览器自动化工具 (通过 STDIO 启动)
+  - &browser_tool_stdio
+    name: "BrowserUsing"
+    type: "MCP_TOOL"
+    mcp_transport_config:
+      transport_type: "STDIO" # 通过标准输入输出与子进程通信
+      command: "npx" # 启动子进程的命令
+      args: ["@playwright/mcp@latest"] # 传递给命令的参数
 
-  - &html_reader_tool # HTML Tool Example
-    name: "HTMLReader"
-    module_path: "other.tool_resource.html_tool"
-
-  # ... (此处省略了其他工具定义，格式与上方类似)
-  # 实际使用中，这里会列出所有可用的工具，例如：
-  # - &vertex_label_adder_tool
-  #   name: "VertexLabelAdder"
-  #   module_path: "app.plugin.neo4j.resource.graph_modeling"
-  # - &cypher_executor_tool
-  #   name: "CypherExecutor"
-  #   module_path: "app.plugin.neo4j.resource.graph_query"
+  # 示例5: 浏览器自动化工具 (通过 SSE 连接到服务)
+  - &browser_tool_sse
+    name: "BrowserUsing"
+    type: "MCP_TOOL"
+    mcp_transport_config:
+      transport_type: "SSE" # 通过 Server-Sent Events 连接到已运行的服务
+      url: "http://localhost:8931" # 浏览器服务监听的地址
+  # ... 此处可以根据需要定义更多不同类型的工具。
 
 # 动作定义：定义了 Agent 在执行任务时可以采取的具体动作
 # 每个动作包含名称 (name)、描述 (desc)，以及完成该动作需要调用的工具 (tools)
