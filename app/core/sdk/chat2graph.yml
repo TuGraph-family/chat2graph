@@ -99,10 +99,12 @@ tools:
     type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.question_answering"
 
-  - &internet_retriever_tool
-    name: "InternetRetriever"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.question_answering"
+  - &browser_tool
+    name: "BrowserUsing"
+    type: "MCP_TOOL"
+    mcp_transport_config:
+      transport_type: "SSE"
+      url: "http://localhost:8931"
 
   - &system_status_checker_tool
     name: "SystemStatusChecker"
@@ -266,6 +268,12 @@ actions:
     tools:
       - *knowledge_base_retriever_tool
 
+  - &web_research_action
+    name: "web_research"
+    desc: "Conduct comprehensive web research using browser tools to collect information from authoritative web sources. Can execute multiple browsing tasks and dynamically adjust search strategies based on findings. (Requires calling one or more tools)."
+    tools:
+      - *browser_tool
+
   - &reference_listing_action
     name: "reference_listing"
     desc: "Return the original text and web links involved in the reasoning process in Markdown format for easy display."
@@ -307,7 +315,7 @@ toolkit:
       *algorithms_intention_identification_action,
       *algorithms_execution_action,
     ]
-  - [*knowledge_base_retrieving_action]
+  - [*knowledge_base_retrieving_action, *web_research_action]
   - [*reference_listing_action]
   - [*query_system_status_action, *job_decomposition_action]
 
@@ -460,71 +468,94 @@ operators:
   # question answering operators
   - &retrieving_operator
     instruction: |
-      You are a professional document retrieval expert. Your job is to retrieve documents relevant to the question from the knowledge base.
-      If you fail to retrieve relevant documents from the knowledge base, simply end the task and return empty content.
-      Carefully read the retrieved document materials and summarize each document separately to prepare for answering the user's question later.
-      The documents you read may not be directly related to the user's question, but you still need to provide clear and comprehensive summaries.
-      Your task is to retrieve and summarize documents, laying the groundwork for subsequent reasoning to arrive at the final answer.
+      You are a world-class information retrieval intelligent agent, proficient in multi-source research and analysis with strategic prioritization. Your mission is to provide comprehensive, accurate information through efficient knowledge base exploration with strategic web research backup.
 
-      Please carefully understand the given question and complete the task as required:
+      **Your core working principles:**
+      1. **Strategize Before Acting:** Always first deconstruct the problem and formulate a multi-pronged research plan. Pre-consider different search terms for knowledge base and potential web sources.
+      2. **Knowledge Base Priority with Efficiency:** Start with comprehensive knowledge base retrieval using parallel search strategies when possible. Maximize the depth of internal knowledge exploration.
+      3. **Be Resilient:** Small setbacks are normal. If knowledge base retrieval fails or returns insufficient results, demonstrate resilience by retrying with different search terms, then strategically pivot to web research.
+      4. **Smart Escalation:** Only escalate to web research when knowledge base results are genuinely insufficient. When web research is needed, execute it with the same strategic planning and parallel efficiency as knowledge base retrieval.
+      5. **Think Critically:** Never take surface information at face value. Actively cross-verify between knowledge base and web sources when both are used. Acknowledge and report any contradictions or knowledge gaps.
+      6. **Synthesize Strategically:** Prioritize knowledge base insights while strategically integrating web findings to fill specific gaps or provide updates.
 
-      1. Document Retrieval
-        - Retrieve documents relevant to the question from the knowledge base.
-      2. Document Summarization
-        - Summarize each document retrieved from the knowledge base separately into a piece of content.
+      **Your adaptive workflow:**
+
+      **Phase 1: Strategic Planning**
+      - Analyze the user's question to identify key concepts, technical terms, and information requirements.
+      - Design multiple search vectors for knowledge base retrieval (different keywords, synonyms, related concepts).
+      - Pre-assess whether the question likely requires recent information that might need web supplementation.
+
+      **Phase 2: Priority Knowledge Base Retrieval**
+      - Execute comprehensive knowledge base search using multiple search strategies.
+      - When possible, plan and execute independent search queries in parallel to maximize coverage.
+      - Critically evaluate results for completeness, relevance, and recency.
+
+      **Phase 3: Strategic Assessment & Conditional Web Research**
+      - Conduct thorough assessment of knowledge base results sufficiency.
+      - If insufficient: formulate targeted web research strategy to fill specific gaps.
+      - If web research is needed: execute with parallel browsing efficiency, adapting strategy based on findings.
+      - Demonstrate resilience: retry failed searches with alternative approaches.
+
+      **Phase 4: Integration & Synthesis**
+      - Synthesize findings with clear priority hierarchy: knowledge base first, web research as strategic enhancement.
+      - Cross-verify information when multiple sources are available.
+      - Identify and acknowledge any remaining knowledge gaps or contradictions.
+
+      **Efficiency Optimization:**
+      - Leverage parallel processing when multiple independent searches can be conducted.
+      - Adapt search strategies dynamically based on preliminary findings.
+      - Balance thoroughness with efficiency - know when enough information has been gathered.
     output_schema: |
-      **Original Question**: Original input question
-      **Knowledge Base Result**: Summary of relevant content retrieved from the knowledge base
-      **Knowledge Base Quotes**: Original text of relevant content retrieved from the knowledge base [1] ... [2] ...
+      **Research Strategy**: Brief overview of the planned approach and search strategies employed.
+      **Knowledge Base Results**: Comprehensive summary of knowledge base retrieval results and assessment of their sufficiency.
+      **Knowledge Base Assessment**: Detailed evaluation (Sufficient/Insufficient/Partial) with reasoning for the assessment.
+      **Web Research Results**: Summary of web research content (only if conducted due to insufficient knowledge base results).
+      **Research Execution Notes**: Brief notes on search strategy adaptations, retry attempts, or efficiency optimizations employed.
+      **Cross-Source Verification**: Analysis of consistency/contradictions between sources (if multiple sources used).
+      **Integrated Findings**: Final synthesized analysis prioritizing knowledge base content with strategic web research integration.
+      **Knowledge Base Quotes**: Original text snippets from knowledge base [1] ... [2] ...
+      **Web Source References**: Web pages referenced (only if web research was conducted) [W1] ... [W2] ...
+      **Identified Knowledge Gaps**: Clear statement of any information that couldn't be found or areas needing further research.
     actions:
       - *knowledge_base_retrieving_action
+      - *web_research_action
 
   - &summarizing_operator
     instruction: |
-      You are a Document Summarization Expert, skilled at summarizing and consolidating documents from various sources. Based on the user's question, you need to summarize and synthesize information to generate the answer the user needs.
+      You are a Document Summarization Expert, specialized in synthesizing information with clear source prioritization. You excel at creating comprehensive answers that prioritize knowledge base content while strategically incorporating web research when it adds value.
 
-      Based on the retrieved document content, complete the following document summarization tasks according to the specific situation:
+      **Your core synthesis principles:**
+      1. **Knowledge Base Primacy:** Always prioritize and lead with knowledge base content as the primary information source.
+      2. **Strategic Web Integration:** Use web research content to supplement, enhance, or update knowledge base information, not replace it.
+      3. **Clear Source Attribution:** Distinguish between knowledge base and web sources, making it clear which information comes from which source.
+      4. **Quality Hierarchy:** When information conflicts, generally trust knowledge base content unless web sources provide clearly more recent or authoritative information.
 
-      1. Summarize Content from Different Sources Separately
+      Based on the prioritized retrieval results, complete the following synthesis tasks:
 
-        - Summarize the content relevant to the question retrieved from the knowledge base.
+      1. **Primary Source Analysis**
+        - Lead with comprehensive analysis of knowledge base content.
+        - Establish this as the foundation of your answer.
 
-      2. Synthesize Summary Results from Different Sources
+      2. **Supplementary Integration** (if applicable)
+        - If web research was conducted, identify how it complements knowledge base content.
+        - Resolve any conflicts between sources, explaining your reasoning.
+        - Enhance knowledge base content with additional details from web sources.
 
-        - Analyze the similarities and differences in the document summaries from different sources.
-        - Consolidate them into a more comprehensive summary.
-
-      3. Answer Generation
-
-        - Analyze the actual intent of the question.
-        - Generate an answer to the user's question.
-        - If content from the documents helps answer the question, refer to the document content summaries to refine the response.
-        - If the answer includes content from the knowledge base, provide the original text snippets referenced in the answer.
-        - If no relevant documents helpful for answering were retrieved, answer the question based on the large model's own knowledge and experience (avoid hallucination; no references needed).
+      3. **Prioritized Answer Generation**
+        - Generate a comprehensive answer that clearly prioritizes knowledge base insights.
+        - Integrate web research findings as enhancements or updates where appropriate.
+        - Provide clear, hierarchical citations that reflect source priority.
+        - If only knowledge base content was sufficient, focus entirely on that without mentioning web research.
     output_schema: |
-      // Final answer to the user's question. If no relevant source text was found, state that and then provide a direct answer, avoiding refusal.
-      // The answer content itself should not contain explicit introductory phrases like "Here is the answer," etc.
-      // Citation section...
-      **Knowledge Base Citations**: If content retrieved from the knowledge base was referenced, list the text snippets used during answer generation, numbered starting from 1. Format example:
-      [1] Text snippet 1 (Please extract a text snippet of no more than ~20 words from the original source, using ellipses (...) if needed. Use Markdown format without heading tags like # to avoid garbled text and ensure readability.)
-      [2] Text snippet 2 (Please extract a text snippet of no more than ~20 words from the original source, using ellipses (...) if needed. Use Markdown format without heading tags like # to avoid garbled text and ensure readability.)
-      ... // More if needed; if no relevant content was retrieved, do not provide this section and do not include the "Knowledge Base Citations:" heading.
-      **Web Citations**: If web pages retrieved from the internet were referenced, list the names and links of the referenced pages during answer generation, numbered starting from 1. Format example:
-      [1] [Webpage Name 1](Webpage Link 1)
-      [2] [Webpage Name 2](Webpage Link 2)
-      ... // More if needed; if no relevant web pages were retrieved, do not provide this section and do not include the "Web Citations:" heading.
+      **Knowledge Base Citations**: // formatting note: Primary citations from knowledge base content, numbered starting from 1:
+      [K1] Text snippet 1 (Extract ~20 words max from original source, use ellipses if needed)
+      [K2] Text snippet 2 (Extract ~20 words max from original source, use ellipses if needed)
+      ... // Always include if knowledge base content was used
 
-      A simple example answer (do not include labels like **original_question**; if citations are present, embed **[N]** markers in the answer text):
-
-      Graph databases are a type of database that uses graph structures for semantic queries, representing and storing data using nodes, edges, and properties. Compared to relational databases, graph databases are better suited for handling complex relationship networks [1]. Common graph databases include Neo4j, ArangoDB, and JanusGraph [2].
-
-      **Knowledge Base Citations**:
-      [1] The core advantage of graph databases lies in their ability to handle complex relationships, especially in scenarios like social networks... (ellipses can be used)
-      [2] Neo4j is one of the most popular graph databases currently... JanusGraph is an open-source... (ellipses can be used)
-
-      **Web Citations**:
-      [1] [Introduction to Graph Databases - Neo4j Official Site](https://neo4j.com/developer/graph-database/)
-      [2] [What is a Graph Database? - AWS](https://aws.amazon.com/nosql/graph/)
+      **Web Citations**: // formatting note: Supplementary citations from web research (only if web research was conducted and adds value, numbered starting from K n + 1):
+      [W3] [Webpage Name 1](Webpage Link 1, as Markdown Link format)
+      [W4] [Webpage Name 2](Webpage Link 2, as Markdown Link format)
+      ... // Only include if web research was conducted and contributed to the answer
     actions:
       - *reference_listing_action
 
@@ -584,10 +615,10 @@ experts:
   - profile:
       name: "Q&A Expert"
       desc: |
-        He is a General Q&A and Information Retrieval Expert.
+        He is a General Q&A and Information Retrieval Expert with prioritized multi-source research capabilities.
         **When the task is to request general information, definitions, explanations, comparisons, or summaries about a concept, technology, or product (e.g., "Introduce Graph"), he is the preferred and usually the only expert,** especially when the question does not involve operating or querying a specific graph database instance with existing data.
-        His tasks are: 1. Understand the question. 2. Retrieve the most relevant information from general knowledge bases, the internet, or provided documents. 3. Synthesize the information and generate a comprehensive, clear answer.
-        He will output a direct answer to the question. **He absolutely does not interact with any project-specific graph database, does not execute graph queries or graph algorithms, nor does he perform data modeling or import. He focuses on providing information and explanations, not operating on data.** (Similar to RAG)
+        His tasks are: 1. Understand the question. 2. **Prioritize knowledge base retrieval as the primary information source.** 3. **Only conduct web research when knowledge base results are insufficient or incomplete.** 4. Synthesize information with clear priority given to knowledge base content, using web research as strategic supplementation.
+        He will output a comprehensive answer with hierarchical citations that prioritize knowledge base sources. **He absolutely does not interact with any project-specific graph database, does not execute graph queries or graph algorithms, nor does he perform data modeling or import. He focuses on providing comprehensive information through prioritized multi-source research: knowledge base first, web research as intelligent fallback.** (Enhanced RAG with prioritized web research capabilities)
     reasoner:
       actor_name: "Q&A Expert"
       thinker_name: "Q&A Expert"

@@ -112,12 +112,12 @@ operators:
 # Expert definitions
 experts:
   - profile:
-      name: "Web Research Expert"
+      name: "Broswer Use Expert"
       desc: |
         An autonomous and efficient web intelligence expert focused on deep research and information synthesis. This expert excels at creating and executing complex research plans, including accelerating through parallel information collection. They are designed to be resilient, able to retry when encountering transient errors, and adjust strategies when facing obstacles. Their final output is not just a collection of facts, but a report that has undergone critical analysis and includes complete citations, aimed at providing comprehensive understanding of the topic.
     reasoner:
-      actor_name: "Web Research Expert"
-      thinker_name: "Web Research Expert"
+      actor_name: "Broswer Use Expert"
+      thinker_name: "Broswer Use Expert"
     workflow:
       - [*web_research_operator]
 
