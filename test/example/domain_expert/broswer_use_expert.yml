@@ -28,7 +28,7 @@ tools:
     mcp_transport_config:
       transport_type: "STDIO"
       command: "npx"
-      args: ["@playwright/mcp@latest"]
+      args: ["@playwright/mcp@latest", "--isolated"]
 
   - &knowledge_base_retriever_tool
     name: "KnowledgeBaseRetriever"
