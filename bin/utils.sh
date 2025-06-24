@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 SERVER_LOG_PATH=~/.chat2graph/logs/server.log
+MCP_LOG_PATH=~/.chat2graph/logs/mcp.log
 
 info() {
   if [[ -n $1 ]]; then

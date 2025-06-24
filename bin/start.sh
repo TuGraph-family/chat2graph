@@ -7,9 +7,13 @@ if [[ -n $pids ]]; then
   fatal "Chat2Graph server already started (pid: $pids)"
 fi
 
+# start MCP tools
+echo "Starting MCP tools..."
+bash start_mcp_tool.sh
+
 # prepare log path
 mkdir -p "$(dirname ${SERVER_LOG_PATH})"
-   
+
 # create a new log file with a timestamp
 timestamp=$(date +"%Y%m%d_%H%M%S")
 new_server_log_path="$(dirname ${SERVER_LOG_PATH})/server_${timestamp}.log"
@@ -25,7 +29,7 @@ tail -f "${new_server_log_path}" | while IFS= read -r line
 do
   if [[ "$line" == *"Press CTRL+C to quit"* ]]; then
       pkill -P $$ tail
-      echo "Detail logs in ${new_server_log_path}"
+      echo "Server detail logs in ${new_server_log_path}"
   else
     echo "$line"
   fi

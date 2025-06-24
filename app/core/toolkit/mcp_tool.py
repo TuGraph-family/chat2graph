@@ -157,7 +157,7 @@ class McpTool(ToolSet):
         """Initialize Stdio connection."""
         server_params = StdioServerParameters(
             command=self._transport_config.command,
-            args=self._transport_config.args or ["@playwright/mcp@latest"],
+            args=self._transport_config.args or [],
             env=self._transport_config.env,
         )
 
