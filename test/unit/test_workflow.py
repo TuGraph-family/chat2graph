@@ -7,7 +7,6 @@ from app.core.model.job import Job, SubJob
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
-from app.core.toolkit.tool import Tool
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
@@ -16,11 +15,7 @@ from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 class TestReasoner(Reasoner):
     """Test reasoner"""
 
-    def _infer(
-        self,
-        task: Task,
-        tools: Optional[List[Tool]] = None,
-    ) -> str:
+    def _infer(self, task: Task) -> str:
         """Infer by the reasoner."""
 
     def update_knowledge(self, data: Any) -> None:
