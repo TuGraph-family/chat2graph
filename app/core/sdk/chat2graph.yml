@@ -106,6 +106,14 @@ tools:
       transport_type: "SSE"
       url: "http://localhost:8931"
 
+  - &file_tool
+    name: "FileTool"
+    type: "MCP_TOOL"
+    mcp_transport_config:
+      transport_type: "STDIO"
+      command: "npx"
+      args: ["@modelcontextprotocol/server-filesystem", ".."]
+
   - &system_status_checker_tool
     name: "SystemStatusChecker"
     type: "LOCAL_TOOL"
@@ -277,6 +285,8 @@ actions:
   - &reference_listing_action
     name: "reference_listing"
     desc: "Return the original text and web links involved in the reasoning process in Markdown format for easy display."
+    tools:
+      - *file_tool
 
   # job decomposition actions
   - &query_system_status_action
