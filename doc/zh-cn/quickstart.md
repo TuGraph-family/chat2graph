@@ -46,7 +46,7 @@ LLM_NAME=openai/deepseek-ai/DeepSeek-V3
 LLM_ENDPOINT=https://api.siliconflow.cn/v1
 LLM_APIKEY={your-llm-api-key}
 
-EMBEDDING_MODEL_NAME=Qwen/Qwen3-Embedding-0.6B
+EMBEDDING_MODEL_NAME=Qwen/Qwen3-Embedding-4B
 EMBEDDING_MODEL_ENDPOINT=https://api.siliconflow.cn/v1/embeddings
 EMBEDDING_MODEL_APIKEY={your-llm-api-key}
 ```
@@ -117,7 +117,7 @@ SystemEnv.LLM_NAME="openai/deepseek-ai/DeepSeek-V3"
 SystemEnv.LLM_ENDPOINT="https://api.siliconflow.cn/v1"
 SystemEnv.LLM_APIKEY="{your-llm-api-key}"
 
-SystemEnv.EMBEDDING_MODEL_NAME="Qwen/Qwen3-Embedding-0.6B"
+SystemEnv.EMBEDDING_MODEL_NAME="Qwen/Qwen3-Embedding-4B"
 SystemEnv.EMBEDDING_MODEL_ENDPOINT="https://api.siliconflow.cn/v1/embeddings"
 SystemEnv.EMBEDDING_MODEL_APIKEY="{your-llm-api-key}"
 ```

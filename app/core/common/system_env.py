@@ -37,7 +37,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "SYSTEM_PATH": (str, "/system"),
     "FILE_PATH": (str, "/files"),
     "KNOWLEDGE_STORE_PATH": (str, "/knowledge_bases"),
-    "EMBEDDING_MODEL_NAME": (str, "Qwen/Qwen3-Embedding-0.6B"),
+    "EMBEDDING_MODEL_NAME": (str, "Qwen/Qwen3-Embedding-4B"),
     "EMBEDDING_MODEL_ENDPOINT": (str, "https://api.siliconflow.cn/v1/embeddings"),
     "EMBEDDING_MODEL_APIKEY": (str, None),
     "GLOBAL_KNOWLEDGE_BASE_NAME": (str, "Global Knowledge Base"),

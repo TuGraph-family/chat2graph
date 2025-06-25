@@ -30,7 +30,7 @@ Model configuration is centrally managed via environment variables (`SystemEnv`)
 | Model Parameter                        | Description                                                                                   |
 | --------------------------------- | -------------------------------------------------------------------------------------- |
 | MODEL_PLATFORM_TYPE               | Specifies the model platform type (LiteLLM, DB-GPT, AiSuite, etc.). Models compatible with the OpenAI API are recommended.         |
-| LLM_NAME                          | Name of the large language model, such as `gemini-2.0-flash`, `geminie-2.5-flash`, `o3-mini`, etc. (could also be `opneai/gemini-2.5-flash`, `openai/deepseek-ai/DeepSeek-V3`, indicating OpenAI API compatibility; the specific format should be adapted to the model platform).                                   |
+| LLM_NAME                          | Name of the large language model, indicating OpenAI API compatibility; the specific format should be adapted to the model platform.                                   |
 | LLM_ENDPOINT                      | API access address for the model service, i.e., `base_url`.                                                              |
 | LLM_APIKEY                        | API key for accessing the model service.                                                          |
 | TEMPERATURE                       | Controls the randomness of model output; higher values produce more diverse content, lower values produce more deterministic results.                            |
