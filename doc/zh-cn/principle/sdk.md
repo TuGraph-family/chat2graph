@@ -341,7 +341,7 @@ Chat2Graph 支持所有兼容 OpenAI API 标准的大语言模型和嵌入模型
 - 阿里通义千问系列（Qwen-3）
 - 智谱 GLM 系列
 - DeepSeek 系列
-- 以及其他支持 OpenAI API 格式的模型服务
+- 以及其他支持 OpenAI API 格式的模型服务，比如硅基流动等
 
 **嵌入模型支持**：
 

@@ -14,8 +14,8 @@ from app.core.common.type import (
 # system environment variable keys
 _env_vars: Dict[str, Tuple[Type, Any]] = {
     "WORKFLOW_PLATFORM_TYPE": (WorkflowPlatformType, WorkflowPlatformType.DBGPT),
-    "MODEL_PLATFORM_TYPE": (ModelPlatformType, ModelPlatformType.DBGPT),
-    "LLM_NAME": (str, "openai:gemini-2.0-flash"),
+    "MODEL_PLATFORM_TYPE": (ModelPlatformType, ModelPlatformType.LITELLM),
+    "LLM_NAME": (str, "openai/gemini-2.0-flash"),
     "LLM_ENDPOINT": (str, "https://generativelanguage.googleapis.com/v1beta/openai"),
     "LLM_APIKEY": (str, None),
     "TEMPERATURE": (float, 0.7),

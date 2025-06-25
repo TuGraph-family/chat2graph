@@ -140,7 +140,7 @@ class AiSuiteLlmClient(ModelService):
             payload=cast(
                 str,
                 (
-                    model_response.choices[0].message.content or "The LLM response was missing."
+                    model_response.choices[0].message.content or "The LLM response is missing."
                 ).strip(),
             ),
             job_id=messages[-1].get_job_id(),

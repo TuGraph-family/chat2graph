@@ -322,7 +322,7 @@ Chat2Graph supports all large language models and embedding models compatible wi
 - OpenAI Embedding series (text-embedding-3-small, text-embedding-3-large, etc.)
 - Gemini Embedding series (select versions compatible with OpenAI interface)
 - Alibaba Tongyi Qianwen embedding models (text-embedding-v3, etc.)
-- Other models compatible with OpenAI Embeddings API
+- Other models compatible with OpenAI Embeddings API, such as SiliconFlow, etc.
 
 Simply configure the corresponding model name, API endpoint, and key in the `.env` file to use them. The system automatically handles API call details for different model providers. Based on testing experience, we recommend using models like Gemini 2.0 Flash, Gemini 2.5 Flash, or o3-mini for better inference performance and cost-effectiveness.
 

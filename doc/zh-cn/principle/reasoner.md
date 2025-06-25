@@ -29,13 +29,13 @@ title: 推理机
 
 | 模型参数                        | 说明                                                                                   |
 | --------------------------------- | -------------------------------------------------------------------------------------- |
-| MODEL_PLATFORM_TYPE               | 指定所用模型平台类型（DB-GPT、AiSuite、LiteLLM 等）。推荐使用兼容 OpenAI API 的模型。         |
-| LLM_NAME                          | 大语言模型的名称，例如 `gemini-2.0-flash`、`geminie-2.5-flash`、`o3-mini` 等（也可能是 `opneai/gemini-2.5-flash`，表示 OpenAI API 兼容，具体格式要根据模型平台适配）。                                   |
+| MODEL_PLATFORM_TYPE               | 指定所用模型平台类型（LiteLLM、DB-GPT、AiSuite 等）。推荐使用兼容 OpenAI API 的模型。         |
+| LLM_NAME                          | 大语言模型的名称，例如 `gemini-2.0-flash`、`geminie-2.5-flash`、`o3-mini` 等（也可能是 `opneai/gemini-2.5-flash`、`openai/deepseek-ai/DeepSeek-V3`，表示 OpenAI API 兼容，具体格式要根据模型平台适配）。                                   |
 | LLM_ENDPOINT                      | 模型服务的 API 访问地址，即 `base_url`。                                                              |
 | LLM_APIKEY                        | 用于访问模型服务的 API 密钥。                                                          |
 | TEMPERATURE                       | 控制模型输出的随机性，数值越高生成内容越多样，越低则更确定。                            |
 | MAX_TOKENS                        | 限制模型每次生成的最大 token 数，防止输出过长或超出服务限制。                          |
-| MAX_COMPLETION_TOKENS             | 限制模型每次生成的最大 completion token 数。                                           |
+| MAX_COMPLETION_TOKENS             | 限制模型每次生成的最大 completion token 数。（Google Gemini 模型使用）                                           |
 
 
 ### 2.2. 单模推理机
