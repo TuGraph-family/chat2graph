@@ -39,15 +39,15 @@ Prepare `.env` file based on [.env.template](https://github.com/TuGraph-family/c
 cp .env.template .env
 ```
 
-Configure environment variables (e.g., LLM parameters), model `gemini-2.0-flash` is recommended。
+Configure environment variables (e.g., LLM parameters), model `DeepSeek-V3` is recommended。
 
 ```bash
-LLM_NAME=gemini-2.0-flash
-LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai
+LLM_NAME=openai/deepseek-ai/DeepSeek-V3
+LLM_ENDPOINT=https://api.siliconflow.cn/v1
 LLM_APIKEY={your-llm-api-key}
 
-EMBEDDING_MODEL_NAME=text-embedding-004
-EMBEDDING_MODEL_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai
+EMBEDDING_MODEL_NAME=Qwen/Qwen3-Embedding-4B
+EMBEDDING_MODEL_ENDPOINT=https://api.siliconflow.cn/v1/embeddings
 EMBEDDING_MODEL_APIKEY={your-llm-api-key}
 ```
 
@@ -114,19 +114,16 @@ Chat2Graph provides a clean and simple SDK API, allowing you to easily customize
 #### 4.1. Configure LLM Parameters
 
 ```python
-SystemEnv.LLM_NAME="gemini-2.0-flash"
-SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai"
+SystemEnv.LLM_NAME="openai/deepseek-ai/DeepSeek-V3"
+SystemEnv.LLM_ENDPOINT="https://api.siliconflow.cn/v1"
 SystemEnv.LLM_APIKEY="{your-llm-api-key}"
 
-SystemEnv.EMBEDDING_MODEL_NAME="text-embedding-004"
-SystemEnv.EMBEDDING_MODEL_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai"
+SystemEnv.EMBEDDING_MODEL_NAME="Qwen/Qwen3-Embedding-4B"
+SystemEnv.EMBEDDING_MODEL_ENDPOINT="https://api.siliconflow.cn/v1/embeddings"
 SystemEnv.EMBEDDING_MODEL_APIKEY="{your-llm-api-key}"
 ```
 
 #### 4.2. Initialize AgenticService
-
-Customize the chat2graph.yml file to initialize AgenticService with one click.
-
 
 Customize [chat2graph.yml](https://github.com/TuGraph-family/chat2graph/blob/master/app/core/sdk/chat2graph.yml) file to initialize AgenticService with one click.
 

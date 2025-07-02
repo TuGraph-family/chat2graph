@@ -1,6 +1,4 @@
-from typing import Any, Dict, List, Optional, cast
-
-from aisuite.client import Client  # type: ignore
+from typing import Any, Dict, List, Optional, Union, cast
 
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
@@ -10,30 +8,22 @@ from app.core.reasoner.model_service import ModelService
 from app.core.toolkit.tool import FunctionCallResult, Tool
 
 
-class AiSuiteLlmClient(ModelService):
-    """AiSuite LLM Client.
-
-    Attributes:
-        _llm_client (LLMClient): The LLM client provided by AiSuite.
+class LiteLlmClient(ModelService):
+    """LiteLLM Client.
+    Uses LiteLLM to interact with various LLM providers.
+    API keys for providers (OpenAI, Anthropic, etc.) should be set as environment variables
+    (e.g., OPENAI_API_KEY, ANTHROPIC_API_KEY). LiteLLM will pick them up.
     """
 
     def __init__(self):
         super().__init__()
-        # if using OpenAI API capabilities,
-        # the model alias should be in the format "openai:<model_name>"
-        self._llm_client: Client = Client(
-            provider_configs={
-                "openai": {
-                    "api_key": SystemEnv.LLM_APIKEY,
-                    "base_url": SystemEnv.LLM_ENDPOINT,
-                },
-                "anthropic": {
-                    "api_key": SystemEnv.LLM_APIKEY,
-                    "base_url": SystemEnv.LLM_ENDPOINT,
-                },
-            }
-        )
-        self._model_alias = SystemEnv.LLM_NAME  # ex. "anthropic:claude-3-5-sonnet-20240620"
+        # e.g., "openai/gpt-4o", "anthropic/claude-3-sonnet-20240229"
+        # SystemEnv.LLM_ENDPOINT can be used as api_base for custom OpenAI-compatible endpoints
+        self._model_alias: str = SystemEnv.LLM_NAME
+        self._api_base: str = SystemEnv.LLM_ENDPOINT
+        self._api_key: str = SystemEnv.LLM_APIKEY
+        self._temperature: float = SystemEnv.TEMPERATURE
+
         self._max_tokens: int = SystemEnv.MAX_TOKENS
         self._max_completion_tokens: int = SystemEnv.MAX_COMPLETION_TOKENS
 
@@ -43,20 +33,33 @@ class AiSuiteLlmClient(ModelService):
         messages: List[ModelMessage],
         tools: Optional[List[Tool]] = None,
     ) -> ModelMessage:
-        """Generate a text given a prompt."""
+        """Generate a text given a prompt using LiteLLM."""
         # prepare model request
-        aisuite_messages: List[Dict[str, str]] = self._prepare_model_request(
+        litellm_messages: List[Dict[str, str]] = self._prepare_model_request(
             sys_prompt=sys_prompt, messages=messages, tools=tools
         )
 
-        # generate response using the llm client
-        model_response: Any = self._llm_client.chat.completions.create(
+        from litellm import completion
+        from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
+        from litellm.types.utils import ModelResponse, StreamingChoices
+
+        model_response: Union[ModelResponse, CustomStreamWrapper] = completion(
             model=self._model_alias,
-            messages=aisuite_messages,
-            temperature=SystemEnv.TEMPERATURE,
+            api_base=self._api_base,
+            api_key=self._api_key,
+            messages=litellm_messages,
+            temperature=self._temperature,
             max_tokens=self._max_tokens,
             max_completion_tokens=self._max_completion_tokens,
+            stream=False,
         )
+        if isinstance(model_response, CustomStreamWrapper) or isinstance(
+            model_response.choices[0], StreamingChoices
+        ):
+            raise ValueError(
+                "Streaming responses are not supported in LiteLlmClient. "
+                "Please PR to add a streaming feature."
+            )
 
         # call functions based on the model output
         func_call_results: Optional[List[FunctionCallResult]] = None
@@ -112,7 +115,7 @@ class AiSuiteLlmClient(ModelService):
                     + "\n</function_call_result>"
                 )
 
-            # Chat2Graph <-> AISuite's last message role should be "user"
+            # Chat2Graph <-> LiteLLM's last message role should be "user"
             if (len(messages) + i) % 2 == 1:
                 base_messages.append({"role": "user", "content": base_message_content.strip()})
             else:
@@ -140,7 +143,7 @@ class AiSuiteLlmClient(ModelService):
             payload=cast(
                 str,
                 (
-                    model_response.choices[0].message.content or "The LLM response is missing."
+                    model_response.choices[0].message.content or "The LLM response was missing."
                 ).strip(),
             ),
             job_id=messages[-1].get_job_id(),

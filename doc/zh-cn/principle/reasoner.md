@@ -25,6 +25,19 @@ title: 推理机
 | `async generate(self, sys_prompt: str, messages: List[ModelMessage], tools: Optional[List[Tool]] = None) -> ModelMessage` | 这是与 LLM 进行交互的核心接口。子类必须实现此方法，以定义如何向底层 LLM 发送系统提示 (`sys_prompt`)、历史消息 (`messages`) 以及可选的可用工具列表 (`tools`)，并异步返回模型的响应 (`ModelMessage`)。                                                              |
 | `async call_function(self, tools: List[Tool], model_response_text: str) -> Optional[List[FunctionCallResult]]`     | 此异步方法负责处理模型响应中可能包含的工具调用请求。它会解析 `model_response_text` 中的 `<function_call>` 标签，查找对应的工具函数，注入必要的服务依赖，执行函数，并返回包含所有调用结果（成功或失败）的 `FunctionCallResult` 列表。如果模型响应中没有有效的工具调用请求，则返回 `None`。 |
 
+模型配置通过环境变量（`SystemEnv`）进行集中管理，开发者可根据实际需求选择不同的模型和模型参数：
+
+| 模型参数                        | 说明                                                                                   |
+| --------------------------------- | -------------------------------------------------------------------------------------- |
+| MODEL_PLATFORM_TYPE               | 指定所用模型平台类型（LiteLLM、DB-GPT、AiSuite 等）。推荐使用兼容 OpenAI API 的模型。         |
+| LLM_NAME                          | 大语言模型的名称，包括 OpenAI API 的模型，具体格式要根据模型平台适配）。                                   |
+| LLM_ENDPOINT                      | 模型服务的 API 访问地址，即 `base_url`。                                                              |
+| LLM_APIKEY                        | 用于访问模型服务的 API 密钥。                                                          |
+| TEMPERATURE                       | 控制模型输出的随机性，数值越高生成内容越多样，越低则更确定。                            |
+| MAX_TOKENS                        | 限制模型每次生成的最大 token 数，防止输出过长或超出服务限制。                          |
+| MAX_COMPLETION_TOKENS             | 限制模型每次生成的最大 completion token 数。（Google Gemini 模型使用）                                           |
+
+
 ### 2.2. 单模推理机
 
 `MonoModelReasoner` (单模推理机) 的工作方式依赖于单个 LLM 实例来完成所有任务处理阶段，包括理解用户指令、进行思考、选择必要的工具，并最终生成回复或执行动作。其主要优点在于配置简单直观，且由于所有处理步骤由同一模型完成，推理链路相对较简单和短。

@@ -36,7 +36,11 @@ class DbgptLlmClient(ModelService):
             model_alias=SystemEnv.LLM_NAME,
             api_base=SystemEnv.LLM_ENDPOINT,
             api_key=SystemEnv.LLM_APIKEY,
-            openai_kwargs={"temperature": SystemEnv.TEMPERATURE},
+            openai_kwargs={
+                "temperature": SystemEnv.TEMPERATURE,
+                "max_tokens": SystemEnv.MAX_TOKENS,
+                "max_completion_tokens": SystemEnv.MAX_COMPLETION_TOKENS,
+            },
         )
 
     async def generate(

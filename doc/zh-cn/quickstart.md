@@ -39,15 +39,15 @@ cd chat2graph
 cp .env.template .env
 ```
 
-配置环境变量（如 LLM 参数），推荐使用`gemini-2.0-flash`模型。
+配置环境变量（如 LLM 参数），推荐使用`DeepSeek-V3`模型。
 
 ```bash
-LLM_NAME=gemini-2.0-flash
-LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai
+LLM_NAME=openai/deepseek-ai/DeepSeek-V3
+LLM_ENDPOINT=https://api.siliconflow.cn/v1
 LLM_APIKEY={your-llm-api-key}
 
-EMBEDDING_MODEL_NAME=text-embedding-004
-EMBEDDING_MODEL_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai
+EMBEDDING_MODEL_NAME=Qwen/Qwen3-Embedding-4B
+EMBEDDING_MODEL_ENDPOINT=https://api.siliconflow.cn/v1/embeddings
 EMBEDDING_MODEL_APIKEY={your-llm-api-key}
 ```
 
@@ -113,12 +113,12 @@ Chat2Graph 提供了清晰简洁的 SDK API，让你轻松定制智能体系统�
 #### 4.1. 配置 LLM 参数
 
 ```python
-SystemEnv.LLM_NAME="gemini-2.0-flash"
-SystemEnv.LLM_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai"
+SystemEnv.LLM_NAME="openai/deepseek-ai/DeepSeek-V3"
+SystemEnv.LLM_ENDPOINT="https://api.siliconflow.cn/v1"
 SystemEnv.LLM_APIKEY="{your-llm-api-key}"
 
-SystemEnv.EMBEDDING_MODEL_NAME="text-embedding-004"
-SystemEnv.EMBEDDING_MODEL_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/openai"
+SystemEnv.EMBEDDING_MODEL_NAME="Qwen/Qwen3-Embedding-4B"
+SystemEnv.EMBEDDING_MODEL_ENDPOINT="https://api.siliconflow.cn/v1/embeddings"
 SystemEnv.EMBEDDING_MODEL_APIKEY="{your-llm-api-key}"
 ```
 
