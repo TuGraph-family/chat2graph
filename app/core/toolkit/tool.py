@@ -146,3 +146,12 @@ class McpTool(Tool):
         function.__name__ = name
         function.__doc__ = description
         return function
+
+    def copy(self) -> "McpTool":
+        """Create a copy of the MCP tool."""
+        copied_tool = super().copy()
+        return McpTool(
+            name=copied_tool.name,
+            description=copied_tool.description,
+            tool_group=self._tool_group,
+        )
