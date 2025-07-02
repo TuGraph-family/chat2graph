@@ -158,14 +158,11 @@ class McpConnection(ToolConnection):
 
     async def list_tools(self) -> List[McpBaseTool]:
         """Get available tools from MCP server with caching support.
-        
+
         Returns cached tools if available, otherwise fetches from the server.
-        
+
         Returns:
             List of available MCP tools.
-            
-        Raises:
-            RuntimeError: If the connection is not initialized.
         """
         if self._cached_tools:
             return self._cached_tools

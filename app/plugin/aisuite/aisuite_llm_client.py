@@ -97,7 +97,7 @@ class AiSuiteLlmClient(ModelService):
             # handle the func call information in the agent message
             base_message_content = message.get_payload()
             func_call_results = message.get_function_calls()
-            if func_call_results:
+            if func_call_results and i >= len(messages) - 2:
                 base_message_content += (
                     "<function_call_result>\n"
                     + "\n".join(

@@ -37,6 +37,10 @@ def run_async_function(
         asyncio.set_event_loop(loop)
         try:
             return loop.run_until_complete(async_func(*args, **kwargs))
+        except Exception as e:
+            # re-raise the exception to show the error from run_async_function,
+            # but hide the traceback from this helper function.
+            raise e
         finally:
             loop.close()
 

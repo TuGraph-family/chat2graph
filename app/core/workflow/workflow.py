@@ -58,7 +58,13 @@ class Workflow(ABC):
                     self.__workflow = self._build_workflow(reasoner)
                 return self.__workflow
 
-        workflow_message = self._execute_workflow(build_workflow(), job, workflow_messages, lesson)
+        try:
+            built_workflow = build_workflow()
+            workflow_message = self._execute_workflow(
+                built_workflow, job, workflow_messages, lesson
+            )
+        except Exception as e:
+            raise e from None
         if not self._evaluator:
             workflow_message.status = WorkflowStatus.SUCCESS
             workflow_message.evaluation = "The workflow is executed successfully."
