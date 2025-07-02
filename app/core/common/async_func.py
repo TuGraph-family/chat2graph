@@ -52,7 +52,7 @@ def run_in_thread(func, *args, **kwargs):
         return func(*args, **kwargs)
 
     thread = threading.Thread(target=thread_target)
-    thread.daemon = False
+    thread.daemon = True
     thread.start()
 
     # return thread object to allow caller to choose to thread.join and wait
