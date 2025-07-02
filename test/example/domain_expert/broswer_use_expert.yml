@@ -1,25 +1,18 @@
-# ===================================================================
-# Web Research Expert v2.1 - Corrected & Optimized Configuration
-# ===================================================================
-# Description: An advanced, robust, and efficient agent configuration
-# for deep web research, analysis, and synthesis.
-# ===================================================================
-
-# Application basic information configuration
+# application basic information configuration
 app:
   name: "WebResearchExpert"
   desc: "An Agentic System for Advanced Web Research and Synthesis."
   version: "2.1.0"
 
-# Plugin configuration
+# plugin configuration
 plugin:
   workflow_platform: "DBGPT"
 
-# Reasoner configuration
+# reasoner configuration
 reasoner:
   type: "DUAL"
 
-# Tool definitions
+# tool definitions
 tools:
   - &browser_tool
     name: "BrowserUsing"
@@ -36,28 +29,28 @@ tools:
     type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.question_answering"
 
-# Action definitions
+# action definitions
 actions:
-  # Phase 1: Strategic Planning
+  # phase 1: Strategic Planning
   - &web_search_planning_action
     name: "web_search_planning"
     desc: "Analyzes user questions and formulates comprehensive web research strategies. Includes identifying key issues, designing multiple search vectors (keywords, authoritative sources), and planning timely parallel information collection paths."
     tools: []
 
-  # Phase 2: Information Collection
+  # phase 2: Information Collection
   - &web_browsing_action
     name: "web_browsing"
     desc: "Executes research plans through web interactions. Can concurrently execute multiple independent browsing tasks to maximize efficiency. This action is responsible for collecting raw information and can dynamically adjust its approach based on preliminary findings."
     tools:
       - *browser_tool
 
-  # Phase 3: Knowledge Synthesis
+  # phase 3: Knowledge Synthesis
   - &information_synthesis_action
     name: "information_synthesis"
     desc: "Critically analyzes, evaluates, and synthesizes collected information. Identifies key findings, confirms facts, resolves contradictions, and builds coherent knowledge structures from different sources."
     tools: []
 
-  # Phase 4: Verification and Citation
+  # phase 4: Verification and Citation
   - &fact_verification_and_citation_action
     name: "fact_verification_and_citation"
     desc: "Conducts final review of synthesized information for accuracy and completeness. Identifies any remaining knowledge gaps and prepares precise citations for all referenced web and knowledge base sources."
@@ -69,12 +62,12 @@ actions:
     name: "job_decomposition"
     desc: "Manually decomposes tasks into multiple subtasks (jobs) according to relevant requirements and assigns each subtask to the corresponding expert."
 
-# Toolkit definitions
+# toolkit definitions
 toolkit:
   - [*web_search_planning_action, *web_browsing_action, *information_synthesis_action, *fact_verification_and_citation_action]
   - [*job_decomposition_action]
 
-# Operator definitions
+# operator definitions
 operators:
   - &web_research_operator
     instruction: |
@@ -109,7 +102,7 @@ operators:
       - *information_synthesis_action
       - *fact_verification_and_citation_action
 
-# Expert definitions
+# expert definitions
 experts:
   - profile:
       name: "Broswer Use Expert"
@@ -121,7 +114,7 @@ experts:
     workflow:
       - [*web_research_operator]
 
-# Leader definition
+# leader definition
 leader:
   actions: [*job_decomposition_action]
 

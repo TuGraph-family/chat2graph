@@ -211,9 +211,12 @@ class DualModelReasoner(Reasoner):
 
         # set the function docstrings
         if len(task.tools) > 0:
-            func_description = ""
-            for i, tool in enumerate(task.tools):
-                func_description += f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n\n"
+            func_description = "\n".join(
+                [
+                    f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n"
+                    for i, tool in enumerate(task.tools)
+                ]
+            )
         else:
             func_description = "No function calling in this round."
 
@@ -280,9 +283,12 @@ class DualModelReasoner(Reasoner):
 
         # set the function docstrings
         if len(task.tools) > 0:
-            func_description = ""
-            for i, tool in enumerate(task.tools):
-                func_description += f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n\n"
+            func_description = "\n".join(
+                [
+                    f"({i + 1}) Function {tool.name}():\n\t{tool.description}\n"
+                    for i, tool in enumerate(task.tools)
+                ]
+            )
         else:
             func_description = "No function calling in this round."
 

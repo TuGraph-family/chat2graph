@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from app.core.common.type import McpTransportType, ToolGroupType, ToolResourceType
+from app.core.common.type import McpTransportType, ToolGroupType
 
 
 @dataclass
@@ -11,8 +11,6 @@ class McpTransportConfig:
     Attributes:
         transport_type (McpTransportType): Specifies MCP transport (STDIO, SSE, etc.);
             determines other relevant params.
-        resource_type (McpReasourceType): Specifies MCP resource type (STATELESS, STATEFUL, STACKABLE);
-            affects how tools are managed and isolated.
         url (str): MCP server base URL; required for SSE, WEBSOCKET, STREAMABLE_HTTP.
             Defaults to "http://localhost:8931".
         command (str): Command for STDIO transport (e.g., 'npx'); not used by other transports.
@@ -30,7 +28,6 @@ class McpTransportConfig:
     """
 
     transport_type: McpTransportType
-    resource_type: ToolResourceType = ToolResourceType.STATEFUL
     url: str = "http://localhost:8931"
     command: str = "npx"
     args: Optional[List[str]] = None
@@ -43,7 +40,6 @@ class McpTransportConfig:
     def from_dict(cls, config: Dict[str, Any]) -> "McpTransportConfig":
         """Create an instance from a dictionary."""
         transport_type = McpTransportType(config.get("transport_type", "STDIO"))
-        resource_type = ToolResourceType(config.get("resource_type", "STATELESS"))
         url = config.get("url", "http://localhost:8931")
         command = config.get("command", "npx")
         args = config.get("args", None)
@@ -54,7 +50,6 @@ class McpTransportConfig:
 
         return cls(
             transport_type=transport_type,
-            resource_type=resource_type,
             url=url,
             command=command,
             args=args,
@@ -68,7 +63,6 @@ class McpTransportConfig:
         """Convert the instance to a dictionary."""
         return {
             "transport_type": self.transport_type.value,
-            "resource_type": self.resource_type.value,
             "url": self.url,
             "command": self.command,
             "args": self.args,

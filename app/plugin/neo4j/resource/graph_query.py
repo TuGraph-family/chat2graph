@@ -232,4 +232,3 @@ def _process_value(
         for item_value in value.values():
             _process_value(item_value, graph_data, node_schema, processed_nodes, processed_rels)
     # ignore primitive types for graph_data
-    # ignore primitive types for graph_data

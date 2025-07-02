@@ -889,11 +889,13 @@ class ShortestPathExecutor(Tool):
                         RETURN 
                             index,
                             gds.util.asNode(sourceNode).name AS sourceNodeName,
+                            gds.util.asNode(sourceNode).id AS sourceNodeId,
                             gds.util.asNode(targetNode).name AS targetNodeName,
+                            gds.util.asNode(targetNode).id AS targetNodeId,
                             totalCost,
                             [nodeId IN nodeIds | gds.util.asNode(nodeId).name] AS nodeNames,
-                            costs,
-                            path
+                            [nodeId IN nodeIds | gds.util.asNode(nodeId).id] AS nodeIds,
+                            costs
                         """
                     ).data()
                 else:

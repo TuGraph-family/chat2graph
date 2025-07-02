@@ -124,14 +124,6 @@ class ToolType(Enum):
     MCP_TOOL = "MCP_TOOL"
 
 
-class ToolResourceType(Enum):
-    """Tool resource type enumeration"""
-
-    STATELESS = "STATELESS"  # shared across operators
-    STATEFUL = "STATEFUL"
-    STACKABLE = "STACKABLE"
-
-
 class ToolGroupType(Enum):
     """Tool set type enumeration"""
 

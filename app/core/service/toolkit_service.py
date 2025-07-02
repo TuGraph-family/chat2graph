@@ -1,5 +1,3 @@
-# app/core/toolkit/toolkit_service.py
-
 import json
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
@@ -22,7 +20,7 @@ matplotlib.use("Agg")
 
 
 class ToolkitService(metaclass=Singleton):
-    """The toolkit service provides functionalities for the toolkit with MCP resource management."""
+    """The toolkit service provides functionalities for the toolkit."""
 
     def __init__(self):
         self._toolkit: Toolkit = Toolkit()
@@ -247,8 +245,14 @@ class ToolkitService(metaclass=Singleton):
         raise NotImplementedError("This method is not implemented")
 
     def visualize(self, graph: Toolkit, title: str, show=False):
-        """Visualize the toolkit graph."""
-        # This implementation remains the same
+        """Visualize the toolkit graph with different colors for actions and tools.
+        Args:
+            graph (Toolkit): The graph to visualize.
+            title (str): Title for the plot.
+            show (bool): Whether to show the plot.
+        Returns:
+            plt.Figure: The plot figure.
+        """
         plt.figure(figsize=(12, 8))
 
         # get vertex positions using spring layout with larger distance and more iterations

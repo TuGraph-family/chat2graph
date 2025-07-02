@@ -103,9 +103,8 @@ tools:
     name: "BrowserUsing"
     type: "MCP"
     mcp_transport_config:
-      transport_type: "STDIO"
-      command: "npx"
-      args: ["@playwright/mcp@latest", "--isolated"]
+      transport_type: "SSE"
+      url: "http://localhost:8931/sse"
 
   - &file_tool
     name: "FileTool"
@@ -173,11 +172,11 @@ actions:
           - (Optional) Consider adding inverse relationships to enhance the expressiveness of the graph.
   - &entity_type_definition_action
     name: "entity_type_definition"
-    desc: "定义和分类文档中识别出的核心实体类型"
+    desc: "Core entity types identified in the definition and classification document."
 
   - &relation_type_definition_action
     name: "relation_type_definition"
-    desc: "设计实体间的关系类型和属性"
+    desc: "Design the types and attributes of relationships between entities."
 
   - &schema_design_and_import_action
     name: "schema_design_and_import"
