@@ -1,6 +1,5 @@
 import asyncio
-from typing import Any, Dict, List, Optional
-from uuid import uuid4
+from typing import Any, Dict, List
 
 from app.core.model.job import SubJob
 from app.core.model.task import Task
@@ -8,15 +7,17 @@ from app.core.service.reasoner_service import ReasonerService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 from app.core.workflow.operator_config import OperatorConfig
+from test.resource.init_server import init_server
+
+init_server()
 
 
 # example tool
 class Calculator(Tool):
     """The query tool in the toolkit."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.calculator.__name__,
             description=self.calculator.__doc__ or "",
             function=self.calculator,

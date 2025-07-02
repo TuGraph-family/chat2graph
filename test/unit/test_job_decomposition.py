@@ -14,14 +14,14 @@ from app.core.model.message import AgentMessage, WorkflowMessage
 from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.reasoner.reasoner import Reasoner
-from app.core.sdk.agentic_service import AgenticService
 from app.core.service.job_service import JobService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.workflow.workflow import Workflow
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from test.resource.init_server import init_server
 
-AgenticService()
+init_server()
 
 
 class MockWorkflow(Workflow):

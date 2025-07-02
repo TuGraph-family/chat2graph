@@ -1,6 +1,5 @@
 import json
-from typing import Dict, List, Optional
-from uuid import uuid4
+from typing import Dict, List
 
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
@@ -9,9 +8,8 @@ from app.core.toolkit.tool import Tool
 class AlgorithmsGetter(Tool):
     """Tool to get all algorithms from the graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.get_algorithms.__name__,
             description=self.get_algorithms.__doc__ or "",
             function=self.get_algorithms,
@@ -59,9 +57,8 @@ class AlgorithmsGetter(Tool):
 class AlgorithmsExecutor(Tool):
     """Tool to execute algorithms on the graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.execute_algorithms.__name__,
             description=self.execute_algorithms.__doc__ or "",
             function=self.execute_algorithms,

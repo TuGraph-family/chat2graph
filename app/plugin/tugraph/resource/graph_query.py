@@ -1,6 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional
-from uuid import uuid4
+from typing import Any, Dict, List
 
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
@@ -17,9 +16,8 @@ MATCH (p:种类), (q:种类) WHERE p,q的条件 RETURN p,q
 class SchemaGetter(Tool):
     """Tool for getting the schema of the graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.get_schema.__name__,
             description=self.get_schema.__doc__ or "",
             function=self.get_schema,
@@ -47,9 +45,8 @@ class SchemaGetter(Tool):
 class GrammerReader(Tool):
     """Tool for reading the graph query language grammar."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.read_grammer.__name__,
             description=self.read_grammer.__doc__ or "",
             function=self.read_grammer,
@@ -73,9 +70,8 @@ class GrammerReader(Tool):
 class VertexQuerier(Tool):
     """Tool for querying vertices in TuGraph."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.query_vertex.__name__,
             description=self.query_vertex.__doc__ or "",
             function=self.query_vertex,
@@ -184,6 +180,9 @@ WHERE {where_clause}
 RETURN {distinct_keyword}n
         """
 
+        store = graph_db_service.get_default_graph_db()
+        result = "\n".join([str(record.get("n", "")) for record in store.conn.run(query=query)])
+        return f"查询图数据库成功。\n查询语句：\n{query}：\n查询结果：\n{result}"
         store = graph_db_service.get_default_graph_db()
         result = "\n".join([str(record.get("n", "")) for record in store.conn.run(query=query)])
         return f"查询图数据库成功。\n查询语句：\n{query}：\n查询结果：\n{result}"

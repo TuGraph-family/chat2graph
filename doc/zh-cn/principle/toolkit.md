@@ -76,6 +76,7 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 | :------------------------------------------------------------------------------------------ |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `get_toolkit(self) -> Toolkit`                                                              | 返回当前服务管理的 `Toolkit` 实例。                                                                                                                                                            |
 | `add_tool(self, tool: Tool, connected_actions: List[Tuple[Action, float]])`                 | 向工具库中添加一个 `Tool`。`tool` 是要添加的工具对象，`connected_actions` 是一个列表，包含调用此工具的 `Action` 对象及其对应的分数（表示关联强度）。如果 `Action` 不存在于图中，会打印警告。如果工具没有任何 `Action` 连接，也会打印警告并移除该工具。                        |
+| `add_tool_set(self, tool_set: ToolSetClient, connected_actions: List[Tuple[Action, float]]) -> None` | 向工具库中添加一系列来自工具集的工具。`tool_set` 是要添加的工具集客户端对象，`connected_actions` 是一个列表，包含调用此工具集中工具的 `Action` 对象及其对应的分数。该方法会创建该工具集中包含的所有的工具，然后依次将工具添加到工具库中，并关联相连的行为。                                              |
 | `add_action(self, action: Action, next_actions: List[Tuple[Action, float]], prev_actions: List[Tuple[Action, float]]) -> None` | 向工具库中添加一个 `Action`。`action` 是要添加的行为对象，`next_actions` 和 `prev_actions` 分别是此行为的后继和前驱 `Action` 列表及其关联分数。                                                                              |
 | `get_action(self, id: str, action_id: str) -> Action`                                       | 根据 `action_id` 从工具库中获取 `Action` 对象。如果未找到，则抛出 `ValueError`。 (注意：参数 `id` 在当前实现中未使用)                                                                                                  |
 | `remove_tool(self, id: str, tool_id: str)`                                                  | 根据 `tool_id` 从工具库中移除一个 `Tool`。 (注意：参数 `id` 在当前实现中未使用)                                                                                                                              |
@@ -83,7 +84,6 @@ Toolkit 被整个系统所共享，因此，其中的行为和工具都是可复
 | `recommend_subgraph(self, actions: List[Action], threshold: float = 0.5, hops: int = 0) -> Toolkit` | 推荐引擎核心方法。基于输入的 `Action` 列表，通过带权重的广度优先搜索（BFS）在指定的 `hops` 范围内查找相关的 `Action`，然后关联这些 `Action` 调用的 `Tool`。所有关联关系的分数需大于等于 `threshold`。返回一个包含这些相关 `Action` 和 `Tool` 的子图 (`Toolkit`)。      |
 | `recommend_tools_actions(self, actions: List[Action], threshold: float = 0.5, hops: int = 0) -> Tuple[List[Tool], List[Action]]` | 基于 `recommend_subgraph` 的结果，将推荐的子图中的 `Tool` 和 `Action` 分别提取出来，返回一个包含 `Tool` 列表和 `Action` 列表的元组。                                                                                    |
 | `visualize(self, graph: Toolkit, title: str, show=False)`                                   | 将给定的 `Toolkit` 图 (`graph`) 可视化。`Action` 节点和 `Tool` 节点会以不同颜色和形状展示，边也会根据类型（Action-Action 或 Action-Tool）有所区分，并显示关联分数。`title` 为图表标题，`show`决定是否立即显示图像。返回 `matplotlib.pyplot.Figure` 对象。 |
-
 ## 3. 示例
 
 * `Toolkit` 的 `Action` 和 `Tool` 注册：`test/example/run_toolkit.py` 的示例代码。

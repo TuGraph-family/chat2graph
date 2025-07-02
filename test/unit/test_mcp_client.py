@@ -4,7 +4,10 @@ from mcp.types import CallToolResult, TextContent, Tool as McpBaseTool
 import pytest
 
 from app.core.common.type import McpTransportType
-from app.core.toolkit.mcp_tool import McpTool, McpTransportConfig
+from app.core.toolkit.mcp_service import McpService, McpTransportConfig
+from test.resource.init_server import init_server
+
+init_server()
 
 
 @pytest.fixture
@@ -71,9 +74,8 @@ def mock_tools():
 @pytest.mark.asyncio
 async def test_init(sse_config):
     """Test McpTool initialization."""
-    tool = McpTool(transport_config=sse_config, id="test_tool")
+    tool = McpService(transport_config=sse_config)
 
-    assert tool.id == "test_tool"
     assert tool._transport_config == sse_config
     assert not tool._initialized
     assert not tool.is_connected
@@ -81,22 +83,13 @@ async def test_init(sse_config):
 
 
 @pytest.mark.asyncio
-async def test_init_with_auto_id(sse_config):
-    """Test McpTool initialization with auto-generated ID."""
-    tool = McpTool(transport_config=sse_config)
-
-    assert tool.id is not None
-    assert len(tool.id) > 0
-
-
-@pytest.mark.asyncio
 async def test_connect_sse_success(sse_config, mock_session):
     """Test successful SSE connection."""
-    tool = McpTool(transport_config=sse_config)
+    tool = McpService(transport_config=sse_config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         # mock the transport
         mock_transport = (AsyncMock(), AsyncMock())
@@ -117,11 +110,11 @@ async def test_connect_sse_success(sse_config, mock_session):
 @pytest.mark.asyncio
 async def test_connect_stdio_success(stdio_config, mock_session):
     """Test successful STDIO connection."""
-    tool = McpTool(transport_config=stdio_config)
+    tool = McpService(transport_config=stdio_config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.stdio_client") as mock_stdio_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.stdio_client") as mock_stdio_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         # mock the transport
         mock_transport = (AsyncMock(), AsyncMock())
@@ -141,11 +134,11 @@ async def test_connect_stdio_success(stdio_config, mock_session):
 @pytest.mark.asyncio
 async def test_connect_websocket_success(websocket_config, mock_session):
     """Test successful WebSocket connection."""
-    tool = McpTool(transport_config=websocket_config)
+    tool = McpService(transport_config=websocket_config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.websocket_client") as mock_ws_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.websocket_client") as mock_ws_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         # mock the transport
         mock_transport = (AsyncMock(), AsyncMock())
@@ -167,7 +160,7 @@ async def test_connect_unsupported_transport():
     """Test connection with unsupported transport type."""
     # create config with invalid transport type
     config = McpTransportConfig(transport_type="INVALID")  # type: ignore
-    tool = McpTool(transport_config=config)
+    tool = McpService(transport_config=config)
 
     with pytest.raises(ValueError, match="Unsupported transport type"):
         await tool.connect()
@@ -176,9 +169,9 @@ async def test_connect_unsupported_transport():
 @pytest.mark.asyncio
 async def test_connect_initialization_failure(sse_config):
     """Test connection failure during initialization."""
-    tool = McpTool(transport_config=sse_config)
+    tool = McpService(transport_config=sse_config)
 
-    with patch("app.core.toolkit.mcp_tool.sse_client") as mock_sse_client:
+    with patch("app.core.toolkit.mcp_client.sse_client") as mock_sse_client:
         mock_sse_client.side_effect = Exception("Connection failed")
 
         with pytest.raises(Exception, match="Connection failed"):
@@ -188,40 +181,14 @@ async def test_connect_initialization_failure(sse_config):
 
 
 @pytest.mark.asyncio
-async def test_disconnect(sse_config, mock_session):
-    """Test disconnection."""
-    tool = McpTool(transport_config=sse_config)
-
-    with (
-        patch("app.core.toolkit.mcp_tool.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
-    ):
-        # mock successful connection
-        mock_transport = (AsyncMock(), AsyncMock())
-        mock_sse_client.return_value.__aenter__ = AsyncMock(return_value=mock_transport)
-        mock_sse_client.return_value.__aexit__ = AsyncMock()
-        mock_client_session.return_value.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_client_session.return_value.__aexit__ = AsyncMock()
-
-        await tool.connect()
-        assert tool.is_connected
-
-        # test disconnect
-        disconnected_tool = await tool.disconnect()
-
-        assert disconnected_tool is tool
-        assert not tool.is_connected
-
-
-@pytest.mark.asyncio
 async def test_get_tools_with_cache(sse_config, mock_session, mock_tools):
     """Test get_tools with caching."""
-    tool = McpTool(transport_config=sse_config)
+    tool = McpService(transport_config=sse_config)
 
     # pre-populate cache
     tool._cached_tools = mock_tools
 
-    result = await tool.get_tools()
+    result = await tool.list_tools()
 
     assert result == mock_tools
     # should not call session methods when cache is populated
@@ -231,11 +198,11 @@ async def test_get_tools_with_cache(sse_config, mock_session, mock_tools):
 @pytest.mark.asyncio
 async def test_get_tools_without_cache(sse_config, mock_session, mock_tools):
     """Test get_tools without cache."""
-    tool = McpTool(transport_config=sse_config)
+    tool = McpService(transport_config=sse_config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         # mock successful connection
         mock_transport = (AsyncMock(), AsyncMock())
@@ -249,7 +216,7 @@ async def test_get_tools_without_cache(sse_config, mock_session, mock_tools):
         mock_response.tools = mock_tools
         mock_session.list_tools.return_value = mock_response
 
-        result = await tool.get_tools()
+        result = await tool.list_tools()
 
         assert result == mock_tools
         assert tool._cached_tools == mock_tools
@@ -259,11 +226,11 @@ async def test_get_tools_without_cache(sse_config, mock_session, mock_tools):
 @pytest.mark.asyncio
 async def test_call_tool_success(sse_config, mock_session):
     """Test successful tool call."""
-    tool = McpTool(transport_config=sse_config)
+    tool = McpService(transport_config=sse_config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         # mock successful connection
         mock_transport = (AsyncMock(), AsyncMock())
@@ -277,22 +244,22 @@ async def test_call_tool_success(sse_config, mock_session):
         mock_result = CallToolResult(content=mock_content)
         mock_session.call_tool.return_value = mock_result
 
-        result = await tool.call_tool("navigate_to", {"url": "https://example.com"})
+        result = await tool.call_tool("navigate_to", param={"url": "https://example.com"})
 
         assert result == mock_content
         mock_session.call_tool.assert_called_once_with(
-            "navigate_to", {"url": "https://example.com"}
+            "navigate_to", {"param": {"url": "https://example.com"}}
         )
 
 
 @pytest.mark.asyncio
 async def test_call_tool_without_params(sse_config, mock_session):
     """Test tool call without parameters."""
-    tool = McpTool(transport_config=sse_config)
+    tool = McpService(transport_config=sse_config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         # mock successful connection
         mock_transport = (AsyncMock(), AsyncMock())
@@ -319,11 +286,11 @@ async def test_url_joining_for_sse(mock_session):
         transport_type=McpTransportType.SSE,
         url="http://localhost:8931",  # without trailing slash
     )
-    tool = McpTool(transport_config=config)
+    tool = McpService(transport_config=config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         mock_transport = (AsyncMock(), AsyncMock())
         mock_sse_client.return_value.__aenter__ = AsyncMock(return_value=mock_transport)
@@ -346,11 +313,11 @@ async def test_websocket_url_conversion(mock_session):
         transport_type=McpTransportType.WEBSOCKET,
         url="http://localhost:8931",  # HTTP should be converted to WS
     )
-    tool = McpTool(transport_config=config)
+    tool = McpService(transport_config=config)
 
     with (
-        patch("app.core.toolkit.mcp_tool.websocket_client") as mock_ws_client,
-        patch("app.core.toolkit.mcp_tool.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp_client.websocket_client") as mock_ws_client,
+        patch("app.core.toolkit.mcp_client.ClientSession") as mock_client_session,
     ):
         mock_transport = (AsyncMock(), AsyncMock())
         mock_ws_client.return_value.__aenter__ = AsyncMock(return_value=mock_transport)

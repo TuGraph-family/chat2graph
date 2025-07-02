@@ -101,14 +101,15 @@ tools:
 
   - &browser_tool
     name: "BrowserUsing"
-    type: "MCP_TOOL"
+    type: "MCP"
     mcp_transport_config:
-      transport_type: "SSE"
-      url: "http://localhost:8931"
+      transport_type: "STDIO"
+      command: "npx"
+      args: ["@playwright/mcp@latest", "--isolated"]
 
   - &file_tool
     name: "FileTool"
-    type: "MCP_TOOL"
+    type: "MCP"
     mcp_transport_config:
       transport_type: "STDIO"
       command: "npx"

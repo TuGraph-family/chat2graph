@@ -1,5 +1,4 @@
-from typing import List, Optional, Tuple
-from uuid import uuid4
+from typing import List, Tuple
 
 from app.core.toolkit.tool import Tool
 
@@ -136,9 +135,8 @@ INTERNET_REF = [
 class KnowledgeBaseRetriever(Tool):
     """Tool for retrieving document content from knowledge base."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.knowledge_base_search.__name__,
             description=self.knowledge_base_search.__doc__ or "",
             function=self.knowledge_base_search,
@@ -161,9 +159,8 @@ class KnowledgeBaseRetriever(Tool):
 class InternetRetriever(Tool):
     """Tool for retrieving webpage contents from Internet."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.internet_search.__name__,
             description=self.internet_search.__doc__ or "",
             function=self.internet_search,
@@ -182,36 +179,3 @@ class InternetRetriever(Tool):
         """
 
         return INTERNET_DOC, INTERNET_REF
-
-
-class ReferenceGenerator(Tool):
-    """Tool for generating rich text references."""
-
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id or str(uuid4()),
-            name=self.reference_listing.__name__,
-            description=self.reference_listing.__doc__ or "",
-            function=self.reference_listing,
-        )
-
-    async def reference_listing(
-        self, knowledge_base_quotes: List[str], internet_references: List[str]
-    ) -> List[str]:
-        """Return a rich text references list for better presentation given the list of references.
-
-        Args:
-            knowledge_base_quotes (List[str]): quotes from knowledge base.
-            internet_references (List[str]): references from internet.
-
-        Returns:
-            str: The rich text to demonstrate all quotes and references.
-        """
-
-        reference_list: List[str] = []
-        for knowledge_base_quote in knowledge_base_quotes:
-            reference_list.append(f"[{knowledge_base_quote}]()")
-        for inernet_ref in internet_references:
-            reference_list.append(f"[网页链接]({inernet_ref})")
-
-        return reference_list

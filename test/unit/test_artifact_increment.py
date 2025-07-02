@@ -2,14 +2,11 @@ from typing import Any, Dict
 
 import pytest
 
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 from app.core.model.artifact import ContentType
 from app.core.service.artifact_service import ArtifactService
-from app.core.service.service_factory import ServiceFactory
+from test.resource.init_server import init_server
 
-DaoFactory.initialize(DbSession())
-ServiceFactory.initialize()
+init_server()
 
 
 @pytest.fixture

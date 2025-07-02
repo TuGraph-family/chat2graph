@@ -3,8 +3,6 @@ import networkx as nx  # type: ignore
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 from app.core.model.job import Job, SubJob
 from app.core.model.message import AgentMessage
 from app.core.prompt.job_decomposition import (
@@ -13,13 +11,12 @@ from app.core.prompt.job_decomposition import (
 )
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.service.job_service import JobService
-from app.core.service.service_factory import ServiceFactory
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from test.resource.init_server import init_server
 
-DaoFactory.initialize(DbSession())
-ServiceFactory.initialize()
+init_server()
 
 
 def main():

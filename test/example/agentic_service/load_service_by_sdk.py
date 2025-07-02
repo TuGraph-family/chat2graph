@@ -30,33 +30,29 @@ from app.plugin.neo4j.resource.graph_modeling import (
 )
 from app.plugin.neo4j.resource.graph_query import CypherExecutor
 from app.plugin.neo4j.resource.question_answering import (
-    InternetRetriever,
     KnowledgeBaseRetriever,
 )
 from app.plugin.neo4j.resource.system_checking import SystemStatusChecker
 
-document_reader_tool = DocumentReader(id="document_reader_tool")
-vertex_label_adder_tool = VertexLabelAdder(id="vertex_label_adder_tool")
-edge_label_adder_tool = EdgeLabelAdder(id="edge_label_adder_tool")
-graph_reachability_getter_tool = GraphReachabilityGetter(id="graph_reachability_getter_tool")
-schema_getter_tool = SchemaGetter(id="schema_getter_tool")
-data_status_check_tool = DataStatusCheck(id="data_status_check_tool")
-data_import_tool = DataImport(id="data_import_tool")
-cypher_executor_tool = CypherExecutor(id="cypher_executor_tool")
-algorithms_getter_tool = AlgorithmsGetter(id="algorithms_getter_tool")
-page_rank_executor_tool = PageRankExecutor(id="page_rank_executor_tool")
-betweenness_centrality_executor_tool = BetweennessCentralityExecutor(
-    id="betweenness_centrality_executor_tool"
-)
-louvain_executor_tool = LouvainExecutor(id="louvain_executor_tool")
-label_propagation_executor_tool = LabelPropagationExecutor(id="label_propagation_executor_tool")
-shortest_path_executor_tool = ShortestPathExecutor(id="shortest_path_executor_tool")
-node_similarity_executor_tool = NodeSimilarityExecutor(id="node_similarity_executor_tool")
-common_neighbors_executor_tool = CommonNeighborsExecutor(id="common_neighbors_executor_tool")
-kmeans_executor_tool = KMeansExecutor(id="kmeans_executor_tool")
-knowledge_base_retriever_tool = KnowledgeBaseRetriever(id="knowledge_base_retriever_tool")
-internet_retriever_tool = InternetRetriever(id="internet_retriever_tool")
-system_status_checker_tool = SystemStatusChecker(id="system_status_checker_tool")
+document_reader_tool = DocumentReader()
+vertex_label_adder_tool = VertexLabelAdder()
+edge_label_adder_tool = EdgeLabelAdder()
+graph_reachability_getter_tool = GraphReachabilityGetter()
+schema_getter_tool = SchemaGetter()
+data_status_check_tool = DataStatusCheck()
+data_import_tool = DataImport()
+cypher_executor_tool = CypherExecutor()
+algorithms_getter_tool = AlgorithmsGetter()
+page_rank_executor_tool = PageRankExecutor()
+betweenness_centrality_executor_tool = BetweennessCentralityExecutor()
+louvain_executor_tool = LouvainExecutor()
+label_propagation_executor_tool = LabelPropagationExecutor()
+shortest_path_executor_tool = ShortestPathExecutor()
+node_similarity_executor_tool = NodeSimilarityExecutor()
+common_neighbors_executor_tool = CommonNeighborsExecutor()
+kmeans_executor_tool = KMeansExecutor()
+knowledge_base_retriever_tool = KnowledgeBaseRetriever()
+system_status_checker_tool = SystemStatusChecker()
 
 content_understanding_action = Action(
     id="content_understanding_action",

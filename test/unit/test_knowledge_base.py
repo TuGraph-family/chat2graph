@@ -3,17 +3,12 @@ from uuid import uuid4
 
 from dbgpt.core import Chunk
 
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
-from app.core.dal.init_db import init_db
 from app.core.model.job import SubJob
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore
+from test.resource.init_server import init_server
 
-init_db()
-# initialize the dao
-DaoFactory.initialize(DbSession())
-knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
+init_server()
 
 
 async def test_vector_knowledge_base():

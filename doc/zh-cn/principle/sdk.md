@@ -88,7 +88,7 @@ reasoner:
 #    此配置文件关注工具的编排与使用，而非其底层开发。系统主要支持以下两种工具类型：
 #    - LOCAL_TOOL: 本地工具，直接在 Agent 运行的 Python 环境中通过函数调用执行。
 #      `module_path` 指向包含该工具实现的 Python 模块。
-#    - MCP_TOOL (A Client connected to MCP Server): 跨进程通信工具，用于与独立的外部进程或服务进行交互。
+#    - MCP (A Client connected to MCP Server): 跨进程通信工具，用于与独立的外部进程或服务进行交互。
 #      这对于集成非 Python 实现的或需要隔离环境的复杂工具（如 Playwright 浏览器自动化）至关重要。一般需要确定外部有MCP Server支持。
 #      其行为由 `mcp_transport_config` 定义：
 #        - transport_type: 通信协议，如 "STDIO" (标准输入输出)、"SSE" (服务器发送事件)、"WebSocket" 等。
@@ -119,7 +119,7 @@ tools:
   # 示例4: 浏览器自动化工具 (通过 STDIO 启动)
   - &browser_tool_stdio
     name: "BrowserUsing"
-    type: "MCP_TOOL"
+    type: "MCP"
     mcp_transport_config:
       transport_type: "STDIO" # 通过标准输入输出与子进程通信
       command: "npx" # 启动子进程的命令
@@ -128,7 +128,7 @@ tools:
   # 示例5: 浏览器自动化工具 (通过 SSE 连接到服务)
   - &browser_tool_sse
     name: "BrowserUsing"
-    type: "MCP_TOOL"
+    type: "MCP"
     mcp_transport_config:
       transport_type: "SSE" # 通过 Server-Sent Events 连接到已运行的服务
       url: "http://localhost:8931" # 浏览器服务监听的地址

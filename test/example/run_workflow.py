@@ -10,12 +10,15 @@ from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from test.resource.init_server import init_server
+
+init_server()
 
 
 class TestReasoner(Reasoner):
     """Test reasoner"""
 
-    async def _infer(self, task: Task) -> str:
+    async def infer(self, task: Task) -> str:
         """Infer by the reasoner."""
         return "Test inference"
 

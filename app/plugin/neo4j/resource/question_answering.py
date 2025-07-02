@@ -1,6 +1,3 @@
-from typing import List, Optional, Tuple
-from uuid import uuid4
-
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.toolkit.tool import Tool
 
@@ -8,9 +5,8 @@ from app.core.toolkit.tool import Tool
 class KnowledgeBaseRetriever(Tool):
     """Tool for retrieving document content from knowledge base."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.knowledge_base_search.__name__,
             description=self.knowledge_base_search.__doc__ or "",
             function=self.knowledge_base_search,
@@ -36,29 +32,3 @@ class KnowledgeBaseRetriever(Tool):
                 "please consider generate the answer by yourself."
             )
         return knowledge.get_payload()
-
-
-class InternetRetriever(Tool):
-    """Tool for retrieving webpage contents from Internet."""
-
-    def __init__(self, id: Optional[str] = None):
-        super().__init__(
-            id=id or str(uuid4()),
-            name=self.internet_search.__name__,
-            description=self.internet_search.__doc__ or "",
-            function=self.internet_search,
-        )
-
-    async def internet_search(self, question: str) -> Tuple[List[str], List[str]]:
-        """Retrive a list of related webpage contents and a list of their URL references from
-        Internet given the question.
-
-        Args:
-            question (str): The question asked by user.
-
-        Returns:
-            Tuple[List[str], List[str]]: The list of related webpage contents and the list of URL
-            references.
-        """
-        # TODO: implement a web search tool
-        return [], []

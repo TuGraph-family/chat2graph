@@ -88,7 +88,7 @@ reasoner:
 #    This configuration file focuses on the orchestration and use of tools, not their underlying development. The system primarily supports the following two tool types:
 #    - LOCAL_TOOL: A local tool executed directly via function calls in the Agent's Python environment.
 #      `module_path` points to the Python module containing the tool's implementation.
-#    - MCP_TOOL (A Client connected to an MCP Server): An inter-process communication tool used to interact with separate external processes or services.
+#    - MCP (A Client connected to an MCP Server): An inter-process communication tool used to interact with separate external processes or services.
 #      This is crucial for integrating complex tools that are not implemented in Python or require an isolated environment (like Playwright for browser automation). It generally requires an external MCP Server to be available.
 #      Its behavior is defined by `mcp_transport_config`:
 #        - transport_type: The communication protocol, such as "STDIO" (Standard Input/Output), "SSE" (Server-Sent Events), "WebSocket", etc.
@@ -117,7 +117,7 @@ tools:
   # Example 4: Browser Automation Tool (Launched via STDIO)
   - &browser_tool_stdio
     name: "BrowserUsing"
-    type: "MCP_TOOL"
+    type: "MCP"
     mcp_transport_config:
       transport_type: "STDIO" # Communicate with the child process via standard I/O
       command: "npx" # Command to start the child process
@@ -126,7 +126,7 @@ tools:
   # Example 5: Browser Automation Tool (Connected to a service via SSE)
   - &browser_tool_sse
     name: "BrowserUsing"
-    type: "MCP_TOOL"
+    type: "MCP"
     mcp_transport_config:
       transport_type: "SSE" # Connect to a running service via Server-Sent Events
       url: "http://localhost:8931" # The address the browser service is listening on

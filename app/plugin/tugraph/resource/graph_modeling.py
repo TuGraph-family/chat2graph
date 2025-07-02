@@ -1,6 +1,5 @@
 import json
 from typing import Dict, List, Optional, Set, Union
-from uuid import uuid4
 
 from app.core.common.system_env import SystemEnv
 from app.core.model.message import ModelMessage
@@ -348,9 +347,8 @@ DOC_CONTENT = """
 class DocumentReader(Tool):
     """Tool for analyzing document content."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.read_document.__name__,
             description=self.read_document.__doc__ or "",
             function=self.read_document,
@@ -373,9 +371,8 @@ class DocumentReader(Tool):
 class VertexLabelAdder(Tool):
     """Tool for generating Cypher statements to create vertex labels in TuGraph."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.create_vertex_label_by_json_schema.__name__,
             description=self.create_vertex_label_by_json_schema.__doc__ or "",
             function=self.create_vertex_label_by_json_schema,
@@ -453,9 +450,8 @@ class VertexLabelAdder(Tool):
 class EdgeLabelAdder(Tool):
     """Tool for generating Cypher statements to create edge labels in TuGraph."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.create_edge_label_by_json_schema.__name__,
             description=self.create_edge_label_by_json_schema.__doc__ or "",
             function=self.create_edge_label_by_json_schema,
@@ -537,9 +533,8 @@ class EdgeLabelAdder(Tool):
 class CypherExecutor(Tool):
     """Tool for validating and executing TuGraph Cypher schema definitions."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.validate_and_execute_cypher.__name__,
             description=self.validate_and_execute_cypher.__doc__ or "",
             function=self.validate_and_execute_cypher,
@@ -588,9 +583,8 @@ class CypherExecutor(Tool):
 class GraphReachabilityGetter(Tool):
     """Tool for getting the reachability information of the graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.get_graph_reachability.__name__,
             description=self.get_graph_reachability.__doc__ or "",
             function=self.get_graph_reachability,

@@ -51,6 +51,7 @@ class EvalOperator(Operator):
         )
 
         result = run_async_function(reasoner.infer, task=task)
+        # TODO: close mcp clients of McpTools if they are used in the task
 
         try:
             parse_result = parse_jsons(text=result)[0]

@@ -6,7 +6,10 @@ import pytest
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.toolkit import Toolkit
-from test.resource.tool_resource import Query
+from test.resource.init_server import init_server
+from test.resource.tool_resource import ExampleQuery
+
+init_server()
 
 
 @pytest.fixture
@@ -21,7 +24,12 @@ def sample_actions():
 @pytest.fixture
 def sample_tools():
     """Create sample tools for testing."""
-    return [Query(id=f"tool {i}") for i in range(1, 5)]
+    _sample_tools: List[ExampleQuery] = []
+    for i in range(1, 5):
+        tool = ExampleQuery()
+        tool._id = f"tool {i}"
+        _sample_tools.append(tool)
+    return _sample_tools
 
 
 @pytest.fixture
@@ -34,7 +42,7 @@ def toolkit_service():
 
 @pytest.fixture
 def populated_toolkit_service(
-    toolkit_service: ToolkitService, sample_actions: List[Action], sample_tools: List[Query]
+    toolkit_service: ToolkitService, sample_actions: List[Action], sample_tools: List[ExampleQuery]
 ):
     """Create a toolkit populated with sample data."""
     action1, action2, action3, action4 = sample_actions
@@ -91,7 +99,7 @@ def test_add_single_action(populated_toolkit_service: ToolkitService, sample_act
 def test_add_single_tool(
     populated_toolkit_service: ToolkitService,
     sample_actions: List[Action],
-    sample_tools: List[Query],
+    sample_tools: List[ExampleQuery],
 ):
     """Test adding a single tool with one action connection."""
     tool = sample_tools[0]
@@ -101,7 +109,7 @@ def test_add_single_tool(
     toolkit: Toolkit = populated_toolkit_service.get_toolkit()
 
     assert len(toolkit.vertices()) == 8
-    assert isinstance(toolkit.get_tool(tool.id), Query)
+    assert isinstance(toolkit.get_tool(tool.id), ExampleQuery)
     assert toolkit.get_tool(tool.id).id == tool.id
 
 

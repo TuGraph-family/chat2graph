@@ -7,6 +7,9 @@ from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service_factory import ModelServiceFactory
+from test.resource.init_server import init_server
+
+init_server()
 
 job_id: str = "test_job_id"
 

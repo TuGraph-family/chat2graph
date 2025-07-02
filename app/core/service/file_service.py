@@ -39,6 +39,8 @@ class FileService(metaclass=Singleton):
         Returns:
             str: ID of the file
         """
+        if file.filename is None:
+            raise ValueError("File filename cannot be None.")
         md5_hash = self._calculate_md5(file)
         md5_folder = os.path.join(self._upload_folder, md5_hash)
         if not os.path.exists(md5_folder):

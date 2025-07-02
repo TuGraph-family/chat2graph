@@ -21,3 +21,13 @@ class Action:
     description: str
     next_action_ids: List[str] = field(default_factory=list)
     tools: List[Tool] = field(default_factory=list)
+
+    def copy(self) -> "Action":
+        """Create a copy of the action."""
+        return Action(
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            next_action_ids=list(self.next_action_ids),
+            tools=[tool.copy() for tool in self.tools],
+        )

@@ -3,24 +3,18 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
-from app.core.dal.init_db import init_db
 from app.core.model.job import SubJob
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
-from test.resource.tool_resource import Query
+from test.resource.init_server import init_server
+from test.resource.tool_resource import ExampleQuery
 
-init_db()
-# initialize the dao
-DaoFactory.initialize(DbSession())
-knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService()
+init_server()
 
 
 @pytest.fixture
@@ -60,7 +54,7 @@ async def operator():
     ]
 
     # create tools
-    tools = [Query(id=f"{action.id}_tool") for action in actions]
+    tools = [ExampleQuery() for _ in actions]
 
     config = OperatorConfig(
         instruction="Test instruction",
@@ -108,7 +102,7 @@ async def test_execute_basic_functionality(operator: EvalOperator, mock_reasoner
     task: Task = call_args["task"]
     actions = task.actions
     assert len(actions) == 2
-    assert all(isinstance(tool, Query) for tool in task.tools)
+    assert all(isinstance(tool, ExampleQuery) for tool in task.tools)
 
     # verify return value
     assert isinstance(op_output, WorkflowMessage)

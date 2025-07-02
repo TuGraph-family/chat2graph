@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 
 from app.core.model.job import SubJob
 from app.core.service.reasoner_service import ReasonerService
-from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
-from test.resource.tool_resource import Query
+from test.resource.init_server import init_server
+from test.resource.tool_resource import ExampleQuery
 
-ServiceFactory.initialize()
+init_server()
 
 
 def main():
@@ -31,8 +31,8 @@ def main():
         description="Generate response based on analysis",
     )
 
-    search_tool = Query(id="search_tool")
-    analyze_tool = Query(id="analyze_tool")
+    search_tool = ExampleQuery()
+    analyze_tool = ExampleQuery()
 
     # set operator properties
     instruction = """

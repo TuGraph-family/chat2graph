@@ -8,6 +8,9 @@ from app.core.model.message import ModelMessage
 from app.core.model.task import Task
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.workflow.operator_config import OperatorConfig
+from test.resource.init_server import init_server
+
+init_server()
 
 job_id: str = "test_job_id"
 

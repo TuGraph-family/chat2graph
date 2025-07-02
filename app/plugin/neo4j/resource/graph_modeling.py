@@ -1,5 +1,4 @@
-from typing import Any, Dict, List, Optional, Set, Union
-from uuid import uuid4
+from typing import Any, Dict, List, Set, Union
 
 from app.core.model.artifact import (
     Artifact,
@@ -18,9 +17,8 @@ from app.plugin.neo4j.resource.data_importation import update_graph_artifact
 class DocumentReader(Tool):
     """Tool for analyzing document content."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.read_document.__name__,
             description=self.read_document.__doc__ or "",
             function=self.read_document,
@@ -41,9 +39,8 @@ class DocumentReader(Tool):
 class VertexLabelAdder(Tool):
     """Tool for generating Cypher statements to create vertex labels in Neo4j."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.create_and_import_vertex_label_schema.__name__,
             description=self.create_and_import_vertex_label_schema.__doc__ or "",
             function=self.create_and_import_vertex_label_schema,
@@ -161,9 +158,8 @@ class VertexLabelAdder(Tool):
 class EdgeLabelAdder(Tool):
     """Tool for generating Cypher statements to create edge labels in GraphDB."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.create_and_import_edge_label_schema.__name__,
             description=self.create_and_import_edge_label_schema.__doc__ or "",
             function=self.create_and_import_edge_label_schema,
@@ -344,9 +340,8 @@ class EdgeLabelAdder(Tool):
 class GraphReachabilityGetter(Tool):
     """Tool for getting the reachability information of the graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.calculate_and_get_graph_reachability.__name__,
             description=self.calculate_and_get_graph_reachability.__doc__ or "",
             function=self.calculate_and_get_graph_reachability,

@@ -1,20 +1,19 @@
 import asyncio
-from typing import Any, Dict, List, Optional
-from uuid import uuid4
+from typing import Any, Dict, List
 
 from app.core.model.job import SubJob
 from app.core.model.task import Task
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.toolkit.tool import Tool
+from test.resource.init_server import init_server
 
-
+init_server()
 # example tool
 class Calculator(Tool):
     """The tool in the toolkit."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.calculator.__name__,
             description=self.calculator.__doc__ or "",
             function=self.calculator,
@@ -85,4 +84,5 @@ d) 三年总收益率（用百分比表示）
 
 
 if __name__ == "__main__":
+    asyncio.run(main())
     asyncio.run(main())

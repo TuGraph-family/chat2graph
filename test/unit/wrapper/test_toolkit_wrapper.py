@@ -1,9 +1,11 @@
+from typing import List
 from unittest import mock
 
 from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from test.resource.tool_resource import Query
+from app.core.toolkit.tool import Tool
+from test.resource.tool_resource import ExampleQuery
 
 ToolkitService()
 
@@ -17,7 +19,9 @@ def test_action(mocker):
     )
 
     action = Action(id="test_action_id", name="test_action", description="test_description")
-    tools = [Query(id="test_query_id")]
+    tools: List[Tool] = [ExampleQuery()]
+    for tool in tools:
+        tool._id = "test_query_id"
 
     # call the action method
     wrapper.action(action, tools)
@@ -39,7 +43,8 @@ def test_chain_single_action(mocker):
         new_callable=mock.Mock,
     )
 
-    tool = Query(id="test_tool_id")
+    tool = ExampleQuery()
+    tool._id = "test_tool_id"
     action = Action(
         id="test_action_id",
         name="action",
@@ -70,17 +75,21 @@ def test_chain_multiple_actions(mocker):
         new_callable=mock.Mock,
     )
 
+    tool1 = ExampleQuery()
+    tool1._id = "tool_1"
     action1 = Action(
         id="action_1",
         name="action_1",
         description="action_description_1",
-        tools=[Query(id="tool_1")],
+        tools=[tool1],
     )
+    tool2 = ExampleQuery()
+    tool2._id = "tool_2"
     action2 = Action(
         id="action_2",
         name="action_2",
         description="action_description_2",
-        tools=[Query(id="tool_2")],
+        tools=[tool2],
     )
 
     # call the chain method with a tuple of 2 actions

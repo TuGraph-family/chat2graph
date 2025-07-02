@@ -24,7 +24,7 @@ tools:
   - &browser_tool
     name: "BrowserUsing"
     desc: "A comprehensive web browser tool. Can execute single or multiple browsing tasks in parallel, supporting navigation, clicking, input, and content extraction operations."
-    type: "MCP_TOOL"
+    type: "MCP"
     mcp_transport_config:
       transport_type: "STDIO"
       command: "npx"

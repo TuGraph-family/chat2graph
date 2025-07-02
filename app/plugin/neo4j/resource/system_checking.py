@@ -1,5 +1,3 @@
-from typing import Optional
-from uuid import uuid4
 
 from app.core.model.graph_db_config import GraphDbConfig
 from app.core.service.graph_db_service import GraphDbService
@@ -9,9 +7,8 @@ from app.core.toolkit.tool import Tool
 class SystemStatusChecker(Tool):
     """Tool for checking the system status."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.query_system_status.__name__,
             description=self.query_system_status.__doc__ or "",
             function=self.query_system_status,
@@ -76,4 +73,5 @@ class SystemStatusChecker(Tool):
             response += "- The graph database currently does not define a schema.\n"
 
         response += "System status check completed."
+        return response
         return response

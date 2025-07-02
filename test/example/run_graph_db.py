@@ -1,10 +1,7 @@
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 from app.core.service.graph_db_service import GraphDbService
-from app.core.service.service_factory import ServiceFactory
+from test.resource.init_server import init_server
 
-DaoFactory.initialize(DbSession())
-ServiceFactory.initialize()
+init_server()
 
 
 def test_connection():

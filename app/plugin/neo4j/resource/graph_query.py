@@ -1,7 +1,6 @@
 import json
 import traceback
-from typing import Any, Dict, List, Optional, Set
-from uuid import uuid4
+from typing import Any, Dict, List, Set
 
 from neo4j.graph import Node, Path, Relationship
 
@@ -14,9 +13,8 @@ from app.plugin.neo4j.resource.data_importation import update_graph_artifact
 class CypherExecutor(Tool):
     """Tool for executing Cypher queries in Neo4j."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.execute_cypher.__name__,
             description=self.execute_cypher.__doc__ or "",
             function=self.execute_cypher,
@@ -233,4 +231,5 @@ def _process_value(
     elif isinstance(value, dict):
         for item_value in value.values():
             _process_value(item_value, graph_data, node_schema, processed_nodes, processed_rels)
+    # ignore primitive types for graph_data
     # ignore primitive types for graph_data

@@ -1,24 +1,25 @@
 import asyncio
 from typing import List, Optional
-from uuid import uuid4
 
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
 from app.core.reasoner.model_service import ModelService
 from app.core.toolkit.tool import Tool
+from test.resource.init_server import init_server
+
+init_server()
 
 
 class SyncAdd(Tool):
     """A synchronous function that adds two numbers."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         name = self.sync_add.__name__
         description = self.sync_add.__doc__ or ""
         super().__init__(
             name=name,
             description=description,
             function=self.sync_add,
-            id=id or str(uuid4()),
         )
 
     def sync_add(self, a: int, b: int) -> int:
@@ -32,7 +33,7 @@ class SyncAdd(Tool):
 
 
 class AsyncMultiply(Tool):
-    """An asynchronous function that multiplies two numbers."""
+    """An asynchronous tool that multiplies two numbers."""
 
     def __init__(self, id: Optional[str] = None):
         name = self.async_multiply.__name__
@@ -41,7 +42,6 @@ class AsyncMultiply(Tool):
             name=name,
             description=description,
             function=self.async_multiply,
-            id=id or str(uuid4()),
         )
 
     async def async_multiply(self, a: int, b: int) -> int:
@@ -56,6 +56,7 @@ class AsyncMultiply(Tool):
 
 
 class ProcessComplexData(Tool):
+    """A tool that processes complex nested data structures."""
     def __init__(self, id: Optional[str] = None):
         name = self.process_complex_data.__name__
         description = self.process_complex_data.__doc__ or ""
@@ -63,7 +64,6 @@ class ProcessComplexData(Tool):
             name=name,
             description=description,
             function=self.process_complex_data,
-            id=id or str(uuid4()),
         )
 
     def process_complex_data(
@@ -91,7 +91,7 @@ class TestModelService(ModelService):
 
     async def generate(
         self,
-        system_prompt: str,
+        sys_prompt: str,
         messages: List[ModelMessage],
         tools: Optional[List[Tool]] = None,
     ) -> ModelMessage:
@@ -185,4 +185,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    asyncio.run(main())
     asyncio.run(main())

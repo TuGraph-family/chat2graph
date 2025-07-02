@@ -1,6 +1,5 @@
 import re
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
 from app.core.model.artifact import (
     Artifact,
@@ -17,9 +16,8 @@ from app.core.toolkit.tool import Tool
 class SchemaGetter(Tool):
     """Tool for getting the schema of a graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.get_schema.__name__,
             description=self.get_schema.__doc__ or "",
             function=self.get_schema,
@@ -74,9 +72,8 @@ class SchemaGetter(Tool):
 class DataStatusCheck(Tool):
     """Tool for checking the current status of data in the graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.check_data_status.__name__,
             description=self.check_data_status.__doc__ or "",
             function=self.check_data_status,
@@ -345,9 +342,8 @@ class DataStatusCheck(Tool):
 class DataImport(Tool):
     """Tool for importing data into a graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.import_triplet_data.__name__,
             description=self.import_triplet_data.__doc__ or "",
             function=self.import_triplet_data,

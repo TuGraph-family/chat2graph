@@ -117,11 +117,17 @@ class Toolkit(Graph):
 
     def get_action(self, id: str) -> Optional[Action]:
         """Get action by vertex id."""
-        return self._actions.get(id, None)
+        action = self._actions.get(id, None)
+        if action is not None:
+            return action.copy()
+        return None
 
     def get_tool(self, id: str) -> Optional[Tool]:
         """Get tool by vertex id."""
-        return self._tools.get(id, None)
+        tool = self._tools.get(id, None)
+        if tool is not None:
+            return tool.copy()
+        return None
 
     def get_score(self, u: str, v: str) -> float:
         """Get the score of an edge."""

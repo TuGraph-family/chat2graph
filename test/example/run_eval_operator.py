@@ -8,13 +8,13 @@ from app.core.prompt.eval_operator import (
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
-from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
+from test.resource.init_server import init_server
 
-ServiceFactory.initialize()
+init_server()
 
 
 def main():

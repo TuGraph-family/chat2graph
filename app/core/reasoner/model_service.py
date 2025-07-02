@@ -4,9 +4,6 @@ import json
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
-from mcp.types import Tool as McpBaseTool
-
-from app.core.common.async_func import run_async_function
 from app.core.common.type import FunctionCallStatus
 from app.core.common.util import parse_jsons
 from app.core.model.message import ModelMessage
@@ -15,7 +12,6 @@ from app.core.reasoner.injection_mapping import (
     injection_services_mapping,
     setup_injection_services_mapping,
 )
-from app.core.toolkit.mcp_tool import McpTool
 from app.core.toolkit.tool import FunctionCallResult, Tool
 
 
@@ -65,29 +61,15 @@ class ModelService(ABC):
 
             assert isinstance(func_tuple, tuple)
             func_name, call_objective, func_args = func_tuple
-
-            func_match_result = self._find_function(func_name, tools)
-            if not func_match_result:
+            func = self._find_function(func_name, tools)
+            if not func:
                 if len(tools) == 0:
                     available_funcs_desc = "No function calling available now."
                 else:
-                    available_funcs_desc = ""
-                    for tool in tools:
-                        if isinstance(tool, McpTool):
-                            available_mcp_tools: List[McpBaseTool] = run_async_function(
-                                tool.list_functions
-                            )
-                            mcp_tool_names = [mcp_tool.name for mcp_tool in available_mcp_tools]
-                            if mcp_tool_names:
-                                available_funcs_desc += (
-                                    f"The available MCP tools from {tool.name} are: "
-                                    f"[{', '.join(mcp_tool_names)}]. "
-                                )
-                        else:
-                            available_funcs_desc += (
-                                f"The available function from {tool.name} is: "
-                                f"[{tool.function.__name__}]. "
-                            )
+                    available_funcs_desc = (
+                        "The available functions/tools that can be called by <function_call>: ["
+                        f"{', '.join([tool.function.__name__ for tool in tools])}]"
+                    )
                 func_call_results.append(
                     FunctionCallResult(
                         func_name=func_name,
@@ -101,15 +83,13 @@ class ModelService(ABC):
                 )
                 continue
 
-            func_callable, tool_type = func_match_result
-
             try:
                 # prepare function arguments:
                 # handle the service injection based on sig parameter types.
                 # this will auto-inject services from the mapping when a function requires them
                 # TODO: handle the case when the function has no type hints
                 # TODO: handle the case when the function has default value
-                sig = inspect.signature(func_callable)
+                sig = inspect.signature(func)
                 for param_name, param in sig.parameters.items():
                     injection_type_found: bool = False
                     param_type: Any = param.annotation
@@ -131,18 +111,11 @@ class ModelService(ABC):
                         if param_type in injection_services_mapping:
                             func_args[param_name] = injection_services_mapping[param_type]
 
-                # if the tool is an McpClient, structure the arguments for calling
-                if tool_type == McpTool:
-                    # it expects tool_name: str and params: Dict
-                    # func_name is the target MCP tool's name (e.g., "playwright_navigate")
-                    # func_args are the parameters for that target MCP tool (e.g., {"url": "..."})
-                    func_args = {"tool_name": func_name, "params": func_args}
-
                 # execute function call
-                if inspect.iscoroutinefunction(func_callable):
-                    result = await func_callable(**func_args)
+                if inspect.iscoroutinefunction(func):
+                    result = await func(**func_args)
                 else:
-                    result = func_callable(**func_args)
+                    result = func(**func_args)
 
                 func_call_results.append(
                     FunctionCallResult(
@@ -248,21 +221,9 @@ class ModelService(ABC):
 
         return func_calls
 
-    def _find_function(
-        self, func_name: str, tools: List[Tool]
-    ) -> Optional[Tuple[Callable[..., Any], type]]:
-        """Find matching function from the provided list.
-
-        Returns:
-            Optional: A tuple (function, type_of_tool) if found, else None.
-        """
+    def _find_function(self, func_name: str, tools: List[Tool]) -> Optional[Callable[..., Any]]:
+        """Find matching function from the provided list."""
         for tool in tools:
-            if isinstance(tool, McpTool):
-                # McpClient is a special case
-                available_mcp_tools: List[McpBaseTool] = run_async_function(tool.list_functions)
-                for mcp_tool in available_mcp_tools:
-                    if mcp_tool.name == func_name:
-                        return tool.function, type(tool)
-            elif tool.name == func_name:
-                return tool.function, type(tool)
+            if tool.name == func_name:
+                return tool.function
         return None

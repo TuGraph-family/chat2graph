@@ -1,15 +1,20 @@
+# app/core/toolkit/toolkit_service.py
+
+import json
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import matplotlib
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
+from mcp.types import Tool as McpBaseTool
 import networkx as nx  # type: ignore
 
 from app.core.common.async_func import run_async_function
 from app.core.common.singleton import Singleton
 from app.core.toolkit.action import Action
-from app.core.toolkit.mcp_tool import McpTool
-from app.core.toolkit.tool import Tool
+from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.tool import McpTool, Tool
+from app.core.toolkit.tool_group import ToolGroup
 from app.core.toolkit.toolkit import Toolkit
 
 # use non-interactive backend for matplotlib, to avoid blocking
@@ -17,7 +22,7 @@ matplotlib.use("Agg")
 
 
 class ToolkitService(metaclass=Singleton):
-    """The toolkit service provides functionalities for the toolkit."""
+    """The toolkit service provides functionalities for the toolkit with MCP resource management."""
 
     def __init__(self):
         self._toolkit: Toolkit = Toolkit()
@@ -57,6 +62,32 @@ class ToolkitService(metaclass=Singleton):
             print(f"warning: Tool {tool.id} has no connected actions")
             self.get_toolkit().remove_vertex(tool.id)
 
+    def add_tool_group(
+        self, tool_group: ToolGroup, connected_actions: List[Tuple[Action, float]]
+    ) -> None:
+        """Add a tool group to the toolkit graph. ToolGroup: Tool_1, Tool_2, ... <--Call-- Action.
+
+        Args:
+            tool_group (ToolGroup): The tool group to be added
+        """
+        if isinstance(tool_group, McpService):
+            available_mcp_tools: List[McpBaseTool] = run_async_function(tool_group.list_tools)
+            for tool in available_mcp_tools:
+                self.add_tool(
+                    McpTool(
+                        name=tool.name,
+                        description=(
+                            (tool.description + "\n")
+                            if tool.description
+                            else "" + json.dumps(tool.inputSchema, indent=4)
+                        ),
+                        tool_group=tool_group,
+                    ),
+                    connected_actions=connected_actions,
+                )
+        else:
+            raise TypeError(f"Unsupported tool group type: {type(tool_group)}.")
+
     def add_action(
         self,
         action: Action,
@@ -88,32 +119,23 @@ class ToolkitService(metaclass=Singleton):
                 self.get_toolkit().add_edge(prev_action.id, action.id)
                 self.get_toolkit().set_score(prev_action.id, action.id, score)
 
-    def get_action(self, id: str, action_id: str) -> Action:
+    def get_action(self, action_id: str) -> Action:
         """Get action from the toolkit graph."""
         action: Optional[Action] = self.get_toolkit().get_action(action_id)
         if not action:
             raise ValueError(f"Action {action_id} not found in the toolkit graph")
         return action
 
-    def remove_tool(self, id: str, tool_id: str):
+    def remove_tool(self, tool_id: str):
         """Remove tool from the toolkit graph."""
-        tool: Optional[Tool] = self.get_toolkit().get_tool(tool_id)
-        if isinstance(tool, McpTool) and tool.is_connected:
-            run_async_function(tool.disconnect())
-
+        # tool: Optional[Tool] = self.get_toolkit().get_tool(tool_id)
+        # if isinstance(tool, McpTool):
+        #     run_async_function(self.cleanup_tool_clients(tool))
         self.get_toolkit().remove_vertex(tool_id)
 
-    def remove_action(self, id: str, action_id: str):
+    def remove_action(self, action_id: str):
         """Remove action from the toolkit graph."""
         self.get_toolkit().remove_vertex(action_id)
-
-    async def close_mcp_tools(self, mcp_tools: List[McpTool]) -> None:
-        """Gracefully disconnects all McpTool instances found in the task's tools."""
-        if len(mcp_tools) == 0:
-            return
-        for tool in mcp_tools:
-            if tool.is_connected:
-                await tool.disconnect()
 
     def recommend_subgraph(
         self, actions: List[Action], threshold: float = 0.5, hops: int = 0
@@ -225,16 +247,8 @@ class ToolkitService(metaclass=Singleton):
         raise NotImplementedError("This method is not implemented")
 
     def visualize(self, graph: Toolkit, title: str, show=False):
-        """Visualize the toolkit graph with different colors for actions and tools.
-
-        Args:
-            graph (Toolkit): The graph to visualize.
-            title (str): Title for the plot.
-            show (bool): Whether to show the plot.
-
-        Returns:
-            plt.Figure: The plot figure.
-        """
+        """Visualize the toolkit graph."""
+        # This implementation remains the same
         plt.figure(figsize=(12, 8))
 
         # get vertex positions using spring layout with larger distance and more iterations

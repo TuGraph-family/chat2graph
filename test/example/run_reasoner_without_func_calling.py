@@ -4,6 +4,9 @@ from app.core.model.job import SubJob
 from app.core.model.task import Task
 from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.operator import OperatorConfig
+from test.resource.init_server import init_server
+
+init_server()
 
 
 async def main():

@@ -1,17 +1,14 @@
 from app.core.common.type import McpTransportType
-from app.core.dal.dao.dao_factory import DaoFactory
-from app.core.dal.database import DbSession
 from app.core.model.job import SubJob
 from app.core.service.reasoner_service import ReasonerService
-from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.mcp_tool import McpTool, McpTransportConfig
+from app.core.toolkit.mcp_service import McpService, McpTransportConfig
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
+from test.resource.init_server import init_server
 
-DaoFactory.initialize(DbSession())
-ServiceFactory.initialize()
+init_server()
 
 
 def main():
@@ -34,12 +31,13 @@ def main():
     )
     # make sure the MCP server is started and running on the specified port
     # e.g. npx @playwright/mcp@latest --port 8931
-    browsing_tool = McpTool(
-        id="playwright_browsing_tool",
+    browsing_tool = McpService(
+        name="browsing_tool",
+        description="A web browsing tool that can visit URLs and retrieve their content.",
         transport_config=McpTransportConfig(
             transport_type=McpTransportType.SSE,
             url="http://localhost:8931",
-        )
+        ),
     )
 
     toolkit_service: ToolkitService = ToolkitService.instance

@@ -1,14 +1,18 @@
 import importlib
+import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
+from mcp.types import Tool as McpBaseTool
+
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
+from app.core.common.async_func import run_async_function
 from app.core.common.singleton import Singleton
-from app.core.common.type import ReasonerType, WorkflowPlatformType
+from app.core.common.type import ReasonerType, ToolGroupType, WorkflowPlatformType
 from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
-from app.core.model.agentic_config import AgenticConfig, LocalToolConfig, McpToolConfig
+from app.core.model.agentic_config import AgenticConfig, LocalToolConfig, McpConfig
 from app.core.model.graph_db_config import GraphDbConfig
 from app.core.model.job import Job
 from app.core.model.message import ChatMessage, MessageType, TextMessage
@@ -30,8 +34,9 @@ from app.core.service.service_factory import ServiceFactory
 from app.core.service.session_service import SessionService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.mcp_tool import McpTool, McpTransportConfig
-from app.core.toolkit.tool import Tool
+from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.tool import McpTool, Tool
+from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
 
 
 class AgenticService(metaclass=Singleton):
@@ -141,34 +146,52 @@ class AgenticService(metaclass=Singleton):
         mas.reasoner(reasoner_type=agentic_service_config.reasoner.type)
 
         # tools and actions
-        tools_dict: Dict[str, Tool] = {}  # name -> Tool
         actions_dict: Dict[str, Action] = {}  # name -> Action
 
         # configure toolkit by the toolkit chains
         for action_chain in agentic_service_config.toolkit:
             chain: List[Action] = []
+            action_tools: List[Tool] = []
             for action_config in action_chain:
                 for tool_config in action_config.tools:
                     if isinstance(tool_config, LocalToolConfig):
                         module = importlib.import_module(tool_config.module_path)
                         tool_class = getattr(module, tool_config.name)
-                        tool = tool_class(id=tool_config.id)
-                        tools_dict[tool_config.name] = tool
-                    elif isinstance(tool_config, McpToolConfig):
-                        tool = McpTool(
-                            id=tool_config.id,
-                            transport_config=McpTransportConfig(
-                                transport_type=tool_config.mcp_transport_config.transport_type,
-                                url=tool_config.mcp_transport_config.url,
-                                command=tool_config.mcp_transport_config.command,
-                                args=tool_config.mcp_transport_config.args,
-                                env=tool_config.mcp_transport_config.env,
-                                headers=tool_config.mcp_transport_config.headers,
-                                timeout=tool_config.mcp_transport_config.timeout,
-                                sse_read_timeout=tool_config.mcp_transport_config.sse_read_timeout,
+                        tool = tool_class()
+                        action_tools.append(tool)
+                    elif isinstance(tool_config, McpConfig):
+                        mcp_service = McpService(
+                            mcp_config=McpConfig(
+                                name=tool_config.name,
+                                type=ToolGroupType.MCP,
+                                transport_config=McpTransportConfig(
+                                    transport_type=tool_config.transport_config.transport_type,
+                                    url=tool_config.transport_config.url,
+                                    command=tool_config.transport_config.command,
+                                    args=tool_config.transport_config.args,
+                                    env=tool_config.transport_config.env,
+                                    headers=tool_config.transport_config.headers,
+                                    timeout=tool_config.transport_config.timeout,
+                                    sse_read_timeout=tool_config.transport_config.sse_read_timeout,
+                                ),
                             ),
                         )
-                        tools_dict[tool_config.name] = tool
+
+                        mcp_available_tools: List[McpBaseTool] = run_async_function(
+                            mcp_service.list_tools
+                        )
+                        for mcp_available_tool in mcp_available_tools:
+                            # create a tool for each available tool
+                            tool = McpTool(
+                                name=mcp_available_tool.name,
+                                description=(
+                                    (mcp_available_tool.description + "\n")
+                                    if mcp_available_tool.description
+                                    else "" + json.dumps(mcp_available_tool.inputSchema, indent=4)
+                                ),
+                                tool_group=mcp_service,
+                            )
+                            action_tools.append(tool)
                     else:
                         raise ValueError(f"Unsupported tool config type: {type(tool_config)}")
 
@@ -176,7 +199,7 @@ class AgenticService(metaclass=Singleton):
                     id=action_config.id,
                     name=action_config.name,
                     description=action_config.desc,
-                    tools=[tools_dict[tool_config.name] for tool_config in action_config.tools],
+                    tools=action_tools,
                 )
                 actions_dict[action_config.name] = action
                 chain.append(action)

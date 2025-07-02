@@ -1,5 +1,3 @@
-from typing import Optional
-from uuid import uuid4
 
 from app.core.common.system_env import SystemEnv
 from app.core.model.message import ModelMessage
@@ -8,17 +6,14 @@ from app.core.toolkit.tool import Tool
 
 
 # example tool
-class Query(Tool):
+class ExampleQuery(Tool):
     """The query tool in the toolkit."""
 
-    def __init__(self, id: Optional[str] = None):
-        name = self.query.__name__
-        description = self.query.__doc__ or ""
+    def __init__(self):
         super().__init__(
-            name=name,
-            description=description,
+            name="query_tool",
+            description="A test query tool",
             function=self.query,
-            id=id or str(uuid4()),
         )
 
     async def query(self, text: str) -> str:

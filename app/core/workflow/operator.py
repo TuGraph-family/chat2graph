@@ -1,6 +1,7 @@
 from typing import List, Optional, cast
 
 from app.core.common.async_func import run_async_function
+from app.core.common.type import ToolType
 from app.core.env.insight.insight import Insight
 from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.job import Job, SubJob
@@ -11,7 +12,9 @@ from app.core.reasoner.reasoner import Reasoner
 from app.core.service.file_service import FileService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.core.service.message_service import MessageService
+from app.core.service.tool_connection_service import ToolConnectionService
 from app.core.service.toolkit_service import ToolkitService
+from app.core.toolkit.tool import McpTool
 from app.core.workflow.operator_config import OperatorConfig
 
 
@@ -51,7 +54,19 @@ class Operator:
             lesson=lesson,
         )
 
-        result = run_async_function(reasoner.infer, task=task)
+        async def aexecute() -> str:
+            """Asynchronous execution of the task."""
+            # init MCP connections for the operator
+            for tool in task.tools:
+                if tool.tool_type == ToolType.MCP_TOOL and isinstance(tool, McpTool):
+                    # create a connection for the tool
+                    await tool.get_tool_group().create_connection(operator_id=self.get_id())
+            result = await reasoner.infer(task=task)
+            tool_connection_service: ToolConnectionService = ToolConnectionService.instance
+            await tool_connection_service.destroy_connection(operator_id=self.get_id())
+            return result
+
+        result: str = cast(str, run_async_function(aexecute))
 
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
@@ -71,6 +86,11 @@ class Operator:
             threshold=self._config.threshold,
             hops=self._config.hops,
         )
+        for tool in rec_tools:
+            if tool.tool_type == ToolType.MCP_TOOL and isinstance(tool, McpTool):
+                # set the operator id for the tool, so that it can be used to call the tool
+                tool.set_operator_id(self.get_id())
+
         merged_workflow_messages: List[WorkflowMessage] = workflow_messages or []
         merged_workflow_messages.extend(previous_expert_outputs or [])
 

@@ -1,7 +1,6 @@
 import json
 import re
-from typing import Any, Dict, List, Optional
-from uuid import uuid4
+from typing import Any, Dict, List
 
 from app.core.common.system_env import SystemEnv
 from app.core.model.message import ModelMessage
@@ -171,9 +170,8 @@ DOC_CONTENT = """
 class DocumentReader(Tool):
     """Tool for analyzing document content."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.read_document.__name__,
             description=self.read_document.__doc__ or "",
             function=self.read_document,
@@ -196,9 +194,8 @@ class DocumentReader(Tool):
 class SchemaGetter(Tool):
     """Tool for getting the schema of a graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.get_schema.__name__,
             description=self.get_schema.__doc__ or "",
             function=self.get_schema,
@@ -231,9 +228,8 @@ class SchemaGetter(Tool):
 class CypherExecutor(Tool):
     """Tool for validating and executing TuGraph Cypher schema definitions."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.validate_and_execute_cypher.__name__,
             description=self.validate_and_execute_cypher.__doc__ or "",
             function=self.validate_and_execute_cypher,
@@ -292,9 +288,8 @@ class CypherExecutor(Tool):
 class DataImport(Tool):
     """Tool for importing data into a graph database."""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self):
         super().__init__(
-            id=id or str(uuid4()),
             name=self.import_data.__name__,
             description=self.import_data.__doc__ or "",
             function=self.import_data,

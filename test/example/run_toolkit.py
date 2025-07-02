@@ -4,7 +4,10 @@ from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.toolkit import Toolkit
-from test.resource.tool_resource import Query
+from test.resource.init_server import init_server
+from test.resource.tool_resource import ExampleQuery
+
+init_server()
 
 
 def main():
@@ -27,10 +30,14 @@ def main():
     )
 
     # create some sample tools
-    tool1: Tool = Query(id="tool1")
-    tool2: Tool = Query(id="tool2")
-    tool3: Tool = Query(id="tool3")
-    tool4: Tool = Query(id="tool4")
+    tool1: Tool = ExampleQuery()
+    tool1._id = "tool1"
+    tool2: Tool = ExampleQuery()
+    tool2._id = "tool2"
+    tool3: Tool = ExampleQuery()
+    tool3._id = "tool3"
+    tool4: Tool = ExampleQuery()
+    tool4._id = "tool4"
 
     # add actions with connections
     toolkit_service.add_action(

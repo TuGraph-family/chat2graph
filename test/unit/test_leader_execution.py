@@ -4,23 +4,20 @@ from uuid import uuid4
 from app.core.agent.agent import AgentConfig, Profile
 from app.core.agent.leader import Leader
 from app.core.common.type import JobStatus
-from app.core.dal.init_db import init_db
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.sdk.agentic_service import AgenticService
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
 from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from test.resource.init_server import init_server
 
-AgenticService()
-job_service: JobService = JobService.instance
-init_db()
+init_server()
 
 
 class TestAgentOperator(Operator):
@@ -134,6 +131,7 @@ def test_agent_job_graph():
 
     # build job graph
     original_job: Job = Job(id="test_original_job_id" + str(uuid4()), goal="Test Job Graph")
+    job_service: JobService = JobService.instance
     job_service.save_job(job=original_job)
     job_service.add_subjob(
         original_job_id=original_job.id,
