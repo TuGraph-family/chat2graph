@@ -1,9 +1,10 @@
-from app.core.common.type import McpTransportType
+from app.core.common.type import McpTransportType, ToolGroupType
 from app.core.model.job import SubJob
 from app.core.service.reasoner_service import ReasonerService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.mcp_service import McpService, McpTransportConfig
+from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from test.resource.init_server import init_server
@@ -32,12 +33,14 @@ def main():
     # make sure the MCP server is started and running on the specified port
     # e.g. npx @playwright/mcp@latest --port 8931
     browsing_tool = McpService(
-        name="browsing_tool",
-        description="A web browsing tool that can visit URLs and retrieve their content.",
-        transport_config=McpTransportConfig(
-            transport_type=McpTransportType.SSE,
-            url="http://localhost:8931",
-        ),
+        mcp_config=McpConfig(
+            type=ToolGroupType.MCP,
+            name="Playwright Browsing Tool Group",
+            transport_config=McpTransportConfig(
+                transport_type=McpTransportType.SSE,
+                url="http://localhost:8931/sse",
+            ),
+        )
     )
 
     toolkit_service: ToolkitService = ToolkitService.instance
@@ -53,8 +56,8 @@ def main():
         action=generate_action, next_actions=[], prev_actions=[(analyze_action, 0.8)]
     )
 
-    toolkit_service.add_tool(
-        tool=browsing_tool,
+    toolkit_service.add_tool_group(
+        tool_group=browsing_tool,
         connected_actions=[(browse_action, 1.0)],
     )
 

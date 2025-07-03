@@ -71,14 +71,11 @@ class ToolkitService(metaclass=Singleton):
         if isinstance(tool_group, McpService):
             available_mcp_tools: List[McpBaseTool] = run_async_function(tool_group.list_tools)
             for tool in available_mcp_tools:
+                tool_description: str = (tool.description + "\n") if tool.description else ""
                 self.add_tool(
                     McpTool(
                         name=tool.name,
-                        description=(
-                            (tool.description + "\n")
-                            if tool.description
-                            else "" + json.dumps(tool.inputSchema, indent=4)
-                        ),
+                        description=tool_description + json.dumps(tool.inputSchema, indent=4),
                         tool_group=tool_group,
                     ),
                     connected_actions=connected_actions,

@@ -11,7 +11,7 @@ browsing_tool = McpTool(
     id="playwright_browsing_tool",
     transport_config=McpTransportConfig(
         transport_type=McpTransportType.SSE,
-        url="http://localhost:8931",
+        url="http://localhost:8931/sse",
     )
 )
 ```

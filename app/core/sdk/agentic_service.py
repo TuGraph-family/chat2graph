@@ -182,13 +182,15 @@ class AgenticService(metaclass=Singleton):
                         )
                         for mcp_available_tool in mcp_available_tools:
                             # create a tool for each available tool
+                            tool_description: str = (
+                                (mcp_available_tool.description + "\n")
+                                if mcp_available_tool.description
+                                else ""
+                            )
                             tool = McpTool(
                                 name=mcp_available_tool.name,
-                                description=(
-                                    (mcp_available_tool.description + "\n")
-                                    if mcp_available_tool.description
-                                    else "" + json.dumps(mcp_available_tool.inputSchema, indent=4)
-                                ),
+                                description=tool_description
+                                + json.dumps(mcp_available_tool.inputSchema, indent=4),
                                 tool_group=mcp_service,
                             )
                             action_tools.append(tool)

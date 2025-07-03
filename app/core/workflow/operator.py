@@ -54,19 +54,23 @@ class Operator:
             lesson=lesson,
         )
 
-        async def aexecute() -> str:
+        async def _async_execute() -> str:
             """Asynchronous execution of the task."""
             # init MCP connections for the operator
             for tool in task.tools:
                 if tool.tool_type == ToolType.MCP_TOOL and isinstance(tool, McpTool):
                     # create a connection for the tool
                     await tool.get_tool_group().create_connection(operator_id=self.get_id())
+
+            # infer by the reasoner
             result = await reasoner.infer(task=task)
+
+            # destroy MCP connections for the operator
             tool_connection_service: ToolConnectionService = ToolConnectionService.instance
             await tool_connection_service.destroy_connection(operator_id=self.get_id())
             return result
 
-        result: str = cast(str, run_async_function(aexecute))
+        result: str = cast(str, run_async_function(_async_execute))
 
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 

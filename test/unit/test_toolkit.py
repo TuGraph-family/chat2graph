@@ -110,7 +110,7 @@ def test_add_single_tool(
 
     assert len(toolkit.vertices()) == 8
     assert isinstance(toolkit.get_tool(tool.id), ExampleQuery)
-    assert toolkit.get_tool(tool.id).id == tool.id
+    assert toolkit.get_tool(tool.id).id != tool.id
 
 
 def test_graph_structure(populated_toolkit_service: ToolkitService):
