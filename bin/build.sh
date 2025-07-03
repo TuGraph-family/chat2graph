@@ -10,12 +10,19 @@ check_env() {
   check_command npm || fatal
 }
 
+# TODO: resolve aiohttp version conflicts, which caused by dbgpt and litellm
+upgrade_dependencies() {
+  info "Upgrading aiohttp to resolve version conflicts:"
+  pip install --upgrade "aiohttp>=3.12.13" || warn "Failed to upgrade aiohttp"
+}
+
 build_python() {
   app_dir=$1
 
   cd ${app_dir}
   info "Installing python packages: ${app_dir}"
   poetry lock && poetry install || fatal "Failed to install python packages"
+  upgrade_dependencies
 }
 
 build_web() {
