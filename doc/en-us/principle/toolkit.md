@@ -9,6 +9,7 @@ The Toolkit module is one of the core components of Chat2Graph. Its primary resp
 This module is dedicated to solving the challenges of tool invocation. It implements an advanced tool management mechanism: a directed graph of Actions, Tools, and ToolGroups that clearly describes the dependencies and transition relationships between tool calls, a significant improvement over a simple, traditional list of tools. Based on this graph structure, the system can more intelligently recommend contextually relevant tools and "Actions" to the Large Language Model (LLM), significantly improving recommendation accuracy. At the same time, the precision of the graph effectively constrains the LLM's tool selection, reducing uncertainty and the potential for errors. For developers, the Toolkit provides a unified mechanism for tool registration and recommendation, allowing `Tool` and `Action` objects to be easily reused, thus simplifying the development process. Furthermore, the module already supports the Model Context Protocol (`MCP`), and future enhancements will include offline learning capabilities to augment the `ToolkitService`'s recommendation abilities through reinforcement learning.
 
 The main features of the Toolkit module include:
+
 1. Support for defining and registering Tools and ToolGroups, compatible with the LLM's function-calling paradigm.
 2. The ability to define Actions, where each action can contain a set of available tools and links to subsequent possible actions.
 3. The core `Toolkit` component, which is responsible for the overall construction and management of the tool graph.
@@ -24,7 +25,7 @@ The Toolkit is shared across the entire system, making its Actions and Tools reu
 
 1. `Tool`: Represents a single, executable tool. Each tool includes its name, a description of its functionality, a JSON Schema definition of its input parameters, and its execution logic. In the Toolkit, a `Tool` is the basic execution unit invoked by an `Action`. Tools can be called by the `Reasoner`. Furthermore, the Toolkit supports dependency injection for services defined in `app.core.reasoner.injection_mapping` (e.g., `GraphDbService`), automatically providing them as parameters during tool invocation. This means you do not need to declare service module parameters in the docstring, as the `Reasoner` will automatically detect and inject the corresponding module, enhancing the tool's flexibility and power.
 
-2.  `Action`: Represents a state or decision point for the LLM during task execution and is a core node in the `Toolkit` graph. The description of an `Action` helps the LLM understand its intent and function. An `Action` can be associated with one or more `Tool`s, indicating that these tools might be called when executing this `Action`.
+2. `Action`: Represents a state or decision point for the LLM during task execution and is a core node in the `Toolkit` graph. The description of an `Action` helps the LLM understand its intent and function. An `Action` can be associated with one or more `Tool`s, indicating that these tools might be called when executing this `Action`.
 
 3. `ToolGroup`: A logical collection of `Tool`s, typically representing an internal or external service (like an MCP server) or a set of functionally related tools. This facilitates the bulk registration and management of tools.
 
