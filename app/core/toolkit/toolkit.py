@@ -5,6 +5,7 @@ import networkx as nx  # type: ignore
 from app.core.model.graph import Graph
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
+from app.core.toolkit.tool_group import ToolGroup
 
 
 class Toolkit(Graph):
@@ -13,11 +14,13 @@ class Toolkit(Graph):
     In the toolkit graph, the actions are connected to the tools:
         Action --Next--> Action
         Action --Call--> Tool
+        ToolGroup --Group_Has_Tool--> Tool
 
     Attributes:
         _graph (nx.DiGraph): The oriented graph to present the dependencies.
         _actions (Dict[str, Action]): The actions in the graph.
         _tools (Dict[str, Tool]): The tools in the graph.
+        _tool_groups (Dict[str, ToolGroup]): The tool groups in the graph.
         _scores (Dict[Tuple[str, str], float]): The scores of the edges in the graph.
     """
 
@@ -25,6 +28,7 @@ class Toolkit(Graph):
         super().__init__(graph=graph)
         self._actions: Dict[str, Action] = {}  # vertex_id -> Action
         self._tools: Dict[str, Tool] = {}  # vertex_id -> Tool
+        self._tool_groups: Dict[str, ToolGroup] = {}  # vertex_id -> ToolGroup
         self._scores: Dict[Tuple[str, str], float] = {}  # (u, v) -> score
 
     def add_vertex(self, id, **properties) -> None:
@@ -35,18 +39,21 @@ class Toolkit(Graph):
             self._actions[id] = properties["data"]
         if isinstance(properties["data"], Tool):
             self._tools[id] = properties["data"]
+        if isinstance(properties["data"], ToolGroup):
+            self._tool_groups[id] = properties["data"]
 
-    def vertices_data(self) -> List[Tuple[str, Dict[str, Union[Action, Tool]]]]:
+    def vertices_data(self) -> List[Tuple[str, Dict[str, Union[Action, Tool, ToolGroup]]]]:
         """Get the vertices of the toolkit graph with data.
 
         Returns:
-            List[Tuple[str, Dict[str, Union[Action, Tool]]]: List of vertices with data
+            List[Tuple[str, Dict[str, Union[Action, Tool, ToolGroup]]]: List of vertices with data
             in tuple.
         """
         return [
             (id, {"data": data})
             for id in self._graph.nodes()
-            if (data := self.get_action(id) or self.get_tool(id)) is not None
+            if (data := self.get_action(id) or self.get_tool(id) or self.get_tool_group(id))
+            is not None
         ]
 
     def update(self, other: Graph) -> None:
@@ -68,6 +75,8 @@ class Toolkit(Graph):
                 self._actions[vertex_id] = data["data"]
             if "data" in data and isinstance(data["data"], Tool):
                 self._tools[vertex_id] = data["data"]
+            if "data" in data and isinstance(data["data"], ToolGroup):
+                self._tool_groups[vertex_id] = data["data"]
 
         # update edges
         other_graph = other.get_graph()
@@ -85,35 +94,65 @@ class Toolkit(Graph):
         Returns:
             Toolkit: The subgraph.
         """
-        toolkit_graoh = Toolkit()
+        toolkit_graph = Toolkit()
 
         subgraph_view: nx.DiGraph = self._graph.subgraph(ids)
-        toolkit_graoh._graph = subgraph_view.copy()  # noqa: W0212
-        toolkit_graoh._actions = {id: self._actions[id] for id in ids if id in self._actions}  # noqa: W0212
-        toolkit_graoh._tools = {id: self._tools[id] for id in ids if id in self._tools}  # noqa: W0212
-        toolkit_graoh._scores = {
+        toolkit_graph._graph = subgraph_view.copy()  # noqa: W0212
+        toolkit_graph._actions = {id: self._actions[id] for id in ids if id in self._actions}  # noqa: W0212
+        toolkit_graph._tools = {id: self._tools[id] for id in ids if id in self._tools}  # noqa: W0212
+        toolkit_graph._tool_groups = {
+            id: self._tool_groups[id] for id in ids if id in self._tool_groups
+        }  # noqa: W0212
+        toolkit_graph._scores = {
             (u, v): self._scores[(u, v)]
-            for u, v in toolkit_graoh._graph.edges()
+            for u, v in toolkit_graph._graph.edges()
             if (u, v) in self._scores
         }  # noqa: W0212
 
-        return toolkit_graoh
+        return toolkit_graph
 
     def remove_vertex(self, id: str) -> None:
-        """Remove a vertex from the job graph."""
-        # if the id is action's, remove all its tool successors which are only called by this action
-        # if the id is tool's which has no successors, just remove it self
-        successors = self.successors(id)
+        """Remove a vertex from the job graph, handling cascading deletions correctly."""
+        if not self._graph.has_node(id):
+            return
 
-        for successor in successors:
-            tool: Optional[Tool] = self.get_tool(successor)
-            if tool and len(self.predecessors(successor)) == 1:
-                self.remove_vertex(successor)
+        item = self.get_action(id) or self.get_tool(id) or self.get_tool_group(id)
 
-        # remove vertex properties
-        self._actions.pop(id, None)
-        self._tools.pop(id, None)
-        self.remove_vertex(id)
+        if isinstance(item, Action):
+            successors_copy = list(self.successors(id))
+            for successor_id in successors_copy:
+                tool: Optional[Tool] = self.get_tool(successor_id)
+                # if this action is the *only* predecessor of the tool, remove the tool
+                if tool and len(list(self.predecessors(successor_id))) == 1:
+                    # cascade the delete to the orphaned tool.
+                    self.remove_vertex(successor_id)
+
+            self._actions.pop(id, None)
+
+        elif isinstance(item, Tool):
+            # when a tool is removed, we need to cascade to the parent ToolGroup,
+            # if the tool is the only child
+
+            for predecessor_id in self.predecessors(id):
+                tool_group: Optional[ToolGroup] = self.get_tool_group(predecessor_id)
+                if tool_group and len(list(self.successors(predecessor_id))) == 1:
+                    # if this tool is the only child of the ToolGroup, remove the ToolGroup
+                    self._tool_groups.pop(predecessor_id, None)
+                    self._graph.remove_node(predecessor_id)
+
+            self._tools.pop(id, None)
+
+        elif isinstance(item, ToolGroup):
+            # when a ToolGroup is removed, it cascades to all its children (tools)
+            successors_copy = list(self.successors(id))
+            for tool_id in successors_copy:
+                self.remove_vertex(tool_id)
+
+            self._tool_groups.pop(id, None)
+
+        # final, unified removal from the graph object
+        if self._graph.has_node(id):
+            self._graph.remove_node(id)
 
     def get_action(self, id: str) -> Optional[Action]:
         """Get action by vertex id."""
@@ -128,6 +167,10 @@ class Toolkit(Graph):
         if tool is not None:
             return tool.copy()
         return None
+
+    def get_tool_group(self, id: str) -> Optional[ToolGroup]:
+        """Get tool group by vertex id."""
+        return self._tool_groups.get(id, None)
 
     def get_score(self, u: str, v: str) -> float:
         """Get the score of an edge."""

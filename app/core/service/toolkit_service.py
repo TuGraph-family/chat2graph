@@ -63,23 +63,59 @@ class ToolkitService(metaclass=Singleton):
     def add_tool_group(
         self, tool_group: ToolGroup, connected_actions: List[Tuple[Action, float]]
     ) -> None:
-        """Add a tool group to the toolkit graph. ToolGroup: Tool_1, Tool_2, ... <--Call-- Action.
+        """Add a tool group to the toolkit graph. ToolGroup: Tool_1, Tool_2, ... <--Call-- Action,
+        and ToolGroup --Group_Has_Tool--> Tool.
 
         Args:
             tool_group (ToolGroup): The tool group to be added
         """
+        toolkit = self.get_toolkit()
+        group_id = tool_group.get_id()
+
+        # add tool group vertex if not exists
+        if group_id not in toolkit.vertices():
+            toolkit.add_vertex(group_id, data=tool_group)
+        else:
+            # clean up old tools directly, avoiding complex cascades from remove_tool
+            # action --Call--> Tool <-- Group_Has_Tool -- ToolGroup
+
+            # tools that are connected to this group
+            tools_in_group = set(toolkit.successors(group_id))
+
+            # tools that are called by the relevant actions
+            called_tools: Set[str] = set()
+            for action, _ in connected_actions:
+                if action.id in toolkit.vertices():
+                    for successor_id in toolkit.successors(action.id):
+                        if toolkit.get_tool(successor_id) is not None:
+                            called_tools.add(successor_id)
+
+            # find the intersection: tools that belong to this group AND are called by these actions
+            tools_to_remove = tools_in_group & called_tools
+
+            for tool_id in tools_to_remove:
+                if toolkit._graph.has_node(tool_id):
+                    toolkit._graph.remove_node(tool_id)
+                    toolkit._tools.pop(tool_id, None)
+
+            # re-add/update the tool group data
+            toolkit.add_vertex(group_id, data=tool_group)
+
+        # create and store tools listed in the tool group
         if isinstance(tool_group, McpService):
             available_mcp_tools: List[McpBaseTool] = run_async_function(tool_group.list_tools)
-            for tool in available_mcp_tools:
-                tool_description: str = (tool.description + "\n") if tool.description else ""
-                self.add_tool(
-                    McpTool(
-                        name=tool.name,
-                        description=tool_description + json.dumps(tool.inputSchema, indent=4),
-                        tool_group=tool_group,
-                    ),
-                    connected_actions=connected_actions,
+            for mcp_tool in available_mcp_tools:
+                tool_description: str = (
+                    (mcp_tool.description + "\n") if mcp_tool.description else ""
                 )
+                tool = McpTool(
+                    name=mcp_tool.name,
+                    description=tool_description + json.dumps(mcp_tool.inputSchema, indent=4),
+                    tool_group=tool_group,
+                )
+                self.add_tool(tool, connected_actions=connected_actions)
+                toolkit.add_edge(group_id, tool.id)
+                toolkit.set_score(group_id, tool.id, 1.0)  # default score
         else:
             raise TypeError(f"Unsupported tool group type: {type(tool_group)}.")
 
@@ -123,9 +159,6 @@ class ToolkitService(metaclass=Singleton):
 
     def remove_tool(self, tool_id: str):
         """Remove tool from the toolkit graph."""
-        # tool: Optional[Tool] = self.get_toolkit().get_tool(tool_id)
-        # if isinstance(tool, McpTool):
-        #     run_async_function(self.cleanup_tool_clients(tool))
         self.get_toolkit().remove_vertex(tool_id)
 
     def remove_action(self, action_id: str):
