@@ -142,10 +142,7 @@ class Expert(Agent):
                 job_result = self._job_service.get_job_result(job_id=job.id)
                 job_result.status = JobStatus.FAILED
                 self._job_service.save_job_result(job_result=job_result)
-                raise Exception(
-                    f"The job {job.id} failed after {max_retry_count} retries. "
-                    f"Last error:\n{workflow_message.evaluation}"
-                )
+                return expert_message
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
             # (3) WorkflowStatus.INPUT_DATA_ERROR

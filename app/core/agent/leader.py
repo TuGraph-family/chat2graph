@@ -10,6 +10,7 @@ from app.core.agent.builtin_leader_state import BuiltinLeaderState
 from app.core.agent.expert import Expert
 from app.core.agent.leader_state import LeaderState
 from app.core.common.async_func import run_in_thread
+from app.core.common.info import WAY_TO_FIND_SERVER_LOG
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import ChatMessageRole, JobStatus, WorkflowStatus
 from app.core.common.util import parse_jsons
@@ -254,7 +255,7 @@ class Leader(Agent):
                     job_graph.add_edge(
                         dep_unique_id, current_unique_id
                     )  # dep_id -> subjob_id shows dependency
-        except Exception as e:  # Catch unexpected errors during subjob creation/linking
+        except Exception as e:  # catch unexpected errors during subjob creation/linking
             # although validation passed, errors might occur during DB interaction or expert lookup
             # color: red
             print(
@@ -535,6 +536,7 @@ class Leader(Agent):
         other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
         """
         # mark the current job as failed
+        error_info += WAY_TO_FIND_SERVER_LOG
         job_result = self._job_service.get_job_result(job_id=job_id)
         if not job_result.has_result():
             job_result.status = JobStatus.FAILED
@@ -618,7 +620,6 @@ class Leader(Agent):
                 new_subgraph=new_job_graqph,
                 old_subgraph=replaced_job_graph,
             )
-        raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
 
     def _validate_job_dict(
         self, job_dict: Dict[str, Dict[str, str]], expert_names: List[str]
