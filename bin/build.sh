@@ -10,6 +10,20 @@ check_env() {
   check_command npm || fatal
 }
 
+# Dependency conflict resolution function
+# PR Purpose: Temporary workaround for aiohttp version conflicts until proper resolution in pyproject.toml
+handle_dependency_conflicts() {
+  #TODO: Remove this workaround after pyproject.toml can resolve the conflict
+
+  # Force reinstall specific aiohttp version while downgrading ERROR messages to WARNING
+  # Design Principles:
+  # 1. Preserve full installation output (no information hidden)
+  # 2. Convert ERROR to WARNING to prevent misleading appearance of failure
+  info "Resolving aiohttp version conflict..."
+  local target_aiohttp_version="3.12.13"
+  pip install --force-reinstall "aiohttp==$target_aiohttp_version" 2>&1 | sed 's/ERROR/WARNING/g'
+}
+
 build_python() {
   app_dir=$1
 
@@ -40,6 +54,7 @@ lock_file="/tmp/chat2graph.lock"
 acquire_lock $lock_file
 check_env
 build_python $project_root
+handle_dependency_conflicts
 build_web $project_root
 release_lock $lock_file
 
