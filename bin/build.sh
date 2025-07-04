@@ -10,8 +10,8 @@ check_env() {
   check_command npm || fatal
 }
 
-# Dependency conflict resolution function
-# PR Purpose: Temporary workaround for aiohttp version conflicts until proper resolution in pyproject.toml
+# TODO: resolve dependency conflict resolution
+# temporary workaround for aiohttp version conflicts until proper resolution in pyproject.toml
 handle_dependency_conflicts() {
   #TODO: Remove this workaround after pyproject.toml can resolve the conflict
 
@@ -30,6 +30,7 @@ build_python() {
   cd ${app_dir}
   info "Installing python packages: ${app_dir}"
   poetry lock && poetry install || fatal "Failed to install python packages"
+  handle_dependency_conflicts
 }
 
 build_web() {
@@ -54,7 +55,6 @@ lock_file="/tmp/chat2graph.lock"
 acquire_lock $lock_file
 check_env
 build_python $project_root
-handle_dependency_conflicts
 build_web $project_root
 release_lock $lock_file
 
