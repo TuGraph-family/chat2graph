@@ -167,11 +167,6 @@ class Leader(Agent):
                     job_dict = result
 
                 except (ValueError, json.JSONDecodeError) as retry_e:
-                    # color: red
-                    print(
-                        f"\033[38;5;196m[ERROR]: Decomposition retry failed or validation error: "
-                        f"{retry_e}\033[0m"
-                    )
                     self.fail_job_graph(
                         job_id=job_id,
                         error_info=(
@@ -193,11 +188,7 @@ class Leader(Agent):
                 job_dict = {}
 
         # if decomposition failed and wasn't retried or retry failed, job_dict might be {}
-        if not job_dict:  # Check if job_dict is empty or None
-            print(
-                "\033[38;5;196m[ERROR]: job_dict is empty or None after decomposition attempts "
-                f"for job {job_id}. Halting graph creation.\033[0m"
-            )
+        if not job_dict:  # check if job_dict is empty or None
             # ensure the job status reflects failure if not already set by fail_job_graph
             current_status = self._job_service.get_job_result(job_id=job_id).status
             if current_status not in (JobStatus.FAILED, JobStatus.STOPPED):
@@ -256,11 +247,6 @@ class Leader(Agent):
                     )  # dep_id -> subjob_id shows dependency
         except Exception as e:  # catch unexpected errors during subjob creation/linking
             # although validation passed, errors might occur during DB interaction or expert lookup
-            # color: red
-            print(
-                "\033[38;5;196m[ERROR]: Unexpected error creating/linking subjobs after "
-                f"validation: {e}\033[0m"
-            )
             self.fail_job_graph(
                 job_id=job_id,
                 error_info=(
@@ -272,10 +258,6 @@ class Leader(Agent):
 
         # the job graph should be a directed acyclic graph (DAG)
         if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
-            print(
-                f"\033[38;5;196m[ERROR]: Cycle detected in job graph for {original_job_id} despite "
-                "validation.\033[0m"
-            )
             self.fail_job_graph(
                 job_id=job_id,
                 error_info=(
@@ -507,9 +489,9 @@ class Leader(Agent):
         of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
         other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
         """
-        # mark the current job as failed
-        error_info += "\nCheck the info in ~/.chat2graph/logs/server.log"
+        error_info += f"\n\nCheck the error details in path: '{SystemEnv.APP_ROOT}/logs/~'"
         job_result = self._job_service.get_job_result(job_id=job_id)
+
         if not job_result.has_result():
             # get the original job
             try:
@@ -522,12 +504,16 @@ class Leader(Agent):
                     original_job_id=job.original_job_id
                 )
 
+            # save the final system message with the error information
             self._save_failed_or_stopped_message(
                 original_job=original_job, message_payload=error_info
             )
 
+            # mark the current job as failed
             job_result.status = JobStatus.FAILED
             self._job_service.save_job_result(job_result=job_result)
+
+            # update all the subjobs which have not the final result
             self._stop_running_subjobs(original_job_id=original_job.id)
 
             # if the original job does not have a final result, mark it as stopped
