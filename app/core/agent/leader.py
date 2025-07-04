@@ -116,7 +116,7 @@ class Leader(Agent):
             if isinstance(result, json.JSONDecodeError):
                 raise result
 
-            # Validate the parsed dictionary
+            # validate the parsed dictionary
             self._validate_job_dict(result, expert_names)
             job_dict = result
 
@@ -162,12 +162,12 @@ class Leader(Agent):
                     if isinstance(result, json.JSONDecodeError):
                         raise result from e
 
-                    # Validate the parsed dictionary after retry
+                    # validate the parsed dictionary after retry
                     self._validate_job_dict(result, expert_names)
                     job_dict = result
 
                 except (ValueError, json.JSONDecodeError) as retry_e:
-                    # Color: red
+                    # color: red
                     print(
                         f"\033[38;5;196m[ERROR]: Decomposition retry failed or validation error: "
                         f"{retry_e}\033[0m"
@@ -201,7 +201,7 @@ class Leader(Agent):
             # ensure the job status reflects failure if not already set by fail_job_graph
             current_status = self._job_service.get_job_result(job_id=job_id).status
             if current_status not in (JobStatus.FAILED, JobStatus.STOPPED):
-                # Use a generic error message if specific one wasn't set in except blocks
+                # use a generic error message if specific one wasn't set in except blocks
                 self.fail_job_graph(
                     job_id,
                     "Decomposition failed to produce a valid and non-empty subtask dictionary.",
@@ -249,7 +249,7 @@ class Leader(Agent):
                 current_unique_id = temp_to_unique_id_map[subjob_id]
                 for dep_id in subjob_dict.get(
                     "dependencies", []
-                ):  # Use .get for safety, though validated
+                ):  # use .get for safety, though validated
                     dep_unique_id = temp_to_unique_id_map[dep_id]  # Already validated to exist
                     job_graph.add_edge(
                         dep_unique_id, current_unique_id
