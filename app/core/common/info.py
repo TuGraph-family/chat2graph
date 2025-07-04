@@ -1,6 +1,9 @@
 WAY_TO_FIND_SERVER_LOG = """
-Please check the error details in Chat2Graph log:
-your_path% bin/restart.sh
+Please check the error details in Chat2Graph log.
+
+You can find the log file in the following **terminal output**:
+```bash
+your_terminal% bin/restart.sh
 ... ...
 Init application: Chat2Graph
 Init the Leader agent
@@ -18,5 +21,7 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5010
  * Running on http://30.239.2.244:5010
-Detail logs in /Users/kuda/.chat2graph/logs/server_***timestamp***.log <<<< find the log path here
+Detail logs in /Users/user_name/.chat2graph/logs/server_***timestamp***.log <<<< find the log path here
+```
+
 """  # noqa: E501

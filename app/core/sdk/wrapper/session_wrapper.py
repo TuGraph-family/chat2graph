@@ -97,7 +97,7 @@ class SessionWrapper:
             raise ValueError("No job submitted in the session since the latest job ID is None.")
         agent_service.leader.stop_job_graph(
             job_id=latest_job_id,
-            error_info=f"The job `{latest_job_id}` is stopped by user.",
+            stop_info=f"The job `{latest_job_id}` is stopped by user.",
         )
 
     def recover_original_job(self) -> None:
