@@ -10,7 +10,6 @@ from app.core.agent.builtin_leader_state import BuiltinLeaderState
 from app.core.agent.expert import Expert
 from app.core.agent.leader_state import LeaderState
 from app.core.common.async_func import run_in_thread
-from app.core.common.info import WAY_TO_FIND_SERVER_LOG
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import ChatMessageRole, JobStatus, WorkflowStatus
 from app.core.common.util import parse_jsons
@@ -490,49 +489,16 @@ class Leader(Agent):
             original_job = self._job_service.get_original_job(original_job_id=job.original_job_id)
 
         # save the final system message with the error information
-        error_payload = (
-            f"An error occurred during the execution of the job:\n\n{stop_info}\n\n"
-            f'Please check the job `{original_job.id}` ("{original_job.goal[:10]}...") '
-            "for more details. Or you can re-try to send your message."
-        )
-        try:
-            error_message = self._message_service.get_text_message_by_job_id_and_role(
-                original_job.id, ChatMessageRole.SYSTEM
-            )
-            error_message.set_payload(error_payload)
-        except ValueError:
-            error_text_message = TextMessage(
-                payload=error_payload,
-                job_id=original_job.id,
-                session_id=original_job.session_id,
-                assigned_expert_name=original_job.assigned_expert_name,
-                role=ChatMessageRole.SYSTEM,
-            )
-            self._message_service.save_message(message=error_text_message)
-            error_message = HybridMessage(
-                instruction_message=error_text_message,
-                job_id=original_job.id,
-                role=ChatMessageRole.SYSTEM,
-            )
-        self._message_service.save_message(message=error_message)
+        self._save_failed_or_stopped_message(original_job=original_job, message_payload=stop_info)
+
+        # update all the subjobs which have not the final result
+        self._stop_running_subjobs(original_job_id=original_job.id)
 
         # if the original job does not have a final result, mark it as stopped
         original_job_result = self._job_service.get_job_result(job_id=original_job.id)
         if not original_job_result.has_result():
             original_job_result.status = JobStatus.STOPPED
             self._job_service.save_job_result(job_result=original_job_result)
-
-        # update all the subjobs which have not the final result
-        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
-        for subjob_id in subjob_ids:
-            # mark all the subjobs as stopped
-            subjob_result = self._job_service.get_job_result(job_id=subjob_id)
-            if not subjob_result.has_result():
-                subjob_result.status = JobStatus.STOPPED
-                self._job_service.save_job_result(job_result=subjob_result)
-
-        # color: red
-        print(f"\033[38;5;196m[ERROR]: {error_payload}\033[0m")
 
     def fail_job_graph(self, job_id: str, error_info: str) -> None:
         """Fail the job graph.
@@ -542,12 +508,32 @@ class Leader(Agent):
         other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
         """
         # mark the current job as failed
-        error_info += WAY_TO_FIND_SERVER_LOG
+        error_info += "\nCheck the info in ~/.chat2graph/logs/server.log"
         job_result = self._job_service.get_job_result(job_id=job_id)
         if not job_result.has_result():
-            self.stop_job_graph(job_id=job_id, stop_info=error_info)
+            # get the original job
+            try:
+                original_job: Job = self._job_service.get_original_job(original_job_id=job_id)
+            except ValueError as e:
+                job: SubJob = self._job_service.get_subjob(subjob_id=job_id)
+                if not job.original_job_id:
+                    raise ValueError("The subjob is not assigned to an original job.") from e
+                original_job = self._job_service.get_original_job(
+                    original_job_id=job.original_job_id
+                )
+
+            self._save_failed_or_stopped_message(
+                original_job=original_job, message_payload=error_info
+            )
+
             job_result.status = JobStatus.FAILED
             self._job_service.save_job_result(job_result=job_result)
+            self._stop_running_subjobs(original_job_id=original_job.id)
+
+            # if the original job does not have a final result, mark it as stopped
+            original_job_result = self._job_service.get_job_result(job_id=original_job.id)
+            original_job_result.status = JobStatus.FAILED
+            self._job_service.save_job_result(job_result=original_job_result)
 
     def recover_original_job(self, original_job_id: str) -> None:
         """Reconver the original job.
@@ -584,6 +570,54 @@ class Leader(Agent):
 
                 # start to execute the job graph
                 run_in_thread(self.execute_job_graph, original_job_id=original_job_id)
+
+    def _stop_running_subjobs(self, original_job_id: str) -> None:
+        """Stop all running jobs for the given original job."""
+        # get all subjobs for the original job
+        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job_id)
+        for subjob_id in subjob_ids:
+            # get the subjob result
+            subjob_result = self._job_service.get_job_result(job_id=subjob_id)
+            if subjob_result.status == JobStatus.RUNNING:
+                # mark the subjob as stopped
+                subjob_result.status = JobStatus.STOPPED
+                self._job_service.save_job_result(job_result=subjob_result)
+
+    def _save_failed_or_stopped_message(self, original_job: Job, message_payload: str) -> None:
+        """Save a message indicating the job has failed or stopped."""
+        # save the final system message with the error information
+        error_payload = (
+            f"An error occurred during the execution of the job:\n\n{message_payload}\n\n"
+            f'Please check the job `{original_job.id}` ("{original_job.goal[:10]}...") '
+            "for more details. Or you can re-try to send your message."
+        )
+        original_job_id = original_job.id
+        try:
+            error_text_message: TextMessage = (
+                self._message_service.get_text_message_by_job_id_and_role(
+                    original_job_id, ChatMessageRole.SYSTEM
+                )
+            )
+            error_text_message.set_payload(error_payload)
+            self._message_service.save_message(message=error_text_message)
+        except ValueError:
+            error_text_message = TextMessage(
+                payload=error_payload,
+                job_id=original_job_id,
+                session_id=original_job.session_id,
+                assigned_expert_name=original_job.assigned_expert_name,
+                role=ChatMessageRole.SYSTEM,
+            )
+            self._message_service.save_message(message=error_text_message)
+            error_hybrid_message: HybridMessage = HybridMessage(
+                instruction_message=error_text_message,
+                job_id=original_job_id,
+                role=ChatMessageRole.SYSTEM,
+            )
+            self._message_service.save_message(message=error_hybrid_message)
+
+        # color: red
+        print(f"\033[38;5;196m[ERROR]: {error_payload}\033[0m")
 
     def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
         """Dispatch the job to the expert, and handle the result."""
