@@ -489,7 +489,7 @@ class Leader(Agent):
         of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
         other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
         """
-        error_info += f"\n\nCheck the error details in path: '{SystemEnv.APP_ROOT}/logs/~'"
+        error_info += f"\n\nCheck the error details in path: '{SystemEnv.APP_ROOT}/logs/server.log'"
         job_result = self._job_service.get_job_result(job_id=job_id)
 
         if not job_result.has_result():
