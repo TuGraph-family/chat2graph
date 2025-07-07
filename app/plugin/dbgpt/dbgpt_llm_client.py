@@ -15,6 +15,7 @@ from dbgpt.model.proxy.llms.chatgpt import OpenAILLMClient  # type: ignore
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
+from app.core.model.task import ToolCallContext
 from app.core.prompt.model_service import FUNC_CALLING_PROMPT
 from app.core.reasoner.model_service import ModelService
 from app.core.toolkit.tool import FunctionCallResult, Tool
@@ -48,6 +49,7 @@ class DbgptLlmClient(ModelService):
         sys_prompt: str,
         messages: List[ModelMessage],
         tools: Optional[List[Tool]] = None,
+        tool_call_ctx: Optional[ToolCallContext] = None,
     ) -> ModelMessage:
         """Generate a text given a prompt."""
         # prepare model request
@@ -62,7 +64,7 @@ class DbgptLlmClient(ModelService):
         func_call_results: Optional[List[FunctionCallResult]] = None
         if tools:
             func_call_results = await self.call_function(
-                tools=tools, model_response_text=model_response.text
+                tools=tools, model_response_text=model_response.text, tool_call_ctx=tool_call_ctx
             )
 
         # parse model response to agent message

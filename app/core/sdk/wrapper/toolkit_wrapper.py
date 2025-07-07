@@ -43,7 +43,7 @@ class ToolkitWrapper:
         """
         toolkit_service: ToolkitService = ToolkitService.instance
 
-        # Flatten the chain to handle both individual items and tuples
+        # flatten the chain to handle both individual items and tuples
         flattened_chain = []
         for item in item_chain:
             if isinstance(item, tuple):
@@ -51,31 +51,34 @@ class ToolkitWrapper:
             else:
                 flattened_chain.append(item)
 
-        # Process each item and create connections
+        # process each item and create connections
         for i, item in enumerate(flattened_chain):
             if isinstance(item, Action):
                 # Add action to the graph
                 next_actions = []
                 prev_actions = []
 
-                # Connect to next item if it's an Action
+                # connect to next item if it's an Action
                 if i + 1 < len(flattened_chain) and isinstance(flattened_chain[i + 1], Action):
                     next_actions.append((flattened_chain[i + 1], 1.0))
 
-                # Connect from previous item if it's an Action
+                # connect from previous item if it's an Action
                 if i > 0 and isinstance(flattened_chain[i - 1], Action):
                     prev_actions.append((flattened_chain[i - 1], 1.0))
 
                 toolkit_service.add_action(item, next_actions, prev_actions)
+                for tool in item.tools:
+                    # connect tool to the action
+                    toolkit_service.add_tool(tool, connected_actions=[(item, 1.0)])
 
             elif isinstance(item, Tool):
-                # Connect tool to previous action if exists
+                # connect tool to previous action if exists
                 connected_actions = []
                 if i > 0 and isinstance(flattened_chain[i - 1], Action):
                     connected_actions.append((flattened_chain[i - 1], 1.0))
 
                 toolkit_service.add_tool(item, connected_actions=connected_actions)
             else:
-                raise ValueError(f"Invalid chain item: {item}. Must be Action or Tool.")
+                raise ValueError(f"Invalid chain item: {item}.")
 
         return self

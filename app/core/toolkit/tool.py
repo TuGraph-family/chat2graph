@@ -1,12 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, cast
+from typing import Any, Callable, Dict
 from uuid import uuid4
 
-from app.core.common.async_func import run_async_function
 from app.core.common.type import FunctionCallStatus, ToolType
-from app.core.model.task import Task
-from app.core.toolkit.mcp_connection import McpConnection
-from app.core.toolkit.mcp_service import McpService
 
 
 @dataclass
@@ -95,61 +91,4 @@ class Tool:
             description=self._description,
             function=self._function,
             tool_type=self._type,
-        )
-
-
-class McpTool(Tool):
-    """MCP tool in the toolkit.
-
-    Inherits from Tool and represents a tool that can be used with MCP.
-    """
-
-    def __init__(self, name: str, description: str, tool_group: McpService):
-        """Initialize the MCP Tool with name, description, and MCP service."""
-        super().__init__(
-            name=name,
-            description=description,
-            function=cast(
-                Callable,
-                run_async_function(self._create_function, name, description, tool_group),
-            ),
-            tool_type=ToolType.MCP_TOOL,
-        )
-
-        self._tool_group = tool_group
-
-    def get_tool_group(self) -> McpService:
-        """Get the MCP service associated with this tool."""
-        return self._tool_group
-
-    def set_operator_id(self, operator_id: str) -> None:
-        """Set the operator ID for this tool."""
-        self._operator_id = operator_id
-
-    async def _create_function(
-        self,
-        name: str,
-        description: str,
-        tool_group: McpService,
-    ) -> Callable[..., Any]:
-        """Create a placeholder function - actual execution is handled by ToolkitService."""
-
-        async def function(infer_task: Task, **kwargs) -> Any:
-            connection: McpConnection = cast(
-                McpConnection, await tool_group.create_connection(self._operator_id)
-            )
-            result = await connection.call(tool_name=name, **kwargs)
-            return result
-
-        function.__name__ = name
-        function.__doc__ = description
-        return function
-
-    def copy(self) -> "McpTool":
-        """Create a copy of the MCP tool."""
-        copied_tool = super().copy()
-        return McpTool(
-            name=copied_tool.name,
-            description=copied_tool.description,
-            tool_group=self._tool_group,
         )

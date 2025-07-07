@@ -12,6 +12,19 @@ from app.core.workflow.operator_config import OperatorConfig
 
 
 @dataclass
+class ToolCallContext:
+    """Context for tool call execution.
+
+    Attributes:
+        job_id: The job ID associated with the tool call.
+        operator_id: The operator ID associated with the tool call.
+    """
+
+    job_id: str
+    operator_id: str
+
+
+@dataclass
 class Task:
     """Task in the system.
 
@@ -36,3 +49,10 @@ class Task:
     insights: Optional[List[Insight]] = None
     lesson: Optional[str] = None
     file_descriptors: Optional[List[FileDescriptor]] = None
+
+    def get_tool_call_ctx(self) -> ToolCallContext:
+        """Get the function call context for the task."""
+        return ToolCallContext(
+            job_id=self.job.id,
+            operator_id=self.operator_config.id if self.operator_config else "unknown_operator_id",
+        )

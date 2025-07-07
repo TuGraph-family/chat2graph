@@ -73,6 +73,7 @@ class MonoModelReasoner(Reasoner):
                 sys_prompt=sys_prompt,
                 messages=reasoner_memory.get_messages(),
                 tools=task.tools,
+                tool_call_ctx=task.get_tool_call_ctx(),
             )
             response.set_source_type(MessageSourceType.MODEL)
             reasoner_memory.add_message(response)

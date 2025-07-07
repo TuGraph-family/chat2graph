@@ -1,12 +1,13 @@
 from typing import List
 from unittest.mock import AsyncMock
 
+from git import Optional
 import pytest
 
 from app.core.common.type import MessageSourceType
 from app.core.model.job import SubJob
 from app.core.model.message import ModelMessage
-from app.core.model.task import Task
+from app.core.model.task import Task, ToolCallContext
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
 from app.core.toolkit.tool import Tool
 from app.core.workflow.operator_config import OperatorConfig
@@ -99,7 +100,8 @@ async def test_infer_multiple_rounds(mock_reasoner: DualModelReasoner, task: Tas
     async def generate_with_rounds(
         sys_prompt: str,
         messages: List[ModelMessage],
-        tools: List[Tool] | None = None,
+        tools: Optional[List[Tool]] = None,
+        tool_call_ctx: Optional[ToolCallContext] = None,
     ) -> ModelMessage:
         nonlocal round_count
         round_count += 1

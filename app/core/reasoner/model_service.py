@@ -7,6 +7,7 @@ from uuid import uuid4
 from app.core.common.type import FunctionCallStatus
 from app.core.common.util import parse_jsons
 from app.core.model.message import ModelMessage
+from app.core.model.task import Task, ToolCallContext
 from app.core.prompt.model_service import FUNC_CALLING_JSON_GUIDE
 from app.core.reasoner.injection_mapping import (
     injection_services_mapping,
@@ -31,11 +32,15 @@ class ModelService(ABC):
         sys_prompt: str,
         messages: List[ModelMessage],
         tools: Optional[List[Tool]] = None,
+        tool_call_ctx: Optional[ToolCallContext] = None,
     ) -> ModelMessage:
         """Generate a text given a prompt non-streaming"""
 
     async def call_function(
-        self, tools: List[Tool], model_response_text: str
+        self,
+        tools: List[Tool],
+        model_response_text: str,
+        tool_call_ctx: Optional[ToolCallContext] = None,
     ) -> Optional[List[FunctionCallResult]]:
         """Call functions based on message content.
 
@@ -93,6 +98,18 @@ class ModelService(ABC):
                 for param_name, param in sig.parameters.items():
                     injection_type_found: bool = False
                     param_type: Any = param.annotation
+
+                    # inject task parameter if parameter type is Task
+                    if param_type is ToolCallContext:
+                        if tool_call_ctx is None:
+                            raise ValueError(
+                                f"Function {func_name} requires FunctionCallContext, "
+                                "but no FunctionCallContext is provided."
+                            )
+                        func_args[param_name] = tool_call_ctx
+                        injection_type_found = True
+                        continue
+
                     # handle the union types
                     if param_type is Union:
                         available_types = getattr(param_type, "__args__", [])
@@ -100,6 +117,17 @@ class ModelService(ABC):
                             # skip None type
                             if available_type is type(None):
                                 continue
+
+                            # inject task if Task type is found in union
+                            if available_type is Task:
+                                if tool_call_ctx is None:
+                                    raise ValueError(
+                                        f"Function {func_name} requires FunctionCallContext, "
+                                        "but no FunctionCallContext is provided."
+                                    )
+                                func_args[param_name] = tool_call_ctx
+                                injection_type_found = True
+                                break
 
                             if available_type in injection_services_mapping:
                                 func_args[param_name] = injection_services_mapping[available_type]

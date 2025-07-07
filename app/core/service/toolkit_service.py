@@ -11,7 +11,8 @@ from app.core.common.async_func import run_async_function
 from app.core.common.singleton import Singleton
 from app.core.toolkit.action import Action
 from app.core.toolkit.mcp_service import McpService
-from app.core.toolkit.tool import McpTool, Tool
+from app.core.toolkit.mcp_tool import McpTool
+from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_group import ToolGroup
 from app.core.toolkit.toolkit import Toolkit
 

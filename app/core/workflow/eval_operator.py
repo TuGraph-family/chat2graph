@@ -1,7 +1,6 @@
 import json
 from typing import List, Optional
 
-from app.core.common.async_func import run_async_function
 from app.core.common.type import WorkflowStatus
 from app.core.common.util import parse_jsons
 from app.core.model.job import Job
@@ -15,7 +14,7 @@ from app.core.workflow.operator import Operator
 class EvalOperator(Operator):
     """Operator for evaluating the performance of the model."""
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -50,7 +49,7 @@ class EvalOperator(Operator):
             lesson=lesson,
         )
 
-        result = run_async_function(reasoner.infer, task=task)
+        result = await reasoner.infer(task=task)
 
         try:
             parse_result = parse_jsons(text=result)[0]
@@ -67,7 +66,7 @@ class EvalOperator(Operator):
                 "you generate the json block in <deliverable>...</deliverable>. Error info: "
                 + str(e)
             )
-            result = run_async_function(reasoner.infer, task=task)
+            result = await reasoner.infer(task=task)
             parse_result = parse_jsons(text=result)[0]
             if isinstance(parse_result, json.JSONDecodeError):
                 raise parse_result from e

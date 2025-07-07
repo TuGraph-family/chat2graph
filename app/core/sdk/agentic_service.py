@@ -35,7 +35,8 @@ from app.core.service.session_service import SessionService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.mcp_service import McpService
-from app.core.toolkit.tool import McpTool, Tool
+from app.core.toolkit.mcp_tool import McpTool
+from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_config import McpConfig
 
 

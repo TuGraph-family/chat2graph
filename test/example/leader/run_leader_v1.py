@@ -27,7 +27,7 @@ class BaseTestOperator(Operator):
         # Did not Call super().__init__(), because it is a test class
         self._config = OperatorConfig(id=id, instruction="", actions=[])
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -41,7 +41,7 @@ class BaseTestOperator(Operator):
 class NumberGeneratorOperator(BaseTestOperator):
     """Generate a sequence of numbers"""
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -60,7 +60,7 @@ class NumberGeneratorOperator(BaseTestOperator):
 class MultiplyByTwoOperator(BaseTestOperator):
     """Multiply each number by 2"""
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -80,7 +80,7 @@ class MultiplyByTwoOperator(BaseTestOperator):
 class AddTenOperator(BaseTestOperator):
     """Add 10 to each number"""
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -100,7 +100,7 @@ class AddTenOperator(BaseTestOperator):
 class SumOperator(BaseTestOperator):
     """Sum all numbers"""
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -120,7 +120,7 @@ class SumOperator(BaseTestOperator):
 class FormatResultOperator(BaseTestOperator):
     """Format the final result"""
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,

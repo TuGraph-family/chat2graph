@@ -26,7 +26,7 @@ class TestAgentOperator(Operator):
     def __init__(self, id: str):
         self._config = OperatorConfig(id=id, instruction="", actions=[])
 
-    def execute(
+    async def execute(
         self,
         reasoner: DualModelReasoner,
         job: Job,

@@ -3,6 +3,7 @@ from typing import List, cast
 from git import Optional
 from mcp.types import Tool as McpBaseTool
 
+from app.core.model.task import ToolCallContext
 from app.core.service.tool_connection_service import ToolConnectionService
 from app.core.toolkit.tool_config import McpConfig
 from app.core.toolkit.tool_connection import ToolConnection
@@ -21,13 +22,13 @@ class McpService(ToolGroup):
     def __init__(self, mcp_config: McpConfig):
         super().__init__(tool_group_config=mcp_config)
 
-    async def create_connection(self, operator_id: Optional[str] = None) -> ToolConnection:
+    async def create_connection(self, tool_call_ctx: Optional[ToolCallContext] = None) -> ToolConnection:
         """Create a connection to the tool group."""
         tool_connection_service: ToolConnectionService = ToolConnectionService.instance
         return await tool_connection_service.get_or_create_connection(
             tool_group_id=self.get_id(),
             tool_group_config=self._tool_group_config,
-            operator_id=operator_id
+            tool_call_ctx=tool_call_ctx,
         )
 
     async def list_tools(self) -> List[McpBaseTool]:

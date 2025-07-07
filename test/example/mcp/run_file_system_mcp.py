@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 import shutil
 import tempfile
@@ -16,7 +17,7 @@ from test.resource.init_server import init_server
 init_server()
 
 
-def main():
+async def main():
     """Main function to demonstrate an agentic Operator for file system operations."""
     # Create a temporary directory for the example
     temp_dir = tempfile.mkdtemp(prefix="fs_mcp_example_")
@@ -90,7 +91,7 @@ def main():
             context=f"The current working directory is {temp_dir}.",
             original_job_id="test_original_job_id",
         )
-        result = operator.execute(reasoner=reasoner, job=job)
+        result = await operator.execute(reasoner=reasoner, job=job)
 
         print("-" * 20)
         print("✅ Operator execution completed!")
@@ -115,4 +116,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

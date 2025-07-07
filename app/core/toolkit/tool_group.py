@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from uuid import uuid4
 
+from app.core.model.task import ToolCallContext
 from app.core.toolkit.tool_config import ToolGroupConfig
 from app.core.toolkit.tool_connection import ToolConnection
 
@@ -23,7 +24,7 @@ class ToolGroup(ABC):
         return self._id
 
     @abstractmethod
-    async def create_connection(self, operator_id: Optional[str] = None) -> ToolConnection:
+    async def create_connection(self, tool_call_ctx: Optional[ToolCallContext] = None) -> ToolConnection:
         """Create a connection to the tool group."""
 
     @abstractmethod
@@ -54,7 +55,7 @@ class ToolPackage(ToolGroup):
         self._format = None
         self._language = None
 
-    async def create_connection(self, operator_id: Optional[str] = None) -> ToolConnection:
+    async def create_connection(self, tool_call_ctx: Optional[ToolCallContext] = None) -> ToolConnection:
         """Create a connection to the tool package."""
         raise NotImplementedError("ToolPackage connection creation is not implemented yet.")
 

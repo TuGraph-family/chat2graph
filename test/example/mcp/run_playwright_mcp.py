@@ -1,3 +1,5 @@
+import asyncio
+
 from app.core.common.type import McpTransportType, ToolGroupType
 from app.core.model.job import SubJob
 from app.core.service.reasoner_service import ReasonerService
@@ -12,7 +14,7 @@ from test.resource.init_server import init_server
 init_server()
 
 
-def main():
+async def main():
     """Main function to demonstrate an agentic Operator for information seeking."""
     # register Actions and Tools to ToolkitService
     browse_action = Action(
@@ -94,7 +96,7 @@ Your goal is to be efficient and accurate. Directly address the user's request i
         context=job_context,
         original_job_id="test_original_job_id",
     )
-    result = operator.execute(reasoner=reasoner, job=job)
+    result = await operator.execute(reasoner=reasoner, job=job)
 
     print("-" * 20)
     print("✅ Operator execution completed!")
@@ -102,4 +104,4 @@ Your goal is to be efficient and accurate. Directly address the user's request i
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

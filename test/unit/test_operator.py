@@ -94,7 +94,7 @@ async def test_execute_basic_functionality(operator: Operator, mock_reasoner: As
     )
     workflow_message = WorkflowMessage(payload={"scratchpad": "Test scratchpad"}, job_id=job.id)
 
-    op_output = operator.execute(
+    op_output = await operator.execute(
         reasoner=mock_reasoner,
         workflow_messages=[workflow_message],
         job=job,
@@ -171,6 +171,8 @@ async def test_execute_error_handling(operator: Operator, mock_reasoner: AsyncMo
     workflow_message = WorkflowMessage(payload={"scratchpad": "Test scratchpad"}, job_id=job.id)
 
     with pytest.raises(Exception) as excinfo:
-        operator.execute(reasoner=mock_reasoner, workflow_messages=[workflow_message], job=job)
+        await operator.execute(
+            reasoner=mock_reasoner, workflow_messages=[workflow_message], job=job
+        )
 
     assert str(excinfo.value) == "Test error"

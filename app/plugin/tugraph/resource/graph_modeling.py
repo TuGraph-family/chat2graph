@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Set, Union
 
 from app.core.common.system_env import SystemEnv
 from app.core.model.message import ModelMessage
+from app.core.model.task import ToolCallContext
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.service.graph_db_service import GraphDbService
 from app.core.toolkit.tool import Tool
@@ -576,7 +577,9 @@ class CypherExecutor(Tool):
             message = ModelMessage(payload=cypher_schema, job_id="cypher_validation_id", step=1)
 
             _model = ModelServiceFactory.create(model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
-            response = await _model.generate(sys_prompt=prompt, messages=[message])
+            response = await _model.generate(
+                sys_prompt=prompt, messages=[message], tool_call_ctx=ToolCallContext(job_id="cypher_validation_id", operator_id="op_id")
+            )
             raise RuntimeError(response.get_payload()) from e
 
 

@@ -1,3 +1,5 @@
+import asyncio
+
 import matplotlib.pyplot as plt
 
 from app.core.model.job import SubJob
@@ -12,7 +14,7 @@ from test.resource.tool_resource import ExampleQuery
 init_server()
 
 
-def main():
+async def main():
     """Main function to demonstrate Operator usage."""
     # initialize
     action1 = Action(
@@ -121,7 +123,7 @@ Answer in Chinese.
         goal="Test goal",
         context=context,
     )
-    result = operator.execute(reasoner=reasoner, job=job)
+    result = await operator.execute(reasoner=reasoner, job=job)
 
     print(f"Operator execution result:\n{result}\n")
     print("Operator execution completed successfully")
@@ -130,4 +132,4 @@ Answer in Chinese.
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

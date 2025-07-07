@@ -77,7 +77,9 @@ class DualModelReasoner(Reasoner):
         for _ in range(max_reasoning_rounds):
             # thinker
             response = await self._thinker_model.generate(
-                sys_prompt=thinker_sys_prompt, messages=reasoner_memory.get_messages()
+                sys_prompt=thinker_sys_prompt,
+                messages=reasoner_memory.get_messages(),
+                tool_call_ctx=task.get_tool_call_ctx(),
             )
             response.set_source_type(MessageSourceType.THINKER)
             reasoner_memory.add_message(response)
@@ -91,6 +93,7 @@ class DualModelReasoner(Reasoner):
                 sys_prompt=actor_sys_prompt,
                 messages=reasoner_memory.get_messages(),
                 tools=task.tools,
+                tool_call_ctx=task.get_tool_call_ctx(),
             )
             response.set_source_type(MessageSourceType.ACTOR)
             reasoner_memory.add_message(response)

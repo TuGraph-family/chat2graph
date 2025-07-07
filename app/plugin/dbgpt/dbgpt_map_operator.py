@@ -35,7 +35,7 @@ class DbgptMapOperator(
             WorkflowMessage: The output message of the operator.
         """
         job, previous_expert_outputs, previous_operator_outputs, lesson = input_value
-        return self._operator.execute(
+        return await self._operator.execute(
             reasoner=self._reasoner,
             job=job,
             workflow_messages=previous_operator_outputs,

@@ -67,7 +67,7 @@ class MockOperator(Operator):
         self._config = OperatorConfig(id=id, instruction="Test instruction", actions=[])
         self._execution_order = execution_order
 
-    def execute(
+    async def execute(
         self,
         reasoner: Reasoner,
         job: Job,
@@ -133,7 +133,7 @@ def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
     class ErrorOperator(MockOperator):
         """Operator that raises an error during execution."""
 
-        def execute(
+        async def execute(
             self,
             reasoner: Reasoner,
             job: Job,
