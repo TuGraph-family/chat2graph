@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
@@ -17,57 +17,65 @@ class ToolkitWrapper:
         """Get the toolkit."""
         return self._toolkit
 
-    def action(self, action: Action, tools: Optional[List[Tool]] = None) -> "ToolkitWrapper":
-        """Syntactic Sugar of add_action."""
-        action.tools = tools or []
-        toolkit_service: ToolkitService = ToolkitService.instance
-        toolkit_service.add_action(action, [], [])
-        action.tools = []  # clear tools from the action
-        return self
+    def chain(
+        self,
+        *item_chain: Union[Action, Tool, Tuple[Union[Action, Tool], ...]],
+    ) -> "ToolkitWrapper":
+        """Chain actions and tools together in the toolkit graph.
 
-    def chain(self, *action_chain: Union[Action, Tuple[Action, ...]]) -> "ToolkitWrapper":
-        """Chain actions together in the toolkit graph.
+        Items are connected sequentially: Action -> Action, Action -> Tool.
+        If a tuple of items is provided, they will be chained sequentially within the tuple.
 
-        If a tuple of actions is provided, they will be chained sequentially.
+        Args:
+            item_chain: Actions, Tools, or tuples of actions/tools to chain
+
+        Examples:
+            # Chain actions and tools
+            wrapper.chain(action1, tool1, action2, tool2)
+
+            # Chain with tuples for grouped sequences
+            wrapper.chain(
+                action1,
+                (action2, tool1),  # Sequential chain within tuple
+                action3,
+                tool2
+            )
         """
-        for item in action_chain:
-            toolkit_service: ToolkitService = ToolkitService.instance
+        toolkit_service: ToolkitService = ToolkitService.instance
 
-            if isinstance(item, Action):
-                # add action to the graph
-                toolkit_service.add_action(item, [], [])
-                # connect tools to the action
-                for tool in item.tools:
-                    # TODO: configure the default score for the action-call->tool edge
-                    toolkit_service.add_tool(tool, connected_actions=[(item, 1.0)])
-
-                # clear tools from the action
-                item.tools = []
-            elif isinstance(item, tuple) and all(isinstance(a, Action) for a in item):
-                # process chain of actions in the tuple
-                for i in range(len(item) - 1):
-                    from_action, to_action = item[i], item[i + 1]
-                    # connect two consecutive actions
-                    # TODO: configure the default score for the action-next->action edge
-                    toolkit_service.add_action(
-                        from_action,
-                        next_actions=[(to_action, 1.0)],
-                        prev_actions=[],
-                    )
-                    toolkit_service.add_action(
-                        to_action,
-                        next_actions=[],
-                        prev_actions=[(from_action, 1.0)],
-                    )
-
-                for action in item:
-                    for tool in action.tools:
-                        # connect tools to the actions
-                        # TODO: configure the default score for the action-call->tool edge
-                        toolkit_service.add_tool(tool, connected_actions=[(action, 1.0)])
-                        # clear tools from all actions in the tuple
-                        action.tools = []
+        # Flatten the chain to handle both individual items and tuples
+        flattened_chain = []
+        for item in item_chain:
+            if isinstance(item, tuple):
+                flattened_chain.extend(item)
             else:
-                raise ValueError(f"Invalid chain item: {item}.")
+                flattened_chain.append(item)
+
+        # Process each item and create connections
+        for i, item in enumerate(flattened_chain):
+            if isinstance(item, Action):
+                # Add action to the graph
+                next_actions = []
+                prev_actions = []
+
+                # Connect to next item if it's an Action
+                if i + 1 < len(flattened_chain) and isinstance(flattened_chain[i + 1], Action):
+                    next_actions.append((flattened_chain[i + 1], 1.0))
+
+                # Connect from previous item if it's an Action
+                if i > 0 and isinstance(flattened_chain[i - 1], Action):
+                    prev_actions.append((flattened_chain[i - 1], 1.0))
+
+                toolkit_service.add_action(item, next_actions, prev_actions)
+
+            elif isinstance(item, Tool):
+                # Connect tool to previous action if exists
+                connected_actions = []
+                if i > 0 and isinstance(flattened_chain[i - 1], Action):
+                    connected_actions.append((flattened_chain[i - 1], 1.0))
+
+                toolkit_service.add_tool(item, connected_actions=connected_actions)
+            else:
+                raise ValueError(f"Invalid chain item: {item}. Must be Action or Tool.")
 
         return self

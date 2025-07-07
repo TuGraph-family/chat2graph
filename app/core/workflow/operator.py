@@ -90,10 +90,6 @@ class Operator:
             threshold=self._config.threshold,
             hops=self._config.hops,
         )
-        for tool in rec_tools:
-            if tool.tool_type == ToolType.MCP_TOOL and isinstance(tool, McpTool):
-                # set the operator id for the tool, so that it can be used to call the tool
-                tool.set_operator_id(self.get_id())
 
         merged_workflow_messages: List[WorkflowMessage] = workflow_messages or []
         merged_workflow_messages.extend(previous_expert_outputs or [])

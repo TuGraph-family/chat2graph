@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, cast
+from typing import Any, Callable, Dict, cast
 from uuid import uuid4
 
 from app.core.common.async_func import run_async_function
 from app.core.common.type import FunctionCallStatus, ToolType
+from app.core.model.task import Task
 from app.core.toolkit.mcp_connection import McpConnection
 from app.core.toolkit.mcp_service import McpService
 
@@ -117,9 +118,6 @@ class McpTool(Tool):
 
         self._tool_group = tool_group
 
-        # used to identify the operator id that call tool by connection
-        self._operator_id: Optional[str] = None
-
     def get_tool_group(self) -> McpService:
         """Get the MCP service associated with this tool."""
         return self._tool_group
@@ -136,7 +134,7 @@ class McpTool(Tool):
     ) -> Callable[..., Any]:
         """Create a placeholder function - actual execution is handled by ToolkitService."""
 
-        async def function(**kwargs) -> Any:
+        async def function(infer_task: Task, **kwargs) -> Any:
             connection: McpConnection = cast(
                 McpConnection, await tool_group.create_connection(self._operator_id)
             )
