@@ -134,18 +134,13 @@ class Expert(Agent):
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
             if retry_count >= max_retry_count:
                 # (2.1) save the expert message in the database
-                expert_message = self.save_output_agent_message(
-                    job=job, workflow_message=workflow_message, lesson=lesson
-                )
+                self._message_service.save_message(message=agent_message)
 
-                # (2.2) save the job result in the database
+                # (2.2) save the expert message in the database
                 job_result = self._job_service.get_job_result(job_id=job.id)
                 job_result.status = JobStatus.FAILED
                 self._job_service.save_job_result(job_result=job_result)
-                raise Exception(
-                    f"The job {job.id} failed after {max_retry_count} retries. "
-                    f"Last error:\n{workflow_message.evaluation}"
-                )
+                return agent_message
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
             # (3) WorkflowStatus.INPUT_DATA_ERROR

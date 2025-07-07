@@ -142,13 +142,14 @@ class AgenticConfig:
             if not isinstance(tool_dict, dict):
                 raise ValueError(f"Tool configuration '{tool_dict}' must be a dictionary.")
 
-            if tool_dict.get("type", ToolType.LOCAL_TOOL.value) == ToolType.LOCAL_TOOL.value:
+            tool_type: str = tool_dict.get("type", ToolType.LOCAL_TOOL.value)
+            if tool_type == ToolType.LOCAL_TOOL.value:
                 tool_config: Union[ToolConfig, ToolGroupConfig] = LocalToolConfig(
                     name=tool_dict.get("name", ""),
                     type=ToolType.LOCAL_TOOL,
                     module_path=tool_dict.get("module_path", ""),
                 )
-            elif tool_dict.get("type", ToolType.LOCAL_TOOL.value) == ToolGroupType.MCP.value:
+            elif tool_type == ToolGroupType.MCP.value:
                 tool_config = McpConfig(
                     type=ToolGroupType.MCP,
                     name=tool_dict.get("name", ""),

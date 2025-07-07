@@ -276,10 +276,12 @@ class ToolkitService(metaclass=Singleton):
 
     def visualize(self, graph: Toolkit, title: str, show=False):
         """Visualize the toolkit graph with different colors for actions and tools.
+
         Args:
             graph (Toolkit): The graph to visualize.
             title (str): Title for the plot.
             show (bool): Whether to show the plot.
+
         Returns:
             plt.Figure: The plot figure.
         """
