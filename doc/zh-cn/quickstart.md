@@ -39,7 +39,7 @@ cd chat2graph
 cp .env.template .env
 ```
 
-配置环境变量（如 LLM 参数），推荐使用`DeepSeek-V3`模型。
+配置环境变量（如 LLM 参数），推荐使用`DeepSeek-V3`模型（详见 [配置 .env](deployment/config-env.md)）。
 
 ```bash
 LLM_NAME=openai/deepseek-ai/DeepSeek-V3

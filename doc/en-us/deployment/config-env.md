@@ -30,7 +30,7 @@ Format: `provider/model_name` or `provider/organization/model_name`
 - **Anthropic Official**: `anthropic/claude-3-5-sonnet-20240620`
 - **Google Official**: `gemini/gemini-2.5-pro`, `gemini/gemini-2.0-flash`
 - **Custom OpenAI Compatible**: `openai/custom-model-name`
-- **Third-party Platform**: `openai/deepseek-ai/DeepSeek-V3`
+- **SiliconFlow (Third-party Platform)**: `openai/deepseek-ai/DeepSeek-V3`
 
 #### API Endpoint Routing Logic
 
@@ -50,12 +50,25 @@ LLM_ENDPOINT=https://api.openai.com/v1
 LLM_APIKEY=sk-xxx
 ```
 
-**Scenario 2: Third-party Platform (e.g., SiliconFlow)**
+**Scenario 2: Third-party Platform**
 
 ```env
-LLM_NAME=openai/deepseek-ai/DeepSeek-V3
+# SiliconFlow https://www.siliconflow.com/models#llm
+LLM_NAME=openai/deepseek-ai/DeepSeek-V3 # optional openai/Qwen/Qwen3-32B
 LLM_ENDPOINT=https://api.siliconflow.cn/v1
 LLM_APIKEY=sk-xxx
+
+MAX_TOKENS=8192
+MAX_COMPLETION_TOKENS=8192
+
+
+# BaiLian https://bailian.console.aliyun.com/#/home
+LLM_NAME=openai/deepseek-v3 # optional openai/qwen-max
+LLM_ENDPOINT=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_APIKEY=sk-xxx
+
+MAX_TOKENS=8192
+MAX_COMPLETION_TOKENS=8192
 ```
 
 **Scenario 3: Anthropic Official API**
@@ -147,7 +160,7 @@ Format: `provider:model_name` (Note: use colon, not slash)
 - **Anthropic**: `anthropic:claude-3-5-sonnet-20240620`
 - **Google**: `google:gemini-pro`
 - **Custom deployment**: `openai:custom-model-name`
-- **Third-party platform**: `openai:deepseek-ai/DeepSeek-V3`
+- **SiliconFlow (Third-party Platform)**: `openai:deepseek-ai/DeepSeek-V3`
 
 #### Configuration Limitations
 

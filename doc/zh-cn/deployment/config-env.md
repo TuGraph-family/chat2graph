@@ -30,7 +30,7 @@ title: 配置 .env
 - **Anthropic 官方**: `anthropic/claude-3-5-sonnet-20240620`
 - **Google 官方**: `gemini/gemini-2.5-pro`, `gemini/gemini-2.0-flash`
 - **自定义 OpenAI 兼容**: `openai/custom-model-name`
-- **第三方平台**: `openai/deepseek-ai/DeepSeek-V3`
+- **硅基流动（第三方平台）**: `openai/deepseek-ai/DeepSeek-V3`
 
 #### API 端点路由逻辑
 
@@ -50,12 +50,25 @@ LLM_ENDPOINT=https://api.openai.com/v1
 LLM_APIKEY=sk-xxx
 ```
 
-**场景 2: 第三方平台（例如 SiliconFlow）**
+**场景 2: 第三方平台**
 
 ```env
-LLM_NAME=openai/deepseek-ai/DeepSeek-V3
+# SiliconFlow https://www.siliconflow.com/models#llm
+LLM_NAME=openai/deepseek-ai/DeepSeek-V3 # optional openai/Qwen/Qwen3-32B
 LLM_ENDPOINT=https://api.siliconflow.cn/v1
 LLM_APIKEY=sk-xxx
+
+MAX_TOKENS=8192
+MAX_COMPLETION_TOKENS=8192
+
+
+# BaiLian https://bailian.console.aliyun.com/#/home
+LLM_NAME=openai/deepseek-v3 # optional openai/qwen-max
+LLM_ENDPOINT=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_APIKEY=sk-xxx
+
+MAX_TOKENS=8192
+MAX_COMPLETION_TOKENS=8192
 ```
 
 **场景 3: Anthropic 官方 API**
@@ -147,7 +160,7 @@ Chat2Graph Request
 - **Anthropic**: `anthropic:claude-3-5-sonnet-20240620`
 - **Google**: `google:gemini-pro`
 - **自定义部署**: `openai:custom-model-name`
-- **第三方平台**: `openai:deepseek-ai/DeepSeek-V3`
+- **硅基流动（第三方平台）**: `openai:deepseek-ai/DeepSeek-V3`
 
 #### 配置限制
 
