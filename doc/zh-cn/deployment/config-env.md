@@ -27,10 +27,9 @@ title: 配置 .env
 **示例（模型名称可能会变化）：**
 
 - **OpenAI 官方**: `openai/gpt-4o`, `openai/gpt-3.5-turbo`
-- **Anthropic 官方**: `anthropic/claude-3-5-sonnet-20240620`
-- **Google 官方**: `gemini/gemini-2.5-pro`, `gemini/gemini-2.0-flash`
-- **自定义 OpenAI 兼容**: `openai/custom-model-name`
-- **硅基流动（第三方平台）**: `openai/deepseek-ai/DeepSeek-V3`
+- **Google 官方**: `gemini/gemini-2.5-pro`, `gemini/gemini-2.5-flash`
+- **Anthropic 官方**: `anthropic/claude-sonnet-4-20250514`
+- **第三方平台或自托管**: `openai/deepseek-ai/DeepSeek-V3`, `openai/custom-model-name`
 
 #### API 端点路由逻辑
 
@@ -47,44 +46,48 @@ title: 配置 .env
 ```env
 LLM_NAME=openai/gpt-4o
 LLM_ENDPOINT=https://api.openai.com/v1
-LLM_APIKEY=sk-xxx
+LLM_APIKEY=
 ```
 
-**场景 2: 第三方平台**
+**场景 2: Google 官方 API**
 
 ```env
-# SiliconFlow https://www.siliconflow.com/models#llm#llm
-LLM_NAME=openai/deepseek-ai/DeepSeek-V3 # optional openai/Qwen/Qwen3-32B
-LLM_ENDPOINT=https://api.siliconflow.cn/v1
-LLM_APIKEY=sk-xxx
-
-MAX_TOKENS=8192
-MAX_COMPLETION_TOKENS=8192
-
-
-# BaiLian https://bailian.console.aliyun.com
-LLM_NAME=openai/deepseek-v3 # optional openai/qwen-max
-LLM_ENDPOINT=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_APIKEY=sk-xxx
-
-MAX_TOKENS=8192
-MAX_COMPLETION_TOKENS=8192
+LLM_NAME=gemini/gemini-1.5-pro
+LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta
+LLM_APIKEY=
 ```
 
 **场景 3: Anthropic 官方 API**
 
 ```env
-LLM_NAME=anthropic/claude-3-5-sonnet-20240620
+LLM_NAME=anthropic/claude-sonnet-4-20250514
 LLM_ENDPOINT=https://api.anthropic.com
 LLM_APIKEY=sk-ant-xxx
 ```
 
-**场景 4: 自托管 OpenAI 兼容服务**
+**场景 4: 第三方平台或自托管服务**
 
 ```env
+# Example 1: SiliconFlow
+# https://www.siliconflow.com/models#llm#llm
+LLM_NAME=openai/deepseek-ai/DeepSeek-V3 # optional openai/Qwen/Qwen3-32B
+LLM_ENDPOINT=https://api.siliconflow.cn/v1
+LLM_APIKEY=
+MAX_TOKENS=8192
+MAX_COMPLETION_TOKENS=8192
+
+# Example 2: BaiLian
+# https://bailian.console.aliyun.com
+LLM_NAME=openai/deepseek-v3 # optional openai/qwen-max
+LLM_ENDPOINT=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_APIKEY=
+MAX_TOKENS=8192
+MAX_COMPLETION_TOKENS=8192
+
+# Example 3: Self-hosted OpenAI Compatible Service
 LLM_NAME=openai/your-model-name
 LLM_ENDPOINT=http://localhost:8000/v1
-LLM_APIKEY=your-api-key
+LLM_APIKEY=
 ```
 
 #### 详细请求流程
@@ -157,8 +160,8 @@ Chat2Graph Request
 **示例:**
 
 - **OpenAI**: `openai:gpt-4o`, `openai:gpt-3.5-turbo`
-- **Anthropic**: `anthropic:claude-3-5-sonnet-20240620`
-- **Google**: `google:gemini-pro`
+- **Google**: `google:gemini-2.5-pro`
+- **Anthropic**: `anthropic:claude-sonnet-4-20250514`
 - **自定义部署**: `openai:custom-model-name`
 - **硅基流动（第三方平台）**: `openai:deepseek-ai/DeepSeek-V3`
 
@@ -184,15 +187,20 @@ Chat2Graph Request
 # OpenAI https://platform.openai.com/docs/api-reference
 EMBEDDING_MODEL_NAME=embedding-ada-002
 EMBEDDING_MODEL_ENDPOINT=https://api.openai.com/v1/embeddings
-EMBEDDING_MODEL_APIKEY=sk-xxx
+EMBEDDING_MODEL_APIKEY=
 
 # SiliconFlow https://www.siliconflow.com/models#llm
 EMBEDDING_MODEL_NAME=Qwen/Qwen3-Embedding-4B
 EMBEDDING_MODEL_ENDPOINT=https://api.siliconflow.cn/v1/embeddings
-EMBEDDING_MODEL_APIKEY=sk-xxx
+EMBEDDING_MODEL_APIKEY=
 
 # BaiLian https://bailian.console.aliyun.com
 EMBEDDING_MODEL_NAME=text-embedding-v4
 EMBEDDING_MODEL_ENDPOINT=https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings
-EMBEDDING_MODEL_APIKEY=sk-xxx
+EMBEDDING_MODEL_APIKEY=
+
+# Self-Hosted OpenAI Compatible Service
+EMBEDDING_MODEL_NAME=your-embedding-model
+EMBEDDING_MODEL_ENDPOINT=http://localhost:8000/v1/embeddings
+EMBEDDING_MODEL_APIKEY=
 ```
