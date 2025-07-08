@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 cd "$(dirname "$(readlink -f "$0")")" &> /dev/null && source utils.sh || exit
 
-# load MCP configuration
-source mcp_config.sh
+# load MCP server configuration
+source mcp_server_config.sh
 
 # stop each MCP tool
 for config in "${mcp_tools_config[@]}"; do

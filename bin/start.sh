@@ -7,9 +7,9 @@ if [[ -n $pids ]]; then
   fatal "Chat2Graph server already started (pid: $pids)"
 fi
 
-# start MCP tools
-echo "Starting MCP tools..."
-bash start_mcp_tool.sh
+# start MCP servers
+echo "Starting MCP servers..."
+bash start_mcp_server.sh
 
 # prepare log path
 mkdir -p "$(dirname ${SERVER_LOG_PATH})"

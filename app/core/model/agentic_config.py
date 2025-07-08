@@ -299,11 +299,13 @@ class AgenticConfig:
             if isinstance(tool, LocalToolConfig):
                 tool_dict: Dict[str, Any] = {
                     "name": tool.name,
+                    "type": tool.type.value,
                     "module_path": tool.module_path,
                 }
             elif isinstance(tool, McpConfig):
                 tool_dict = {
                     "name": tool.name,
+                    "type": tool.type.value,
                     "mcp_transport_config": tool.transport_config.to_dict(),
                 }
             else:
@@ -323,12 +325,17 @@ class AgenticConfig:
                 for tool in action.tools:
                     if isinstance(tool, LocalToolConfig):
                         action_tools_list.append(
-                            {"name": tool.name, "module_path": tool.module_path}
+                            {
+                                "name": tool.name,
+                                "type": tool.type.value,
+                                "module_path": tool.module_path,
+                            }
                         )
                     elif isinstance(tool, McpConfig):
                         action_tools_list.append(
                             {
                                 "name": tool.name,
+                                "type": tool.type.value,
                                 "mcp_transport_config": tool.transport_config.to_dict(),
                             }
                         )
@@ -356,6 +363,7 @@ class AgenticConfig:
                                 action_tools_list.append(
                                     {
                                         "name": tool.name,
+                                        "type": tool.type.value,
                                         "module_path": tool.module_path,
                                     }
                                 )
@@ -363,6 +371,7 @@ class AgenticConfig:
                                 action_tools_list.append(
                                     {
                                         "name": tool.name,
+                                        "type": tool.type.value,
                                         "mcp_transport_config": tool.transport_config.to_dict(),
                                     }
                                 )
@@ -422,6 +431,7 @@ class AgenticConfig:
                                                 op_action_tools_list.append(
                                                     {
                                                         "name": tool.name,
+                                                        "type": tool.type.value,
                                                         "module_path": tool.module_path,
                                                     }
                                                 )
@@ -429,8 +439,8 @@ class AgenticConfig:
                                                 op_action_tools_list.append(
                                                     {
                                                         "name": tool.name,
-                                                        "mcp_transport_config": \
-                                                            tool.transport_config.to_dict(),
+                                                        "type": tool.type.value,
+                                                        "mcp_transport_config": tool.transport_config.to_dict(),  # noqa: E501
                                                     }
                                                 )
                                             else:

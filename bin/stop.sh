@@ -2,9 +2,9 @@
 cd "$(dirname "$(readlink -f "$0")")" &> /dev/null && source utils.sh || exit
 
 # stop MCP tools
-# echo "Stopping MCP tools..."
-info "MCP tools is not stopped."
-# bash stop_mcp_tool.sh
+# echo "Stopping MCP servers..."
+info "MCP servers is not stopped."
+# bash stop_mcp_server.sh
 
 pids=$(get_pids)
 if [[ -n $pids ]]; then
