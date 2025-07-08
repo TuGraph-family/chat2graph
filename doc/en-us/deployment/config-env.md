@@ -55,7 +55,7 @@ LLM_APIKEY=
 LLM_NAME=gemini/gemini-2.5-pro
 # LiteLLM handles the endpoint automatically, but set for consistency
 LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta
-LLM_APIKEY=your-google-api-key
+LLM_APIKEY=
 ```
 
 **Scenario 3: Anthropic Official API**
@@ -63,7 +63,7 @@ LLM_APIKEY=your-google-api-key
 ```env
 LLM_NAME=anthropic/claude-sonnet-4-20250514
 LLM_ENDPOINT=https://api.anthropic.com
-LLM_APIKEY=sk-ant-xxx
+LLM_APIKEY=
 ```
 
 **Scenario 4: Third-party Platform or Self-hosted Service**
