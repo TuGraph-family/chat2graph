@@ -15,10 +15,13 @@ class Expert(Agent):
         """Execute to resolve the job with enhanced error handling and lesson learned.
 
         Args:
-            job (Job): The job to be executed.
+            agent_message (AgentMessage): The message from the agent containing
+                the job to be executed.
+            retry_count (int): The number of times the job has been retried. Defaults to 0.
 
         Returns:
-            Job: The job with the response (WorkflowMessage).
+            AgentMessage: The message containing the result of the job execution,
+                which includes the workflow message and any lessons learned.
         """
         # TODO: convert to a state machine (?)
 
@@ -90,11 +93,11 @@ class Expert(Agent):
         except Exception as e:
             workflow_message = WorkflowMessage(
                 payload={
-                    "scratchpad": str(e) + "\n" + traceback.format_exc(),
+                    "scratchpad": f"The current job {job.id} failed: "
+                    f"{str(e)}\n{traceback.format_exc()}\n",
                     "status": WorkflowStatus.EXECUTION_ERROR,
-                    "evaluation": "There occurs some errors during the execution: "
-                    f"{str(e)}\n{traceback.format_exc()}",
-                    "lesson": "",  # TODO: add the lesson learned
+                    "evaluation": f"There occurs some errors during the execution: {str(e)}",
+                    "lesson": "",
                 },
             )
 
@@ -134,13 +137,16 @@ class Expert(Agent):
             max_retry_count = SystemEnv.MAX_RETRY_COUNT
             if retry_count >= max_retry_count:
                 # (2.1) save the expert message in the database
-                self._message_service.save_message(message=agent_message)
+                expert_message = self.save_output_agent_message(
+                    job=job, workflow_message=workflow_message, lesson=lesson
+                )
 
-                # (2.2) save the expert message in the database
-                job_result = self._job_service.get_job_result(job_id=job.id)
-                job_result.status = JobStatus.FAILED
-                self._job_service.save_job_result(job_result=job_result)
-                return agent_message
+                # (2.2) do not mark the job as failed, but return the expert message, since leader
+                # will handle the error, and fail the job graph
+                # job_result = self._job_service.get_job_result(job_id=job.id)
+                # job_result.status = JobStatus.FAILED
+                # self._job_service.save_job_result(job_result=job_result)
+                return expert_message
             return self.execute(agent_message=agent_message, retry_count=retry_count + 1)
         if workflow_message.status == WorkflowStatus.INPUT_DATA_ERROR:
             # (3) WorkflowStatus.INPUT_DATA_ERROR

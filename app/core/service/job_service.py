@@ -39,7 +39,10 @@ class JobService(metaclass=Singleton):
 
     def get_original_job(self, original_job_id: str) -> Job:
         """Get a job from the job registry."""
-        return self._job_dao.get_job_by_id(original_job_id)
+        original_job = self._job_dao.get_job_by_id(original_job_id)
+        if isinstance(original_job, SubJob):
+            raise ValueError(f"Job with id {original_job_id} is a subjob, not an original job.")
+        return original_job
 
     def get_original_jobs_by_session_id(self, session_id: str) -> List[Job]:
         """Get all original jobs by session id."""

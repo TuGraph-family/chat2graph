@@ -39,7 +39,7 @@ Prepare `.env` file based on [.env.template](https://github.com/TuGraph-family/c
 cp .env.template .env
 ```
 
-Configure environment variables (e.g., LLM parameters), model `DeepSeek-V3` is recommended。
+Configure environment variables (e.g., LLM parameters), model `DeepSeek-V3` is recommended (see [Configure .env](deployment/config-env.md)).
 
 ```bash
 LLM_NAME=openai/deepseek-ai/DeepSeek-V3

@@ -15,7 +15,7 @@ from app.core.common.type import ChatMessageRole, JobStatus, WorkflowStatus
 from app.core.common.util import parse_jsons
 from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
-from app.core.model.message import AgentMessage, TextMessage, WorkflowMessage
+from app.core.model.message import AgentMessage, HybridMessage, TextMessage, WorkflowMessage
 from app.core.prompt.job_decomposition import (
     JOB_DECOMPOSITION_OUTPUT_SCHEMA,
     TASK_AND_PROFILE_PROMPT,
@@ -167,11 +167,6 @@ class Leader(Agent):
                     job_dict = result
 
                 except (ValueError, json.JSONDecodeError) as retry_e:
-                    # color: red
-                    print(
-                        f"\033[38;5;196m[ERROR]: Decomposition retry failed or validation error: "
-                        f"{retry_e}\033[0m"
-                    )
                     self.fail_job_graph(
                         job_id=job_id,
                         error_info=(
@@ -187,17 +182,13 @@ class Leader(Agent):
                     job_id=job_id,
                     error_info=(
                         f"The job `{original_job_id}` could not be executed due to an "
-                        f"unexpected error during decomposition. Error info: {e}"
+                        f"unexpected error during leader task decomposition. Error info: {e}"
                     ),
                 )
                 job_dict = {}
 
         # if decomposition failed and wasn't retried or retry failed, job_dict might be {}
-        if not job_dict:  # Check if job_dict is empty or None
-            print(
-                "\033[38;5;196m[ERROR]: job_dict is empty or None after decomposition attempts "
-                f"for job {job_id}. Halting graph creation.\033[0m"
-            )
+        if not job_dict:  # check if job_dict is empty or None
             # ensure the job status reflects failure if not already set by fail_job_graph
             current_status = self._job_service.get_job_result(job_id=job_id).status
             if current_status not in (JobStatus.FAILED, JobStatus.STOPPED):
@@ -254,13 +245,8 @@ class Leader(Agent):
                     job_graph.add_edge(
                         dep_unique_id, current_unique_id
                     )  # dep_id -> subjob_id shows dependency
-        except Exception as e:  # Catch unexpected errors during subjob creation/linking
+        except Exception as e:  # catch unexpected errors during subjob creation/linking
             # although validation passed, errors might occur during DB interaction or expert lookup
-            # color: red
-            print(
-                "\033[38;5;196m[ERROR]: Unexpected error creating/linking subjobs after "
-                f"validation: {e}\033[0m"
-            )
             self.fail_job_graph(
                 job_id=job_id,
                 error_info=(
@@ -272,10 +258,6 @@ class Leader(Agent):
 
         # the job graph should be a directed acyclic graph (DAG)
         if not nx.is_directed_acyclic_graph(job_graph.get_graph()):
-            print(
-                f"\033[38;5;196m[ERROR]: Cycle detected in job graph for {original_job_id} despite "
-                "validation.\033[0m"
-            )
             self.fail_job_graph(
                 job_id=job_id,
                 error_info=(
@@ -469,7 +451,7 @@ class Leader(Agent):
                 if not completed_job_ids and running_jobs:
                     time.sleep(0.5)
 
-    def stop_job_graph(self, job_id: str, error_info: str) -> None:
+    def stop_job_graph(self, job_id: str, stop_info: str) -> None:
         """Stop the job graph.
 
         When a specific job (original job / subjob) is stopped, this method is called to mark the
@@ -488,44 +470,17 @@ class Leader(Agent):
                 raise ValueError("The subjob is not assigned to an original job.") from e
             original_job = self._job_service.get_original_job(original_job_id=job.original_job_id)
 
+        # save the final system message with the error information
+        self._save_failed_or_stopped_message(original_job=original_job, message_payload=stop_info)
+
+        # update all the subjobs which have not the final result
+        self._stop_running_subjobs(original_job_id=original_job.id)
+
         # if the original job does not have a final result, mark it as stopped
         original_job_result = self._job_service.get_job_result(job_id=original_job.id)
         if not original_job_result.has_result():
             original_job_result.status = JobStatus.STOPPED
             self._job_service.save_job_result(job_result=original_job_result)
-
-        # update all the subjobs which have not the final result
-        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job.id)
-        for subjob_id in subjob_ids:
-            # mark all the subjobs as stopped
-            subjob_result = self._job_service.get_job_result(job_id=subjob_id)
-            if not subjob_result.has_result():
-                subjob_result.status = JobStatus.STOPPED
-                self._job_service.save_job_result(job_result=subjob_result)
-
-        # save the final system message with the error information
-        error_payload = (
-            f"An error occurred during the execution of the job:\n\n{error_info}\n\n"
-            f'Please check the job `{original_job.id}` ("{original_job.goal[:10]}...") '
-            "for more details. Or you can re-try to send your message."
-        )
-        try:
-            error_message = self._message_service.get_text_message_by_job_id_and_role(
-                original_job.id, ChatMessageRole.SYSTEM
-            )
-            error_message.set_payload(error_payload)
-        except ValueError:
-            error_message = TextMessage(
-                payload=error_payload,
-                job_id=original_job.id,
-                session_id=original_job.session_id,
-                assigned_expert_name=original_job.assigned_expert_name,
-                role=ChatMessageRole.SYSTEM,
-            )
-        self._message_service.save_message(message=error_message)
-
-        # color: red
-        print(f"\033[38;5;196m[ERROR]: {error_info}\033[0m")
 
     def fail_job_graph(self, job_id: str, error_info: str) -> None:
         """Fail the job graph.
@@ -534,12 +489,37 @@ class Leader(Agent):
         of the JobGraph, this method is called to mark the entire current job as `FAILED`, while
         other jobs without results (including subjobs and original jobs) are marked as `STOPPED`.
         """
-        # mark the current job as failed
+        error_info += f"\n\nCheck the error details in path: '{SystemEnv.APP_ROOT}/logs/server.log'"
         job_result = self._job_service.get_job_result(job_id=job_id)
+
         if not job_result.has_result():
+            # get the original job
+            try:
+                original_job: Job = self._job_service.get_original_job(original_job_id=job_id)
+            except ValueError as e:
+                job: SubJob = self._job_service.get_subjob(subjob_id=job_id)
+                if not job.original_job_id:
+                    raise ValueError("The subjob is not assigned to an original job.") from e
+                original_job = self._job_service.get_original_job(
+                    original_job_id=job.original_job_id
+                )
+
+            # save the final system message with the error information
+            self._save_failed_or_stopped_message(
+                original_job=original_job, message_payload=error_info
+            )
+
+            # mark the current job as failed
             job_result.status = JobStatus.FAILED
             self._job_service.save_job_result(job_result=job_result)
-            self.stop_job_graph(job_id=job_id, error_info=error_info)
+
+            # update all the subjobs which have not the final result
+            self._stop_running_subjobs(original_job_id=original_job.id)
+
+            # if the original job does not have a final result, mark it as stopped
+            original_job_result = self._job_service.get_job_result(job_id=original_job.id)
+            original_job_result.status = JobStatus.FAILED
+            self._job_service.save_job_result(job_result=original_job_result)
 
     def recover_original_job(self, original_job_id: str) -> None:
         """Reconver the original job.
@@ -577,6 +557,54 @@ class Leader(Agent):
                 # start to execute the job graph
                 run_in_thread(self.execute_job_graph, original_job_id=original_job_id)
 
+    def _stop_running_subjobs(self, original_job_id: str) -> None:
+        """Stop all running jobs for the given original job."""
+        # get all subjobs for the original job
+        subjob_ids = self._job_service.get_subjob_ids(original_job_id=original_job_id)
+        for subjob_id in subjob_ids:
+            # get the subjob result
+            subjob_result = self._job_service.get_job_result(job_id=subjob_id)
+            if subjob_result.status == JobStatus.RUNNING:
+                # mark the subjob as stopped
+                subjob_result.status = JobStatus.STOPPED
+                self._job_service.save_job_result(job_result=subjob_result)
+
+    def _save_failed_or_stopped_message(self, original_job: Job, message_payload: str) -> None:
+        """Save a message indicating the job has failed or stopped."""
+        # save the final system message with the error information
+        error_payload = (
+            f"An error occurred during the execution of the job:\n\n{message_payload}\n\n"
+            f'Please check the job `{original_job.id}` ("{original_job.goal[:10]}...") '
+            "for more details. Or you can re-try to send your message."
+        )
+        original_job_id = original_job.id
+        try:
+            error_text_message: TextMessage = (
+                self._message_service.get_text_message_by_job_id_and_role(
+                    original_job_id, ChatMessageRole.SYSTEM
+                )
+            )
+            error_text_message.set_payload(error_payload)
+            self._message_service.save_message(message=error_text_message)
+        except ValueError:
+            error_text_message = TextMessage(
+                payload=error_payload,
+                job_id=original_job_id,
+                session_id=original_job.session_id,
+                assigned_expert_name=original_job.assigned_expert_name,
+                role=ChatMessageRole.SYSTEM,
+            )
+            self._message_service.save_message(message=error_text_message)
+            error_hybrid_message: HybridMessage = HybridMessage(
+                instruction_message=error_text_message,
+                job_id=original_job_id,
+                role=ChatMessageRole.SYSTEM,
+            )
+            self._message_service.save_message(message=error_hybrid_message)
+
+        # color: red
+        print(f"\033[38;5;196m[ERROR]: {error_payload}\033[0m")
+
     def _execute_job(self, expert: Expert, agent_message: AgentMessage) -> AgentMessage:
         """Dispatch the job to the expert, and handle the result."""
         agent_result_message: AgentMessage = expert.execute(agent_message=agent_message)
@@ -585,11 +613,11 @@ class Leader(Agent):
         if workflow_result.status == WorkflowStatus.SUCCESS:
             return agent_result_message
         if workflow_result.status == WorkflowStatus.EXECUTION_ERROR:
-            error_info: str = (
-                f"The job `{agent_message.get_job_id()}` is failed, since there is an error "
-                f"of http request. Agent lesson\n: {agent_result_message.get_lesson()}"
+            self.fail_job_graph(
+                job_id=agent_message.get_job_id(),
+                error_info=agent_result_message.get_lesson() or "Error info was missing.",
             )
-            self.fail_job_graph(job_id=agent_message.get_job_id(), error_info=error_info)
+            return agent_result_message
         if workflow_result.status == WorkflowStatus.INPUT_DATA_ERROR:
             # reexecute all the dependent jobs (predecessors)
             return agent_result_message
@@ -618,7 +646,11 @@ class Leader(Agent):
                 new_subgraph=new_job_graqph,
                 old_subgraph=replaced_job_graph,
             )
-        raise ValueError(f"Unexpected workflow status: {workflow_result.status}")
+
+        raise ValueError(
+            f"Job {agent_message.get_job_id()} failed with an unexpected status: "
+            f"{workflow_result.status.value}. Please check the job graph status."
+        )
 
     def _validate_job_dict(
         self, job_dict: Dict[str, Dict[str, str]], expert_names: List[str]
