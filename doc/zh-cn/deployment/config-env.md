@@ -53,7 +53,7 @@ LLM_APIKEY=sk-xxx
 **场景 2: 第三方平台**
 
 ```env
-# SiliconFlow https://www.siliconflow.com/models#llm
+# SiliconFlow https://www.siliconflow.com/models#llm#llm
 LLM_NAME=openai/deepseek-ai/DeepSeek-V3 # optional openai/Qwen/Qwen3-32B
 LLM_ENDPOINT=https://api.siliconflow.cn/v1
 LLM_APIKEY=sk-xxx
@@ -62,7 +62,7 @@ MAX_TOKENS=8192
 MAX_COMPLETION_TOKENS=8192
 
 
-# BaiLian https://bailian.console.aliyun.com/#/home
+# BaiLian https://bailian.console.aliyun.com
 LLM_NAME=openai/deepseek-v3 # optional openai/qwen-max
 LLM_ENDPOINT=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_APIKEY=sk-xxx
@@ -181,7 +181,18 @@ Chat2Graph Request
 #### 配置示例
 
 ```env
+# OpenAI https://platform.openai.com/docs/api-reference
+EMBEDDING_MODEL_NAME=embedding-ada-002
+EMBEDDING_MODEL_ENDPOINT=https://api.openai.com/v1/embeddings
+EMBEDDING_MODEL_APIKEY=sk-xxx
+
+# SiliconFlow https://www.siliconflow.com/models#llm
 EMBEDDING_MODEL_NAME=Qwen/Qwen3-Embedding-4B
 EMBEDDING_MODEL_ENDPOINT=https://api.siliconflow.cn/v1/embeddings
-EMBEDDING_MODEL_APIKEY=
+EMBEDDING_MODEL_APIKEY=sk-xxx
+
+# BaiLian https://bailian.console.aliyun.com
+EMBEDDING_MODEL_NAME=text-embedding-v4
+EMBEDDING_MODEL_ENDPOINT=https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings
+EMBEDDING_MODEL_APIKEY=sk-xxx
 ```
