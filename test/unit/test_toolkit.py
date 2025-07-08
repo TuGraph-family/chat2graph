@@ -8,6 +8,7 @@ from app.core.common.type import McpTransportType, ToolGroupType
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.mcp_tool import McpTool
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
 from app.core.toolkit.toolkit import Toolkit
@@ -46,9 +47,12 @@ class MockMcpService(McpService):
         # override the auto-generated id for predictable testing
         self._id = f"group_{name}"
 
-    async def list_tools(self) -> List[McpBaseTool]:
+    async def list_tools(self) -> List[Tool]:
         """Return the mock list of tools."""
-        return self._mock_tools
+        return [
+            McpTool(name=t.name, description=t.description, tool_group=self)
+            for t in self._mock_tools
+        ]
 
 
 @pytest.fixture

@@ -1,17 +1,13 @@
-import json
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import matplotlib
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
-from mcp.types import Tool as McpBaseTool
 import networkx as nx  # type: ignore
 
 from app.core.common.async_func import run_async_function
 from app.core.common.singleton import Singleton
 from app.core.toolkit.action import Action
-from app.core.toolkit.mcp_service import McpService
-from app.core.toolkit.mcp_tool import McpTool
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_group import ToolGroup
 from app.core.toolkit.toolkit import Toolkit
@@ -55,10 +51,10 @@ class ToolkitService(metaclass=Singleton):
                 self.get_toolkit().set_score(action.id, tool.id, score)
                 has_connected_actions = True
             else:
-                print(f"warning: Action {action.id} not in the toolkit graph")
+                print(f"warning: Action {action.name} ({action.id}) not in the toolkit graph")
 
         if not has_connected_actions:
-            print(f"warning: Tool {tool.id} has no connected actions")
+            print(f"warning: Tool {tool.name} ({tool.id}) has no connected actions")
             self.get_toolkit().remove_vertex(tool.id)
 
     def add_tool_group(
@@ -103,22 +99,11 @@ class ToolkitService(metaclass=Singleton):
             toolkit.add_vertex(group_id, data=tool_group)
 
         # create and store tools listed in the tool group
-        if isinstance(tool_group, McpService):
-            available_mcp_tools: List[McpBaseTool] = run_async_function(tool_group.list_tools)
-            for mcp_tool in available_mcp_tools:
-                tool_description: str = (
-                    (mcp_tool.description + "\n") if mcp_tool.description else ""
-                )
-                tool = McpTool(
-                    name=mcp_tool.name,
-                    description=tool_description + json.dumps(mcp_tool.inputSchema, indent=4),
-                    tool_group=tool_group,
-                )
-                self.add_tool(tool, connected_actions=connected_actions)
-                toolkit.add_edge(group_id, tool.id)
-                toolkit.set_score(group_id, tool.id, 1.0)  # default score
-        else:
-            raise TypeError(f"Unsupported tool group type: {type(tool_group)}.")
+        tools: List[Tool] = run_async_function(tool_group.list_tools)
+        for tool in tools:
+            self.add_tool(tool, connected_actions=connected_actions)
+            toolkit.add_edge(group_id, tool.id)
+            toolkit.set_score(group_id, tool.id, 1.0)  # default score
 
     def add_action(
         self,

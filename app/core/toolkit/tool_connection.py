@@ -65,7 +65,11 @@ class PackageConnection(ToolConnection):
         if hasattr(self._runtime_obj, "list_tools"):
             return await self._runtime_obj.list_tools()
         else:
-            return [tool for tool in dir(self._runtime_obj) if callable(getattr(self._runtime_obj, tool))]
+            return [
+                tool
+                for tool in dir(self._runtime_obj)
+                if callable(getattr(self._runtime_obj, tool))
+            ]
 
     async def close(self) -> None:
         """Close and release package connection resources."""

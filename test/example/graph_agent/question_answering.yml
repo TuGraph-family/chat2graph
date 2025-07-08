@@ -51,7 +51,7 @@ toolkit:
 
 operators:
   # question answering operators
-  - &retrieving_operator
+  - &retrieval_operator
     instruction: |
       你是一位专业的文档检索专家。你的工作是，从知识库以及互联网两个信息来源检索与问题相关的文档，
       仔细阅读检索得到的文档材料，分别总结每一份文档，为后续回答用户问题作准备。
@@ -78,7 +78,7 @@ operators:
       - *knowledge_base_retrieving_action
       - *internet_retrieving_action
 
-  - &summarizing_operator
+  - &summary_operator
     instruction: |
       你是一位文档总结专家,擅长总结归纳不同来源的文档。你需要根据用户的问题，总结归纳出用户需要的答案。
 
@@ -116,7 +116,7 @@ experts:
       actor_name: "Q&A Expert"
       thinker_name: "Q&A Expert"
     workflow:
-      - [*retrieving_operator, *summarizing_operator]
+      - [*retrieval_operator, *summary_operator]
 
 knowledgebase: {}
 memory: {}

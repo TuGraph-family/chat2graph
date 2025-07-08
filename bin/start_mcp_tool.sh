@@ -16,14 +16,28 @@ for config in "${mcp_tools_config[@]}"; do
     port=$(get_mcp_port "$config")
     command=$(get_mcp_command "$config")
 
-    # post check
-    mcp_pids=$(lsof -ti:${port} 2>/dev/null)
+    # check if the port is in use
+    if lsof -i :$port > /dev/null; then
+        info "Port $port is already in use. Assuming ${mcp_name} is running."
+        continue
+    fi
 
-    if [[ -n $mcp_pids ]]; then
-        info "${mcp_name} MCP tool already started (pid: $mcp_pids)"
+    # check if the process is already running
+    if pgrep -f "$command --port $port" > /dev/null; then
+        info "${mcp_name} MCP tool is already running."
+        continue
+    fi
+
+    nohup ${command} --port ${port} >> "${new_mcp_log_path}" 2>&1 </dev/null &
+    pid=$!
+
+    # wait a moment to see if the process started successfully
+    sleep 2
+
+    if ps -p $pid > /dev/null; then
+        info "${mcp_name} MCP tool started successfully! (pid: $pid)"
     else
-        nohup ${command} --port ${port} >> "${new_mcp_log_path}" 2>&1 </dev/null &
-        info "${mcp_name} MCP tool started success ! (pid: $!)"
+        error "Failed to start ${mcp_name} MCP tool. Check the log for details: ${new_mcp_log_path}"
     fi
 done
 

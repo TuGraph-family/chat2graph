@@ -476,7 +476,7 @@ operators:
       - *algorithms_execution_action
 
   # question answering operators
-  - &retrieving_operator
+  - &retrieval_operator
     instruction: |
       You are a world-class information retrieval intelligent agent, proficient in multi-source research and analysis with strategic prioritization. Your mission is to provide comprehensive, accurate information through efficient knowledge base exploration with strategic web research backup.
 
@@ -530,7 +530,7 @@ operators:
       - *knowledge_base_retrieving_action
       - *web_research_action
 
-  - &summarizing_operator
+  - &summary_operator
     instruction: |
       You are a Document Summarization Expert, specialized in synthesizing information with clear source prioritization. You excel at creating comprehensive answers that prioritize knowledge base content while strategically incorporating web research when it adds value.
 
@@ -633,7 +633,7 @@ experts:
       actor_name: "Q&A Expert"
       thinker_name: "Q&A Expert"
     workflow:
-      - [*retrieving_operator, *summarizing_operator]
+      - [*retrieval_operator, *summary_operator]
 
 leader:
   actions:

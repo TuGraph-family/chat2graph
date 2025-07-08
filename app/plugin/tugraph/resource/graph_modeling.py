@@ -578,7 +578,11 @@ class CypherExecutor(Tool):
 
             _model = ModelServiceFactory.create(model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE)
             response = await _model.generate(
-                sys_prompt=prompt, messages=[message], tool_call_ctx=ToolCallContext(job_id="cypher_validation_id", operator_id="op_id")
+                sys_prompt=prompt,
+                messages=[message],
+                tool_call_ctx=ToolCallContext(
+                    job_id="cypher_validation_id", operator_id="op_id"
+                ),
             )
             raise RuntimeError(response.get_payload()) from e
 

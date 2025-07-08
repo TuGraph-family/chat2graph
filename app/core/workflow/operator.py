@@ -56,7 +56,7 @@ class Operator:
 
         # destroy MCP connections for the operator
         tool_connection_service: ToolConnectionService = ToolConnectionService.instance
-        await tool_connection_service.destroy_connection(call_tool_ctx=task.get_tool_call_ctx())
+        await tool_connection_service.release_connection(call_tool_ctx=task.get_tool_call_ctx())
 
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 

@@ -429,7 +429,8 @@ class AgenticConfig:
                                                 op_action_tools_list.append(
                                                     {
                                                         "name": tool.name,
-                                                        "mcp_transport_config": tool.transport_config.to_dict(),
+                                                        "mcp_transport_config": \
+                                                            tool.transport_config.to_dict(),
                                                     }
                                                 )
                                             else:

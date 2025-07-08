@@ -1,10 +1,12 @@
-from typing import List, cast
+from typing import List
 
 from git import Optional
 from mcp.types import Tool as McpBaseTool
 
 from app.core.model.task import ToolCallContext
 from app.core.service.tool_connection_service import ToolConnectionService
+from app.core.toolkit.mcp_tool import McpTool
+from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_config import McpConfig
 from app.core.toolkit.tool_connection import ToolConnection
 from app.core.toolkit.tool_group import ToolGroup
@@ -22,7 +24,9 @@ class McpService(ToolGroup):
     def __init__(self, mcp_config: McpConfig):
         super().__init__(tool_group_config=mcp_config)
 
-    async def create_connection(self, tool_call_ctx: Optional[ToolCallContext] = None) -> ToolConnection:
+    async def create_connection(
+        self, tool_call_ctx: Optional[ToolCallContext] = None
+    ) -> ToolConnection:
         """Create a connection to the tool group."""
         tool_connection_service: ToolConnectionService = ToolConnectionService.instance
         return await tool_connection_service.get_or_create_connection(
@@ -31,7 +35,17 @@ class McpService(ToolGroup):
             tool_call_ctx=tool_call_ctx,
         )
 
-    async def list_tools(self) -> List[McpBaseTool]:
+    async def list_tools(self) -> List[Tool]:
         """Get available tool list from MCP server, with caching support."""
         connection = await self.create_connection()
-        return cast(List[McpBaseTool], await connection.list_tools())
+        mcp_base_tools: List[McpBaseTool] = await connection.list_tools()
+        tools: List[Tool] = []
+        for mcp_base_tool in mcp_base_tools:
+            tools.append(
+                McpTool(
+                    name=mcp_base_tool.name,
+                    description=mcp_base_tool.description or "",
+                    tool_group=self,
+                )
+            )
+        return tools

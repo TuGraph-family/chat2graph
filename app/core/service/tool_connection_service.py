@@ -57,7 +57,7 @@ class ToolConnectionService(metaclass=Singleton):
             connection = self._connections[job_id][operator_id][tool_group_id]
         return connection
 
-    async def destroy_connection(self, call_tool_ctx: ToolCallContext) -> None:
+    async def release_connection(self, call_tool_ctx: ToolCallContext) -> None:
         """Destroy the specified connection."""
         job_id = call_tool_ctx.job_id
         operator_id = call_tool_ctx.operator_id

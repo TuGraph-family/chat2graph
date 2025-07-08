@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import List, Optional
 from uuid import uuid4
 
 from app.core.model.task import ToolCallContext
+from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_config import ToolGroupConfig
 from app.core.toolkit.tool_connection import ToolConnection
 
@@ -24,11 +25,13 @@ class ToolGroup(ABC):
         return self._id
 
     @abstractmethod
-    async def create_connection(self, tool_call_ctx: Optional[ToolCallContext] = None) -> ToolConnection:
+    async def create_connection(
+        self, tool_call_ctx: Optional[ToolCallContext] = None
+    ) -> ToolConnection:
         """Create a connection to the tool group."""
 
     @abstractmethod
-    async def list_tools(self) -> List[Any]:
+    async def list_tools(self) -> List[Tool]:
         """List all tools in the group.
 
         Returns:
@@ -55,14 +58,16 @@ class ToolPackage(ToolGroup):
         self._format = None
         self._language = None
 
-    async def create_connection(self, tool_call_ctx: Optional[ToolCallContext] = None) -> ToolConnection:
+    async def create_connection(
+        self, tool_call_ctx: Optional[ToolCallContext] = None
+    ) -> ToolConnection:
         """Create a connection to the tool package."""
         raise NotImplementedError("ToolPackage connection creation is not implemented yet.")
 
-    async def list_tools(self) -> List[str]:
+    async def list_tools(self) -> List[Tool]:
         """List all tools in the package.
 
         Returns:
-            A list of tool names available in the package.
+            A list of tools available in the package.
         """
         raise NotImplementedError("ToolPackage tool listing is not implemented yet.")

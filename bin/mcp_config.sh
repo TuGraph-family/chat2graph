@@ -2,10 +2,10 @@
 
 # MCP tools configuration
 # format: "name:port:command"
-# for example: "npx @playwright/mcp --port 8931"
+# for example: "npx @playwright/mcp@latest --port 8931"
 # --convert--> "playwright:8931:npx @playwright/mcp@latest"
 mcp_tools_config=(
-    "playwright:8931:npx @playwright/mcp@latest"
+    "playwright:8931:npx @playwright/mcp --isolated"
 )
 
 get_mcp_name() {

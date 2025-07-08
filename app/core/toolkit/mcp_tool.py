@@ -1,10 +1,12 @@
-from typing import Any, Callable, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 from app.core.common.type import ToolType
 from app.core.model.task import ToolCallContext
 from app.core.toolkit.mcp_connection import McpConnection
-from app.core.toolkit.mcp_service import McpService
 from app.core.toolkit.tool import Tool
+
+if TYPE_CHECKING:
+    from app.core.toolkit.mcp_service import McpService
 
 
 class McpTool(Tool):
@@ -13,7 +15,7 @@ class McpTool(Tool):
     Inherits from Tool and represents a tool that can be used with MCP.
     """
 
-    def __init__(self, name: str, description: str, tool_group: McpService):
+    def __init__(self, name: str, description: str, tool_group: "McpService"):
         """Initialize the MCP Tool with name, description, and MCP service."""
         super().__init__(
             name=name,
@@ -22,9 +24,9 @@ class McpTool(Tool):
             tool_type=ToolType.MCP_TOOL,
         )
 
-        self._tool_group = tool_group
+        self._tool_group: McpService = tool_group
 
-    def get_tool_group(self) -> McpService:
+    def get_tool_group(self) -> "McpService":
         """Get the MCP service associated with this tool."""
         return self._tool_group
 
@@ -32,7 +34,7 @@ class McpTool(Tool):
         self,
         name: str,
         description: str,
-        tool_group: McpService,
+        tool_group: "McpService",
     ) -> Callable[..., Any]:
         """Create a placeholder function - actual execution is handled by ToolkitService."""
 

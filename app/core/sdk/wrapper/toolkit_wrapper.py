@@ -1,8 +1,9 @@
-from typing import Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
+from app.core.toolkit.tool_group import ToolGroup
 from app.core.toolkit.toolkit import Toolkit
 
 
@@ -19,66 +20,131 @@ class ToolkitWrapper:
 
     def chain(
         self,
-        *item_chain: Union[Action, Tool, Tuple[Union[Action, Tool], ...]],
+        *item_chain: Union[Action, Tool, ToolGroup, Tuple[Union[Action, Tool, ToolGroup], ...]],
     ) -> "ToolkitWrapper":
-        """Chain actions and tools together in the toolkit graph.
+        """Chain actions, tools, and tool groups together in the toolkit graph.
 
-        Items are connected sequentially: Action -> Action, Action -> Tool.
-        If a tuple of items is provided, they will be chained sequentially within the tuple.
+        Valid connection patterns:
+        - Action -> Action
+        - Action -> Tool
+        - Action -> ToolGroup
+        - Action -> (Tool, Tool, ...) - connects Action to multiple Tools
+        - Action -> (ToolGroup, ToolGroup, ...) - connects Action to multiple ToolGroups
+        - Action -> (Tool, ToolGroup, ...) - connects Action to mixed Tools and ToolGroups
+        - (Action, Tool, ToolGroup, ...) - sequential chain within tuple
+
+        Invalid patterns (will raise ValueError):
+        - Tool/ToolGroup as first item
+        - Tool/ToolGroup followed by anything other than Action
+        - A parallel tuple followed by anything other than an Action
 
         Args:
-            item_chain: Actions, Tools, or tuples of actions/tools to chain
+            item_chain (Union[Action, Tool, ToolGroup, Tuple[Union[Action, Tool, ToolGroup], ...]]):
+                A sequence of Actions, Tools, ToolGroups, or tuples of Tools/ToolGroups to be
+                chained.
 
         Examples:
-            # Chain actions and tools
-            wrapper.chain(action1, tool1, action2, tool2)
+            # Basic chains
+            wrapper.chain(action1, tool1)
+            wrapper.chain(action1, action2, tool1)
 
-            # Chain with tuples for grouped sequences
+            # Action connecting to multiple tools
+            wrapper.chain(action1, (tool1, tool2, tool3))
+
+            # Action connecting to multiple tool groups
+            wrapper.chain(action1, (tool_group1, tool_group2))
+
+            # Mixed connections
+            wrapper.chain(action1, (tool1, tool_group1), action2, tool2)
+
+            # Sequential chain within tuple
+            wrapper.chain((action1, tool1, tool_group1), action2)
+
+            # Complex chain
             wrapper.chain(
                 action1,
-                (action2, tool1),  # Sequential chain within tuple
-                action3,
-                tool2
+                (tool1, tool2),      # action1 connects to both tools
+                action2,             # continues the chain
+                tool_group1          # action2 connects to tool_group1
             )
         """
         toolkit_service: ToolkitService = ToolkitService.instance
 
-        # flatten the chain to handle both individual items and tuples
-        flattened_chain = []
+        if not item_chain:
+            return self
+
+        # 1. Flatten sequential tuples
+        processed_chain: List[Any] = []
         for item in item_chain:
-            if isinstance(item, tuple):
-                flattened_chain.extend(item)
+            if isinstance(item, tuple) and item and isinstance(item[0], Action):
+                processed_chain.extend(item)
             else:
-                flattened_chain.append(item)
+                processed_chain.append(item)
 
-        # process each item and create connections
-        for i, item in enumerate(flattened_chain):
-            if isinstance(item, Action):
-                # Add action to the graph
-                next_actions = []
-                prev_actions = []
+        if not processed_chain:
+            return self
 
-                # connect to next item if it's an Action
-                if i + 1 < len(flattened_chain) and isinstance(flattened_chain[i + 1], Action):
-                    next_actions.append((flattened_chain[i + 1], 1.0))
+        # 2. Validate and Process the chain in a single pass
+        # The last action that can be a source for a connection
+        last_action_source = None
 
-                # connect from previous item if it's an Action
-                if i > 0 and isinstance(flattened_chain[i - 1], Action):
-                    prev_actions.append((flattened_chain[i - 1], 1.0))
+        for i, current_item in enumerate(processed_chain):
+            prev_item = processed_chain[i - 1] if i > 0 else None
 
-                toolkit_service.add_action(item, next_actions, prev_actions)
-                for tool in item.tools:
-                    # connect tool to the action
-                    toolkit_service.add_tool(tool, connected_actions=[(item, 1.0)])
+            # --- Validation for the current item ---
+            if i == 0 and not isinstance(current_item, Action):
+                raise ValueError("Chain must start with an Action.")
 
-            elif isinstance(item, Tool):
-                # connect tool to previous action if exists
-                connected_actions = []
-                if i > 0 and isinstance(flattened_chain[i - 1], Action):
-                    connected_actions.append((flattened_chain[i - 1], 1.0))
+            if isinstance(prev_item, Tool | ToolGroup) and not isinstance(current_item, Action):
+                raise ValueError(f"{type(prev_item).__name__} can only be followed by an Action.")
 
-                toolkit_service.add_tool(item, connected_actions=connected_actions)
+            if isinstance(prev_item, tuple) and not isinstance(current_item, Action):
+                raise ValueError("A parallel connection tuple can only be followed by an Action.")
+
+            # --- Processing and Connection ---
+            if isinstance(current_item, Action):
+                prev_actions: List[Tuple[Action, float]] = []
+                # An action connects to the last action source
+                if last_action_source:
+                    prev_actions.append((last_action_source, 1.0))
+
+                toolkit_service.add_action(current_item, prev_actions=prev_actions, next_actions=[])
+                # This action is now the new source for subsequent tools/actions
+                last_action_source = current_item
+
+            elif isinstance(current_item, Tool | ToolGroup):
+                if not isinstance(prev_item, Action):
+                    # This case should be caught by validation, but as a safeguard:
+                    raise ValueError(
+                        f"{type(current_item).__name__} must be preceded by an Action."
+                    )
+
+                connected_actions = [(prev_item, 1.0)]
+                if isinstance(current_item, Tool):
+                    toolkit_service.add_tool(current_item, connected_actions=connected_actions)
+                else:  # ToolGroup
+                    toolkit_service.add_tool_group(
+                        current_item, connected_actions=connected_actions
+                    )
+
+            elif isinstance(current_item, tuple):
+                if not isinstance(prev_item, Action):
+                    raise ValueError("A parallel connection tuple must be preceded by an Action.")
+
+                for sub_item in current_item:
+                    if not isinstance(sub_item, Tool | ToolGroup):
+                        raise ValueError(
+                            "Parallel connection tuples can only contain Tools or ToolGroups."
+                        )
+
+                    connected_actions = [(prev_item, 1.0)]
+                    if isinstance(sub_item, Tool):
+                        toolkit_service.add_tool(sub_item, connected_actions=connected_actions)
+                    else:  # ToolGroup
+                        toolkit_service.add_tool_group(
+                            sub_item, connected_actions=connected_actions
+                        )
             else:
-                raise ValueError(f"Invalid chain item: {item}.")
+                raise TypeError(f"Invalid chain item type: {type(current_item).__name__}")
 
         return self

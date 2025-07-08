@@ -285,7 +285,9 @@ class CypherExecutor(Tool):
             response = await _model.generate(
                 sys_prompt=prompt,
                 messages=[message],
-                tool_call_ctx=ToolCallContext(job_id="validate_and_execute_cypher_id", operator_id="op_id"),
+                tool_call_ctx=ToolCallContext(
+                    job_id="validate_and_execute_cypher_id", operator_id="op_id"
+                ),
             )
             raise Exception(response.get_payload()) from e
 
