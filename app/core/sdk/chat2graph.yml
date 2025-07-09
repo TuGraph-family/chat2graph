@@ -112,7 +112,7 @@ tools:
     mcp_transport_config:
       transport_type: "STDIO"
       command: "npx"
-      args: ["@modelcontextprotocol/server-filesystem", ".."]
+      args: ["@modelcontextprotocol/server-filesystem", "."]
 
   - &system_status_checker_tool
     name: "SystemStatusChecker"
