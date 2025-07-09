@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from git import Optional
@@ -41,10 +42,15 @@ class McpService(ToolGroup):
         mcp_base_tools: List[McpBaseTool] = await connection.list_tools()
         tools: List[Tool] = []
         for mcp_base_tool in mcp_base_tools:
+            tool_description = mcp_base_tool.description + "\n" if mcp_base_tool.description else ""
             tools.append(
                 McpTool(
                     name=mcp_base_tool.name,
-                    description=mcp_base_tool.description or "",
+                    description=(
+                        tool_description
+                        + "\tInput Schema:\n"
+                        + json.dumps(mcp_base_tool.inputSchema, indent=4)
+                    ),
                     tool_group=self,
                 )
             )
