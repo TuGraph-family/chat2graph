@@ -7,10 +7,7 @@ def main():
     mas = AgenticService.load("app/core/sdk/chat2graph.yml")
 
     # set the user message
-    user_message = TextMessage(
-        payload="Please introduce TuGraph of Ant Group.",
-        assigned_expert_name="Q&A Expert",
-    )
+    user_message = TextMessage(payload="Please introduce TuGraph of Ant Group.")
 
     # submit the job
     service_message = mas.session().submit(user_message).wait()
