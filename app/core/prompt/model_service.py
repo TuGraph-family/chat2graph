@@ -19,7 +19,7 @@ The CONVERSATION INFORMATION provides the information in the LLM multi-agent sys
 
 current session_id: {session_id}
 
-2. job_id: 1. session_id: Uniquely identifies the current job, used to track job status and progress
+2. job_id: Uniquely identifies the current job, used to track job status and progress
 
 current job_id: {job_id}
 
