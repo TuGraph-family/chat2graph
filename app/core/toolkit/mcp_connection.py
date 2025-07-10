@@ -37,16 +37,13 @@ class McpConnection(ToolConnection):
 
     async def call(self, tool_name: str, **kwargs) -> Any:
         """Execute a tool call through this connection.
-        
+
         Args:
             tool_name: Name of the tool to call.
             **kwargs: Arguments to pass to the tool.
-            
+
         Returns:
             The result content from the tool execution.
-            
-        Raises:
-            RuntimeError: If the connection is not initialized.
         """
         with self._lock:
             if self._session is None:
@@ -57,7 +54,7 @@ class McpConnection(ToolConnection):
 
     async def close(self) -> None:
         """Close and release MCP connection resources.
-        
+
         Safely closes the session and cleans up transport resources.
         """
         with self._lock:
@@ -71,13 +68,9 @@ class McpConnection(ToolConnection):
 
     async def connect(self) -> None:
         """Establish MCP connection based on transport type.
-        
-        Creates the appropriate transport connection (STDIO, SSE, WebSocket, or 
+
+        Creates the appropriate transport connection (STDIO, SSE, WebSocket, or
         Streamable HTTP) and initializes the session.
-        
-        Raises:
-            ValueError: If the transport type is unsupported.
-            RuntimeError: If the session fails to connect properly.
         """
         with self._lock:
             if self._session is not None:

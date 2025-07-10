@@ -144,21 +144,6 @@ class AgenticService(metaclass=Singleton):
         mas.reasoner(reasoner_type=agentic_service_config.reasoner.type)
 
         # 3. build all actions and configure the toolkit
-        actions_dict: Dict[str, Action] = {}  # cache for all created actions: name -> Action
-
-        # the 'toolkit' section in YAML defines chains of actions.
-        # iterate through each defined chain to build and register it.
-        for action_config_chain in agentic_service_config.toolkit:
-            # process each action separately to avoid tuple connection issues
-            for action_config in action_config_chain:
-                # create the Action instance with its configured tools.
-                action = Action(
-                    id=action_config.id,
-                    name=action_config.name,
-                    description=action_config.desc,
-                )
-                actions_dict[action.name] = action
-
         mas.toolkit(*AgenticService._build_toolkit(agentic_service_config))
 
         # 4. configure the Leader Agent
@@ -168,7 +153,6 @@ class AgenticService(metaclass=Singleton):
         mas.leader("Leader").workflow(
             AgenticService._build_leader_workflow(
                 agentic_service_config=agentic_service_config,
-                actions_dict=actions_dict,
             ),
             platform_type=workflow_platform_type,
         ).build()
@@ -181,7 +165,7 @@ class AgenticService(metaclass=Singleton):
             ).workflow(
                 *AgenticService._build_expert_workflow(
                     expert_config=expert_config,
-                    actions_dict=actions_dict,
+                    agentic_service_config=agentic_service_config,
                 ),
                 platform_type=workflow_platform_type,
             ).build()
@@ -240,12 +224,24 @@ class AgenticService(metaclass=Singleton):
         return item_chain
 
     @staticmethod
-    def _build_leader_workflow(
-        agentic_service_config: AgenticConfig,
-        actions_dict: Dict[str, Action],
-    ) -> OperatorWrapper:
+    def _build_leader_workflow(agentic_service_config: AgenticConfig) -> OperatorWrapper:
         """Build the leader agent configuration and return workflow components."""
         print("Init the Leader agent")
+
+        actions_dict: Dict[str, Action] = {}  # cache for all created actions: name -> Action
+
+        # the 'toolkit' section in YAML defines chains of actions.
+        # iterate through each defined chain to build and register it.
+        for action_config_chain in agentic_service_config.toolkit:
+            # process each action separately to avoid tuple connection issues
+            for action_config in action_config_chain:
+                # create the Action instance with its configured tools.
+                action = Action(
+                    id=action_config.id,
+                    name=action_config.name,
+                    description=action_config.desc,
+                )
+                actions_dict[action.name] = action
 
         # gather actions for the leader from the previously built actions.
         leader_actions = [
@@ -267,10 +263,25 @@ class AgenticService(metaclass=Singleton):
     @staticmethod
     def _build_expert_workflow(
         expert_config: ExpertConfig,
-        actions_dict: Dict[str, Action],
+        agentic_service_config: AgenticConfig,
     ) -> Tuple[Union[OperatorWrapper, Tuple[OperatorWrapper, ...]], ...]:
         """Build a single expert agent configuration and return workflow components."""
         print(f"  - Configuring expert: {expert_config.profile.name}")
+
+        actions_dict: Dict[str, Action] = {}  # cache for all created actions: name -> Action
+
+        # the 'toolkit' section in YAML defines chains of actions.
+        # iterate through each defined chain to build and register it.
+        for action_config_chain in agentic_service_config.toolkit:
+            # process each action separately to avoid tuple connection issues
+            for action_config in action_config_chain:
+                # create the Action instance with its configured tools.
+                action = Action(
+                    id=action_config.id,
+                    name=action_config.name,
+                    description=action_config.desc,
+                )
+                actions_dict[action.name] = action
 
         workflow_items: List[Union[OperatorWrapper, Tuple[OperatorWrapper, ...]]] = []
 
