@@ -2,6 +2,7 @@
   "title": "运维手册",
   "pages": [
     "overview",
+    "config-env",
     "installation"
   ],
   "defaultOpen": true
