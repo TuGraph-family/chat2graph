@@ -53,8 +53,7 @@ LLM_APIKEY=
 
 ```env
 LLM_NAME=gemini/gemini-2.5-pro
-# LiteLLM handles the endpoint automatically, but set for consistency
-LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta
+LLM_ENDPOINT=  # do not set the endpoint for Gemini, LiteLLM will use the default
 LLM_APIKEY=
 ```
 

@@ -52,8 +52,8 @@ LLM_APIKEY=
 **场景 2: Google 官方 API**
 
 ```env
-LLM_NAME=gemini/gemini-1.5-pro
-LLM_ENDPOINT=https://generativelanguage.googleapis.com/v1beta
+LLM_NAME=gemini/gemini-2.5-pro
+LLM_ENDPOINT=  # do not set the endpoint for Gemini, LiteLLM will use the default
 LLM_APIKEY=
 ```
 
