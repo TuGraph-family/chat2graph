@@ -46,9 +46,6 @@ class Chat2GraphModel(ModelAPI):
         self.model_args = model_args
         self.mas = AgenticService.load(config_path)
 
-        self.gaia_files_root = (Path(__file__).parent / "../gaia_files").resolve()
-        Path(self.gaia_files_root).mkdir(parents=True, exist_ok=True)
-
     async def generate(
         self,
         input: list[ChatMessage],
@@ -64,7 +61,7 @@ class Chat2GraphModel(ModelAPI):
         # log file
         log_dir = Path("./run_logs")
         log_dir.mkdir(exist_ok=True)
-        log_file_path = log_dir / "gaia_outputs.log"
+        log_file_path = log_dir / f"gaia_outputs_{datetime.now()}.log"
 
         with open(log_file_path, "a", encoding="utf-8") as log_file:
             log_file.write(f"--- PROMPT @ {datetime.now()} ---\n{conversation_text}\n\n")

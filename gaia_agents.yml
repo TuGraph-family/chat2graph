@@ -1,12 +1,13 @@
 # This is a YAML file for configuring a multi-agent system designed for GAIA benchmark tasks.
-# It defines the application, tools (including Playwright and File System MCPs), actions,
-# operators, and a team of collaborating experts.
+# VERSION 2.1 - All PDF processing is now consolidated into the MultiModalTool.
+# It defines the application, a comprehensive set of tools, modular actions,
+# workflow-oriented operators, and a team of collaborating experts.
 
 # 1. Application Basic Information
 app:
-  name: "GAIA-Agents"
-  desc: "A multi-agent system for tackling tasks from the GAIA benchmark."
-  version: "0.1.0"
+  name: "GAIA-Agents-v2.1"
+  desc: "A versatile multi-agent system where all PDF processing is handled by the MultiModalExpert."
+  version: "0.2.1"
 
 # 2. Plugin and Reasoner Configuration
 plugin:
@@ -17,296 +18,224 @@ reasoner:
 # 3. Tools Definition
 tools:
   - &browser_tool
-    name: "Browser"
+    name: "BrowserTool"
     type: "MCP"
-    desc: "A tool for browsing the web, reading page content, and interacting with web elements. Powered by Playwright."
+    desc: "A tool for browsing the web, reading page content, and interacting with web elements."
     mcp_transport_config:
       transport_type: "STDIO"
       command: "npx"
       args: ["@playwright/mcp@latest", "--isolated"]
 
   - &file_tool
-    name: "FileSystem"
+    name: "FileSystemTool"
     type: "MCP"
-    desc: "A tool for performing file operations like reading, writing, and listing files in the local filesystem."
+    desc: "A tool for basic file operations like reading, writing, and listing files in the local filesystem."
     mcp_transport_config:
       transport_type: "STDIO"
       command: "npx"
       args: ["@modelcontextprotocol/server-filesystem", "."]
 
+  - &code_executor_tool
+    name: "CodeExecutorTool"
+    type: "LOCAL_TOOL"
+    desc: "Executes Python code snippets in a sandboxed environment. Ideal for math, data processing, and using specialized libraries."
+    module_path: "gaia_env.tool.code_executor"
+  
+  - &shell_executor_tool
+    name: "ShellExecutorTool"
+    type: "LOCAL_TOOL"
+    desc: "Executes shell commands. Primarily used for installing Python packages with 'pip install'."
+    module_path: "gaia_env.tool.shell_executor"
+
   - &arxiv_tool
-    name: "ArxivMcp"
+    name: "ArxivTool"
     type: "MCP"
-    desc: "A tool for searching, retrieving, and analyzing academic papers from the arXiv repository, providing access to scholarly research and scientific literature."
+    desc: "A specialized tool for searching and retrieving papers from the arXiv academic repository."
     mcp_transport_config:
       transport_type: "STDIO"
       command: "uv"
       args: ["tool", "run", "arxiv-mcp-server", "--storage-path", "."]
-
-  # - &pdf_tool
-  #   name: "PDFProcessor"
-  #   type: "MCP"
-  #   desc: "A tool for reading and extracting text from PDF files using pymupdf."
-  #   mcp_transport_config:
-  #     transport_type: "STDIO"
-  #     command: "npx"
-  #     args: ["@sylphlab/pdf-reader-mcp@latest"]
-
-  - &code_executor_tool
-    name: "CodeExecutor"
+  
+  - &spreadsheet_tool
+    name: "SpreadsheetTool"
     type: "LOCAL_TOOL"
-    desc: "A tool to execute Python code snippets in a sandboxed environment."
-    module_path: "gaia_env.tool.code_executor"
+    desc: "A tool for interacting with spreadsheet files (XLSX, CSV). Can read specific cells, rows, columns, or entire sheets."
+    module_path: "gaia_env.tool.spreadsheet_tool"
+
+  - &zip_tool
+    name: "ZipTool"
+    type: "LOCAL_TOOL"
+    desc: "A tool for handling .zip archives. Can list the contents or extract files."
+    module_path: "gaia_env.tool.zip_tool"
 
   - &multi_modal_tool
     name: "MultiModalTool"
     type: "LOCAL_TOOL"
-    desc: "A tool for processing multi-modal content (images, videos, audio, PDFs) along with a text query to provide a comprehensive answer."
-    module_path: "app.plugin.multi-modal.multi_modal_tool"
+    desc: "An advanced tool for processing complex content. Use this for analyzing images, audio, and ALL PDF documents (for both text extraction and visual understanding)."
+    module_path: "app.plugin.multi_modal.multi_modal_tool"
 
-# 4. Action Definitions
+# 4. Action Definitions (PDF-specific action removed)
 actions:
-  # Web Research Actions
   - &web_research_action
-    name: "web_research_action"
-    desc: "Uses the browser tool to search for information, navigate websites, and extract relevant content to answer a query."
-    tools:
+    name: "web research action"
+    desc: "Uses the browser tool to search for information. (Please do not easily trust the 'AI Overview' section of search results.)"
+    tools: 
       - *browser_tool
-
-  # File Operation Actions
   - &file_operation_action
-    name: "file_operation_action"
-    desc: "Performs file system operations such as creating, writing to, reading from, or listing files and directories."
+    name: "file operation action"
+    desc: "Performs basic file system operations like reading or writing."
     tools:
       - *file_tool
-
-  # Coding Actions
-  - &code_writing_action
-    name: "write_python_code_action"
-    desc: "Writes a Python code snippet to solve a specific part of the problem. The output is the code as a string."
-    tools: [] # LLM generates code directly
-
-  - &code_execution_action
-    name: "execute_python_code_action"
-    desc: "Executes a given Python code snippet and returns the output or any errors."
-    tools:
-      - *code_executor_tool
-
-  # PDF Processing Actions
-  - &pdf_processing_action
-    name: "pdf_processing_action"
-    desc: "Reads and extracts text content from PDF files, including text extraction, metadata reading, and document structure analysis."
-    # tools:
-      # - *pdf_tool
-
-  # Synthesis Action
-  - &synthesis_action
-    name: "synthesize_results_action"
-    desc: "Integrates information from various sources (web, files, code output) to formulate a final, comprehensive answer."
+  - &write_python_code_action
+    name: "write python code action"
+    desc: "Writes a Python code snippet to solve a problem."
     tools: []
-    
-  # ArXiv Actions
+  - &execute_python_code_action
+    name: "execute python code action"
+    desc: "Executes a given Python code snippet."
+    tools: 
+      - *code_executor_tool
+  - &execute_shell_command_action
+    name: "execute shell command action"
+    desc: "Executes a shell command."
+    tools: 
+      - *shell_executor_tool
   - &arxiv_search_action
-    name: "arxiv_search_action"
-    desc: "Searches for relevant papers on arXiv based on keywords, authors, categories, or specific research topics."
-    tools:
+    name: "arxiv search action"
+    desc: "Searches for relevant papers on arXiv."
+    tools: 
       - *arxiv_tool
-
-  - &arxiv_retrieve_action
-    name: "arxiv_retrieve_action"
-    desc: "Retrieves detailed information, abstracts, and when available, full-text content for specific arXiv papers."
-    tools:
-      - *arxiv_tool
-
-  - &arxiv_analysis_action
-    name: "arxiv_analysis_action"
-    desc: "Analyzes content from arXiv papers, extracting key findings, methodologies, and scientific conclusions relevant to the task."
-    tools:
-      - *arxiv_tool
-
-  # Multi-modal Action
-  - &multi_modal_process_action
-    name: "multi_modal_process_action"
-    desc: "Processes multi-modal content from various media files (images, videos, audio, PDFs) along with a text query to understand and answer questions about them."
-    tools:
+  - &process_spreadsheet_action
+    name: "process spreadsheet action"
+    desc: "Reads and extracts data from a spreadsheet file."
+    tools: 
+      - *spreadsheet_tool
+  - &handle_zip_file_action
+    name: "handle zip file action"
+    desc: "Lists content of or extracts files from a .zip archive."
+    tools: 
+      - *zip_tool
+  - &analyze_multimodal_content_action
+    name: "analyze multimodal content action"
+    desc: "Processes images, audio files, or PDF documents to extract information (OCR, STT, object recognition, text extraction)."
+    tools: 
       - *multi_modal_tool
+  - &synthesis_action
+    name: "synthesize results"
+    desc: "Integrates information from all previous steps into a final answer."
+    tools: []
 
+  - &job_decomposition_action
+    - name: "job decomposition action"
+      desc: "Decomposes the goal and assigns tasks to experts, and the final expert is the synthesis expert."
+x
+# Toolkits updated to reflect the new tool structure
 toolkit:
-  - [*web_research_action]
-  - [*file_operation_action, *pdf_processing_action]
-  - [*code_writing_action, *code_execution_action]
+  - [*web_research_action, *file_operation_action, *arxiv_search_action, *process_spreadsheet_action, *handle_zip_file_action]
+  - [*write_python_code_action, *execute_python_code_action, *execute_shell_command_action, *analyze_multimodal_content_action]
   - [*synthesis_action]
-  - [*arxiv_search_action, *arxiv_retrieve_action, *arxiv_analysis_action]
-  - [*multi_modal_process_action]
 
-# 5. Operator Definitions
+# 5. Operator Definitions (Instructions updated for new PDF workflow)
 operators:
-  - &research_operator
+  - &data_gathering_operator
     instruction: |
-      You are a comprehensive research specialist for GAIA benchmark tasks. Your role is to gather and analyze information from multiple sources including web browsing, local files, and PDF documents.
-      
-      Your workflow:
-      1. First, examine any local files or PDFs provided with the task
-      2. Extract relevant information from these documents
-      3. If additional information is needed, conduct targeted web research
-      4. Synthesize all findings into a coherent research summary
-      
-      Focus on accuracy, completeness, and relevance to the specific GAIA task at hand.
+      You are an information gathering specialist for text-based and structured data.
+      Acquire data from web sources (Browser), simple files (FileSystem), spreadsheets (SpreadsheetTool), archives (ZipTool), and academic papers (Arxiv).
+      IMPORTANT: You DO NOT process PDF files. If a task involves a PDF, it must be handled by the MultiModalAnalysisExpert.
+      Aggregate all findings into a structured summary.
     output_schema: |
-      research_summary: Comprehensive summary of all research findings
-      source_files: List of local files and PDFs processed
-      web_sources: List of websites visited and key information extracted
-      key_findings: Most important discoveries relevant to the task
-      information_gaps: Any missing information that couldn't be found
+      data_summary: A structured summary of all information found.
+      sources_used: A list of all files read and URLs visited.
     actions:
-      - *file_operation_action
-      - *pdf_processing_action
       - *web_research_action
-
-  - &computation_operator
-    instruction: |
-      You are a computational problem-solving specialist for GAIA benchmark tasks. Your role is to handle all programming, mathematical calculations, data processing, and algorithmic implementations.
-
-      Your workflow:
-      1. Analyze the computational requirements of the task
-      2. Read any necessary input files or data
-      3. Write appropriate Python code to solve the problem
-      4. Execute the code and verify results
-      5. Handle any errors and iterate until solution is achieved
-
-      Focus on accuracy, efficiency, and proper error handling.
-    output_schema: |
-      computation_approach: Description of the computational strategy used
-      code_written: The Python code developed
-      execution_results: Output from code execution
-      data_processed: Summary of any data files processed
-      final_calculations: Key numerical results or computed values
-    actions:
       - *file_operation_action
-      - *code_writing_action
-      - *code_execution_action
+      - *arxiv_search_action
+      - *process_spreadsheet_action
+      - *handle_zip_file_action
+
+  - &computational_operator
+    instruction: |
+      You are a computational specialist. Your task is to perform calculations or data manipulation.
+      1. If needed, use the ShellExecutor to run 'pip install <package_name>'.
+      2. Write and execute Python code to perform the task.
+    output_schema: |
+      computation_result: The final output from the code execution.
+      code_snippet: The Python code that was executed.
+    actions:
+      - *write_python_code_action
+      - *execute_python_code_action
+      - *execute_shell_command_action
+
+  - &multimodal_analysis_operator
+    instruction: |
+      You are a multi-modal analysis specialist. Your role is to analyze and interpret complex media files.
+      Use your tool to process images (for OCR or content), audio files (for transcription), and ALL PDF documents.
+      For PDFs, extract all relevant text and describe any important visual elements (like charts or tables).
+    output_schema: |
+      analysis_summary: A comprehensive summary of the findings from the media content, including all text extracted from PDFs.
+    actions:
+      - *analyze_multimodal_content_action
 
   - &synthesis_operator
     instruction: |
-      You are a final synthesis specialist for GAIA benchmark tasks. Your role is to integrate all information from research and computation to produce a comprehensive, accurate final answer.
-      
-      Your workflow:
-      1. Review all previous work from research and computation phases
-      2. Access any additional files or documents if needed
-      3. Integrate findings from all sources
-      4. Formulate a clear, complete final answer
-      5. Provide proper citations and references
-      
-      Focus on accuracy, completeness, and clear presentation of the final answer.
+      You are the final answer specialist. Review the structured information from all other experts (DataGathering, Computational, MultiModal).
+      Synthesize these pieces of information into a single, clear, and complete final answer.
     output_schema: |
-      final_answer: The comprehensive final answer to the GAIA task
-      supporting_evidence: Key evidence and reasoning supporting the answer
-      sources_used: All sources consulted (files, web, computations)
-      confidence_level: Assessment of answer reliability
-      additional_notes: Any important caveats or supplementary information
+      - Return only your answer, which should be a number, or a short phrase with as few words as possible, or a comma separated list of numbers and/or strings.
+      - If the answer is a number, return only the number without any units unless specified otherwise.
+      - If the answer is a string, don't include articles, and don't use abbreviations (e.g. for states).
+      - If the answer is a comma separated list, apply the above rules to each element in the list.
     actions:
-      - *file_operation_action
-      - *pdf_processing_action
       - *synthesis_action
-
-  - &academic_research_operator
-    instruction: |
-      You are an academic research specialist for GAIA benchmark tasks. Your role is to search, retrieve, and analyze academic papers from arXiv to gather scientific knowledge relevant to the task at hand.
-      
-      Your workflow:
-      1. Search for relevant papers on arXiv using appropriate keywords and filters
-      2. Retrieve and read the abstracts of the most promising papers
-      3. Extract key findings, methodologies, and conclusions from these papers
-      4. Synthesize the academic information into a coherent scientific summary
-      
-      Focus on scientific accuracy, relevance to the task, and proper citation of sources.
-    output_schema: |
-      research_summary: Comprehensive summary of academic findings related to the task
-      papers_reviewed: List of arXiv papers consulted with IDs and titles
-      key_scientific_concepts: Important scientific concepts identified in the papers
-      methodologies: Summary of methodologies used in relevant research
-      conclusions: Main scientific conclusions from the reviewed papers
-    actions:
-      - *arxiv_search_action
-      - *arxiv_retrieve_action
-      - *arxiv_analysis_action
-
-  - &multi_modal_operator
-    instruction: |
-      You are a multi-modal analysis specialist. Your role is to analyze and interpret information from various media types including images, videos, audio, and PDFs, in conjunction with a user's query.
-
-      Your workflow:
-      1. Receive a text query and a list of media file paths.
-      2. Use the multi-modal tool to process the content of these files.
-      3. Synthesize the information from the text and media to formulate a comprehensive answer.
-
-      Focus on accurately interpreting the visual and textual data to provide a relevant and detailed response.
-    output_schema: |
-      analysis_summary: A comprehensive summary of the findings from the multi-modal content.
-      media_processed: List of media files that were analyzed.
-      key_insights: Important insights or answers extracted from the media, directly addressing the user's query.
-    actions:
-      - *multi_modal_process_action
 
 # 6. Expert Definitions
 experts:
   - profile:
-      name: "ResearcherExpert"
-      desc: "Specializes in comprehensive information gathering from multiple sources including local files, PDFs, and web resources. This expert handles the complete research phase of GAIA tasks, from document analysis to web investigation."
+      name: "DataGatheringExpert"
+      desc: "A specialist in acquiring information from text-based and structured sources like the web, text files, spreadsheets, and ZIP archives. Does not handle PDFs, images, or audio."
     reasoner:
-      actor_name: "ResearcherActor"
-      thinker_name: "ResearcherThinker"
+      actor_name: "DataGathererActor"
+      thinker_name: "DataGathererThinker"
     workflow:
-      - [*research_operator]
+      - [*data_gathering_operator]
 
   - profile:
-      name: "DeveloperExpert"
-      desc: "Specializes in computational problem-solving through code development and execution. This expert handles all programming, mathematical calculations, data processing, and algorithmic implementations required for GAIA tasks."
+      name: "ComputationalExpert"
+      desc: "A specialist in programming and calculation. Writes and executes Python code, and manages its own dependencies."
     reasoner:
-      actor_name: "DeveloperActor"
-      thinker_name: "DeveloperThinker"
+      actor_name: "ComputationalActor"
+      thinker_name: "ComputationalThinker"
     workflow:
-      - [*computation_operator]
+      - [*computational_operator]
 
   - profile:
-      name: "AcademicResearchExpert"
-      desc: "Specializes in searching, retrieving, and analyzing academic papers from arXiv to provide scientific knowledge and insights relevant to GAIA tasks. This expert focuses on finding and interpreting cutting-edge research literature."
-    reasoner:
-      actor_name: "AcademicResearchActor"
-      thinker_name: "AcademicResearchThinker"
-    workflow:
-      - [*academic_research_operator]
-
-  - profile:
-      name: "MultiModalExpert"
-      desc: "Specializes in analyzing and interpreting multi-modal content. This expert can understand images, videos, audio, and PDFs to answer questions that require processing information from multiple formats."
+      name: "MultiModalAnalysisExpert"
+      desc: "A specialist for complex media. It analyzes images (OCR, content), transcribes audio, and is responsible for processing ALL PDF documents."
     reasoner:
       actor_name: "MultiModalActor"
       thinker_name: "MultiModalThinker"
     workflow:
-      - [*multi_modal_operator]
+      - [*multimodal_analysis_operator]
 
   - profile:
-      name: "FinisherExpert"
-      desc: "Specializes in synthesizing information from all sources (research, code output, files, PDFs) to produce a comprehensive final answer. This expert integrates all previous work and formulates the definitive response to GAIA tasks."
+      name: "SynthesisAndAnswerExpert"
+      desc: "The final expert. It takes the structured outputs from all other experts, synthesizes them, and formulates the definitive final answer. The assigned subtask should be the original task, and the final answer of this expert would be output the whole system."
     reasoner:
-      actor_name: "FinisherActor"
-      thinker_name: "FinisherThinker"
-    workflow:
+      actor_name: "SynthesizerActor"
+      thinker_name: "SynthesizerThinker"
+    workflow: 
       - [*synthesis_operator]
+
 
 # 7. Leader Configuration
 leader:
   profile:
-    name: "GAIA-Leader"
-    desc: "The leader of the agent team. It receives the main task, decomposes it into sub-tasks, and delegates them to the appropriate experts (Researcher, Developer, Finisher, AcademicResearcher, MultiModalExpert). It orchestrates the collaboration to solve the task."
+    name: "GAIA-Orchestrator"
+    desc: "Orchestrates the agent team. Uses the ProblemAnalyzerExpert to create a plan, then delegates sub-tasks to the appropriate experts to solve the problem."
   actions:
-    - name: "job_decomposition"
-      desc: "Decomposes the main goal into a sequence of sub-tasks and assigns each to the most suitable expert."
-    - name: "query_system_status"
-      desc: "Queries the status of ongoing tasks and experts."
+    - *job_decomposition_action
 
-# 8. KnowledgeBase, Memory, and Environment (can be left empty for now)
+# 8. KnowledgeBase, Memory, and Environment
 knowledgebase: {}
 memory: {}
 env: {}

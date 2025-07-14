@@ -16,8 +16,8 @@ class MultiModalTool(Tool):
 
     def __init__(self):
         super().__init__(
-            name="MultiModalTool",
-            description="A tool for multi-modal content processing",
+            name=self.call_multi_modal.__name__,
+            description=self.call_multi_modal.__doc__ or "",
             function=self.call_multi_modal,
         )
 
