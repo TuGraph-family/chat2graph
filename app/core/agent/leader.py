@@ -101,6 +101,15 @@ class Leader(Agent):
             # decompose the job by the reasoner in the workflow
             workflow_message = self._workflow.execute(job=decomp_job, reasoner=self._reasoner)
 
+            if workflow_message.status != WorkflowStatus.SUCCESS:
+                # if the workflow execution failed, return an empty job graph
+                evaluation = workflow_message.evaluation or "No evaluation provided."
+                lesson = workflow_message.lesson or "No lesson provided."
+                raise ValueError(
+                    f"Job decomposition failed with status: {workflow_message.status.value}.\n"
+                    f"Evaluation: {evaluation}\nLesson: {lesson}\n"
+                )
+
             # extract the subjobs from the json block
             results: List[Union[Dict[str, Dict[str, str]], json.JSONDecodeError]] = parse_jsons(
                 text=workflow_message.scratchpad,
