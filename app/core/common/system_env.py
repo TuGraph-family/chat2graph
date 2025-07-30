@@ -15,8 +15,8 @@ from app.core.common.type import (
 _env_vars: Dict[str, Tuple[Type, Any]] = {
     "WORKFLOW_PLATFORM_TYPE": (WorkflowPlatformType, WorkflowPlatformType.DBGPT),
     "MODEL_PLATFORM_TYPE": (ModelPlatformType, ModelPlatformType.LITELLM),
-    "LLM_NAME": (str, "openai/deepseek-ai/DeepSeek-V3"),
-    "LLM_ENDPOINT": (str, "https://api.siliconflow.cn/v1"),
+    "LLM_NAME": (str, None),
+    "LLM_ENDPOINT": (str, None),
     "LLM_APIKEY": (str, None),
     "TEMPERATURE": (float, 0.7),
     "MAX_TOKENS": (int, 1048576),
