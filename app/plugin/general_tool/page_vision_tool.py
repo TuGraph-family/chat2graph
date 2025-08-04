@@ -67,12 +67,12 @@ class PageVisionTool(Tool):
             str: A JSON formatted string containing a direct answer to the question, along with supporting evidence
                  and an assessment of whether the question was answerable from the visual content.
         """  # noqa: E501
-        # First, try to download the file directly.
+        # first, try to download the file directly.
         downloaded_file_path: Optional[Path] = None
         try:
             temp_dir = "./tmp/"
             os.makedirs(temp_dir, exist_ok=True)
-            # Let UrlDownloaderTool handle the extension.
+            # let UrlDownloaderTool handle the extension.
             save_path_base = os.path.join(temp_dir, str(uuid.uuid4()))
             downloaded_file_path = await UrlDownloaderTool().download_file_from_url(
                 url=url,
@@ -118,18 +118,22 @@ class PageVisionTool(Tool):
                 pdf_path = pdf_path_results[0].text
                 print(f"Successfully rendered page {url} to {pdf_path}")
             except Exception as browser_e:
-                raise ValueError(f"Failed to render URL {url} with browser after direct download failed.") from browser_e
+                raise ValueError(
+                    f"Failed to render URL {url} with browser after direct download failed."
+                ) from browser_e
 
         if not pdf_path:
-            raise ValueError(f"Could not retrieve content from URL {url} either by download or rendering.")
+            raise ValueError(
+                f"Could not retrieve content from URL {url} either by download or rendering."
+            )
 
-        structured_prompt = self._construct_visual_query_prompt(question)
+        structured_prompt = self._get_visual_query_prompt(question)
 
         return await MultiModalTool().call_multi_modal(
             query_prompt=structured_prompt, media_paths=[pdf_path]
         )
 
-    def _construct_visual_query_prompt(self, question: str) -> str:
+    def _get_visual_query_prompt(self, question: str) -> str:
         prompt = f"""
     You are an expert Visual Question Answering (VQA) agent specializing in analyzing web pages. Your task is to act as a user's eyes, meticulously examining the provided webpage document (rendered as a PDF/image) and answering a specific question about its visual content.
 
@@ -210,11 +214,12 @@ async def init_server():
 
     await mcp_connection.call(
         tool_name="browser_navigate",
-        url="http://pietromurano.org/Papers/Murano-Khan-Published-Version.pdf",
+        url="https://www.wikiwand.com/en/articles/SINGAPORE",
     )
     sleep(2)
 
     await mcp_connection.call(tool_name="browser_get_state")
+
 
 async def close_connection():
     """Close the MCP connection."""
@@ -245,7 +250,7 @@ async def main():
     result = await tool.call_page_vision(
         tool_call_ctx=ToolCallContext(job_id="1", operator_id="2"),
         question=task_description,
-        url="http://pietromurano.org/Papers/Murano-Khan-Published-Version.pdf",
+        url="https://www.wikiwand.com/en/articles/SINGAPORE",
     )
     print(result)
 

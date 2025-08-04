@@ -30,7 +30,8 @@ class MultiModalTool(Tool):
 
         Args:
             query_prompt (str): The query prompt to process. It can be a question or instruction,
-                just talk to a multi-modal model like you would with a human.
+                just talk to a multi-modal model like you would with a human. It is suggested to ask
+                it to think before answering, to avoid hallucinations.
             media_paths (List[str]): A list containing paths to local media files or public URLs.
                 - For local files, provide a relative or absolute path.
                 - For URLs, the tool will first attempt to download the resource to a temporary
@@ -54,7 +55,8 @@ class MultiModalTool(Tool):
 
                 is_url = path_or_url.startswith(("http://", "https://", "gs://"))
                 if is_url:
-                    # 对于 "gs://" 协议，我们遵循原始逻辑，因为它不是标准的 HTTP 下载
+                    # for the "gs://" protocol,
+                    # it follows the original logic because it is not a standard HTTP download
                     if path_or_url.startswith("gs://"):
                         mime_type, _ = mimetypes.guess_type(path_or_url)
                         if not mime_type:
@@ -62,9 +64,9 @@ class MultiModalTool(Tool):
                         content.append(
                             {"type": "file", "file": {"file_id": path_or_url, "format": mime_type}}
                         )
-                        continue  # 处理完 gs:// URL 后跳过后续的本地文件逻辑
+                        continue  # skip subsequent local file logic after processing the gs:// URL.
 
-                    # 对于 HTTP/HTTPS URL，下载文件
+                    # download the file from the HTTP/HTTPS URL
                     downloaded_path = await UrlDownloaderTool().download_file_from_url(url=path_or_url)
                     if downloaded_path:
                         file_path = downloaded_path
@@ -72,7 +74,7 @@ class MultiModalTool(Tool):
                     else:
                         return f"Error: Failed to download media from URL: {path_or_url}"
                 else:
-                    # 处理本地文件路径
+                    # handle local file paths
                     local_path = Path(path_or_url)
                     if not local_path.is_absolute():
                         local_path = (Path(os.getcwd()) / local_path).resolve()
@@ -126,14 +128,15 @@ class MultiModalTool(Tool):
 async def main():
     """Main function to demonstrate the usage of MultiModalTool."""
     result = await MultiModalTool().call_multi_modal(
-        query_prompt="请从PDF中提取重要的信息，总结这篇文章",
+        query_prompt="她说了什么？",
         media_paths=[
-            "./shared_files/67e8878b-5cef-4375-804e-e6291fdbe78a.pdf",
+            # "./shared_files/67e8878b-5cef-4375-804e-e6291fdbe78a.pdf",
             # "https://arxiv.org/pdf/1301.6961.pdf",
             # "https://threatenedtaxa.org/index.php/JoTT/article/view/3238/4123",
             # "https://whitney.org/collection/works/65848",
             # "https://en.wikipedia.org/w/index.php?title=Ice_cream&action=history",
             # "https://www.bing.com/search?q=what+kind+of+fish+is+nemo",
+            "./shared_files/1f975693-876d-457b-a649-393859e79bf3.mp3"
         ],
     )
     print("Result:", result)

@@ -24,13 +24,13 @@ class CodeExecutorTool(Tool):
         Returns:
             The output from the executed code (stdout/stderr and any exceptions).
         """
-        local_vars = {}
+        shared_scope = {}
         stdout_capture = io.StringIO()
         stderr_capture = io.StringIO()
 
         try:
             with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-                exec(code, globals(), local_vars)
+                exec(code, shared_scope)
 
             stdout_val = stdout_capture.getvalue()
             stderr_val = stderr_capture.getvalue()
