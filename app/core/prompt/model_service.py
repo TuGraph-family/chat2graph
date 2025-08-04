@@ -55,50 +55,67 @@ Here are the LESSONS LEARNED:
 ==========
 """  # noqa: E501
 
+
 FUNC_CALLING_PROMPT = """
 // When you need to call the function(s), use the following format in the <action>...</action>. Or else you can skip this part.
-Notes:
-1. The internal format that located in <function_call>...</function_call> must be valid JSON
-2. Function name goes in the "name" field
-3. All arguments go in the "args" object
-4. Multiple function calls should be separated by newlines. All callable functions are listed in the FUNCTION CALLING LIST (I informed you to abvoid this kind of hallucination).
-5. For complex arguments of the function:
-- Use standard JSON data types, including strings (using double quotes), numbers (no quotes), Boolean values (true/false), arrays ([]), and objects (\{\}). Pay special attention to the placement of commas between elements. Do not put a comma after the last element.
-- Ensure standard nesting of data structures, and not do use code comments in the JSON
-- Remember to escape special characters in strings
-- Use <function_call>...</function_call> to wrap the function call (in the <action>...</action> part). You can use it multiple times to call multiple functions.
-- When using <function_call>...</function_call>, make sure to provide the "call_objective" field, and to generate the correct json format. Use empty dict if no arguments 'args: \{\}' are needed.
-6. If functions called, the third party (neither you or me) will execute the functions and paste the results in <function_call_result>...</function_call_result>, (after <action> part), so that you and me are NOT permitted to generate the mock function results by ourselves.
 
+Function Call Rule: For simple arguments, use standard JSON. For complex, multi-line arguments like code, use the Payload Wrapper.
 
-Function calling examples:
+Here are the detailed rules:
+
+1.  **General Format**: All function calls must be wrapped in `<function_call>...</function_call>` tags inside the `<action>` section. You can have multiple `<function_call>` blocks for multiple calls.
+
+2.  **JSON Structure**: The content inside each `<function_call>` must be a valid JSON object with three required keys:
+    *   `"name"`: The name of the function to call (string).
+    *   `"call_objective"`: A brief description of why you are calling this function (string).
+    *   `"args"`: An object containing all arguments for the function. If no arguments are needed, use an empty object `{{}}`.
+
+3.  **Handling Simple Arguments**: For standard data types like short strings, numbers, booleans, or simple nested objects/arrays, use standard JSON format.
+    *   Keys and strings must be in **double quotes** (`"`).
+    *   Do not use trailing commas.
+
+4.  **Handling COMPLEX Arguments (e.g., Code, HTML, Markdown) - THE EASY WAY**:
+    *   Problem**: Multi-line code or text with special characters is extremely difficult and error-prone to escape correctly in a JSON string.
+    *   Solution: Instead of escaping, wrap the raw, unescaped content in a **Payload Wrapper**.
+    *   Start Marker: `__PAYLOAD_START__`
+    *   **End Marker: `__PAYLOAD_END__`
+    *   Simply place the raw content between these markers. The system will handle it automatically.
+
+5.  **Execution Flow**: After you provide the `<action>`, a third party will execute the functions and paste the results in `<function_call_result>...</function_call_result>`. You are NOT permitted to generate mock function results.
+
+Function Calling Examples:
+
+**Example 1: Calling a simple function**
 <action>
     <function_call>
     {
-        "name": "some_function",
-        "call_objective": "waht is the objective of calling this function",
+        "name": "update_user_profile",
+        "call_objective": "Update the user's name and notification settings.",
         "args": {
-            "data_dict": {
-                "name": "test",
-                "value": 123
-            },
-            "nested_list": [
-                {"value": 1},
-                {"value": 2}
-            ],
-            "config": {
-                "enabled": true,
-                "debug": false
-            },
-            "special_str": "Hello, World! 你好，世界！"
+            "user_id": 123,
+            "profile": {
+                "name": "Alice",
+                "notifications_enabled": true
+            }
         }
     }
     </function_call>
+// Example 2: Calling a function with a COMPLEX code argument (Recommended Method)
     <function_call>
     {
-        "name": "another_function_with_no_args",
-        "call_objective": "what is the objective of calling this function",
-        "args": {}
+        "name": "execute_python_code",
+        "call_objective": "Define a function to greet a user and then call it.",
+        "args": {
+            "code": __PAYLOAD_START__
+def greet(name):
+    # This is a comment inside the code.
+    # Notice there are no escape characters needed.
+    message = f"Hello, {name}! Welcome."
+    print(message)
+
+greet("World")
+__PAYLOAD_END__
+        }
     }
     </function_call>
     <function_call>
@@ -107,31 +124,60 @@ Function calling examples:
 </action>
 """  # noqa: E501
 
-
 FUNC_CALLING_JSON_GUIDE = """
-===== LLM Guide for Generating Valid JSON within `<function_call>` =====
-1.  **Structure:** Use `{ }` for objects, `[]` for arrays.
-2.  **Keys:** Object keys MUST be strings in DOUBLE QUOTES (`"`). Example: `{ "key": ... }`
-3.  **Values:** Values MUST be ONE of these literal types:
-    *   `"string"` (in DOUBLE QUOTES)
-    *   `number` (e.g., `123`, `-4.5`, `0`)
-    *   `true` (lowercase)
-    *   `false` (lowercase)
-    *   `null` (lowercase)
-    *   Another valid JSON `{object}`
-    *   Another valid JSON `[array]`
-4.  **CRITICAL: NO CALCULATIONS INSIDE JSON!**
-    *   **NEVER** put expressions like `10*5`, `sqrt(25)`, `variable` directly as a value.
-    *   **ALWAYS** calculate the final value *first*, then put the *literal result* (e.g., `50`, `5`) into the JSON.
-    *   Incorrect: `"value": 10 * 5`
-    *   Correct: `"value": 50`
-5.  **Syntax:**
-    *   Use `:` between key and value in objects.
-    *   Use `,` between elements in arrays and pairs in objects.
-    *   **NO trailing comma** after the last item.
-6.  **Quotes:** Use DOUBLE QUOTES (`"`) ONLY for keys and string values. NO single quotes (`'`).
-7.  *The `json` marker like <function_call>```json\n...```</function_call> is not validated, use <function_call>...</function_call> instead.*
+===== LLM Guide for Correcting Function Call Errors within `<function_call>` =====
 
-**Focus:** Generate literal values. Pre-calculate everything. Follow syntax strictly.
-=====
+A JSON parsing error occurred. Please review your `<function_call>` content.
+
+**>>> COMMON MISTAKE & SOLUTION FOR CODE ARGUMENTS <<<**
+
+*   **MISTAKE**: the system tried to manually escape a multi-line code block or complex string. This is very difficult and often fails.
+    // WRONG AND ERROR-PRONE WAY:
+<function_call>
+    {
+      "name": "execute_python_code",
+      "args": {
+        "code": "def greet(name):\\n    print(f\\"Hello, {{name}}!\\")"
+      }
+    }
+</function_call>
+
+*  **MISTAKE**:
+    // WRONG AND ERROR-PRONE WAY: __PAYLOAD_START__ and __PAYLOAD_END__ is enclosed in a pair of double quotes "".
+<function_call>
+    {
+      "name": "execute_python_code",
+      "args": {
+        "code": "__PAYLOAD_START__\ndef greet(name):\n    print(f\"Hello, {{name}}!\")\n__PAYLOAD_END__"
+      }
+    }
+    ```
+</function_call>
+
+*   **SOLUTION**: Use the Payload Wrapper. It's simpler and always correct. Just wrap your raw code with `__PAYLOAD_START__` and `__PAYLOAD_END__`.
+
+    // CORRECT AND SIMPLE WAY:
+<function_call>
+    {
+      "name": "execute_python_code",
+      "call_objective": "To run a simple greeting script.",
+      "args": {
+        "code": __PAYLOAD_START__
+def greet(name):
+    print(f"Hello, {{name}}!")
+__PAYLOAD_END__
+      }
+    }
+</function_call>
+
+**General JSON Syntax Checklist (For non-payload parts):**
+
+1.  **Keys & Strings**: MUST be in DOUBLE QUOTES (`"`).
+    *   Correct: `{ "key": "value" }`
+    *   Incorrect: `{ 'key': 'value' }`
+2.  **Trailing Commas**: NOT ALLOWED after the last item in an object or array.
+    *   Correct: `{ "a": 1, "b": 2 }`
+    *   Incorrect: `{ "a": 1, "b": 2, }`
+3.  **Data Types**: Values must be a string, number, `true`, `false`, `null`, object `{}` or array `[]`.
+4.  **No Comments**: Do not use `//` or `/* */` inside the JSON block.
 """  # noqa: E501
