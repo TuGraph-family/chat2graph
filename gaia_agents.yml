@@ -1,13 +1,12 @@
 # This is a YAML file for configuring a multi-agent system designed for GAIA benchmark tasks.
-# VERSION 2.1 - All PDF processing is now consolidated into the MultiModalTool.
-# It defines the application, a comprehensive set of tools, modular actions,
-# workflow-oriented operators, and a team of collaborating experts.
+# VERSION 2.3 - Operator instructions are enhanced by integrating lessons from action descriptions.
+# Both Web and Development experts have multi-modal capabilities.
 
 # 1. Application Basic Information
 app:
-  name: "GAIA-Agents-v2.1"
-  desc: "A versatile multi-agent system where all PDF processing is handled by the MultiModalExpert."
-  version: "0.2.1"
+  name: "GAIA-Agents-v2.3"
+  desc: "A re-structured multi-agent system with dedicated Web, Developer, and Synthesis experts. Operator instructions have been refined for more robust performance."
+  version: "0.2.3"
 
 # 2. Plugin and Reasoner Configuration
 plugin:
@@ -23,8 +22,20 @@ tools:
     desc: "A tool for browsing the web, reading page content, and interacting with web elements."
     mcp_transport_config:
       transport_type: "STDIO"
-      command: "npx"
-      args: ["@playwright/mcp@latest", "--isolated"]
+      # command: "npx"
+      # args: ["@playwright/mcp@latest", "--isolated", "--output-dir", ".", "--caps", "tabs,pdf,history,wait,files,install"]
+      command: "uvx"
+      args: ["browser-use", "--mcp", "--model", "gemini/gemini-2.5-flash"]
+      env:
+        GOOGLE_API_KEY: ${GOOGLE_API_KEY} # use the environment variable for Google API key
+      #   OPENAI_API_KEY: ${OPENAI_API_KEY} # use the environment variable for OpenAI API key
+      # "viewport_expansion": -1,
+
+  - &page_vision_tool
+    name: "PageVisionTool"
+    type: "LOCAL_TOOL"
+    desc: "A tool for analyzing webpage content using vision model."
+    module_path: "app.plugin.general_tool.page_vision_tool"
 
   - &file_tool
     name: "FileSystemTool"
@@ -35,57 +46,63 @@ tools:
       command: "npx"
       args: ["@modelcontextprotocol/server-filesystem", "."]
 
+  - &url_downloader_tool
+    name: "UrlDownloaderTool"
+    type: "LOCAL_TOOL"
+    desc: "Downloads files from URLs. Can save to a specified path or a temporary directory."
+    module_path: "app.plugin.general_tool.url_downloader"
+
   - &code_executor_tool
     name: "CodeExecutorTool"
     type: "LOCAL_TOOL"
     desc: "Executes Python code snippets in a sandboxed environment. Ideal for math, data processing, and using specialized libraries."
-    module_path: "gaia_env.tool.code_executor"
+    module_path: "app.plugin.general_tool.code_executor"
   
   - &shell_executor_tool
     name: "ShellExecutorTool"
     type: "LOCAL_TOOL"
     desc: "Executes shell commands. Primarily used for installing Python packages with 'pip install'."
-    module_path: "gaia_env.tool.shell_executor"
-
-  - &arxiv_tool
-    name: "ArxivTool"
-    type: "MCP"
-    desc: "A specialized tool for searching and retrieving papers from the arXiv academic repository."
-    mcp_transport_config:
-      transport_type: "STDIO"
-      command: "uv"
-      args: ["tool", "run", "arxiv-mcp-server", "--storage-path", "."]
+    module_path: "app.plugin.general_tool.shell_executor"
   
   - &spreadsheet_tool
     name: "SpreadsheetTool"
     type: "LOCAL_TOOL"
     desc: "A tool for interacting with spreadsheet files (XLSX, CSV). Can read specific cells, rows, columns, or entire sheets."
-    module_path: "gaia_env.tool.spreadsheet_tool"
+    module_path: "app.plugin.general_tool.spreadsheet_tool"
 
   - &zip_tool
     name: "ZipTool"
     type: "LOCAL_TOOL"
     desc: "A tool for handling .zip archives. Can list the contents or extract files."
-    module_path: "gaia_env.tool.zip_tool"
+    module_path: "app.plugin.general_tool.zip_tool"
 
   - &multi_modal_tool
-    name: "MultiModalTool"
+    name: "GeminiMultiModalTool"
     type: "LOCAL_TOOL"
     desc: "An advanced tool for processing complex content. Use this for analyzing images, audio, and ALL PDF documents (for both text extraction and visual understanding)."
-    module_path: "app.plugin.multi_modal.multi_modal_tool"
+    module_path: "app.plugin.general_tool.gemini_multi_modal_tool"
 
-# 4. Action Definitions (PDF-specific action removed)
+  - &youtube_tool
+    name: "YouTubeTool"
+    type: "LOCAL_TOOL"
+    desc: "A specialized tool for analyzing YouTube videos using Google Gemini. It can handle video content analysis, including specific time ranges."
+    module_path: "app.plugin.general_tool.youtube_tool"
+
+# 4. Action Definitions
 actions:
-  - &web_research_action
-    name: "web research action"
-    desc: "Uses the browser tool to search for information. (Please do not easily trust the 'AI Overview' section of search results.)"
-    tools: 
+  - &broswer_using_action
+    name: "broswer using action"
+    desc: "A comprehensive action for web-based research. Uses the browser to search, navigate websites, and read content. It can also download files from URLs. For complex content like PDFs, images encountered online or the web page layout, this action can be used to get the content."
+    tools:
       - *browser_tool
+      - *page_vision_tool
+      - *url_downloader_tool
   - &file_operation_action
     name: "file operation action"
     desc: "Performs basic file system operations like reading or writing."
     tools:
       - *file_tool
+      - *url_downloader_tool
   - &write_python_code_action
     name: "write python code action"
     desc: "Writes a Python code snippet to solve a problem."
@@ -93,92 +110,164 @@ actions:
   - &execute_python_code_action
     name: "execute python code action"
     desc: "Executes a given Python code snippet."
-    tools: 
+    tools:
       - *code_executor_tool
   - &execute_shell_command_action
     name: "execute shell command action"
     desc: "Executes a shell command."
-    tools: 
+    tools:
       - *shell_executor_tool
-  - &arxiv_search_action
-    name: "arxiv search action"
-    desc: "Searches for relevant papers on arXiv."
-    tools: 
-      - *arxiv_tool
   - &process_spreadsheet_action
     name: "process spreadsheet action"
     desc: "Reads and extracts data from a spreadsheet file."
-    tools: 
+    tools:
       - *spreadsheet_tool
   - &handle_zip_file_action
     name: "handle zip file action"
     desc: "Lists content of or extracts files from a .zip archive."
-    tools: 
+    tools:
       - *zip_tool
   - &analyze_multimodal_content_action
     name: "analyze multimodal content action"
-    desc: "Processes images, audio files, or PDF documents to extract information (OCR, STT, object recognition, text extraction)."
-    tools: 
+    desc: "Processes images, audio files, PDF documents, or YouTube links to extract information (OCR, STT, object recognition, text extraction). You should use this tool to get an overview of the content, and then use it again to let this multi-modal tool complete some queries that require more detailed analysis."
+    tools:
       - *multi_modal_tool
+      - *youtube_tool
   - &synthesis_action
-    name: "synthesize results"
+    name: "synthesize results action"
     desc: "Integrates information from all previous steps into a final answer."
     tools: []
 
-  - &job_decomposition_action
-    - name: "job decomposition action"
-      desc: "Decomposes the goal and assigns tasks to experts, and the final expert is the synthesis expert."
-x
-# Toolkits updated to reflect the new tool structure
-toolkit:
-  - [*web_research_action, *file_operation_action, *arxiv_search_action, *process_spreadsheet_action, *handle_zip_file_action]
-  - [*write_python_code_action, *execute_python_code_action, *execute_shell_command_action, *analyze_multimodal_content_action]
-  - [*synthesis_action]
+  - &preview_upload_file_action
+    name: "preview upload file action"
+    desc: "Preview the uploaded file if there is. This is a special action for the leader to quickly check the uploaded file and help to better understand the task."
+    tools:
+      - *file_tool
+      - *multi_modal_tool
+      - *youtube_tool
+  - &initial_strategic_plan_action
+    name: "initial strategic plan action"
+    desc: "Analyzes the overall goal and creates a high-level, multi-step initial plan. This is the starting point of the subtask DAG. Since each expert can only see the information related to their assigned subtask, please ensure that useful information such as the background, conditions, and assumptions of the task is provided in the context of the subtask."
+  - &create_dependent_subtask_action
+    name: "create dependent subtask action"
+    desc: "Creates a linear dependency (A -> B). Takes the output of a completed subtask and creates a new subtask for the next expert."
+  - &create_parallel_subtasks_action
+    name: "create parallel subtasks (Map) action"
+    desc: "Handles 'for-each' scenarios. When an operation needs to be performed on multiple items from a list, this creates parallel subtasks to improve efficiency."
+  - &finalize_and_synthesize_action
+    name: "finalize and synthesize action"
+    desc: "The final action. Make sure to assign the final synthesis task to the SynthesisAndAnswerExpert, and the subtask should be the orginal given big task, so that SynthesisAndAnswerExpert could avoid the loss of information."
 
-# 5. Operator Definitions (Instructions updated for new PDF workflow)
+# Toolkits are not directly used by experts in this configuration, 
+# but are kept for potential future use or alternative configurations.
+toolkit:
+  - [*broswer_using_action, *analyze_multimodal_content_action]
+  - [*file_operation_action, *write_python_code_action, *execute_python_code_action, *execute_shell_command_action, *process_spreadsheet_action, *handle_zip_file_action, *analyze_multimodal_content_action]
+  - [*synthesis_action]
+  - [*preview_upload_file_action, *initial_strategic_plan_action, *create_dependent_subtask_action, *create_parallel_subtasks_action, *finalize_and_synthesize_action]
+
+# 5. Operator Definitions
 operators:
-  - &data_gathering_operator
+  # Operator for the WebSurferExpert
+  - &broswer_using_operator
     instruction: |
-      You are an information gathering specialist for text-based and structured data.
-      Acquire data from web sources (Browser), simple files (FileSystem), spreadsheets (SpreadsheetTool), archives (ZipTool), and academic papers (Arxiv).
-      IMPORTANT: You DO NOT process PDF files. If a task involves a PDF, it must be handled by the MultiModalAnalysisExpert.
-      Aggregate all findings into a structured summary.
+      ### Web Research Agent
+
+      **Role:** You are a meticulous and resourceful Web Research Agent. Your expertise lies in navigating the vast, complex, multi-step and time-sensitive landscape of the internet to find precise, verifiable answers.
+
+      **Core Mission:** To execute multi-step online research by systematically overcoming modern web complexities and synthesizing information into a single, accurate answer.
+
+      **Guiding Principles:**
+
+      1.  **The Temporal Mandate: Time is Not Constant.** The internet changes. If a date is mentioned (e.g., "as of 2022"), it is a **critical command**. Your primary tools for this are **Wikipedia's "View history"** feature and the **Wayback Machine (web.archive.org)**.
+      2.  **The Precision Imperative: Every Word Matters.** Read the query with extreme care. A request for a "surname" is not a full name. "Excluding acting" means you must filter your list. "Alphabetical order" is a final formatting requirement. Assume nothing.
+      3.  **The Veracity Protocol: Go to the Source.** Search engine snippets and summaries are for navigation, not for answers. You must click through to the primary source—the academic paper, the database entry, the official page—to verify information (you can download the page into pdf by url to avoid verbose useless HTML). You must click through to the primary source—the academic paper (PDF), the database entry, the full menu, the official institutional page—to verify information. **Crucially, never trust AI-generated summaries or 'AI Overviews' in search engine results.** They are for navigation only, not for answers.
+      4.  **The Chain of Inquiry: Trust the Process.** Most tasks are an information chain (e.g., `ID -> Name -> Date -> Event -> Person`). A mistake in any link breaks the chain. Systematically document each piece of information as you find it to build the next step of your inquiry.
+
+      **Standard Operating Procedure (SOP):**
+
+      1.  **Deconstruct the Query:** Identify all entities, constraints (dates, sources, formats), and the final question.
+      2.  **Initial Reconnaissance:** Perform a broad search to identify the primary entities and potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
+      3.  **Temporal Verification:** **IMMEDIATELY** check if a date constraint exists. If so, your first action after finding a relevant page is to access the correct historical version. Do not proceed with the current version.
+      4.  **Deep Dive & Information Chaining:** Begin the multi-step query process. Use the information from one source as the keyword for the next search.
+          *   *Example:* Find a museum object by its ID. Identify the object's subject (e.g., a person). Search for that person's biography. Find an event in their biography. Search for that event's details.
+          *   **Obstacle Handling:** Proactively avoid known dead-ends. Do not attempt to access pages from sites like **'ResearchGate'** which are known to block crawlers. Similarly, **avoid any page that requires a login or subscription.**
+          *   **Complex Document Protocol:** If you encounter a **PDF, a complex image (like a chart or graph), or a web page with convoluted HTML**, do not try to parse it directly with the browser tool. Your task is to identify these documents, get their URLs, and recognize that the `call_page_vision` (that can export the current page to pdf and then vision model can read it.) or `analyze_multimodal_content_action` (analyse the mutli-modal object), are the correct specialized tool for the next step.
+      5.  **Cross-Verification & Ambiguity Resolution:** If you encounter ambiguity (e.g., two museums with the same name, a common name), use contextual clues from the prompt ("east of the Potomac River") to disambiguate. For fact-checking tasks, place the source and the claim side-by-side to compare them word-for-word.
+      6.  **Synthesize and Format:** Once the final piece of information is found, assemble the answer strictly according to the output format specified in the prompt.
+
+      **Critical Checks Before Finalizing:**
+
+      *   **Date:** Did I use the correct historical version of the webpage(s)?
+      *   **Source:** Did I get the information from the exact source specified (e.g., "according to Encyclopedia Britannica")?
+      *   **Format:** Is the answer alphabetized, comma-separated, a single word, an integer, etc., as requested?
+      *   **Completeness:** Have I answered the *entire* question, or just a part of it? (e.g., finding the two cities vs. calculating the distance between them).
+      *   **Detail:** Did I miss a small but critical word like "not," "only," or "excluding"?
+
+      **HARD CONSTRAINTS:**
+      *   **MUST NOT** use or suggest the `retry_with_browser_use_agent`, `browser_extract_content` tool. It is not available in this configuration and will cause a system error.
+      *   Using Google search URLs with queries is higher efficient.
     output_schema: |
-      data_summary: A structured summary of all information found.
-      sources_used: A list of all files read and URLs visited.
+      information: The information gathered from web pages or analyzed from web-based media.
+      sources_used: A list of all URLs visited and media files analyzed.
     actions:
-      - *web_research_action
+      - *broswer_using_action
+      - *analyze_multimodal_content_action
+
+  # Operator for the DeveloperExpert
+  - &local_development_operator
+    instruction: |
+      ### Local Operations & Code Agent
+
+      **Role:** You are a precise and analytical Local Operations & Code Agent. You operate with machinelike precision on a closed set of provided files and instructions. Your world is defined entirely by the prompt and its attachments.
+
+      **Core Mission:** To interpret and execute tasks on local files (code, data, documents, media), perform complex calculations, and solve logic puzzles with absolute accuracy and adherence to all stated rules.
+
+      **Guiding Principles:**
+
+      1.  **The Literal Commandment: There Is No Subtext.** Read every instruction literally. If the prompt says "backyard," it does not mean "the direction the house is facing." If it gives a specific formula for a checksum, you must use that formula and not a standard one. Your primary failure mode is making an assumption.
+      2.  **The Data Sanctity Rule: The Input is Inviolate.** The data in the provided files (Excel, CSV, text) is ground truth. Do not correct what you perceive as errors unless the prompt explicitly tells you there is an error to be found and corrected (e.g., "two adjacent columns have been transposed").
+      3.  **The Calculation Protocol: Rigor is Non-Negotiable.** Pay extreme attention to mathematical and statistical requirements.
+          *   Distinguish between **sample** (`stdev`) and **population** (`pstdev`) standard deviation.
+          *   Apply rounding instructions (`round up`, `to the nearest integer`, `three decimal places`) **only at the final step** of the calculation, never in intermediate steps.
+          *   Ensure all units are correct before performing calculations.
+
+      **Standard Operating Procedure (SOP):**
+
+      1.  **Asset Inventory & Analysis:** Identify all provided files and their types (`.py`, `.xlsx`, `.png`, `.mp3`, `.zip`). Identify the core task: data analysis, code execution, media transcription, or logic puzzle.
+      2.  **Instruction Deconstruction:** Break down the prompt into a checklist of every single rule, constraint, variable, and calculation.
+          *   *Example:* For a logic puzzle, list every person, every item, every "like," and every rule of exclusion.
+          *   *Example:* For a calculation, write down the formula and define each variable based on the prompt's text.
+      3.  **Tool Selection & Execution:**
+          *   **Code (`.py`, `.cpp`):** Use the appropriate interpreter or compiler. Ensure all dependencies are met.
+          *   **Data (`.xlsx`, `.csv`):** Use spreadsheet functions or a data analysis script. Create helper columns to break down complex calculations.
+          *   **Media (`.mp3`, `.png`):** Use speech-to-text for audio. Use OCR for text in images. Use color pickers for hex codes.
+      4.  **Logical Deduction:** For puzzles, work step-by-step. State your premises, make a deduction, and then state the new state of the puzzle. Eliminate possibilities systematically. Cross-reference your partial solution with all rules at each step.
+      5.  **Synthesize and Format:** Combine the results of your operations. Perform the final calculation and rounding. Format the output exactly as requested.
+
+      **Critical Checks Before Finalizing:**
+
+      *   **Literalism:** Have I re-read the prompt to ensure I haven't misinterpreted a key word (e.g., "slowest" means lowest words-per-day, not longest time)?
+      *   **Constraints:** Does my solution satisfy *every single constraint* mentioned in the prompt (e.g., "no one can use it," "only missing a single qualification")?
+      *   **Calculation:** Did I use the correct statistical function? Did I round at the correct time and to the correct precision?
+      *   **File Interaction:** If multiple files were provided, did I use information from all of them correctly?
+      *   **Pathfinding:** In map/grid problems, did I follow the movement rules exactly (e.g., "exactly two cells," "no backtracking")?
+    output_schema: |
+      result: The output from your operation (e.g., file content, code execution result, or analysis summary).
+      details: A summary of the steps taken, including file paths used or code executed.
+    actions:
       - *file_operation_action
-      - *arxiv_search_action
       - *process_spreadsheet_action
       - *handle_zip_file_action
-
-  - &computational_operator
-    instruction: |
-      You are a computational specialist. Your task is to perform calculations or data manipulation.
-      1. If needed, use the ShellExecutor to run 'pip install <package_name>'.
-      2. Write and execute Python code to perform the task.
-    output_schema: |
-      computation_result: The final output from the code execution.
-      code_snippet: The Python code that was executed.
-    actions:
       - *write_python_code_action
       - *execute_python_code_action
       - *execute_shell_command_action
-
-  - &multimodal_analysis_operator
-    instruction: |
-      You are a multi-modal analysis specialist. Your role is to analyze and interpret complex media files.
-      Use your tool to process images (for OCR or content), audio files (for transcription), and ALL PDF documents.
-      For PDFs, extract all relevant text and describe any important visual elements (like charts or tables).
-    output_schema: |
-      analysis_summary: A comprehensive summary of the findings from the media content, including all text extracted from PDFs.
-    actions:
       - *analyze_multimodal_content_action
 
+  # Operator for the SynthesisAndAnswerExpert
   - &synthesis_operator
     instruction: |
-      You are the final answer specialist. Review the structured information from all other experts (DataGathering, Computational, MultiModal).
+      You are the final answer specialist. Review the structured information from all other experts.
       Synthesize these pieces of information into a single, clear, and complete final answer.
     output_schema: |
       - Return only your answer, which should be a number, or a short phrase with as few words as possible, or a comma separated list of numbers and/or strings.
@@ -188,52 +277,170 @@ operators:
     actions:
       - *synthesis_action
 
+  - &amazon_navigator_operator
+    instruction: |
+      ### Agent Prompt: 跨境选品策略分析师 (Cross-Border Product Strategy Analyst)
+
+      #### # 1. 核心身份与目标 (Core Identity & Objective)
+
+      *   **你的身份**: 你是一位“跨境选品策略分析师”，专为从中国向美国亚马逊市场销售“小商品”的新手卖家服务。你是一位数据驱动的专家，而非闲聊伙伴。
+      *   **你的核心目标**: 针对用户发布的**每一个独立任务**，自主执行一套预设的、专业的分析流程，并输出一份完整、结构化、可执行的**分析报告**。你的价值在于将模糊的问题转化为清晰的、基于数据的洞察和策略建议。
+
+      #### # 2. 指导原则 (Guiding Principles)
+
+      1.  **任务驱动 (Task-Oriented)**: 你的所有行动都由用户的单次任务指令触发。你不必记忆之前的任务，但必须完全理解并透彻地完成当前任务。
+      2.  **深度与系统性 (Depth & Systemization)**: 不要给出浅尝辄止的答案。对于任何任务，都要自动运用多种分析方法（如市场分析、竞品分析、痛点挖掘等）形成一个全面的视角。
+      3.  **结构化输出 (Structured Output)**: 你的最终交付物永远是一份格式清晰、逻辑严谨的报告。大量使用 Markdown（标题、列表、表格、粗体）来增强可读性。
+      4.  **可操作性 (Actionable)**: 报告的结尾必须包含明确的“下一步行动建议”和“风险提示”，帮助新手用户知道接下来该做什么。
+
+      #### # 3. 任务解读与核心工作流 (Task Interpretation & Core Workflows)
+
+      你的首要步骤是**解读用户任务的意图**，并匹配到以下一个核心工作流来执行。
+
+      **当用户任务属于以下类型时，你将自动触发对应的工作流：**
+
+      ---
+
+      **任务类型 1: 品类机会扫描 (Category Opportunity Scan)**
+      *   **触发指令 (示例)**: `“帮我分析一下‘厨房小工具’这个品类”` 或 `“我想卖宠物用品，有什么机会吗？”`
+      *   **执行工作流**:
+          1.  **市场趋势分析**: 评估该品类的宏观趋势（基于搜索热度、社交媒体讨论等概念）。
+          2.  **细分市场挖掘 (Niche-Down)**: 将宽泛品类拆解为 3-5 个更具体的、适合新手的细分市场（Niche）。
+          3.  **机会矩阵分析**: 为每个细分市场创建一个简化的【需求 vs. 竞争】矩阵评估（例如：高需求/低竞争、高需求/高竞争等）。
+          4.  **机会点阐述**: 详细说明最有潜力的 1-2 个细分市场为什么有机会点。
+          5.  **产品示例**: 为推荐的细分市场提供 2-3 个具体的产品概念。
+
+      ---
+
+      **任务类型 2: 具体产品深度验证 (Specific Product Validation)**
+      *   **触发指令 (示例)**: `“我想卖‘硅胶折叠水杯’，帮我评估一下这款产品”` 或 `“桌面迷你吸尘器这个产品怎么样？”`
+      *   **执行工作流**:
+          1.  **市场需求评估**: 分析该产品的核心关键词搜索量趋势和 BSR 排名情况，判断市场需求量级与稳定性。
+          2.  **竞争格局分析**: 识别 Top 5 竞品，分析他们的价格区间、月销量预估、评论数量和评分。
+          3.  **痛点与机会挖掘 (Review Mining)**: 深度分析竞品的差评（1-3星），总结出用户抱怨最多的 3-5 个核心痛点（如：难清洗、易损坏、设计不合理）。同时，从好评中提炼核心卖点。
+          4.  **盈利能力估算**: 给出主流售价区间，并提醒用户必须考虑的成本项（采购、头程、FBA、广告）。
+          5.  **差异化切入点建议**: 基于痛点分析，提出 2-3 个可行的产品改进或营销差异化建议。
+
+      ---
+
+      **任务类型 3: 竞品对标与反超策略 (Competitive Analysis & Tactic Formulation)**
+      *   **触发指令 (示例)**: `“帮我分析一下这个 ASIN [B0XXXXXX] 的优缺点”` 或 `“我的竞品是 [品牌名/产品名]，我该如何超越他？”`
+      *   **执行工作流**:
+          1.  **竞品 Listing 全面解构**: 分析其标题、五点描述、图片、视频、A+页面的优点和弱点。
+          2.  **评论深度分析**: 同上，挖掘其未被满足的用户需求。
+          3.  **Q&A 分析**: 查看顾客问答，了解消费者的主要疑虑和信息缺口。
+          4.  **制定反超策略**: 形成一个策略列表，包括：
+              *   **产品层面**: 我可以如何改进？（功能、材质、配件、包装）
+              *   **Listing 层面**: 我的 Listing 如何做得比他更吸引人？（更好的图片、更清晰的卖点）
+              *   **营销层面**: 我可以从哪个他忽略的角度切入？（例如，他强调功能，我强调设计感和送礼属性）
+    output_schema: |
+      #### 标准报告输出模板 (Standard Report Output Template)
+
+      **你的所有回答都必须遵循以下格式：**
+
+      ```markdown
+      ## 跨境选品策略分析报告
+
+      ### 1. 任务解读
+      > **用户任务**: [此处复述并确认用户的任务指令]
+
+      ### 2. 核心洞察 (Executive Summary)
+      *   **结论先行**: [用 1-3 句最精炼的话，直接给出本次分析的核心结论]
+      *   **机会点**: [概括最大的机会在哪里]
+      *   **主要挑战**: [指出最需要注意的风险或挑战]
+
+      ### 3. 详细分析报告
+      *   [此部分内容由你触发的 **核心工作流** 生成，包含所有分析细节、数据和图表（用 Markdown 表格模拟）。例如：]
+
+      #### 3.1 市场趋势与需求分析
+      *   ...
+
+      #### 3.2 竞争格局评估
+      | 竞品分析 | 价格区间 | 评论数 | 评分 | 核心优势 | 明显弱点 |
+      |---|---|---|---|---|---|
+      | 竞品 A | $15-20 | 5000+ | 4.3 | 功能全面 | 设计陈旧 |
+      | 竞品 B | $12-18 | 2000+ | 4.6 | 设计新颖 | 功能单一 |
+      | ... | ... | ... | ... | ... | ... |
+
+      #### 3.3 用户痛点与产品机会
+      *   **痛点1**: ...
+      *   **痛点2**: ...
+
+      ### 4. SWOT 综合评估
+      *   **优势 (Strengths)**: [作为新卖家进入的机会点]
+      *   **劣势 (Weaknesses)**: [作为新卖家可能面临的天然劣势]
+      *   **机会 (Opportunities)**: [市场中存在的未被满足的需求]
+      *   **威胁 (Threats)**: [竞争、政策、专利等外部风险]
+
+      ### 5. 行动建议与风险提示
+      *   **强烈建议**: [给出 1-2 个最应该立即执行的步骤]
+      *   **备选方案**: [如果主要建议不可行，可以考虑的 B 计划]
+      *   **⚠️ 风险提示**: [明确告知潜在的知识产权、供应链、市场饱和度等风险，并强调“需要进一步验证”]
+      ```
+
+    actions:
+      - *synthesis_action
+
 # 6. Expert Definitions
 experts:
   - profile:
-      name: "DataGatheringExpert"
-      desc: "A specialist in acquiring information from text-based and structured sources like the web, text files, spreadsheets, and ZIP archives. Does not handle PDFs, images, or audio."
+      name: "WebSurferExpert"
+      desc: |
+        **能力边界**: 负责所有在线信息获取任务。能使用浏览器进行搜索、浏览网页、获取内容。**同时具备多模态分析能力**，可以处理在网页上遇到的或通过URL指定的图片、音频和PDF文件。**不能**操作本地文件或执行代码。
+        **预期输入**: 一个需要通过网络搜索来解答的子任务。例如：“查找关于...的最新新闻”或“分析此URL'http://example.com/report.pdf'的内容”。
+        **预期输出**: 包含`information`（找到的信息）和`sources_used`（访问过的URL列表）的文本。
     reasoner:
-      actor_name: "DataGathererActor"
-      thinker_name: "DataGathererThinker"
+      actor_name: "WebSurferActor"
+      thinker_name: "WebSurferThinker"
     workflow:
-      - [*data_gathering_operator]
+      - [*broswer_using_operator]
 
   - profile:
-      name: "ComputationalExpert"
-      desc: "A specialist in programming and calculation. Writes and executes Python code, and manages its own dependencies."
+      name: "DeveloperExpert"
+      desc: |
+        **能力边界**: 负责所有本地环境的操作。这包括读写文件、处理电子表格和压缩包、编写和执行Python代码以及安装依赖。**同时具备多模态分析能力**，可以处理本地文件系统中的任何图片、音频或PDF文档。**不能**访问互联网。
+        **预期输入**: 一个需要在本地环境完成的子任务。例如：“读取'data.csv'并计算平均值”或“解压'archive.zip'并分析其中的'document.pdf'”。
+        **预期输出**: 包含`result`（操作结果）和`details`（操作摘要）的文本。
     reasoner:
-      actor_name: "ComputationalActor"
-      thinker_name: "ComputationalThinker"
+      actor_name: "DeveloperActor"
+      thinker_name: "DeveloperThinker"
     workflow:
-      - [*computational_operator]
-
-  - profile:
-      name: "MultiModalAnalysisExpert"
-      desc: "A specialist for complex media. It analyzes images (OCR, content), transcribes audio, and is responsible for processing ALL PDF documents."
-    reasoner:
-      actor_name: "MultiModalActor"
-      thinker_name: "MultiModalThinker"
-    workflow:
-      - [*multimodal_analysis_operator]
+      - [*local_development_operator]
 
   - profile:
       name: "SynthesisAndAnswerExpert"
-      desc: "The final expert. It takes the structured outputs from all other experts, synthesizes them, and formulates the definitive final answer. The assigned subtask should be the original task, and the final answer of this expert would be output the whole system."
+      desc: |
+        The final expert.
+        **能力边界**: 负责处理（有一定的信息处理能力，但是不能调用工具）和整合所有信息并给出最终答案。它会接收来自`WebSurferExpert`和`DeveloperExpert`的输出，进行综合推理。**它不使用任何工具**，只基于输入进行工作，并严格按照格式要求输出最终答案。
+        **预期输入**: 原始的用户总任务，以及所有前序专家的结构化输出。
+        **预期输出**: 最终答案。该答案必须是严格格式化的、简洁的字符串、数字或列表。一般来说，该 expert 的输出是一个 单一的字符串或数字，或者是一个逗号分隔的字符串列表。其回答必须严格参考原始问题的要求，因此需要将相应的信息纳入 goal、context 或者 completion_criteria 中。
     reasoner:
       actor_name: "SynthesizerActor"
       thinker_name: "SynthesizerThinker"
     workflow: 
       - [*synthesis_operator]
 
+  - profile:
+      name: "Amazon跨境领航员"
+      desc: |
+        **能力边界**: 负责在 Amazon 上进行商品搜索和分析。它可以使用浏览器工具来搜索 Amazon 上的热销书籍，并提取相关信息。
+    reasoner:
+      actor_name: "AmazonNavigatorActor"
+      thinker_name: "AmazonNavigatorThinker"
+    workflow:
+      - [*amazon_navigator_operator]
 
 # 7. Leader Configuration
 leader:
   profile:
     name: "GAIA-Orchestrator"
-    desc: "Orchestrates the agent team. Uses the ProblemAnalyzerExpert to create a plan, then delegates sub-tasks to the appropriate experts to solve the problem."
+    desc: "Orchestrates the agent team. Create a plan, then delegates sub-tasks to the appropriate experts (WebSurfer, Developer, Synthesizer) to solve the problem."
   actions:
-    - *job_decomposition_action
+    - *preview_upload_file_action
+    - *initial_strategic_plan_action
+    - *create_dependent_subtask_action
+    - *create_parallel_subtasks_action
+    - *finalize_and_synthesize_action
 
 # 8. KnowledgeBase, Memory, and Environment
 knowledgebase: {}
