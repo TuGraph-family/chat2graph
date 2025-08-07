@@ -272,7 +272,7 @@ operators:
     output_schema: |
       - Return only your answer, which should be a number, or a short phrase with as few words as possible, or a comma separated list of numbers and/or strings.
       - If the answer is a number, return only the number without any units unless specified otherwise.
-      - If the answer is a string, don't include articles, and don't use abbreviations (e.g. for states).
+      - If the answer is a string, don't use abbreviations (e.g. for states).
       - If the answer is a comma separated list, apply the above rules to each element in the list.
     actions:
       - *synthesis_action
