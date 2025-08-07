@@ -138,7 +138,7 @@ class UrlDownloaderTool(Tool):
 async def main():
     """Main function to test the UrlDownloaderTool."""
     downloader = UrlDownloaderTool()
-    save_dir = Path("./tmp")
+    save_dir = Path("./.gaia_tmp")
     save_dir.mkdir(exist_ok=True)
 
     print("\n--- Testing HTML Page (Should be skipped) ---")

@@ -1,7 +1,6 @@
 import os
-from pathlib import Path
 from time import sleep
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 import uuid
 
 from mcp.types import ContentBlock
@@ -17,8 +16,7 @@ from app.core.toolkit.tool_config import (
     McpTransportConfig,
     McpTransportType,
 )
-from app.plugin.general_tool.multi_modal_tool import MultiModalTool
-from app.plugin.general_tool.url_downloader import UrlDownloaderTool
+from app.plugin.general_tool.gemini_multi_modal_tool import GeminiMultiModalTool
 
 
 class PageVisionTool(Tool):
@@ -32,10 +30,7 @@ class PageVisionTool(Tool):
         )
 
     async def call_page_vision(
-        self,
-        tool_call_ctx: ToolCallContext,
-        question: str,
-        url: str,
+        self, tool_call_ctx: ToolCallContext, question: str, tab_index: Optional[int] = None
     ) -> str:
         """Answers a wide range of questions about a webpage by visually analyzing its content.
 
@@ -61,81 +56,70 @@ class PageVisionTool(Tool):
                 - BAD (Too Vague): "Analyze this page."
                 - BAD (Action-Oriented): "Click on the third link."
                 - BAD (Code-Specific): "Find the element with id 'user-profile'."
-            url (str): The URL of the webpage to analyze.
+            tab_index (Optional[int]): The index of the browser tab to analyze. If None, defaults to the current tab.
 
         Returns:
             str: A JSON formatted string containing a direct answer to the question, along with supporting evidence
                  and an assessment of whether the question was answerable from the visual content.
         """  # noqa: E501
-        # first, try to download the file directly.
-        downloaded_file_path: Optional[Path] = None
-        try:
-            temp_dir = "./tmp/"
-            os.makedirs(temp_dir, exist_ok=True)
-            # let UrlDownloaderTool handle the extension.
-            save_path_base = os.path.join(temp_dir, str(uuid.uuid4()))
-            downloaded_file_path = await UrlDownloaderTool().download_file_from_url(
-                url=url,
-                save_path=save_path_base,
-            )
-        except Exception as e:
-            print(f"Direct download of {url} failed: {e}. Will try to render with browser.")
-
         pdf_path: Optional[str] = None
-        if downloaded_file_path:
-            pdf_path = str(downloaded_file_path)
-            print(f"Successfully downloaded file from {url} to {pdf_path}")
-        else:
-            # If download failed or URL points to an HTML page, use browser to render.
-            print(f"Falling back to browser rendering for {url}")
-            try:
-                toolkit_service: ToolkitService = ToolkitService.instance
-                mcp_service: Optional[McpService] = None
-                toolkit = toolkit_service.get_toolkit()
-                for item_id in toolkit.vertices():
-                    tool_group = toolkit.get_tool_group(item_id)
-                    if tool_group and isinstance(tool_group, McpService):
-                        if tool_group._tool_group_config.name == "BrowserTool":
-                            mcp_service = tool_group
-                            break
-                if not mcp_service:
-                    raise ValueError("MCP service (BrowserTool) not found in the toolkit.")
+        tab_index_to_print = str(tab_index) if tab_index is not None else "current"
 
-                mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
+        try:
+            # get the MCP connection
+            toolkit_service: ToolkitService = ToolkitService.instance
+            mcp_service: Optional[McpService] = None
+            toolkit = toolkit_service.get_toolkit()
+            for item_id in toolkit.vertices():
+                tool_group = toolkit.get_tool_group(item_id)
+                if tool_group and isinstance(tool_group, McpService):
+                    if tool_group._tool_group_config.name == "BrowserTool":
+                        mcp_service = tool_group
+                        break
+            if not mcp_service:
+                raise ValueError("MCP service (BrowserTool) not found in the toolkit.")
 
-                temp_dir = "./tmp/"
-                os.makedirs(temp_dir, exist_ok=True)
-                file_path: str = os.path.join(temp_dir, f"{uuid.uuid4()}.pdf")
+            mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
 
-                pdf_path_results: List[ContentBlock] = await mcp_connection.call(
-                    tool_name="browser_export_whole_webpage_as_pdf",
-                    file_path=file_path,
-                )
+            # prepare the PDF path
+            temp_dir = "./.gaia_tmp/"
+            os.makedirs(temp_dir, exist_ok=True)
+            file_path: str = os.path.join(temp_dir, f"{uuid.uuid4()}.pdf")
 
-                assert pdf_path_results and pdf_path_results[0].type == "text", (
-                    "Expected a text content block with the file path."
-                )
-                pdf_path = pdf_path_results[0].text
-                print(f"Successfully rendered page {url} to {pdf_path}")
-            except Exception as browser_e:
-                raise ValueError(
-                    f"Failed to render URL {url} with browser after direct download failed."
-                ) from browser_e
+            # use browser to render
+            browser_tool_args: Dict[str, Any] = {
+                "file_path": file_path,
+            }
+            if tab_index is not None:
+                browser_tool_args["tab_index"] = tab_index
+            pdf_path_results: List[ContentBlock] = await mcp_connection.call(
+                tool_name="browser_export_whole_webpage_as_pdf", **browser_tool_args
+            )
+            assert pdf_path_results and pdf_path_results[0].type == "text", (
+                "Expected a text content block with the file path."
+            )
+            pdf_path = pdf_path_results[0].text
+            print(f"Successfully rendered page (tab: {tab_index_to_print}) to {pdf_path}")
+        except Exception as browser_e:
+            raise ValueError(
+                f"Failed to render page (tab: {tab_index_to_print}) with browser "
+                "after direct download failed."
+            ) from browser_e
 
         if not pdf_path:
             raise ValueError(
-                f"Could not retrieve content from URL {url} either by download or rendering."
+                f"Could not retrieve content from page (tab: {tab_index_to_print}) "
+                "either by download or rendering."
             )
 
         structured_prompt = self._get_visual_query_prompt(question)
 
-        return await MultiModalTool().call_multi_modal(
+        return await GeminiMultiModalTool().call_multi_modal(
             query_prompt=structured_prompt, media_paths=[pdf_path]
         )
 
     def _get_visual_query_prompt(self, question: str) -> str:
-        prompt = f"""
-    You are an expert Visual Question Answering (VQA) agent specializing in analyzing web pages. Your task is to act as a user's eyes, meticulously examining the provided webpage document (rendered as a PDF/image) and answering a specific question about its visual content.
+        prompt = f"""You are an expert Visual Question Answering (VQA) agent specializing in analyzing web pages. Your task is to act as a user's eyes, meticulously examining the provided webpage document (rendered as a PDF/image) and answering a specific question about its visual content.
 
     The user's question is: "{question}"
 
@@ -250,7 +234,6 @@ async def main():
     result = await tool.call_page_vision(
         tool_call_ctx=ToolCallContext(job_id="1", operator_id="2"),
         question=task_description,
-        url="https://www.wikiwand.com/en/articles/SINGAPORE",
     )
     print(result)
 
