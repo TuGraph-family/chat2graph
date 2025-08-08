@@ -48,7 +48,7 @@ class McpService(ToolGroup):
                     name=mcp_base_tool.name,
                     description=(
                         tool_description
-                        + "\tInput Schema:\n"
+                        + "\tInput Schema (Args):\n"
                         + json.dumps(mcp_base_tool.inputSchema, indent=4)
                     ),
                     tool_group=self,
