@@ -198,7 +198,7 @@ async def init_server():
 
     await mcp_connection.call(
         tool_name="browser_navigate",
-        url="https://www.wikiwand.com/en/articles/SINGAPORE",
+        url="https://en.wikipedia.org/wiki/Mercedes_Sosa",
     )
     sleep(2)
 
