@@ -78,6 +78,34 @@ def load_gaia_dataset(split: str, level: str) -> datasets.Dataset:
     return dataset
 
 
+def load_processed_task_ids(log_dir: Path, split: str, level: str) -> set[str]:
+    """
+    Scan existing gaia_results_{split}_level-{level}_*.jsonl files and
+    collect previously processed task_ids to avoid re-running them.
+    """
+    processed: set[str] = set()
+    if not log_dir.exists():
+        return processed
+    pattern = f"gaia_results_{split}_level-{level}_*.jsonl"
+    for fp in log_dir.glob(pattern):
+        try:
+            with fp.open("r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                        tid = obj.get("task_id")
+                        if isinstance(tid, str):
+                            processed.add(tid)
+                    except json.JSONDecodeError:
+                        continue
+        except Exception:
+            continue
+    return processed
+
+
 def process_single_sample(
     sample: dict, agent_config_path: str, project_root_path: str, split: str
 ) -> dict:
@@ -162,9 +190,7 @@ def process_single_sample(
             print(f"   Timestamp: {datetime.now()}")
             if file_name:
                 print(
-                    f"   Attached File: {file_name} -> {
-                        path_for_agent if path_for_agent else 'NOT FOUND / FAILED TO STAGE'
-                    }"
+                    f"   Attached File: {file_name} -> {path_for_agent if path_for_agent else 'NOT FOUND / FAILED TO STAGE'}"
                 )
             print("-" * 80)
             print(f"❓ QUESTION (Passed to Agent):\n{full_question}\n")
@@ -273,6 +299,21 @@ def main():
                     f"⚠️  Warning: The following task_id not found in dataset: {list(missing_ids)}"
                 )
         else:
+            log_dir = Path(project_root) / "test/benchmark/gaia/running_logs"
+            processed_ids = load_processed_task_ids(log_dir, args.split, args.level)
+            if processed_ids:
+                print(
+                    f"ℹ️  Found {len(processed_ids)} previously processed task_ids. Skipping them."
+                )
+                before = len(dataset)
+                dataset = dataset.filter(lambda example: example["task_id"] not in processed_ids)
+                print(f"   Remaining unprocessed samples: {len(dataset)} (from {before})")
+
+            if len(dataset) == 0:
+                print(
+                    "✅ All tasks for this split & level have already been processed. Nothing to do."
+                )
+                return
             if args.random:
                 print("ℹ️  Selecting random samples...")
                 samples_to_run = dataset.shuffle().select(

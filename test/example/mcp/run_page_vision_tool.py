@@ -1,4 +1,4 @@
-app/plugin/system/url_downloader.pyfrom time import sleep
+from time import sleep
 from typing import Optional
 
 from app.core.common.type import ToolGroupType
