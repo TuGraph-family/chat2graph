@@ -6,7 +6,7 @@ from mcp.types import Tool as McpBaseTool
 
 from app.core.model.task import ToolCallContext
 from app.core.service.tool_connection_service import ToolConnectionService
-from app.core.toolkit.mcp_tool import McpTool
+from app.core.toolkit.mcp.mcp_tool import McpTool
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_config import McpConfig
 from app.core.toolkit.tool_connection import ToolConnection
@@ -48,7 +48,7 @@ class McpService(ToolGroup):
                     name=mcp_base_tool.name,
                     description=(
                         tool_description
-                        + "\tInput Schema:\n"
+                        + "\tInput Schema (Args):\n"
                         + json.dumps(mcp_base_tool.inputSchema, indent=4)
                     ),
                     tool_group=self,

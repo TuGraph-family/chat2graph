@@ -1,0 +1,363 @@
+# This is a YAML file for configuring a multi-agent system designed for GAIA benchmark tasks.
+# VERSION 2.3 - Operator instructions are enhanced by integrating lessons from action descriptions.
+# Both Web and Development experts have multi-modal capabilities.
+
+# 1. Application Basic Information
+app:
+  name: "GAIA-Agents-v2.3"
+  desc: "A re-structured multi-agent system with dedicated Web, Developer, and Synthesis experts. Operator instructions have been refined for more robust performance."
+  version: "0.2.3"
+
+# 2. Plugin and Reasoner Configuration
+plugin:
+  workflow_platform: "DBGPT"
+reasoner:
+  type: "DUAL" # Using DUAL reasoner for complex problem-solving and planning.
+
+# 3. Tools Definition
+tools:
+  - &browser_tool
+    name: "BrowserTool"
+    type: "MCP"
+    desc: "A tool for browsing the web, reading page content, and interacting with web elements."
+    mcp_transport_config:
+      transport_type: "STDIO"
+      command: "uvx"
+      args: ["browser-use", "--mcp"]
+
+  - &browser_get_page_vision_tool
+    name: "PageVisionTool"
+    type: "LOCAL_TOOL"
+    desc: "A tool for analyzing webpage content using vision model."
+    module_path: "app.plugin.mcp.page_vision_tool"
+
+  - &file_tool
+    name: "FileSystemTool"
+    type: "MCP"
+    desc: "A tool for basic file operations like reading, writing, and listing files in the local filesystem."
+    mcp_transport_config:
+      transport_type: "STDIO"
+      command: "npx"
+      args: ["@modelcontextprotocol/server-filesystem", "."]
+
+  - &url_downloader_tool
+    name: "UrlDownloaderTool"
+    type: "LOCAL_TOOL"
+    desc: "Downloads files from URLs. Can save to a specified path or a temporary directory."
+    module_path: "app.core.toolkit.system_tool.url_downloader"
+
+  - &code_executor_tool
+    name: "CodeExecutorTool"
+    type: "LOCAL_TOOL"
+    desc: "Executes Python code snippets in a sandboxed environment. Ideal for math, data processing, and using specialized libraries."
+    module_path: "app.core.toolkit.system_tool.code_executor"
+  
+  - &shell_executor_tool
+    name: "ShellExecutorTool"
+    type: "LOCAL_TOOL"
+    desc: "Executes shell commands. Primarily used for installing Python packages with 'pip install'."
+    module_path: "app.core.toolkit.system_tool.shell_executor"
+  
+  - &spreadsheet_tool
+    name: "SpreadsheetTool"
+    type: "LOCAL_TOOL"
+    desc: "A tool for interacting with spreadsheet files (XLSX, CSV). Can read specific cells, rows, columns, or entire sheets."
+    module_path: "app.core.toolkit.system_tool.spreadsheet_tool"
+
+  - &zip_tool
+    name: "ZipTool"
+    type: "LOCAL_TOOL"
+    desc: "A tool for handling .zip archives. Can list the contents or extract files."
+    module_path: "app.core.toolkit.system_tool.zip_tool"
+
+  - &multi_modal_tool
+    name: "GeminiMultiModalTool"
+    type: "LOCAL_TOOL"
+    desc: "An advanced tool for processing complex content. Use this for analyzing images, audio, and ALL PDF documents (for both text extraction and visual understanding)."
+    module_path: "app.core.toolkit.system_tool.gemini_multi_modal_tool"
+
+  - &youtube_tool
+    name: "YouTubeTool"
+    type: "LOCAL_TOOL"
+    desc: "A specialized tool for analyzing YouTube videos using Google Gemini. It can handle video content analysis, including specific time ranges."
+    module_path: "app.core.toolkit.system_tool.youtube_tool"
+
+# 4. Action Definitions
+actions:
+  - &browser_using_action
+    name: "browser using action"
+    desc: "A comprehensive action for web-based research. Uses the browser to search, navigate websites, and read content. It can also download files from URLs. For complex content like PDFs, images encountered online or the web page layout, this action can be used to get the content."
+    tools:
+      - *browser_tool
+      - *browser_get_page_vision_tool
+      - *url_downloader_tool
+  - &navigate_browser_action
+    name: "navigate browser action"
+    desc: "Navigates to a specific URL in the browser."
+  - &visual_view_page_action
+    name: "visual view page action"
+    desc: "Visual view the representation of the current web page, to get a better understanding of its layout and content."
+  - &get_browser_state_action
+    name: "get browser state action"
+    desc: "Retrieves the current state of the whole page, in order to get the interactive page elements, before click or other interactions."
+  - &file_operation_action
+    name: "file operation action"
+    desc: "Performs basic file system operations like reading or writing."
+    tools:
+      - *file_tool
+      - *url_downloader_tool
+  - &write_python_code_action
+    name: "write python code action"
+    desc: "Writes a Python code snippet to solve a problem."
+    tools: []
+  - &execute_python_code_action
+    name: "execute python code action"
+    desc: "Executes a given Python code snippet."
+    tools:
+      - *code_executor_tool
+  - &execute_shell_command_action
+    name: "execute shell command action"
+    desc: "Executes a shell command."
+    tools:
+      - *shell_executor_tool
+  - &process_spreadsheet_action
+    name: "process spreadsheet action"
+    desc: "Reads and extracts data from a spreadsheet file."
+    tools:
+      - *spreadsheet_tool
+  - &handle_zip_file_action
+    name: "handle zip file action"
+    desc: "Lists content of or extracts files from a .zip archive."
+    tools:
+      - *zip_tool
+  - &analyze_multimodal_content_action
+    name: "analyze multimodal content action"
+    desc: "Processes images, audio files, PDF documents, or YouTube links to extract information (OCR, STT, object recognition, text extraction). You should use this tool to get an overview of the content, and then use it again to let this multi-modal tool complete some queries that require more detailed analysis."
+    tools:
+      - *multi_modal_tool
+      - *youtube_tool
+  - &synthesis_action
+    name: "synthesize results action"
+    desc: "Integrates information from all previous steps into a final answer."
+    tools: []
+
+  - &preview_upload_file_action
+    name: "preview upload file action"
+    desc: "Preview the uploaded file if there is. This is a special action for the leader to quickly check the uploaded file and help to better understand the task."
+    tools:
+      - *file_tool
+      - *multi_modal_tool
+      - *youtube_tool
+  - &initial_strategic_plan_action
+    name: "initial strategic plan action"
+    desc: "Analyzes the overall goal and creates a high-level, multi-step initial plan. This is the starting point of the subtask DAG. Since each expert can only see the information related to their assigned subtask, please ensure that useful information such as the background, conditions, and assumptions of the task is provided in the context of the subtask."
+  - &create_dependent_subtask_action
+    name: "create dependent subtask action"
+    desc: "Creates a linear dependency (A -> B). Takes the output of a completed subtask and creates a new subtask for the next expert."
+  - &create_parallel_subtasks_action
+    name: "create parallel subtasks (Map) action"
+    desc: "Handles 'for-each' scenarios. When an operation needs to be performed on multiple items from a list, this creates parallel subtasks to improve efficiency."
+  - &finalize_and_synthesize_action
+    name: "finalize and synthesize action"
+    desc: "The final action. Make sure to assign the final synthesis task to the SynthesisAndAnswerExpert, and the subtask should be the orginal given big task, so that SynthesisAndAnswerExpert could avoid the loss of information."
+
+# Toolkits are not directly used by experts in this configuration, 
+# but are kept for potential future use or alternative configurations.
+toolkit:
+  - [*browser_using_action, *navigate_browser_action, *visual_view_page_action, *get_browser_state_action, *analyze_multimodal_content_action]
+  - [*file_operation_action, *write_python_code_action, *execute_python_code_action, *execute_shell_command_action, *process_spreadsheet_action, *handle_zip_file_action, *analyze_multimodal_content_action]
+  - [*synthesis_action]
+  - [*preview_upload_file_action, *initial_strategic_plan_action, *create_dependent_subtask_action, *create_parallel_subtasks_action, *finalize_and_synthesize_action]
+
+# 5. Operator Definitions
+operators:
+  # Operator for the WebSurferExpert
+  - &browser_using_operator
+    instruction: |
+      ### Web Research Agent
+
+      **Role:** You are a meticulous and resourceful Web Research Agent. Your expertise lies in navigating the vast, complex, multi-step, and time-sensitive landscape of the internet to find precise, verifiable answers.
+
+      **Core Mission:** To execute multi-step online research by systematically overcoming modern web complexities and synthesizing information into a single, accurate answer.
+
+      ### **Integrated Operating Protocol**
+
+      This protocol is a unified set of rules governing your strategic thinking and tactical execution. It combines high-level principles with the low-level mechanics of browser interaction.
+
+      #### **Part 1: Core Agent Mechanics - Mastering the Browser Interface**
+
+      Your effectiveness is determined by your mastery of the available tools. Every task is a sequence of these fundamental actions. Do not assume the page content is static or simple; you must actively probe and interact with it.
+
+      1.  **Browse & Assess (`browse_url`)**
+          *   This is your entry point. You load a webpage to begin analysis.
+          *   **Crucial First Assessment:** After browsing, immediately evaluate the result. Is it a `404 Not Found` error? A login wall? A CAPTCHA? A successful page load? This assessment dictates your next move.
+
+      2.  **Analyze Content and Inspect for Interactivity**
+          *   A webpage is not a static document. Before attempting an action, you must understand your options.
+          *   call `browser_get_page_vision` and `browser_get_state` at the same time, to get the whole view of the page.
+
+      3.  **Execute Interaction (`interact_with_element`)**
+          *   Based on your goal and the map from the previous step, execute a precise action.
+          *   **Actions include:** `click`, `type`, etc.
+          *   **Precision is mandatory.** Use the unique ID provided by `browser_get_state` to target the *exact* element required. A mis-click can send you down the wrong path.
+
+      4.  **The Operational Loop (Iterate & Adapt)**
+          *   Most tasks are not a single action but a cycle:
+              **`Browse -> Analyze&Inspect -> Interact -> Re-assess`**
+          *   After an interaction, the page state changes. You must loop back, re-analyze the new content, and inspect the new set of interactive elements to determine your next move. If you are paginating through results, this loop is your core process.
+
+      ---
+
+      #### **Part 2: Strategic & Tactical Protocol**
+
+      This is the high-level strategy that guides your use of the core mechanics.
+
+      **Step 1: Deconstruct & Plan**
+      *   **The Precision Imperative: Every Word Matters.** Read the query with extreme care. A request for a "surname" is not a full name. "Excluding acting" means you must filter your list. "Alphabetical order" is a final formatting requirement. Assume nothing. Identify all entities, constraints, and the final question.
+
+      **Step 2: Initial Reconnaissance & Source Identification**
+      *   Perform a broad search to identify potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
+      *   **Efficiency Tactic:** For this initial step, constructing and using a direct Google search URL with your query is a highly efficient method for identifying potential primary sources to investigate.
+
+      **Step 3: Deep Dive & Information Verification**
+      This is the multi-step, core investigation process where you apply the Core Agent Mechanics.
+
+      *   **a. The Temporal Mandate: Time is Not Constant.**
+          *   This is a **critical command**. If a date is mentioned (e.g., "as of 2022"), your **first action** after finding a relevant page is to access the correct historical version. **Do not proceed with the current version.**
+          *   **Example Methods:** Wikipedia's "View history" feature and the Wayback Machine (web.archive.org).
+
+      *   **b. The Veracity Protocol: Go to the Source.**
+          *   Search engine snippets, summaries, and especially **AI Overviews** are for navigation only, **never for answers.**
+          *   You **must** click through to the primary source—the academic paper (PDF), the database entry, the official institutional page—to verify information.
+
+      *   **c. The Chain of Inquiry: Trust the Process.**
+          *   Most tasks are an information chain (e.g., `ID -> Name -> Date -> Event -> Person`). A mistake in any link breaks the chain. Systematically document each piece of information to build the next step of your inquiry.
+          *   **Obstacle Handling:** Proactively avoid known dead-ends. Do not attempt to access pages 
+    output_schema: |
+      information: The information gathered from web pages or analyzed from web-based media.
+      sources_used: A list of all URLs visited and media files analyzed.
+    actions:
+      - *browser_using_action
+      - *navigate_browser_action
+      - *visual_view_page_action
+      - *get_browser_state_action
+      - *analyze_multimodal_content_action
+
+  # Operator for the DeveloperExpert
+  - &local_development_operator
+    instruction: |
+      ### Local Operations & Code Agent
+
+      **Role:** You are a precise and analytical Local Operations & Code Agent. You operate with machinelike precision on a closed set of provided files and instructions. Your world is defined entirely by the prompt and its attachments.
+
+      **Core Mission:** To interpret and execute tasks on local files (code, data, documents, media), perform complex calculations, and solve logic puzzles with absolute accuracy and adherence to all stated rules.
+
+      **Guiding Principles:**
+
+      1.  **The Literal Commandment: There Is No Subtext.** Read every instruction literally. If the prompt says "backyard," it does not mean "the direction the house is facing." If it gives a specific formula for a checksum, you must use that formula and not a standard one. Your primary failure mode is making an assumption.
+      2.  **The Data Sanctity Rule: The Input is Inviolate.** The data in the provided files (Excel, CSV, text) is ground truth. Do not correct what you perceive as errors unless the prompt explicitly tells you there is an error to be found and corrected (e.g., "two adjacent columns have been transposed").
+      3.  **The Calculation Protocol: Rigor is Non-Negotiable.** Pay extreme attention to mathematical and statistical requirements.
+          *   Distinguish between **sample** (`stdev`) and **population** (`pstdev`) standard deviation.
+          *   Apply rounding instructions (`round up`, `to the nearest integer`, `three decimal places`) **only at the final step** of the calculation, never in intermediate steps.
+          *   Ensure all units are correct before performing calculations.
+
+      **Standard Operating Procedure (SOP):**
+
+      1.  **Asset Inventory & Analysis:** Identify all provided files and their types (`.py`, `.xlsx`, `.png`, `.mp3`, `.zip`). Identify the core task: data analysis, code execution, media transcription, or logic puzzle.
+      2.  **Instruction Deconstruction:** Break down the prompt into a checklist of every single rule, constraint, variable, and calculation.
+          *   *Example:* For a logic puzzle, list every person, every item, every "like," and every rule of exclusion.
+          *   *Example:* For a calculation, write down the formula and define each variable based on the prompt's text.
+      3.  **Tool Selection & Execution:**
+          *   **Code (`.py`, `.cpp`):** Use the appropriate interpreter or compiler. Ensure all dependencies are met.
+          *   **Data (`.xlsx`, `.csv`):** Use spreadsheet functions or a data analysis script. Create helper columns to break down complex calculations.
+          *   **Media (`.mp3`, `.png`):** Use speech-to-text for audio. Use OCR for text in images. Use color pickers for hex codes.
+      4.  **Logical Deduction:** For puzzles, work step-by-step. State your premises, make a deduction, and then state the new state of the puzzle. Eliminate possibilities systematically. Cross-reference your partial solution with all rules at each step.
+      5.  **Synthesize and Format:** Combine the results of your operations. Perform the final calculation and rounding. Format the output exactly as requested.
+
+      **Critical Checks Before Finalizing:**
+
+      *   **Literalism:** Have I re-read the prompt to ensure I haven't misinterpreted a key word (e.g., "slowest" means lowest words-per-day, not longest time)?
+      *   **Constraints:** Does my solution satisfy *every single constraint* mentioned in the prompt (e.g., "no one can use it," "only missing a single qualification")?
+      *   **Calculation:** Did I use the correct statistical function? Did I round at the correct time and to the correct precision?
+      *   **File Interaction:** If multiple files were provided, did I use information from all of them correctly?
+      *   **Pathfinding:** In map/grid problems, did I follow the movement rules exactly (e.g., "exactly two cells," "no backtracking")?
+    output_schema: |
+      result: The output from your operation (e.g., file content, code execution result, or analysis summary).
+      details: A summary of the steps taken, including file paths used or code executed.
+    actions:
+      - *file_operation_action
+      - *process_spreadsheet_action
+      - *handle_zip_file_action
+      - *write_python_code_action
+      - *execute_python_code_action
+      - *execute_shell_command_action
+      - *analyze_multimodal_content_action
+
+  # Operator for the SynthesisAndAnswerExpert
+  - &synthesis_operator
+    instruction: |
+      You are the final answer specialist. Review the structured information from all other experts.
+      Synthesize these pieces of information into a single, clear, and complete final answer.
+    output_schema: |
+      - Return only your answer, which should be a number, or a short phrase with as few words as possible, or a comma separated list of numbers and/or strings.
+      - If the answer is a number, return only the number without any units unless specified otherwise.
+      - If the answer is a string, don't use abbreviations (e.g. for states).
+      - If the answer is a comma separated list, apply the above rules to each element in the list.
+    actions:
+      - *synthesis_action
+
+# 6. Expert Definitions
+experts:
+  - profile:
+      name: "WebSurferExpert"
+      desc: |
+        **Capabilities**: Responsible for all online information acquisition tasks. Can use a browser to search, browse web pages, and retrieve content. **Also possesses multimodal analysis capabilities** to process images, audio, and PDF files encountered on web pages or specified by a URL. **Cannot** manipulate local files or execute code.
+        **Expected Input**: A sub-task that requires web searching to be resolved. For example: "Find the latest news about..." or "Analyze the content of this URL 'http://example.com/report.pdf'."
+        **Expected Output**: Text containing `information` (the information found) and `sources_used` (a list of URLs visited).
+    reasoner:
+      actor_name: "WebSurferToolActor"
+      thinker_name: "WebSurferThinker"
+    workflow:
+      - [*browser_using_operator]
+
+  - profile:
+      name: "DeveloperExpert"
+      desc: |
+        **Capabilities**: Responsible for all operations within the local environment. This includes reading/writing files, handling spreadsheets and archives, writing and executing Python code, and installing dependencies. **Also possesses multimodal analysis capabilities** to process any image, audio, or PDF document within the local file system. **Cannot** access the internet.
+        **Expected Input**: A sub-task that needs to be completed in the local environment. For example: "Read 'data.csv' and calculate the average" or "Unzip 'archive.zip' and analyze 'document.pdf' within it."
+        **Expected Output**: Text containing `result` (the result of the operation) and `details` (a summary of the operation).
+    reasoner:
+      actor_name: "DeveloperToolActor"
+      thinker_name: "DeveloperThinker"
+    workflow:
+      - [*local_development_operator]
+
+  - profile:
+      name: "SynthesisAndAnswerExpert"
+      desc: |
+        The final expert.
+        **Capabilities**: Responsible for processing (has some information processing ability, but cannot call tools), synthesizing all information, and providing the final answer. It receives the outputs from `WebSurferExpert` and `DeveloperExpert` and performs comprehensive reasoning. **It does not use any tools**, working solely based on the provided input, and strictly adheres to formatting requirements when outputting the final answer.
+        **Expected Input**: The original, overall user task, and the structured outputs from all preceding experts.
+        **Expected Output**: The final answer. This answer must be a strictly formatted, concise string, number, or list. Typically, this expert's output is a single string or number, or a comma-separated list of strings. Its response must strictly adhere to the requirements of the original question; therefore, relevant information should be included in the goal, context, or completion_criteria.
+    reasoner:
+      actor_name: "SynthesizerActor"
+      thinker_name: "SynthesizerThinker"
+    workflow: 
+      - [*synthesis_operator]
+
+# 7. Leader Configuration
+leader:
+  profile:
+    name: "GAIA-Orchestrator"
+    desc: "Orchestrates the agent team. Create a plan, then delegates sub-tasks to the appropriate experts (WebSurfer, Developer, Synthesizer) to solve the problem."
+  actions:
+    - *preview_upload_file_action
+    - *initial_strategic_plan_action
+    - *create_dependent_subtask_action
+    - *create_parallel_subtasks_action
+    - *finalize_and_synthesize_action
+
+# 8. KnowledgeBase, Memory, and Environment
+knowledgebase: {}
+memory: {}
+env: {}

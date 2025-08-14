@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict, List, Optional, cast
 
 from aisuite.client import Client  # type: ignore
@@ -68,6 +69,19 @@ class AiSuiteLlmClient(ModelService):
                 model_response_text=cast(str, model_response.choices[0].message.content),
                 tool_call_ctx=tool_call_ctx,
             )
+
+        # filter <function_call_result>...</function_call_result> content
+        # since LLM may image the function call result, which should have been provided
+        # by the function's execution return values
+        model_response.choices[0].message.content = (
+            re.sub(
+                r"<function_call_result>.*?</function_call_result>",
+                "",
+                cast(str, model_response.choices[0].message.content),
+                flags=re.DOTALL,
+            ).strip()
+            + "\n"
+        )
 
         # parse model response to agent message
         response: ModelMessage = self._parse_model_response(
