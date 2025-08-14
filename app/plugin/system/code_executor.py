@@ -1,6 +1,7 @@
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import traceback
+from typing import Any, Dict
 
 from app.core.toolkit.tool import Tool
 
@@ -24,7 +25,7 @@ class CodeExecutorTool(Tool):
         Returns:
             The output from the executed code (stdout/stderr and any exceptions).
         """
-        shared_scope = {}
+        shared_scope: Dict[str, Any] = {}
         stdout_capture = io.StringIO()
         stderr_capture = io.StringIO()
 

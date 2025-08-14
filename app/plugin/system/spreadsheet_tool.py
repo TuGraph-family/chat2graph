@@ -1,6 +1,6 @@
 import traceback
 
-import pandas as pd
+import pandas as pd  # type: ignore
 
 from app.core.toolkit.tool import Tool
 

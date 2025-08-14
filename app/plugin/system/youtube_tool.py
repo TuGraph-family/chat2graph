@@ -1,4 +1,3 @@
-import asyncio
 from typing import Dict, Optional
 
 from google import genai
@@ -9,8 +8,7 @@ from app.core.toolkit.tool import Tool
 
 
 class YouTubeTool(Tool):
-    """A multi-modal tool to analyze YouTube videos using Google Gemini.
-    """
+    """A multi-modal tool to analyze YouTube videos using Google Gemini."""
 
     def __init__(self):
         super().__init__(
@@ -47,13 +45,17 @@ class YouTubeTool(Tool):
             print(f"End Offset: {end_offset}")
 
         file_data = types.FileData(file_uri=youtube_url)
-        metadata = types.VideoMetadata(start_offset=start_offset, end_offset=end_offset) if video_metadata else None
+        metadata = (
+            types.VideoMetadata(start_offset=start_offset, end_offset=end_offset)
+            if video_metadata
+            else None
+        )
 
         client = genai.Client(api_key=SystemEnv.MULTI_MODAL_LLM_APIKEY)
         response = client.models.generate_content(
             model=SystemEnv.MULTI_MODAL_LLM_NAME,
             contents=[
-                types.Part(text=query_prompt),
+                query_prompt,
                 types.Part(file_data=file_data, video_metadata=metadata),
             ],
         )
@@ -64,34 +66,3 @@ class YouTubeTool(Tool):
             result_text += "."
 
         return result_text
-
-
-async def main():
-    """Main function to demonstrate and test the GeminiMultiModalTool."""
-    tool = GeminiMultiModalTool()
-
-    test_query_1 = "Summarize the main points of this video."
-    test_youtube_url = "https://www.youtube.com/watch?v=9hE5-98ZeCg"
-
-    print("--- Test 1: Basic Analysis ---")
-    result_1 = await tool.watch_youtube(query_prompt=test_query_1, youtube_url=test_youtube_url)
-    print("\n--- Final Result 1 ---")
-    print(result_1)
-
-    print("\n" + "=" * 40 + "\n")
-
-    test_query_2 = "What is happening in this segment of the video?"
-
-    print("--- Test 2: Analysis with Time Offsets ---")
-    result_2 = await tool.watch_youtube(
-        query_prompt=test_query_2,
-        youtube_url=test_youtube_url,
-        start_offset="10s",
-        end_offset="25s",
-    )
-    print("\n--- Final Result 2 ---")
-    print(result_2)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
