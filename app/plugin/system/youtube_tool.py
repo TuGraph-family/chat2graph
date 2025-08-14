@@ -54,10 +54,12 @@ class YouTubeTool(Tool):
         client = genai.Client(api_key=SystemEnv.MULTI_MODAL_LLM_APIKEY)
         response = client.models.generate_content(
             model=SystemEnv.MULTI_MODAL_LLM_NAME,
-            contents=[
-                query_prompt,
-                types.Part(file_data=file_data, video_metadata=metadata),
-            ],
+            contents=types.Content(
+                parts=[
+                    types.Part(text=query_prompt),
+                    types.Part(file_data=file_data, video_metadata=metadata),
+                ]
+            ),
         )
         result_text = f"Analysis complete for {youtube_url}\n\nAnswer: {response.text}"
         if video_metadata:

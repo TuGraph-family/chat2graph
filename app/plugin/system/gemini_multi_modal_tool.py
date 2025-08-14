@@ -126,11 +126,14 @@ class GeminiMultiModalTool(Tool):
                         reason_map = {
                             "STOP": (
                                 "The model finished but did not generate any content. "
-                                "This might be because the input was unclear or the model had no relevant information to provide."
+                                "This might be because the input was unclear or the model had "
+                                "no relevant information to provide."
                             ),
-                            "MAX_TOKENS": "The response was truncated due to reaching the maximum token limit.",
+                            "MAX_TOKENS": "The response was truncated due to reaching "
+                            "the maximum token limit.",
                             "SAFETY": "The model's response was blocked due to safety filters.",
-                            "RECITATION": "The response was blocked due to containing copyrighted material.",
+                            "RECITATION": "The response was blocked due to "
+                            "containing copyrighted material.",
                             "OTHER": "The model stopped for an unknown reason.",
                         }
                         reason_text = reason_map.get(finish_reason, "Unknown reason")
@@ -149,7 +152,10 @@ class GeminiMultiModalTool(Tool):
                         pass
                     model_response_text = message
             else:
-                model_response_text = "Warning: No valid media files were processed. The model can only see the text prompt."
+                model_response_text = (
+                    "Warning: No valid media files were processed. "
+                    "The model can only see the text prompt."
+                )
 
             # append any errors that occurred during file processing
             if error_messages:
