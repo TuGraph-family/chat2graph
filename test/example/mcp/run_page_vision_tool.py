@@ -9,7 +9,7 @@ from app.core.model.task import ToolCallContext
 from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.mcp.mcp_service import McpService
 from app.core.toolkit.tool_config import (
     McpConfig,
     McpTransportConfig,

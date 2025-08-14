@@ -4,11 +4,11 @@ from mcp.types import ContentBlock
 
 from app.core.common.type import ToolType
 from app.core.model.task import ToolCallContext
-from app.core.toolkit.mcp_connection import McpConnection
+from app.core.toolkit.mcp.mcp_connection import McpConnection
 from app.core.toolkit.tool import Tool
 
 if TYPE_CHECKING:
-    from app.core.toolkit.mcp_service import McpService
+    from app.core.toolkit.mcp.mcp_service import McpService
 
 
 class McpTool(Tool):

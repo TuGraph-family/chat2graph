@@ -6,7 +6,7 @@ from mcp.types import ContentBlock
 
 from app.core.model.task import ToolCallContext
 from app.core.service.toolkit_service import ToolkitService
-from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.mcp.mcp_service import McpService
 from app.core.toolkit.system_tool.gemini_multi_modal_tool import GeminiMultiModalTool
 from app.core.toolkit.tool import Tool
 
