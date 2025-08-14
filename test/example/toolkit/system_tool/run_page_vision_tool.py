@@ -15,7 +15,7 @@ from app.core.toolkit.tool_config import (
     McpTransportConfig,
     McpTransportType,
 )
-from app.plugin.system.page_vision_tool import PageVisionTool
+from app.plugin.mcp.page_vision_tool import PageVisionTool
 
 
 async def init_server():

@@ -7,12 +7,15 @@ from mcp.types import ContentBlock
 from app.core.model.task import ToolCallContext
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.system_tool.gemini_multi_modal_tool import GeminiMultiModalTool
 from app.core.toolkit.tool import Tool
-from app.plugin.system.gemini_multi_modal_tool import GeminiMultiModalTool
 
 
 class PageVisionTool(Tool):
-    """A Visual Question Answering (VQA) tool for analyzing web pages."""
+    """A Visual Question Answering (VQA) tool for analyzing web pages.
+
+    Node: make sure the BrowserTool is properly configured in the MCP service.
+    """
 
     def __init__(self):
         super().__init__(
@@ -71,7 +74,7 @@ class PageVisionTool(Tool):
                         mcp_service = tool_group
                         break
             if not mcp_service:
-                raise ValueError("MCP service (BrowserTool) not found in the toolkit.")
+                raise ValueError("MCP service (BrowserTool) not registered in the toolkit.")
 
             mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
 
@@ -81,9 +84,7 @@ class PageVisionTool(Tool):
             file_path: str = os.path.join(temp_dir, f"{uuid.uuid4()}.pdf")
 
             # use browser to render
-            browser_tool_args: Dict[str, Any] = {
-                "file_path": file_path,
-            }
+            browser_tool_args: Dict[str, Any] = {"file_path": file_path}
             if tab_index is not None:
                 browser_tool_args["tab_index"] = tab_index
             pdf_path_results: List[ContentBlock] = await mcp_connection.call(

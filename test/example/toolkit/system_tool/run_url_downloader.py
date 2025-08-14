@@ -4,7 +4,7 @@ from pathlib import Path
 
 import requests
 
-from app.plugin.system.url_downloader import UrlDownloaderTool
+from app.core.toolkit.system_tool.url_downloader import UrlDownloaderTool
 
 
 async def main():

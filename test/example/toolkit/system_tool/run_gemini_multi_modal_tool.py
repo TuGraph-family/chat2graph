@@ -1,6 +1,6 @@
 import asyncio
 
-from app.plugin.system.gemini_multi_modal_tool import GeminiMultiModalTool
+from app.core.toolkit.system_tool.gemini_multi_modal_tool import GeminiMultiModalTool
 
 
 async def main():

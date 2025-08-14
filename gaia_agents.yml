@@ -35,7 +35,7 @@ tools:
     name: "PageVisionTool"
     type: "LOCAL_TOOL"
     desc: "A tool for analyzing webpage content using vision model."
-    module_path: "app.plugin.system.page_vision_tool"
+    module_path: "app.plugin.mcp.page_vision_tool"
 
   - &file_tool
     name: "FileSystemTool"
@@ -50,43 +50,43 @@ tools:
     name: "UrlDownloaderTool"
     type: "LOCAL_TOOL"
     desc: "Downloads files from URLs. Can save to a specified path or a temporary directory."
-    module_path: "app.plugin.system.url_downloader"
+    module_path: "app.core.toolkit.system_tool.url_downloader"
 
   - &code_executor_tool
     name: "CodeExecutorTool"
     type: "LOCAL_TOOL"
     desc: "Executes Python code snippets in a sandboxed environment. Ideal for math, data processing, and using specialized libraries."
-    module_path: "app.plugin.system.code_executor"
+    module_path: "app.core.toolkit.system_tool.code_executor"
   
   - &shell_executor_tool
     name: "ShellExecutorTool"
     type: "LOCAL_TOOL"
     desc: "Executes shell commands. Primarily used for installing Python packages with 'pip install'."
-    module_path: "app.plugin.system.shell_executor"
+    module_path: "app.core.toolkit.system_tool.shell_executor"
   
   - &spreadsheet_tool
     name: "SpreadsheetTool"
     type: "LOCAL_TOOL"
     desc: "A tool for interacting with spreadsheet files (XLSX, CSV). Can read specific cells, rows, columns, or entire sheets."
-    module_path: "app.plugin.system.spreadsheet_tool"
+    module_path: "app.core.toolkit.system_tool.spreadsheet_tool"
 
   - &zip_tool
     name: "ZipTool"
     type: "LOCAL_TOOL"
     desc: "A tool for handling .zip archives. Can list the contents or extract files."
-    module_path: "app.plugin.system.zip_tool"
+    module_path: "app.core.toolkit.system_tool.zip_tool"
 
   - &multi_modal_tool
     name: "GeminiMultiModalTool"
     type: "LOCAL_TOOL"
     desc: "An advanced tool for processing complex content. Use this for analyzing images, audio, and ALL PDF documents (for both text extraction and visual understanding)."
-    module_path: "app.plugin.system.gemini_multi_modal_tool"
+    module_path: "app.core.toolkit.system_tool.gemini_multi_modal_tool"
 
   - &youtube_tool
     name: "YouTubeTool"
     type: "LOCAL_TOOL"
     desc: "A specialized tool for analyzing YouTube videos using Google Gemini. It can handle video content analysis, including specific time ranges."
-    module_path: "app.plugin.system.youtube_tool"
+    module_path: "app.core.toolkit.system_tool.youtube_tool"
 
 # 4. Action Definitions
 actions:

@@ -1,6 +1,6 @@
 import asyncio
 
-from app.plugin.system.youtube_tool import YouTubeTool
+from app.core.toolkit.system_tool.youtube_tool import YouTubeTool
 
 
 async def main():

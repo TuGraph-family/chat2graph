@@ -5,8 +5,8 @@ from typing import Any, List
 import google.generativeai as genai
 
 from app.core.common.system_env import SystemEnv
+from app.core.toolkit.system_tool.url_downloader import UrlDownloaderTool
 from app.core.toolkit.tool import Tool
-from app.plugin.system.url_downloader import UrlDownloaderTool
 
 
 class GeminiMultiModalTool(Tool):
