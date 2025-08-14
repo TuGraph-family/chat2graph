@@ -1,6 +1,6 @@
 app:
   name: "Chat2Graph"
-  desc: "An Agentic System on Graph Database."
+  desc: "A Graph Native Agentic System."
   version: "0.0.1"
 
 plugin:
