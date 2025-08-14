@@ -22,14 +22,8 @@ tools:
     desc: "A tool for browsing the web, reading page content, and interacting with web elements."
     mcp_transport_config:
       transport_type: "STDIO"
-      # command: "npx"
-      # args: ["@playwright/mcp@latest", "--isolated", "--output-dir", ".", "--caps", "tabs,pdf,history,wait,files,install"]
       command: "uvx"
-      args: ["browser-use", "--mcp", "--model", "gemini/gemini-2.5-flash"]
-      env:
-        GOOGLE_API_KEY: ${GOOGLE_API_KEY} # use the environment variable for Google API key
-      #   OPENAI_API_KEY: ${OPENAI_API_KEY} # use the environment variable for OpenAI API key
-      # "viewport_expansion": -1,
+      args: ["browser-use", "--mcp"]
 
   - &browser_get_page_vision_tool
     name: "PageVisionTool"
@@ -317,11 +311,11 @@ experts:
   - profile:
       name: "WebSurferExpert"
       desc: |
-        **能力边界**: 负责所有在线信息获取任务。能使用浏览器进行搜索、浏览网页、获取内容。**同时具备多模态分析能力**，可以处理在网页上遇到的或通过URL指定的图片、音频和PDF文件。**不能**操作本地文件或执行代码。
-        **预期输入**: 一个需要通过网络搜索来解答的子任务。例如：“查找关于...的最新新闻”或“分析此URL'http://example.com/report.pdf'的内容”。
-        **预期输出**: 包含`information`（找到的信息）和`sources_used`（访问过的URL列表）的文本。
+        **Capabilities**: Responsible for all online information acquisition tasks. Can use a browser to search, browse web pages, and retrieve content. **Also possesses multimodal analysis capabilities** to process images, audio, and PDF files encountered on web pages or specified by a URL. **Cannot** manipulate local files or execute code.
+        **Expected Input**: A sub-task that requires web searching to be resolved. For example: "Find the latest news about..." or "Analyze the content of this URL 'http://example.com/report.pdf'."
+        **Expected Output**: Text containing `information` (the information found) and `sources_used` (a list of URLs visited).
     reasoner:
-      actor_name: "WebSurferActor"
+      actor_name: "WebSurferToolActor"
       thinker_name: "WebSurferThinker"
     workflow:
       - [*browser_using_operator]
@@ -329,11 +323,11 @@ experts:
   - profile:
       name: "DeveloperExpert"
       desc: |
-        **能力边界**: 负责所有本地环境的操作。这包括读写文件、处理电子表格和压缩包、编写和执行Python代码以及安装依赖。**同时具备多模态分析能力**，可以处理本地文件系统中的任何图片、音频或PDF文档。**不能**访问互联网。
-        **预期输入**: 一个需要在本地环境完成的子任务。例如：“读取'data.csv'并计算平均值”或“解压'archive.zip'并分析其中的'document.pdf'”。
-        **预期输出**: 包含`result`（操作结果）和`details`（操作摘要）的文本。
+        **Capabilities**: Responsible for all operations within the local environment. This includes reading/writing files, handling spreadsheets and archives, writing and executing Python code, and installing dependencies. **Also possesses multimodal analysis capabilities** to process any image, audio, or PDF document within the local file system. **Cannot** access the internet.
+        **Expected Input**: A sub-task that needs to be completed in the local environment. For example: "Read 'data.csv' and calculate the average" or "Unzip 'archive.zip' and analyze 'document.pdf' within it."
+        **Expected Output**: Text containing `result` (the result of the operation) and `details` (a summary of the operation).
     reasoner:
-      actor_name: "DeveloperActor"
+      actor_name: "DeveloperToolActor"
       thinker_name: "DeveloperThinker"
     workflow:
       - [*local_development_operator]
@@ -342,9 +336,9 @@ experts:
       name: "SynthesisAndAnswerExpert"
       desc: |
         The final expert.
-        **能力边界**: 负责处理（有一定的信息处理能力，但是不能调用工具）和整合所有信息并给出最终答案。它会接收来自`WebSurferExpert`和`DeveloperExpert`的输出，进行综合推理。**它不使用任何工具**，只基于输入进行工作，并严格按照格式要求输出最终答案。
-        **预期输入**: 原始的用户总任务，以及所有前序专家的结构化输出。
-        **预期输出**: 最终答案。该答案必须是严格格式化的、简洁的字符串、数字或列表。一般来说，该 expert 的输出是一个 单一的字符串或数字，或者是一个逗号分隔的字符串列表。其回答必须严格参考原始问题的要求，因此需要将相应的信息纳入 goal、context 或者 completion_criteria 中。
+        **Capabilities**: Responsible for processing (has some information processing ability, but cannot call tools), synthesizing all information, and providing the final answer. It receives the outputs from `WebSurferExpert` and `DeveloperExpert` and performs comprehensive reasoning. **It does not use any tools**, working solely based on the provided input, and strictly adheres to formatting requirements when outputting the final answer.
+        **Expected Input**: The original, overall user task, and the structured outputs from all preceding experts.
+        **Expected Output**: The final answer. This answer must be a strictly formatted, concise string, number, or list. Typically, this expert's output is a single string or number, or a comma-separated list of strings. Its response must strictly adhere to the requirements of the original question; therefore, relevant information should be included in the goal, context, or completion_criteria.
     reasoner:
       actor_name: "SynthesizerActor"
       thinker_name: "SynthesizerThinker"

@@ -328,7 +328,7 @@ def main():
 
     # --- parallel processing ---
     results = []
-    agent_config_path = os.path.join(project_root, "gaia_agents.yml")
+    agent_config_path = os.path.join(project_root, "test/benchmark/gaia/gaia_agents.yml")
 
     with ProcessPoolExecutor(max_workers=args.parallel_num) as executor:
         future_to_sample = {
