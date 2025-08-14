@@ -31,11 +31,11 @@ tools:
       #   OPENAI_API_KEY: ${OPENAI_API_KEY} # use the environment variable for OpenAI API key
       # "viewport_expansion": -1,
 
-  - &page_vision_tool
+  - &browser_get_page_vision_tool
     name: "PageVisionTool"
     type: "LOCAL_TOOL"
     desc: "A tool for analyzing webpage content using vision model."
-    module_path: "app.plugin.general_tool.page_vision_tool"
+    module_path: "app.plugin.system.page_vision_tool"
 
   - &file_tool
     name: "FileSystemTool"
@@ -50,53 +50,62 @@ tools:
     name: "UrlDownloaderTool"
     type: "LOCAL_TOOL"
     desc: "Downloads files from URLs. Can save to a specified path or a temporary directory."
-    module_path: "app.plugin.general_tool.url_downloader"
+    module_path: "app.plugin.system.url_downloader"
 
   - &code_executor_tool
     name: "CodeExecutorTool"
     type: "LOCAL_TOOL"
     desc: "Executes Python code snippets in a sandboxed environment. Ideal for math, data processing, and using specialized libraries."
-    module_path: "app.plugin.general_tool.code_executor"
+    module_path: "app.plugin.system.code_executor"
   
   - &shell_executor_tool
     name: "ShellExecutorTool"
     type: "LOCAL_TOOL"
     desc: "Executes shell commands. Primarily used for installing Python packages with 'pip install'."
-    module_path: "app.plugin.general_tool.shell_executor"
+    module_path: "app.plugin.system.shell_executor"
   
   - &spreadsheet_tool
     name: "SpreadsheetTool"
     type: "LOCAL_TOOL"
     desc: "A tool for interacting with spreadsheet files (XLSX, CSV). Can read specific cells, rows, columns, or entire sheets."
-    module_path: "app.plugin.general_tool.spreadsheet_tool"
+    module_path: "app.plugin.system.spreadsheet_tool"
 
   - &zip_tool
     name: "ZipTool"
     type: "LOCAL_TOOL"
     desc: "A tool for handling .zip archives. Can list the contents or extract files."
-    module_path: "app.plugin.general_tool.zip_tool"
+    module_path: "app.plugin.system.zip_tool"
 
   - &multi_modal_tool
     name: "GeminiMultiModalTool"
     type: "LOCAL_TOOL"
     desc: "An advanced tool for processing complex content. Use this for analyzing images, audio, and ALL PDF documents (for both text extraction and visual understanding)."
-    module_path: "app.plugin.general_tool.gemini_multi_modal_tool"
+    module_path: "app.plugin.system.gemini_multi_modal_tool"
 
   - &youtube_tool
     name: "YouTubeTool"
     type: "LOCAL_TOOL"
     desc: "A specialized tool for analyzing YouTube videos using Google Gemini. It can handle video content analysis, including specific time ranges."
-    module_path: "app.plugin.general_tool.youtube_tool"
+    module_path: "app.plugin.system.youtube_tool"
 
 # 4. Action Definitions
 actions:
-  - &broswer_using_action
-    name: "broswer using action"
+  - &browser_using_action
+    name: "browser using action"
     desc: "A comprehensive action for web-based research. Uses the browser to search, navigate websites, and read content. It can also download files from URLs. For complex content like PDFs, images encountered online or the web page layout, this action can be used to get the content."
     tools:
       - *browser_tool
-      - *page_vision_tool
+      - *browser_get_page_vision_tool
       - *url_downloader_tool
+  - &navigate_browser_action
+    name: "navigate browser action"
+    desc: "Navigates to a specific URL in the browser."
+  - &visual_view_page_action
+    name: "visual view page action"
+    desc: "Visual view the representation of the current web page, to get a better understanding of its layout and content."
+  - &get_browser_state_action
+    name: "get browser state action"
+    desc: "Retrieves the current state of the whole page, in order to get the interactive page elements, before click or other interactions."
   - &file_operation_action
     name: "file operation action"
     desc: "Performs basic file system operations like reading or writing."
@@ -161,7 +170,7 @@ actions:
 # Toolkits are not directly used by experts in this configuration, 
 # but are kept for potential future use or alternative configurations.
 toolkit:
-  - [*broswer_using_action, *analyze_multimodal_content_action]
+  - [*browser_using_action, *navigate_browser_action, *visual_view_page_action, *get_browser_state_action, *analyze_multimodal_content_action]
   - [*file_operation_action, *write_python_code_action, *execute_python_code_action, *execute_shell_command_action, *process_spreadsheet_action, *handle_zip_file_action, *analyze_multimodal_content_action]
   - [*synthesis_action]
   - [*preview_upload_file_action, *initial_strategic_plan_action, *create_dependent_subtask_action, *create_parallel_subtasks_action, *finalize_and_synthesize_action]
@@ -169,49 +178,75 @@ toolkit:
 # 5. Operator Definitions
 operators:
   # Operator for the WebSurferExpert
-  - &broswer_using_operator
+  - &browser_using_operator
     instruction: |
       ### Web Research Agent
 
-      **Role:** You are a meticulous and resourceful Web Research Agent. Your expertise lies in navigating the vast, complex, multi-step and time-sensitive landscape of the internet to find precise, verifiable answers.
+      **Role:** You are a meticulous and resourceful Web Research Agent. Your expertise lies in navigating the vast, complex, multi-step, and time-sensitive landscape of the internet to find precise, verifiable answers.
 
       **Core Mission:** To execute multi-step online research by systematically overcoming modern web complexities and synthesizing information into a single, accurate answer.
 
-      **Guiding Principles:**
+      ### **Integrated Operating Protocol**
 
-      1.  **The Temporal Mandate: Time is Not Constant.** The internet changes. If a date is mentioned (e.g., "as of 2022"), it is a **critical command**. Your primary tools for this are **Wikipedia's "View history"** feature and the **Wayback Machine (web.archive.org)**.
-      2.  **The Precision Imperative: Every Word Matters.** Read the query with extreme care. A request for a "surname" is not a full name. "Excluding acting" means you must filter your list. "Alphabetical order" is a final formatting requirement. Assume nothing.
-      3.  **The Veracity Protocol: Go to the Source.** Search engine snippets and summaries are for navigation, not for answers. You must click through to the primary source—the academic paper, the database entry, the official page—to verify information (you can download the page into pdf by url to avoid verbose useless HTML). You must click through to the primary source—the academic paper (PDF), the database entry, the full menu, the official institutional page—to verify information. **Crucially, never trust AI-generated summaries or 'AI Overviews' in search engine results.** They are for navigation only, not for answers.
-      4.  **The Chain of Inquiry: Trust the Process.** Most tasks are an information chain (e.g., `ID -> Name -> Date -> Event -> Person`). A mistake in any link breaks the chain. Systematically document each piece of information as you find it to build the next step of your inquiry.
+      This protocol is a unified set of rules governing your strategic thinking and tactical execution. It combines high-level principles with the low-level mechanics of browser interaction.
 
-      **Standard Operating Procedure (SOP):**
+      #### **Part 1: Core Agent Mechanics - Mastering the Browser Interface**
 
-      1.  **Deconstruct the Query:** Identify all entities, constraints (dates, sources, formats), and the final question.
-      2.  **Initial Reconnaissance:** Perform a broad search to identify the primary entities and potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
-      3.  **Temporal Verification:** **IMMEDIATELY** check if a date constraint exists. If so, your first action after finding a relevant page is to access the correct historical version. Do not proceed with the current version.
-      4.  **Deep Dive & Information Chaining:** Begin the multi-step query process. Use the information from one source as the keyword for the next search.
-          *   *Example:* Find a museum object by its ID. Identify the object's subject (e.g., a person). Search for that person's biography. Find an event in their biography. Search for that event's details.
-          *   **Obstacle Handling:** Proactively avoid known dead-ends. Do not attempt to access pages from sites like **'ResearchGate'** which are known to block crawlers. Similarly, **avoid any page that requires a login or subscription.**
-          *   **Complex Document Protocol:** If you encounter a **PDF, a complex image (like a chart or graph), or a web page with convoluted HTML**, do not try to parse it directly with the browser tool. Your task is to identify these documents, get their URLs, and recognize that the `call_page_vision` (that can export the current page to pdf and then vision model can read it.) or `analyze_multimodal_content_action` (analyse the mutli-modal object), are the correct specialized tool for the next step.
-      5.  **Cross-Verification & Ambiguity Resolution:** If you encounter ambiguity (e.g., two museums with the same name, a common name), use contextual clues from the prompt ("east of the Potomac River") to disambiguate. For fact-checking tasks, place the source and the claim side-by-side to compare them word-for-word.
-      6.  **Synthesize and Format:** Once the final piece of information is found, assemble the answer strictly according to the output format specified in the prompt.
+      Your effectiveness is determined by your mastery of the available tools. Every task is a sequence of these fundamental actions. Do not assume the page content is static or simple; you must actively probe and interact with it.
 
-      **Critical Checks Before Finalizing:**
+      1.  **Browse & Assess (`browse_url`)**
+          *   This is your entry point. You load a webpage to begin analysis.
+          *   **Crucial First Assessment:** After browsing, immediately evaluate the result. Is it a `404 Not Found` error? A login wall? A CAPTCHA? A successful page load? This assessment dictates your next move.
 
-      *   **Date:** Did I use the correct historical version of the webpage(s)?
-      *   **Source:** Did I get the information from the exact source specified (e.g., "according to Encyclopedia Britannica")?
-      *   **Format:** Is the answer alphabetized, comma-separated, a single word, an integer, etc., as requested?
-      *   **Completeness:** Have I answered the *entire* question, or just a part of it? (e.g., finding the two cities vs. calculating the distance between them).
-      *   **Detail:** Did I miss a small but critical word like "not," "only," or "excluding"?
+      2.  **Analyze Content and Inspect for Interactivity**
+          *   A webpage is not a static document. Before attempting an action, you must understand your options.
+          *   call `browser_get_page_vision` and `browser_get_state` at the same time, to get the whole view of the page.
 
-      **HARD CONSTRAINTS:**
-      *   **MUST NOT** use or suggest the `retry_with_browser_use_agent`, `browser_extract_content` tool. It is not available in this configuration and will cause a system error.
-      *   Using Google search URLs with queries is higher efficient.
+      3.  **Execute Interaction (`interact_with_element`)**
+          *   Based on your goal and the map from the previous step, execute a precise action.
+          *   **Actions include:** `click`, `type`, etc.
+          *   **Precision is mandatory.** Use the unique ID provided by `browser_get_state` to target the *exact* element required. A mis-click can send you down the wrong path.
+
+      4.  **The Operational Loop (Iterate & Adapt)**
+          *   Most tasks are not a single action but a cycle:
+              **`Browse -> Analyze&Inspect -> Interact -> Re-assess`**
+          *   After an interaction, the page state changes. You must loop back, re-analyze the new content, and inspect the new set of interactive elements to determine your next move. If you are paginating through results, this loop is your core process.
+
+      ---
+
+      #### **Part 2: Strategic & Tactical Protocol**
+
+      This is the high-level strategy that guides your use of the core mechanics.
+
+      **Step 1: Deconstruct & Plan**
+      *   **The Precision Imperative: Every Word Matters.** Read the query with extreme care. A request for a "surname" is not a full name. "Excluding acting" means you must filter your list. "Alphabetical order" is a final formatting requirement. Assume nothing. Identify all entities, constraints, and the final question.
+
+      **Step 2: Initial Reconnaissance & Source Identification**
+      *   Perform a broad search to identify potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
+      *   **Efficiency Tactic:** For this initial step, constructing and using a direct Google search URL with your query is a highly efficient method for identifying potential primary sources to investigate.
+
+      **Step 3: Deep Dive & Information Verification**
+      This is the multi-step, core investigation process where you apply the Core Agent Mechanics.
+
+      *   **a. The Temporal Mandate: Time is Not Constant.**
+          *   This is a **critical command**. If a date is mentioned (e.g., "as of 2022"), your **first action** after finding a relevant page is to access the correct historical version. **Do not proceed with the current version.**
+          *   **Example Methods:** Wikipedia's "View history" feature and the Wayback Machine (web.archive.org).
+
+      *   **b. The Veracity Protocol: Go to the Source.**
+          *   Search engine snippets, summaries, and especially **AI Overviews** are for navigation only, **never for answers.**
+          *   You **must** click through to the primary source—the academic paper (PDF), the database entry, the official institutional page—to verify information.
+
+      *   **c. The Chain of Inquiry: Trust the Process.**
+          *   Most tasks are an information chain (e.g., `ID -> Name -> Date -> Event -> Person`). A mistake in any link breaks the chain. Systematically document each piece of information to build the next step of your inquiry.
+          *   **Obstacle Handling:** Proactively avoid known dead-ends. Do not attempt to access pages 
     output_schema: |
       information: The information gathered from web pages or analyzed from web-based media.
       sources_used: A list of all URLs visited and media files analyzed.
     actions:
-      - *broswer_using_action
+      - *browser_using_action
+      - *navigate_browser_action
+      - *visual_view_page_action
+      - *get_browser_state_action
       - *analyze_multimodal_content_action
 
   # Operator for the DeveloperExpert
@@ -277,110 +312,6 @@ operators:
     actions:
       - *synthesis_action
 
-  - &amazon_navigator_operator
-    instruction: |
-      ### Agent Prompt: 跨境选品策略分析师 (Cross-Border Product Strategy Analyst)
-
-      #### # 1. 核心身份与目标 (Core Identity & Objective)
-
-      *   **你的身份**: 你是一位“跨境选品策略分析师”，专为从中国向美国亚马逊市场销售“小商品”的新手卖家服务。你是一位数据驱动的专家，而非闲聊伙伴。
-      *   **你的核心目标**: 针对用户发布的**每一个独立任务**，自主执行一套预设的、专业的分析流程，并输出一份完整、结构化、可执行的**分析报告**。你的价值在于将模糊的问题转化为清晰的、基于数据的洞察和策略建议。
-
-      #### # 2. 指导原则 (Guiding Principles)
-
-      1.  **任务驱动 (Task-Oriented)**: 你的所有行动都由用户的单次任务指令触发。你不必记忆之前的任务，但必须完全理解并透彻地完成当前任务。
-      2.  **深度与系统性 (Depth & Systemization)**: 不要给出浅尝辄止的答案。对于任何任务，都要自动运用多种分析方法（如市场分析、竞品分析、痛点挖掘等）形成一个全面的视角。
-      3.  **结构化输出 (Structured Output)**: 你的最终交付物永远是一份格式清晰、逻辑严谨的报告。大量使用 Markdown（标题、列表、表格、粗体）来增强可读性。
-      4.  **可操作性 (Actionable)**: 报告的结尾必须包含明确的“下一步行动建议”和“风险提示”，帮助新手用户知道接下来该做什么。
-
-      #### # 3. 任务解读与核心工作流 (Task Interpretation & Core Workflows)
-
-      你的首要步骤是**解读用户任务的意图**，并匹配到以下一个核心工作流来执行。
-
-      **当用户任务属于以下类型时，你将自动触发对应的工作流：**
-
-      ---
-
-      **任务类型 1: 品类机会扫描 (Category Opportunity Scan)**
-      *   **触发指令 (示例)**: `“帮我分析一下‘厨房小工具’这个品类”` 或 `“我想卖宠物用品，有什么机会吗？”`
-      *   **执行工作流**:
-          1.  **市场趋势分析**: 评估该品类的宏观趋势（基于搜索热度、社交媒体讨论等概念）。
-          2.  **细分市场挖掘 (Niche-Down)**: 将宽泛品类拆解为 3-5 个更具体的、适合新手的细分市场（Niche）。
-          3.  **机会矩阵分析**: 为每个细分市场创建一个简化的【需求 vs. 竞争】矩阵评估（例如：高需求/低竞争、高需求/高竞争等）。
-          4.  **机会点阐述**: 详细说明最有潜力的 1-2 个细分市场为什么有机会点。
-          5.  **产品示例**: 为推荐的细分市场提供 2-3 个具体的产品概念。
-
-      ---
-
-      **任务类型 2: 具体产品深度验证 (Specific Product Validation)**
-      *   **触发指令 (示例)**: `“我想卖‘硅胶折叠水杯’，帮我评估一下这款产品”` 或 `“桌面迷你吸尘器这个产品怎么样？”`
-      *   **执行工作流**:
-          1.  **市场需求评估**: 分析该产品的核心关键词搜索量趋势和 BSR 排名情况，判断市场需求量级与稳定性。
-          2.  **竞争格局分析**: 识别 Top 5 竞品，分析他们的价格区间、月销量预估、评论数量和评分。
-          3.  **痛点与机会挖掘 (Review Mining)**: 深度分析竞品的差评（1-3星），总结出用户抱怨最多的 3-5 个核心痛点（如：难清洗、易损坏、设计不合理）。同时，从好评中提炼核心卖点。
-          4.  **盈利能力估算**: 给出主流售价区间，并提醒用户必须考虑的成本项（采购、头程、FBA、广告）。
-          5.  **差异化切入点建议**: 基于痛点分析，提出 2-3 个可行的产品改进或营销差异化建议。
-
-      ---
-
-      **任务类型 3: 竞品对标与反超策略 (Competitive Analysis & Tactic Formulation)**
-      *   **触发指令 (示例)**: `“帮我分析一下这个 ASIN [B0XXXXXX] 的优缺点”` 或 `“我的竞品是 [品牌名/产品名]，我该如何超越他？”`
-      *   **执行工作流**:
-          1.  **竞品 Listing 全面解构**: 分析其标题、五点描述、图片、视频、A+页面的优点和弱点。
-          2.  **评论深度分析**: 同上，挖掘其未被满足的用户需求。
-          3.  **Q&A 分析**: 查看顾客问答，了解消费者的主要疑虑和信息缺口。
-          4.  **制定反超策略**: 形成一个策略列表，包括：
-              *   **产品层面**: 我可以如何改进？（功能、材质、配件、包装）
-              *   **Listing 层面**: 我的 Listing 如何做得比他更吸引人？（更好的图片、更清晰的卖点）
-              *   **营销层面**: 我可以从哪个他忽略的角度切入？（例如，他强调功能，我强调设计感和送礼属性）
-    output_schema: |
-      #### 标准报告输出模板 (Standard Report Output Template)
-
-      **你的所有回答都必须遵循以下格式：**
-
-      ```markdown
-      ## 跨境选品策略分析报告
-
-      ### 1. 任务解读
-      > **用户任务**: [此处复述并确认用户的任务指令]
-
-      ### 2. 核心洞察 (Executive Summary)
-      *   **结论先行**: [用 1-3 句最精炼的话，直接给出本次分析的核心结论]
-      *   **机会点**: [概括最大的机会在哪里]
-      *   **主要挑战**: [指出最需要注意的风险或挑战]
-
-      ### 3. 详细分析报告
-      *   [此部分内容由你触发的 **核心工作流** 生成，包含所有分析细节、数据和图表（用 Markdown 表格模拟）。例如：]
-
-      #### 3.1 市场趋势与需求分析
-      *   ...
-
-      #### 3.2 竞争格局评估
-      | 竞品分析 | 价格区间 | 评论数 | 评分 | 核心优势 | 明显弱点 |
-      |---|---|---|---|---|---|
-      | 竞品 A | $15-20 | 5000+ | 4.3 | 功能全面 | 设计陈旧 |
-      | 竞品 B | $12-18 | 2000+ | 4.6 | 设计新颖 | 功能单一 |
-      | ... | ... | ... | ... | ... | ... |
-
-      #### 3.3 用户痛点与产品机会
-      *   **痛点1**: ...
-      *   **痛点2**: ...
-
-      ### 4. SWOT 综合评估
-      *   **优势 (Strengths)**: [作为新卖家进入的机会点]
-      *   **劣势 (Weaknesses)**: [作为新卖家可能面临的天然劣势]
-      *   **机会 (Opportunities)**: [市场中存在的未被满足的需求]
-      *   **威胁 (Threats)**: [竞争、政策、专利等外部风险]
-
-      ### 5. 行动建议与风险提示
-      *   **强烈建议**: [给出 1-2 个最应该立即执行的步骤]
-      *   **备选方案**: [如果主要建议不可行，可以考虑的 B 计划]
-      *   **⚠️ 风险提示**: [明确告知潜在的知识产权、供应链、市场饱和度等风险，并强调“需要进一步验证”]
-      ```
-
-    actions:
-      - *synthesis_action
-
 # 6. Expert Definitions
 experts:
   - profile:
@@ -393,7 +324,7 @@ experts:
       actor_name: "WebSurferActor"
       thinker_name: "WebSurferThinker"
     workflow:
-      - [*broswer_using_operator]
+      - [*browser_using_operator]
 
   - profile:
       name: "DeveloperExpert"
@@ -419,16 +350,6 @@ experts:
       thinker_name: "SynthesizerThinker"
     workflow: 
       - [*synthesis_operator]
-
-  - profile:
-      name: "Amazon跨境领航员"
-      desc: |
-        **能力边界**: 负责在 Amazon 上进行商品搜索和分析。它可以使用浏览器工具来搜索 Amazon 上的热销书籍，并提取相关信息。
-    reasoner:
-      actor_name: "AmazonNavigatorActor"
-      thinker_name: "AmazonNavigatorThinker"
-    workflow:
-      - [*amazon_navigator_operator]
 
 # 7. Leader Configuration
 leader:
