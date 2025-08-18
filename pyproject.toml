@@ -22,6 +22,11 @@ sqlalchemy-utils = "^0.41.2"
 matplotlib = "^3.10.3"
 networkx = "^3.4.2"
 pyfiglet = "^1.0.3"
+pymupdf = ">1.25.3"
+playwright = ">=1.53.0"
+python-magic = ">=0.4.27"
+google-generativeai = ">=0.8.5"
+datasets = ">=2.16.1"
 
 [[tool.poetry.source]]
 name = "PyPI"
@@ -52,8 +57,8 @@ pytest-cov = "6.2.1"
 pytest-mock = "^3.14.1"
 
 [tool.poetry.group.db-gpt.dependencies]
-dbgpt = { version = "0.7.1", extras = ["agent", "simple_framework", "framework"] }
-dbgpt-ext = { version = "0.7.1", extras = ["rag", "graph_rag", "storage_chromadb"] }
+dbgpt = { version = "0.7.3", extras = ["agent", "simple_framework", "framework"] }
+dbgpt-ext = { version = "0.7.3", extras = ["rag", "graph_rag", "storage_chromadb"] }
 
 [tool.ruff]
 line-length = 100
