@@ -48,8 +48,8 @@ install_python_extras() {
   info "Installing playwright chromium..."
   playwright install chromium || fatal "Failed to install playwright chromium"
 
-  info "Installing/updating browser-use..."
-  uv pip install --force-reinstall "git+https://github.com/chat2graph/browser-use.git@main#egg=browser-use[cli]" --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host github.com || fatal "Failed to install browser-use"
+  info "Installing browser-use..."
+  uv tool install --force "git+https://github.com/chat2graph/browser-use.git@main#egg=browser-use[cli]" --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host github.com || fatal "Failed to install browser-use"
 }
 
 # TODO: resolve dependency conflict resolution
