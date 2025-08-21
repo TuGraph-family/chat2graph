@@ -1,5 +1,7 @@
+import asyncio
 from time import sleep
 from typing import Optional
+from uuid import uuid4
 
 from app.core.common.type import ToolGroupType
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -18,7 +20,7 @@ from app.core.toolkit.tool_config import (
 from app.plugin.mcp.page_vision_tool import PageVisionTool
 
 
-async def init_server():
+async def init_server(job_id: str, operator_id: str):
     """Initialize the server by setting up the database and service factory."""
 
     # initialize the database
@@ -52,16 +54,16 @@ async def init_server():
     toolkit_service.add_action(test_action, [], [])
     toolkit_service.add_tool_group(mcp_service, [(test_action, 1.0)])
 
-    tool_call_ctx = ToolCallContext(job_id="1", operator_id="2")
+    tool_call_ctx = ToolCallContext(job_id=job_id, operator_id=operator_id)
     mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
 
-    await mcp_connection.call(tool_name="browser_navigate", url="https://www.baidu.com/")
+    await mcp_connection.call(tool_name="browser_navigate", url="https://cn.aliyun.com/")
     sleep(2)
 
     await mcp_connection.call(tool_name="browser_get_state")
 
 
-async def close_connection():
+async def close_connection(job_id: str, operator_id: str):
     """Close the MCP connection."""
     toolkit_service: ToolkitService = ToolkitService.instance
     mcp_service: Optional[McpService] = None
@@ -74,29 +76,29 @@ async def close_connection():
                 break
     if not mcp_service:
         raise ValueError("MCP service not found in the toolkit.")
-    tool_call_ctx = ToolCallContext(job_id="1", operator_id="2")
-    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
 
+    tool_call_ctx = ToolCallContext(job_id=job_id, operator_id=operator_id)
+    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
     await mcp_connection.close()
 
 
 async def main():
     """Main function to run the AnalyzeWebPageLayoutTool."""
-    await init_server()
+    job_id = str(uuid4())
+    operator_id = str(uuid4())
+    await init_server(job_id=job_id, operator_id=operator_id)
 
     tool = PageVisionTool()
     task_description = "Introduce the information."
 
     result = await tool.browser_get_page_vision(
-        tool_call_ctx=ToolCallContext(job_id="1", operator_id="2"),
+        tool_call_ctx=ToolCallContext(job_id=job_id, operator_id=operator_id),
         question=task_description,
     )
     print(result)
 
-    await close_connection()
+    await close_connection(job_id=job_id, operator_id=operator_id)
 
 
 if __name__ == "__main__":
-    import asyncio
-
     asyncio.run(main())
