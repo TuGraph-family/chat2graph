@@ -1,8 +1,8 @@
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 import uuid
 
-from mcp.types import ContentBlock
+from mcp.types import EmbeddedResource, ImageContent, TextContent
 
 from app.core.model.task import ToolCallContext
 from app.core.service.toolkit_service import ToolkitService
@@ -87,10 +87,12 @@ class PageVisionTool(Tool):
             browser_tool_args: Dict[str, Any] = {"file_path": file_path}
             if tab_index is not None:
                 browser_tool_args["tab_index"] = tab_index
-            pdf_path_results: List[ContentBlock] = await mcp_connection.call(
+            pdf_path_results: List[
+                Union[TextContent, ImageContent, EmbeddedResource]
+            ] = await mcp_connection.call(
                 tool_name="browser_export_whole_webpage_as_pdf", **browser_tool_args
             )
-            assert pdf_path_results and pdf_path_results[0].type == "text", (
+            assert pdf_path_results and isinstance(pdf_path_results[0], TextContent), (
                 "Expected a text content block with the file path."
             )
             pdf_path = pdf_path_results[0].text
