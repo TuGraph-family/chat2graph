@@ -1,6 +1,6 @@
 from contextlib import AsyncExitStack
 import threading
-from typing import List, Optional, cast
+from typing import List, Optional, Union, cast
 from urllib.parse import urljoin
 
 from mcp.client.session import ClientSession
@@ -8,7 +8,12 @@ from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.client.websocket import websocket_client
-from mcp.types import ContentBlock, Tool as McpBaseTool
+from mcp.types import (
+    EmbeddedResource,
+    ImageContent,
+    TextContent,
+    Tool as McpBaseTool,
+)
 
 from app.core.common.type import McpTransportType
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
@@ -35,7 +40,9 @@ class McpConnection(ToolConnection):
         """Get the transport configuration from the MCP service."""
         return self._mcp_config.transport_config
 
-    async def call(self, tool_name: str, **kwargs) -> List[ContentBlock]:
+    async def call(
+        self, tool_name: str, **kwargs
+    ) -> List[Union[TextContent, ImageContent, EmbeddedResource]]:
         """Execute a tool call through this connection.
 
         Args:
@@ -43,8 +50,8 @@ class McpConnection(ToolConnection):
             **kwargs: Arguments to pass to the tool.
 
         Returns:
-            List[ContentBlock]: The result of the tool call,
-                which may include multiple content blocks.
+            List[Union[TextContent, ImageContent, EmbeddedResource]]: The result
+                of the tool call, which may include multiple content blocks.
         """
         with self._lock:
             if self._session is None:
@@ -62,7 +69,16 @@ class McpConnection(ToolConnection):
             if self._session is None:
                 return
 
-            # Close session and transport resources
+            try:
+                # TODO: remove this hardcoded check
+                # used to close every 'browser-use' session,
+                # since the session won't be released after the shutdown
+                if self._mcp_config.name == "BrowserTool":
+                    await self._session.call_tool("browser_close")
+            except Exception:
+                pass
+
+            # close session and transport resources
             await self._exit_stack.aclose()
 
             self._session = None
