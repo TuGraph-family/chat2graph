@@ -1,0 +1,353 @@
+app:
+  name: "Chat2Graph"
+  desc: "An Agentic System on Graph Database."
+  version: "0.0.1"
+
+plugin:
+  workflow_platform: "DBGPT"
+
+reasoner:
+  type: "DUAL"
+
+tools:
+  - &document_reader_tool
+    name: "DocumentReader"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
+
+  - &vertex_label_adder_tool
+    name: "VertexLabelAdder"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
+
+  - &edge_label_adder_tool
+    name: "EdgeLabelAdder"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
+
+  - &graph_reachability_getter_tool
+    name: "GraphReachabilityGetter"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
+
+  - &schema_getter_tool
+    name: "SchemaGetter"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.data_importation"
+
+  - &data_status_check_tool
+    name: "DataStatusCheck"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.data_importation"
+
+  - &data_import_tool
+    name: "DataImport"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.data_importation"
+
+  - &cypher_executor_tool
+    name: "CypherExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_query"
+
+  - &algorithms_getter_tool
+    name: "AlgorithmsGetter"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &page_rank_executor_tool
+    name: "PageRankExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &betweenness_centrality_executor_tool
+    name: "BetweennessCentralityExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &louvain_executor_tool
+    name: "LouvainExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &label_propagation_executor_tool
+    name: "LabelPropagationExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &shortest_path_executor_tool
+    name: "ShortestPathExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &node_similarity_executor_tool
+    name: "NodeSimilarityExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &common_neighbors_executor_tool
+    name: "CommonNeighborsExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &kmeans_executor_tool
+    name: "KMeansExecutor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.graph_analysis"
+
+  - &knowledge_base_retriever_tool
+    name: "KnowledgeBaseRetriever"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.question_answering"
+
+  - &browser_tool
+    name: "BrowserUsing"
+    type: "MCP"
+    mcp_transport_config:
+      transport_type: "SSE"
+      url: "http://localhost:8931/sse"
+
+  - &file_tool
+    name: "FileTool"
+    type: "MCP"
+    mcp_transport_config:
+      transport_type: "STDIO"
+      command: "npx"
+      args: ["@modelcontextprotocol/server-filesystem", "."]
+
+  - &system_status_checker_tool
+    name: "SystemStatusChecker"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.neo4j.resource.system_checking"
+
+actions:
+  # graph modeling actions
+  - &content_understanding_action
+    name: "content_understanding"
+    desc: "Understand the main content and structure of the document through reading and annotating (requires calling one or more tools)."
+    tools:
+      - *document_reader_tool
+
+  - &deep_recognition_action
+    name: "deep_recognition"
+    desc: |
+      Identify key concepts and terms in the analyzed text (in text form), categorize the concepts, discover relationship patterns and interaction methods between concepts, and establish a hierarchical relationship.
+
+      1. Semantic Layer Analysis
+          - Explicit Information (e.g., keywords, topics, term definitions)
+          - Implicit Information (e.g., deep semantics, contextual associations, domain mapping)
+
+      2. Relational Layer Analysis
+          - Entity Relationships (e.g., direct relationships, indirect relationships, hierarchical relationships). Temporal Relationships (e.g., state transitions, evolutionary laws, causal chains)
+
+      3. Knowledge Reasoning
+          - Pattern Reasoning, Knowledge Completion
+
+      Thinking Dimensions for Graph Schema Modeling:
+
+      1. Entity Type Definition
+          - Think about and define entity types from the following dimensions:
+              * Temporal Dimension: Temporal entities such as events, periods, dynasties, etc.
+              * Spatial Dimension: Spatial entities such as places, regions, geographical features, etc.
+              * Social Dimension: Social entities such as people, organizations, forces, etc. (Optional)
+              * Cultural Dimension: Abstract entities such as ideas, culture, allusions, etc. (Optional)
+              * Physical Dimension: Concrete entities such as objects, resources, buildings, etc. (Optional)
+          - Establish a hierarchical system of entity types:
+              * Define superordinate and subordinate relationships (e.g., Person - Monarch - Vassal)
+              * Determine parallel relationships (e.g., Military Figure, Political Figure, Strategist)
+              * Design multiple inheritance relationships (e.g., someone who is both a Military Figure and a Strategist)
+          - Design a rich set of attributes for each entity type:
+              * Basic Attributes: Identifiers, names, descriptions, etc.
+              * Type-Specific Attributes: Defined according to the characteristics of the entity type
+              * Associated Attributes: Attributes that refer to other entities
+          - Consider the temporality of entities:
+              * The timeliness of attributes (e.g., official positions change over time) (Optional)
+              * The variability of states (e.g., changes in camp) (Optional)
+          - Define a complete set of attributes for each entity type, including required and optional attributes.
+          - Ensure that there are potential association paths between entity types, while maintaining the independence of conceptual boundaries.
+
+      2. Relationship Type Design
+          - Define the relationship types between entities, including direct relationships, derived relationships, and potential relationships.
+          - Clarify the directionality of relationships (directed), design the attribute set of relationships.
+          - Verify the reachability between key entities through relationship combinations.
+          - (Optional) Consider adding inverse relationships to enhance the expressiveness of the graph.
+  - &entity_type_definition_action
+    name: "entity_type_definition"
+    desc: "Core entity types identified in the definition and classification document."
+
+  - &relation_type_definition_action
+    name: "relation_type_definition"
+    desc: "Design the types and attributes of relationships between entities."
+
+  - &schema_design_and_import_action
+    name: "schema_design_and_import"
+    desc: "Transform the conceptual model into graph database labels, and use relevant tools to create the graph schema in the graph database (if necessary, tools can be called multiple times and labels created in the database to ensure the given task is completed) (Requires calling one or more tools)"
+    tools:
+      - *schema_getter_tool
+      - *vertex_label_adder_tool
+      - *edge_label_adder_tool
+
+  - &graph_validation_action
+    name: "graph_validation"
+    desc: "Reflect on and check the reachability of the graph (Requires calling one or more tools)"
+    tools:
+      - *graph_reachability_getter_tool
+
+  # data importation actions
+  - &schema_understanding_action
+    name: "schema_understanding"
+    desc: "Call relevant tools to obtain the graph model, and analyze and understand the graph model (Requires calling one or more tools)"
+    tools:
+      - *schema_getter_tool
+
+  - &data_status_check_action
+    name: "data_status_check"
+    desc: "Check the status of the current data in the graph database to understand the existing data situation and ensure the consistency of subsequent data import (Requires calling one or more tools)"
+    tools:
+      - *data_status_check_tool
+
+  - &content_understanding_action_2
+    name: "content_understanding_2"
+    desc: "Call relevant tools to obtain the original text content, and analyze and understand it in combination with the graph model (schema) (Requires calling one or more tools)"
+    tools:
+      - *document_reader_tool
+
+  - &triplet_data_generation_action
+    name: "triplet_data_generation"
+    desc: "Based on the understanding of the graph model and the text content, extract triple data and store it in the graph database (if necessary, extraction and import into the database can be performed multiple times to ensure the given task is completed) (Requires calling one or more tools)"
+    tools:
+      - *data_import_tool
+
+  - &output_result_action
+    name: "output_result"
+    desc: "Output summary information of the data import results."
+
+  # graph query actions
+  - &vertex_type_and_condition_validation_action
+    name: "vertex_type_and_condition_validation"
+    desc: "Read the existing schema of the graph data to check whether the query intention and requirements match the corresponding model, and check whether the conditions match the corresponding model. If they do not match, the corresponding query handle needs to be modified (Requires calling one or more tools)."
+    tools:
+      - *schema_getter_tool
+
+  - &supplement_action
+    name: "supplement"
+    desc: "If the query conditions/node types are missing or do not match, it is necessary to supplement the missing query content through one's own thinking and reasoning (if multiple attempts fail, then it is necessary to stop the loss in a timely manner)."
+
+  - &query_execution_action
+    name: "query_execution"
+    desc: "According to the graph query syntax, the existing graph schema, and the query requirements, call the graph database tool function to execute the query statement on the corresponding graph to obtain the results (Requires calling one or more tools)."
+    tools:
+      - *schema_getter_tool
+      - *cypher_executor_tool
+
+  # graph analysis actions
+  - &content_understanding_action_3
+    name: "content_understanding_3"
+    desc: "Understand and analyze the user's needs."
+
+  - &algorithms_intention_identification_action
+    name: "algorithms_intention_identification"
+    desc: "Determine the algorithm(s) to be executed (possibly multiple) and identify their names and other relevant information."
+    tools:
+      - *algorithms_getter_tool
+
+  - &algorithms_execution_action
+    name: "algorithms_execution"
+    desc: |
+      Call the relevant algorithm execution tools to execute the algorithm(s). (Requires calling one or more tools).
+      When encountering tricky problems with using algorithm tools, you can query the current graph database schema or execute Cypher query statements to help you better understand and configure the algorithm tool's input parameters.
+      On the other hand, graph database algorithms have strict requirements for input parameters, but in LLMs, algorithm input parameters are often ambiguous, especially data node and edge parameters. For example, you might want to input "Romeo", but the graph database only has "romeo". You can query the graph database schema or execute Cypher query statements to help you better understand and configure the algorithm tool's input parameters.
+      Note: You are not allowed to ask the user for more information.
+    tools:
+      - *page_rank_executor_tool
+      - *betweenness_centrality_executor_tool
+      - *louvain_executor_tool
+      - *label_propagation_executor_tool
+      - *shortest_path_executor_tool
+      - *node_similarity_executor_tool
+      - *common_neighbors_executor_tool
+      - *kmeans_executor_tool
+      - *cypher_executor_tool
+      - *schema_getter_tool
+
+  # question answering actions
+  - &knowledge_base_retrieving_action
+    name: "knowledge_base_retrieving"
+    desc: "Call the knowledge_base_search tool to retrieve relevant documents from the external knowledge base. If multiple retrievals fail to produce relevant results, abandon calling the tool. (Requires calling one or more tools)."
+    tools:
+      - *knowledge_base_retriever_tool
+
+  - &web_research_action
+    name: "web_research"
+    desc: "Conduct comprehensive web research using browser tools to collect information from authoritative web sources. Can execute multiple browsing tasks and dynamically adjust search strategies based on findings. (Requires calling one or more tools)."
+    tools:
+      - *browser_tool
+
+  - &reference_listing_action
+    name: "reference_listing"
+    desc: "Return the original text and web links involved in the reasoning process in Markdown format for easy display."
+    tools:
+      - *file_tool
+
+  # job decomposition actions
+  - &query_system_status_action
+    name: "query_system_status"
+    desc: "Call relevant tools to query the system status and obtain system status information. The large language model needs to understand the system's state in order to better reason and make decisions. (Requires calling one or more tools)."
+    tools:
+      - *system_status_checker_tool
+      - *document_reader_tool
+
+  - &job_decomposition_action
+    name: "job_decomposition"
+    desc: "Manually decompose the task into multiple sub-tasks (jobs) according to the relevant requirements and assign each sub-task to the corresponding expert."
+
+toolkit:
+  - [*content_understanding_action, *deep_recognition_action]
+  - [
+      *entity_type_definition_action,
+      *relation_type_definition_action,
+      *schema_design_and_import_action,
+      *graph_validation_action,
+    ]
+  - [
+      *schema_understanding_action,
+      *data_status_check_action,
+      *content_understanding_action_2,
+      *triplet_data_generation_action,
+      *output_result_action,
+    ]
+  - [
+      *vertex_type_and_condition_validation_action,
+      *supplement_action,
+      *query_execution_action,
+    ]
+  - [
+      *content_understanding_action_3,
+      *algorithms_intention_identification_action,
+      *algorithms_execution_action,
+    ]
+  - [*knowledge_base_retrieving_action, *web_research_action]
+  - [*reference_listing_action]
+  - [*query_system_status_action, *job_decomposition_action]
+
+operators:
+  - &basic_operator
+    instruction: |
+      You are a basic expert to response the question.
+    output_schema: |
+      **result**: freedom format, just the answer of the question
+    actions:
+      - *content_understanding_action
+
+experts:
+  - profile:
+      name: "basic Expert"
+      desc: |
+        He is a basic expert to response the question.
+      actor_name: "basic Expert"
+      thinker_name: "basic Expert"
+    workflow:
+      - [*basic_operator]
+
+knowledgebase: {}
+memory: {}
+env: {}
