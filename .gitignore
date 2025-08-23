@@ -23,3 +23,6 @@ web/.umi-test
 web/dist
 web/.mfsu
 web/.swc
+test/example/workflow_generator/workflow_space
+data*.json
+run*.log
