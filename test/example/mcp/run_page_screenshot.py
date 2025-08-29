@@ -16,7 +16,6 @@ from app.core.toolkit.action import Action
 from app.core.toolkit.mcp.mcp_connection import McpConnection
 from app.core.toolkit.mcp.mcp_service import McpService
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig, McpTransportType
-from app.plugin.mcp.page_vision_tool import PageVisionTool
 
 
 async def init_server(tool_call_ctx: ToolCallContext):
@@ -58,16 +57,7 @@ async def init_server(tool_call_ctx: ToolCallContext):
         await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
     )
 
-    await mcp_connection.call(
-        tool_name="browser_navigate", url="https://www.youtube.com/watch?v=28QvSs2_zec/"
-    )
-    sleep(2)
-
-    page_info = cast(
-        TextContent,
-        (await mcp_connection.call(tool_name="browser_get_interactive_elements_info"))[0],
-    )
-    print(page_info.text)
+    await mcp_connection.call(tool_name="browser_navigate", url="https://www.aliyun.com/")
     sleep(2)
 
 
@@ -89,22 +79,39 @@ async def close_connection(tool_call_ctx: ToolCallContext):
     await mcp_connection.close()
 
 
-async def read_page_by_vision(tool_call_ctx: ToolCallContext):
-    """Read the web page content using vision."""
-    tool = PageVisionTool()
-    task_description = "Introduce the information."
+async def take_screenshot(tool_call_ctx: ToolCallContext):
+    """Take the browser screenshot"""
+    toolkit_service: ToolkitService = ToolkitService.instance
+    mcp_service: Optional[McpService] = None
+    toolkit = toolkit_service.get_toolkit()
+    for item_id in toolkit.vertices():
+        tool_group = toolkit.get_tool_group(item_id)
+        if tool_group and isinstance(tool_group, McpService):
+            if tool_group._tool_group_config.name == "BrowserTool":
+                mcp_service = tool_group
+                break
+    if not mcp_service:
+        raise ValueError("MCP service not found in the toolkit.")
 
-    result = await tool.browser_read_page_by_vision(
-        tool_call_ctx=tool_call_ctx, llm_prompt=task_description
+    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
+
+    page_screenshot_path = cast(
+        TextContent,
+        (
+            await mcp_connection.call(
+                tool_name="browser_screenshot",
+                file_path="./test_screenshot.png",
+            )
+        )[0],
     )
-    print(result)
+    print(page_screenshot_path.text)
 
 
 async def main():
     """Main function to run the AnalyzeWebPageLayoutTool."""
-    tool_call_ctx = ToolCallContext(job_id=str(uuid4), operator_id=str(uuid4()))
+    tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
     await init_server(tool_call_ctx=tool_call_ctx)
-    await read_page_by_vision(tool_call_ctx=tool_call_ctx)
+    await take_screenshot(tool_call_ctx=tool_call_ctx)
     await close_connection(tool_call_ctx=tool_call_ctx)
 
 

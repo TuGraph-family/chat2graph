@@ -1,9 +1,8 @@
 import asyncio
+import json
 from time import sleep
 from typing import Optional, cast
 from uuid import uuid4
-
-from mcp.types import TextContent
 
 from app.core.common.type import ToolGroupType
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -16,7 +15,7 @@ from app.core.toolkit.action import Action
 from app.core.toolkit.mcp.mcp_connection import McpConnection
 from app.core.toolkit.mcp.mcp_service import McpService
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig, McpTransportType
-from app.plugin.mcp.page_vision_tool import PageVisionTool
+from app.plugin.mcp.browser_read_and_get_state import BrowserReadAndGetStateTool
 
 
 async def init_server(tool_call_ctx: ToolCallContext):
@@ -58,18 +57,10 @@ async def init_server(tool_call_ctx: ToolCallContext):
         await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
     )
 
-    await mcp_connection.call(
-        tool_name="browser_navigate", url="https://www.youtube.com/watch?v=28QvSs2_zec/"
-    )
+    await mcp_connection.call(tool_name="browser_navigate", url="https://www.aliyun.com/")
     sleep(2)
-
-    page_info = cast(
-        TextContent,
-        (await mcp_connection.call(tool_name="browser_get_interactive_elements_info"))[0],
-    )
-    print(page_info.text)
+    await mcp_connection.call(tool_name="browser_scroll", direction="down")
     sleep(2)
-
 
 async def close_connection(tool_call_ctx: ToolCallContext):
     """Close the MCP connection."""
@@ -88,23 +79,23 @@ async def close_connection(tool_call_ctx: ToolCallContext):
     mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
     await mcp_connection.close()
 
-
-async def read_page_by_vision(tool_call_ctx: ToolCallContext):
-    """Read the web page content using vision."""
-    tool = PageVisionTool()
-    task_description = "Introduce the information."
-
-    result = await tool.browser_read_page_by_vision(
-        tool_call_ctx=tool_call_ctx, llm_prompt=task_description
+async def read_and_get_state(tool_call_ctx: ToolCallContext):
+    """Read the current state of the browser."""
+    # instantiate and call the ReadAndGetStateTool
+    read_and_get_state_tool = BrowserReadAndGetStateTool()
+    result = await read_and_get_state_tool.browser_read_and_get_state(
+        tool_call_ctx=tool_call_ctx,
+        use_vlm=True,
+        vlm_task="Can we find main News & Events?",
     )
-    print(result)
+    print(json.dumps(result, indent=2))
 
 
 async def main():
-    """Main function to run the AnalyzeWebPageLayoutTool."""
-    tool_call_ctx = ToolCallContext(job_id=str(uuid4), operator_id=str(uuid4()))
+    """Main function to run the ReadAndGetStateTool."""
+    tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
     await init_server(tool_call_ctx=tool_call_ctx)
-    await read_page_by_vision(tool_call_ctx=tool_call_ctx)
+    await read_and_get_state(tool_call_ctx=tool_call_ctx)
     await close_connection(tool_call_ctx=tool_call_ctx)
 
 
