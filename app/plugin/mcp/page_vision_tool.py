@@ -19,48 +19,42 @@ class PageVisionTool(Tool):
 
     def __init__(self):
         super().__init__(
-            name=self.browser_get_page_vision.__name__,
-            description=self.browser_get_page_vision.__doc__ or "",
-            function=self.browser_get_page_vision,
+            name=self.browser_read_page_by_vision.__name__,
+            description=self.browser_read_page_by_vision.__doc__ or "",
+            function=self.browser_read_page_by_vision,
         )
 
-    async def browser_get_page_vision(
-        self, tool_call_ctx: ToolCallContext, question: str, tab_index: Optional[int] = None
+    async def browser_read_page_by_vision(
+        self, tool_call_ctx: ToolCallContext, llm_prompt: str
     ) -> str:
-        """Answers complex questions about a webpage by visually analyzing its content like a human.
+        """Answers complex questions or llm prompts about a webpage by visually analyzing its content like a human.
 
         **When to Use This Tool:**
         This tool is your "eyes" for a webpage. Use it when:
-        - Standard HTML/text-based tools fail to extract information. The data might be in an image, a canvas, or a complex non-standard component.
         - You need to understand the layout, structure, or visual hierarchy (e.g., "What is the most prominent button on the page?", "Is there a sidebar on the right?").
         - You need to interpret visual data like charts, graphs, or infographics.
         - You need to verify the presence of visual elements ("Is there a shopping cart icon at the top?").
+        - When you use it and `browser_get_interactive_elements_info` tool.
         - ...
 
         **How to Formulate Effective Questions:**
-        The key is to ask questions from the perspective of a human looking at the page. Be descriptive and specific. Instead of just asking for a piece of text you failed to find, ask the tool to *look* for it and describe where it is.
+        The key is to ask questions or provide llm prompt from the perspective of a human looking at the page. Be descriptive and specific. Instead of just asking for a piece of text you failed to find, ask the tool to *look* for it and describe where it is.
 
-        Args:
-            question (str): **CRITICAL:** A clear, specific question about the visual content. The more context you provide in the question, the better the VLM can understand the task.
-
-                **STRATEGIC EXAMPLES:**
-                - **When text extraction fails:** Instead of just re-trying to extract, ask: "I'm looking for the price of the 'Pro Plan'. I couldn't find it in the HTML. Can you visually scan the page for a pricing table or section and tell me the price for the 'Pro Plan'?"
-                - **For layout understanding:** "Describe the main sections of the homepage. What is in the main banner?"
-                - **For chart analysis:** "There should be a bar chart showing monthly sales. What are the approximate sales for August?"
-                - **For verification:** "Is there a 'Live Chat' support widget visible on the page? If so, where is it located?"
-
-                **AVOID:**
-                - Vague questions: "Analyze this page."
-                - Action commands: "Click the login button."
-                - Code-level questions: "Find the div with class 'main-content'."
-            tab_index (Optional[int]): The index of the browser tab to analyze. If None, defaults to the current tab.
-
-        Returns:
-            str: A JSON formatted string containing a direct answer to the question, along with supporting evidence
-                 and an assessment of whether the question was answerable from the visual content.
+        Input Schema (Args):
+        {
+            "type": "object",
+            "properties": {
+                "llm_prompt": {
+                    "type": "str",
+                    "description": "**CRITICAL:** A clear, specific llm prompt about the visual content. The more context you provide in the question, the better the VLM can understand the task.\n**STRATEGIC EXAMPLES:**\n- **When text extraction fails:** Instead of just re-trying to extract, ask: \"I'm looking for the price of the 'Pro Plan'. I couldn't find it in the HTML. Can you visually scan the page for a pricing table or section and tell me the price for the 'Pro Plan'?\"\n- **For layout understanding:** \"Describe the main sections of the homepage. What is in the main banner?\"\n- **For chart analysis:** \"There should be a bar chart showing monthly sales. What are the approximate sales for August?\"\n- **For verification:** \"Is there a 'Live Chat' support widget visible on the page? If so, where is it located?\"\n\n**AVOID:**\n- Vague questions: \"Analyze this page.\"\n- Action commands: \"Click the login button.\"\n- Code-level questions: \"Find the div with class 'main-content'.\""
+                },
+            },
+            "required": [
+                "llm_prompt"
+            ]
+        }
         """  # noqa: E501
         pdf_path: Optional[str] = None
-        tab_index_to_print = str(tab_index) if tab_index is not None else "current"
 
         try:
             # get the MCP connection
@@ -85,8 +79,6 @@ class PageVisionTool(Tool):
 
             # use browser to render
             browser_tool_args: Dict[str, Any] = {"file_path": file_path}
-            if tab_index is not None:
-                browser_tool_args["tab_index"] = tab_index
             pdf_path_results: List[
                 Union[TextContent, ImageContent, EmbeddedResource]
             ] = await mcp_connection.call(
@@ -96,20 +88,18 @@ class PageVisionTool(Tool):
                 "Expected a text content block with the file path."
             )
             pdf_path = pdf_path_results[0].text
-            print(f"Successfully rendered page (tab: {tab_index_to_print}) to {pdf_path}")
+            print(f"Successfully rendered page to {pdf_path}")
         except Exception as browser_e:
             raise ValueError(
-                f"Failed to render page (tab: {tab_index_to_print}) with browser "
-                "after direct download failed."
+                "Failed to render page with browser after direct download failed."
             ) from browser_e
 
         if not pdf_path:
             raise ValueError(
-                f"Could not retrieve content from page (tab: {tab_index_to_print}) "
-                "either by download or rendering."
+                "Could not retrieve content from page either by download or rendering."
             )
 
-        structured_prompt = self._get_visual_query_prompt(question)
+        structured_prompt = self._get_visual_query_prompt(llm_prompt)
 
         return await GeminiMultiModalTool().call_multi_modal(
             query_prompt=structured_prompt, media_paths=[pdf_path]
