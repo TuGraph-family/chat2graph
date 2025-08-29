@@ -42,7 +42,10 @@ class GeminiMultiModalTool(Tool):
         """  # noqa: E501
         genai.configure(api_key=SystemEnv.MULTI_MODAL_LLM_APIKEY)
         model = genai.GenerativeModel(model_name=SystemEnv.MULTI_MODAL_LLM_NAME)
-        prompt_parts: List[Any] = [query_prompt]
+        prompt_parts: List[Any] = [
+            query_prompt
+            + "\n\n\nIf you don't find the answer about the multi modal content, please tell me what you have seen and answer why you can't find the answer (e.g., It seems you have shown me incomplete content of a webpage, it seems you have displayed a blank page to me, or it seems you have played for me a piece of music that is all noise.)."  # noqa: E501
+        ]
         temp_files_to_clean: List[Path] = []
         error_messages: List[str] = []
 
