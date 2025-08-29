@@ -1,10 +1,6 @@
 from typing import TYPE_CHECKING, Any, Callable, List, Union, cast
 
-from mcp.types import (
-    EmbeddedResource,
-    ImageContent,
-    TextContent,
-)
+from mcp.types import EmbeddedResource, ImageContent, TextContent
 
 from app.core.common.type import ToolType
 from app.core.model.task import ToolCallContext

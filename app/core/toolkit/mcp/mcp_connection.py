@@ -1,5 +1,5 @@
 from contextlib import AsyncExitStack
-import threading
+from threading import Lock
 from typing import List, Optional, Union, cast
 from urllib.parse import urljoin
 
@@ -8,12 +8,7 @@ from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.client.websocket import websocket_client
-from mcp.types import (
-    EmbeddedResource,
-    ImageContent,
-    TextContent,
-    Tool as McpBaseTool,
-)
+from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool as McpBaseTool
 
 from app.core.common.type import McpTransportType
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
@@ -33,7 +28,7 @@ class McpConnection(ToolConnection):
         self._session: Optional[ClientSession] = None
         self._cached_tools: List[McpBaseTool] = []
         self._exit_stack: AsyncExitStack = AsyncExitStack()
-        self._lock = threading.Lock()
+        self._lock = Lock()
 
     @property
     def transport_config(self) -> McpTransportConfig:
