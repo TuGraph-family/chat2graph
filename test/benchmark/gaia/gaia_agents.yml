@@ -25,11 +25,11 @@ tools:
       command: "uvx"
       args: ["browser-use", "--mcp"]
 
-  - &browser_get_page_vision_tool
-    name: "PageVisionTool"
+  - &browser_read_and_get_state_tool
+    name: "BrowserReadAndGetStateTool"
     type: "LOCAL_TOOL"
-    desc: "A tool for analyzing webpage content using vision model."
-    module_path: "app.plugin.mcp.page_vision_tool"
+    desc: "A tool for reading the current state of a webpage, including interactive elements, and optionally performing a Visual Question Answering (VQA) task on a screenshot of the page."
+    module_path: "app.plugin.mcp.browser_read_and_get_state"
 
   - &file_tool
     name: "FileSystemTool"
@@ -89,7 +89,7 @@ actions:
     desc: "A comprehensive action for web-based research. Uses the browser to search, navigate websites, and read content. It can also download files from URLs. For complex content like PDFs, images encountered online or the web page layout, this action can be used to get the content."
     tools:
       - *browser_tool
-      - *browser_get_page_vision_tool
+      - *browser_read_and_get_state_tool
       - *url_downloader_tool
   - &navigate_browser_action
     name: "navigate browser action"
@@ -194,16 +194,16 @@ operators:
 
       2.  **Analyze Content and Inspect for Interactivity**
           *   A webpage is not a static document. Before attempting an action, you must understand your options.
-          *   call `browser_get_page_vision` and `browser_get_state` at the same time, to get the whole view of the page.
+          *   call `browser_read_and_get_state`, to get the whole view of the page.
 
-      3.  **Execute Interaction (`interact_with_element`)**
+      3.  **Execute Interaction**
           *   Based on your goal and the map from the previous step, execute a precise action.
-          *   **Actions include:** `click`, `type`, etc.
-          *   **Precision is mandatory.** Use the unique ID provided by `browser_get_state` to target the *exact* element required. A mis-click can send you down the wrong path.
+          *   **Actions include:** `click`, `type`, `scroll`, etc. If the interactive elements are not in the current window (i.e., when VLM suggests scrolling up/down), window scrolling tools can be called multi-times simultaneously. The number of scrolls can be reduced by increasing the step size of the scroll.
+          *   **Precision is mandatory.** Use the unique ID provided by `browser_read_and_get_state` to target the *exact* element required. A mis-click can send you down the wrong path.
 
       4.  **The Operational Loop (Iterate & Adapt)**
           *   Most tasks are not a single action but a cycle:
-              **`Browse -> Analyze&Inspect -> Interact -> Re-assess`**
+              **`Browse -> Analyze&Inspect or Interact -> Re-assess`**
           *   After an interaction, the page state changes. You must loop back, re-analyze the new content, and inspect the new set of interactive elements to determine your next move. If you are paginating through results, this loop is your core process.
 
       ---
@@ -228,11 +228,12 @@ operators:
 
       *   **b. The Veracity Protocol: Go to the Source.**
           *   Search engine snippets, summaries, and especially **AI Overviews** are for navigation only, **never for answers.**
-          *   You **must** click through to the primary source—the academic paper (PDF), the database entry, the official institutional page—to verify information.
-
-      *   **c. The Chain of Inquiry: Trust the Process.**
+          *   When accessing academic resources and institutional data, please ensure the accuracy of the data, the applicability of formulas, and their availability. Some data and information may be misleading, so it is necessary to discern whether to adopt relevant information on your own.
+      *   **c. Internal Knowledge Verification: Dialectically applying one's own knowledge.**
+          *   You are allowed to use your own well-established knowledge base as an anchor for reasoning. This knowledge can assist in web operations (for example, quickly identifying the most authoritative links among multiple search results) and information processing (for instance, becoming alert to obvious misinformation found online). **However, this internal knowledge is merely a tool for assistance and verification and must never replace the final validation from external authoritative sources.**
+      *   **d. The Chain of Inquiry: Trust the Process.**
           *   Most tasks are an information chain (e.g., `ID -> Name -> Date -> Event -> Person`). A mistake in any link breaks the chain. Systematically document each piece of information to build the next step of your inquiry.
-          *   **Obstacle Handling:** Proactively avoid known dead-ends. Do not attempt to access pages 
+          *   **Obstacle Handling:** Proactively avoid known dead-ends, for example, the current IP/Location is not allowed to access.
     output_schema: |
       information: The information gathered from web pages or analyzed from web-based media.
       sources_used: A list of all URLs visited and media files analyzed.
