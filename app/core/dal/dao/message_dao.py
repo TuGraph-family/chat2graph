@@ -76,7 +76,7 @@ class MessageDao(Dao[MessageDo]):
                 payload=WorkflowMessage.serialize_payload(message.get_payload()),
                 artifact_ids=message.get_artifact_ids(),
                 id=message.get_id(),
-                job_id=message.get_id(),
+                job_id=message.get_job_id(),
                 timestamp=message.get_timestamp(),
             )
 

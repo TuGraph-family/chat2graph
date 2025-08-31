@@ -4,7 +4,7 @@ from app.core.sdk.agentic_service import AgenticService
 
 def main():
     """Main function."""
-    mas = AgenticService.load("test/example/domain_expert/broswer_use_expert.yml")
+    mas = AgenticService.load("test/example/domain_expert/browser_use_expert.yml")
 
     # set a question that requires web research
     user_message = TextMessage(

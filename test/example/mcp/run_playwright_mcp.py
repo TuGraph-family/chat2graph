@@ -5,7 +5,7 @@ from app.core.model.job import SubJob
 from app.core.service.reasoner_service import ReasonerService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
-from app.core.toolkit.mcp_service import McpService
+from app.core.toolkit.mcp.mcp_service import McpService
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig

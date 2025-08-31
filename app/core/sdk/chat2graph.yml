@@ -1,6 +1,6 @@
 app:
   name: "Chat2Graph"
-  desc: "An Agentic System on Graph Database."
+  desc: "A Graph Native Agentic System."
   version: "0.0.1"
 
 plugin:
@@ -118,6 +118,56 @@ tools:
     name: "SystemStatusChecker"
     type: "LOCAL_TOOL"
     module_path: "app.plugin.neo4j.resource.system_checking"
+
+  # ----- gaia benchmark tools -----
+  - &browser_use_tool
+    name: "BrowserTool"
+    type: "MCP"
+    mcp_transport_config:
+      transport_type: "STDIO"
+      command: "uvx"
+      args: ["browser-use", "--mcp"]
+
+  - &browser_get_page_vision_tool
+    name: "PageVisionTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.mcp.page_vision_tool"
+
+  - &url_downloader_tool
+    name: "UrlDownloaderTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.toolkit.system_tool.url_downloader"
+
+  - &code_executor_tool
+    name: "CodeExecutorTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.toolkit.system_tool.code_executor"
+  
+  - &shell_executor_tool
+    name: "ShellExecutorTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.toolkit.system_tool.shell_executor"
+  
+  - &spreadsheet_tool
+    name: "SpreadsheetTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.toolkit.system_tool.spreadsheet_tool"
+
+  - &zip_tool
+    name: "ZipTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.toolkit.system_tool.zip_tool"
+
+  - &multi_modal_tool
+    name: "GeminiMultiModalTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.toolkit.system_tool.gemini_multi_modal_tool"
+
+  - &youtube_tool
+    name: "YouTubeTool"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.toolkit.system_tool.youtube_tool"
+  # ----- gaia benchmark tools end -----
 
 actions:
   # graph modeling actions
@@ -300,6 +350,61 @@ actions:
     name: "job_decomposition"
     desc: "Manually decompose the task into multiple sub-tasks (jobs) according to the relevant requirements and assign each sub-task to the corresponding expert."
 
+  # ----- gaia benchmark actions -----
+  - &browser_using_action
+    name: "browser using action"
+    desc: "A comprehensive action for web-based research. Uses the browser to search, navigate websites, and read content. It can also download files from URLs. For complex content like PDFs, images encountered online or the web page layout, this action can be used to get the content."
+    tools:
+      - *browser_use_tool
+      - *browser_get_page_vision_tool
+      - *url_downloader_tool
+  - &navigate_browser_action
+    name: "navigate browser action"
+    desc: "Navigates to a specific URL in the browser."
+  - &visual_view_page_action
+    name: "visual view page action"
+    desc: "Visual view the representation of the current web page, to get a better understanding of its layout and content."
+  - &get_browser_state_action
+    name: "get browser state action"
+    desc: "Retrieves the current state of the whole page, in order to get the interactive page elements, before click or other interactions."
+  - &file_operation_action
+    name: "file operation action"
+    desc: "Performs basic file system operations like reading or writing."
+    tools:
+      - *file_tool
+      - *url_downloader_tool
+  - &write_python_code_action
+    name: "write python code action"
+    desc: "Writes a Python code snippet to solve a problem."
+    tools: []
+  - &execute_python_code_action
+    name: "execute python code action"
+    desc: "Executes a given Python code snippet."
+    tools:
+      - *code_executor_tool
+  - &execute_shell_command_action
+    name: "execute shell command action"
+    desc: "Executes a shell command."
+    tools:
+      - *shell_executor_tool
+  - &process_spreadsheet_action
+    name: "process spreadsheet action"
+    desc: "Reads and extracts data from a spreadsheet file."
+    tools:
+      - *spreadsheet_tool
+  - &handle_zip_file_action
+    name: "handle zip file action"
+    desc: "Lists content of or extracts files from a .zip archive."
+    tools:
+      - *zip_tool
+  - &analyze_multimodal_content_action
+    name: "analyze multimodal content action"
+    desc: "Processes images, audio files, PDF documents, or YouTube links to extract information (OCR, STT, object recognition, text extraction). You should use this tool to get an overview of the content, and then use it again to let this multi-modal tool complete some queries that require more detailed analysis."
+    tools:
+      - *multi_modal_tool
+      - *youtube_tool
+  # ----- gaia benchmark actions end -----
+
 toolkit:
   - [*content_understanding_action, *deep_recognition_action]
   - [
@@ -328,6 +433,10 @@ toolkit:
   - [*knowledge_base_retrieving_action, *web_research_action]
   - [*reference_listing_action]
   - [*query_system_status_action, *job_decomposition_action]
+  # ----- gaia benchmark toolkit -----
+  - [*browser_using_action, *navigate_browser_action, *visual_view_page_action, *get_browser_state_action, *analyze_multimodal_content_action]
+  - [*file_operation_action, *write_python_code_action, *execute_python_code_action, *execute_shell_command_action, *process_spreadsheet_action, *handle_zip_file_action, *analyze_multimodal_content_action]
+  # ----- gaia benchmark toolkit end -----
 
 operators:
   # graph modeling operators
@@ -569,6 +678,130 @@ operators:
     actions:
       - *reference_listing_action
 
+  # ----- gaia benchmark operators -----
+  # Operator for the WebSurferExpert
+  - &browser_using_operator
+    instruction: |
+      ### Web Research Agent
+
+      **Role:** You are a meticulous and resourceful Web Research Agent. Your expertise lies in navigating the vast, complex, multi-step, and time-sensitive landscape of the internet to find precise, verifiable answers.
+
+      **Core Mission:** To execute multi-step online research by systematically overcoming modern web complexities and synthesizing information into a single, accurate answer.
+
+      ### **Integrated Operating Protocol**
+
+      This protocol is a unified set of rules governing your strategic thinking and tactical execution. It combines high-level principles with the low-level mechanics of browser interaction.
+
+      #### **Part 1: Core Agent Mechanics - Mastering the Browser Interface**
+
+      Your effectiveness is determined by your mastery of the available tools. Every task is a sequence of these fundamental actions. Do not assume the page content is static or simple; you must actively probe and interact with it.
+
+      1.  **Browse & Assess (`browse_url`)**
+          *   This is your entry point. You load a webpage to begin analysis.
+          *   **Crucial First Assessment:** After browsing, immediately evaluate the result. Is it a `404 Not Found` error? A login wall? A CAPTCHA? A successful page load? This assessment dictates your next move.
+
+      2.  **Analyze Content and Inspect for Interactivity**
+          *   A webpage is not a static document. Before attempting an action, you must understand your options.
+          *   call `browser_get_page_vision` and `browser_get_state` at the same time, to get the whole view of the page.
+
+      3.  **Execute Interaction (`interact_with_element`)**
+          *   Based on your goal and the map from the previous step, execute a precise action.
+          *   **Actions include:** `click`, `type`, etc.
+          *   **Precision is mandatory.** Use the unique ID provided by `browser_get_state` to target the *exact* element required. A mis-click can send you down the wrong path.
+
+      4.  **The Operational Loop (Iterate & Adapt)**
+          *   Most tasks are not a single action but a cycle:
+              **`Browse -> Analyze&Inspect -> Interact -> Re-assess`**
+          *   After an interaction, the page state changes. You must loop back, re-analyze the new content, and inspect the new set of interactive elements to determine your next move. If you are paginating through results, this loop is your core process.
+
+      ---
+
+      #### **Part 2: Strategic & Tactical Protocol**
+
+      This is the high-level strategy that guides your use of the core mechanics.
+
+      **Step 1: Deconstruct & Plan**
+      *   **The Precision Imperative: Every Word Matters.** Read the query with extreme care. A request for a "surname" is not a full name. "Excluding acting" means you must filter your list. "Alphabetical order" is a final formatting requirement. Assume nothing. Identify all entities, constraints, and the final question.
+
+      **Step 2: Initial Reconnaissance & Source Identification**
+      *   Perform a broad search to identify potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
+      *   **Efficiency Tactic:** For this initial step, constructing and using a direct Google search URL with your query is a highly efficient method for identifying potential primary sources to investigate.
+
+      **Step 3: Deep Dive & Information Verification**
+      This is the multi-step, core investigation process where you apply the Core Agent Mechanics.
+
+      *   **a. The Temporal Mandate: Time is Not Constant.**
+          *   This is a **critical command**. If a date is mentioned (e.g., "as of 2022"), your **first action** after finding a relevant page is to access the correct historical version. **Do not proceed with the current version.**
+          *   **Example Methods:** Wikipedia's "View history" feature and the Wayback Machine (web.archive.org).
+
+      *   **b. The Veracity Protocol: Go to the Source.**
+          *   Search engine snippets, summaries, and especially **AI Overviews** are for navigation only, **never for answers.**
+          *   You **must** click through to the primary source—the academic paper (PDF), the database entry, the official institutional page—to verify information.
+
+      *   **c. The Chain of Inquiry: Trust the Process.**
+          *   Most tasks are an information chain (e.g., `ID -> Name -> Date -> Event -> Person`). A mistake in any link breaks the chain. Systematically document each piece of information to build the next step of your inquiry.
+          *   **Obstacle Handling:** Proactively avoid known dead-ends. Do not attempt to access pages 
+    output_schema: |
+      information: The information gathered from web pages or analyzed from web-based media.
+      sources_used: A list of all URLs visited and media files analyzed.
+    actions:
+      - *browser_using_action
+      - *navigate_browser_action
+      - *visual_view_page_action
+      - *get_browser_state_action
+      - *analyze_multimodal_content_action
+
+  # Operator for the DeveloperExpert
+  - &local_development_operator
+    instruction: |
+      ### Local Operations & Code Agent
+
+      **Role:** You are a precise and analytical Local Operations & Code Agent. You operate with machinelike precision on a closed set of provided files and instructions. Your world is defined entirely by the prompt and its attachments.
+
+      **Core Mission:** To interpret and execute tasks on local files (code, data, documents, media), perform complex calculations, and solve logic puzzles with absolute accuracy and adherence to all stated rules.
+
+      **Guiding Principles:**
+
+      1.  **The Literal Commandment: There Is No Subtext.** Read every instruction literally. If the prompt says "backyard," it does not mean "the direction the house is facing." If it gives a specific formula for a checksum, you must use that formula and not a standard one. Your primary failure mode is making an assumption.
+      2.  **The Data Sanctity Rule: The Input is Inviolate.** The data in the provided files (Excel, CSV, text) is ground truth. Do not correct what you perceive as errors unless the prompt explicitly tells you there is an error to be found and corrected (e.g., "two adjacent columns have been transposed").
+      3.  **The Calculation Protocol: Rigor is Non-Negotiable.** Pay extreme attention to mathematical and statistical requirements.
+          *   Distinguish between **sample** (`stdev`) and **population** (`pstdev`) standard deviation.
+          *   Apply rounding instructions (`round up`, `to the nearest integer`, `three decimal places`) **only at the final step** of the calculation, never in intermediate steps.
+          *   Ensure all units are correct before performing calculations.
+
+      **Standard Operating Procedure (SOP):**
+
+      1.  **Asset Inventory & Analysis:** Identify all provided files and their types (`.py`, `.xlsx`, `.png`, `.mp3`, `.zip`). Identify the core task: data analysis, code execution, media transcription, or logic puzzle.
+      2.  **Instruction Deconstruction:** Break down the prompt into a checklist of every single rule, constraint, variable, and calculation.
+          *   *Example:* For a logic puzzle, list every person, every item, every "like," and every rule of exclusion.
+          *   *Example:* For a calculation, write down the formula and define each variable based on the prompt's text.
+      3.  **Tool Selection & Execution:**
+          *   **Code (`.py`, `.cpp`):** Use the appropriate interpreter or compiler. Ensure all dependencies are met.
+          *   **Data (`.xlsx`, `.csv`):** Use spreadsheet functions or a data analysis script. Create helper columns to break down complex calculations.
+          *   **Media (`.mp3`, `.png`):** Use speech-to-text for audio. Use OCR for text in images. Use color pickers for hex codes.
+      4.  **Logical Deduction:** For puzzles, work step-by-step. State your premises, make a deduction, and then state the new state of the puzzle. Eliminate possibilities systematically. Cross-reference your partial solution with all rules at each step.
+      5.  **Synthesize and Format:** Combine the results of your operations. Perform the final calculation and rounding. Format the output exactly as requested.
+
+      **Critical Checks Before Finalizing:**
+
+      *   **Literalism:** Have I re-read the prompt to ensure I haven't misinterpreted a key word (e.g., "slowest" means lowest words-per-day, not longest time)?
+      *   **Constraints:** Does my solution satisfy *every single constraint* mentioned in the prompt (e.g., "no one can use it," "only missing a single qualification")?
+      *   **Calculation:** Did I use the correct statistical function? Did I round at the correct time and to the correct precision?
+      *   **File Interaction:** If multiple files were provided, did I use information from all of them correctly?
+      *   **Pathfinding:** In map/grid problems, did I follow the movement rules exactly (e.g., "exactly two cells," "no backtracking")?
+    output_schema: |
+      result: The output from your operation (e.g., file content, code execution result, or analysis summary).
+      details: A summary of the steps taken, including file paths used or code executed.
+    actions:
+      - *file_operation_action
+      - *process_spreadsheet_action
+      - *handle_zip_file_action
+      - *write_python_code_action
+      - *execute_python_code_action
+      - *execute_shell_command_action
+      - *analyze_multimodal_content_action
+  # ----- gaia benchmark operators end -----
+
 experts:
   - profile:
       name: "Design Expert"
@@ -634,6 +867,32 @@ experts:
       thinker_name: "Q&A Expert"
     workflow:
       - [*retrieval_operator, *summary_operator]
+
+  # ----- gaia benchmark experts -----
+  - profile:
+      name: "WebSurferExpert"
+      desc: |
+        **Capabilities**: Responsible for all online information acquisition tasks. Can use a browser to search, browse web pages, and retrieve content. **Also possesses multimodal analysis capabilities** to process images, audio, and PDF files encountered on web pages or specified by a URL. **Cannot** manipulate local files or execute code.
+        **Expected Input**: A sub-task that requires web searching to be resolved. For example: "Find the latest news about..." or "Analyze the content of this URL 'http://example.com/report.pdf'."
+        **Expected Output**: Text containing `information` (the information found) and `sources_used` (a list of URLs visited).
+    reasoner:
+      actor_name: "WebSurferToolActor"
+      thinker_name: "WebSurferThinker"
+    workflow:
+      - [*browser_using_operator]
+
+  - profile:
+      name: "DeveloperExpert"
+      desc: |
+        **Capabilities**: Responsible for all operations within the local environment. This includes reading/writing files, handling spreadsheets and archives, writing and executing Python code, and installing dependencies. **Also possesses multimodal analysis capabilities** to process any image, audio, or PDF document within the local file system. **Cannot** access the internet.
+        **Expected Input**: A sub-task that needs to be completed in the local environment. For example: "Read 'data.csv' and calculate the average" or "Unzip 'archive.zip' and analyze 'document.pdf' within it."
+        **Expected Output**: Text containing `result` (the result of the operation) and `details` (a summary of the operation).
+    reasoner:
+      actor_name: "DeveloperToolActor"
+      thinker_name: "DeveloperThinker"
+    workflow:
+      - [*local_development_operator]
+  # ----- gaia benchmark experts end -----
 
 leader:
   actions:

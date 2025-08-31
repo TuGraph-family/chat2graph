@@ -1,6 +1,6 @@
 from contextlib import AsyncExitStack
 import threading
-from typing import Any, List, Optional, cast
+from typing import List, Optional, cast
 from urllib.parse import urljoin
 
 from mcp.client.session import ClientSession
@@ -8,7 +8,7 @@ from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.client.websocket import websocket_client
-from mcp.types import Tool as McpBaseTool
+from mcp.types import ContentBlock, Tool as McpBaseTool
 
 from app.core.common.type import McpTransportType
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
@@ -35,7 +35,7 @@ class McpConnection(ToolConnection):
         """Get the transport configuration from the MCP service."""
         return self._mcp_config.transport_config
 
-    async def call(self, tool_name: str, **kwargs) -> Any:
+    async def call(self, tool_name: str, **kwargs) -> List[ContentBlock]:
         """Execute a tool call through this connection.
 
         Args:
@@ -43,7 +43,8 @@ class McpConnection(ToolConnection):
             **kwargs: Arguments to pass to the tool.
 
         Returns:
-            The result content from the tool execution.
+            List[ContentBlock]: The result of the tool call,
+                which may include multiple content blocks.
         """
         with self._lock:
             if self._session is None:

@@ -13,7 +13,7 @@ class ToolConnectionFactory:
     async def create_connection(tool_group_config: ToolGroupConfig) -> ToolConnection:
         """Create a connection based on the tool group type."""
         if isinstance(tool_group_config, McpConfig):
-            from app.core.toolkit.mcp_connection import McpConnection
+            from app.core.toolkit.mcp.mcp_connection import McpConnection
             connection: McpConnection = McpConnection(tool_group_config=tool_group_config)
             await connection.connect()
             return connection

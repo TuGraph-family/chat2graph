@@ -75,7 +75,7 @@ class Artifact:
     id: Optional[str] = None
     timestamp: Optional[str] = None
     status: ArtifactStatus = ArtifactStatus.CREATED
-    metadata: ArtifactMetadata = ArtifactMetadata(version=1)
+    metadata: ArtifactMetadata = field(default_factory=lambda: ArtifactMetadata(version=1))
     handle: Optional[str] = None
 
     def serialize_content(self) -> str:
