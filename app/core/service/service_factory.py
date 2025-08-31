@@ -9,12 +9,18 @@ from app.core.service.message_service import MessageService
 
 
 class ServiceFactory:
-    """Automatically discover and initialize all Service classes in app.core.service"""
+    """Automatically discover and initialize all Service classes in
+    app.core.service"""
 
     # define service initialization order by class name
     # services listed here will be initialized first, in the order specified
-    # any services not listed will be initialized after these, in discovery order
-    _initialization_order: List[str] = [MessageService.__name__, JobService.__name__]
+    # any services not listed will be initialized after these, in discovery
+    # order
+    _initialization_order: List[str] = [
+        MessageService.__name__,
+        JobService.__name__,
+        "MemoryService",  # Add MemoryService to initialization order
+    ]
 
     @classmethod
     def initialize(cls) -> None:
