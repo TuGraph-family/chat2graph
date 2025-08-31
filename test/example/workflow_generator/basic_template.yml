@@ -1,0 +1,94 @@
+app:
+  name: "Chat2Graph"
+  desc: "An Agentic System on Graph Database."
+  version: "0.0.1"
+
+plugin:
+  workflow_platform: "DBGPT"
+
+reasoner:
+  type: "DUAL"
+
+tools:
+  - &document_reader_tool
+    name: "DocumentReader"
+    module_path: "app.plugin.neo4j.resource.graph_modeling"
+
+actions:
+  # graph modeling actions
+  - &content_understanding_action
+    name: "content_understanding"
+    desc: "Understand the main content and structure of the document through reading and annotating (requires calling one or more tools)."
+    tools:
+      - *document_reader_tool
+
+  - &deep_recognition_action
+    name: "deep_recognition"
+    desc: |
+      Identify key concepts and terms in the analyzed text (in text form), categorize the concepts, discover relationship patterns and interaction methods between concepts, and establish a hierarchical relationship.
+
+      1. Semantic Layer Analysis
+          - Explicit Information (e.g., keywords, topics, term definitions)
+          - Implicit Information (e.g., deep semantics, contextual associations, domain mapping)
+
+      2. Relational Layer Analysis
+          - Entity Relationships (e.g., direct relationships, indirect relationships, hierarchical relationships). Temporal Relationships (e.g., state transitions, evolutionary laws, causal chains)
+
+      3. Knowledge Reasoning
+          - Pattern Reasoning, Knowledge Completion
+
+      Thinking Dimensions for Graph Schema Modeling:
+
+      1. Entity Type Definition
+          - Think about and define entity types from the following dimensions:
+              * Temporal Dimension: Temporal entities such as events, periods, dynasties, etc.
+              * Spatial Dimension: Spatial entities such as places, regions, geographical features, etc.
+              * Social Dimension: Social entities such as people, organizations, forces, etc. (Optional)
+              * Cultural Dimension: Abstract entities such as ideas, culture, allusions, etc. (Optional)
+              * Physical Dimension: Concrete entities such as objects, resources, buildings, etc. (Optional)
+          - Establish a hierarchical system of entity types:
+              * Define superordinate and subordinate relationships (e.g., Person - Monarch - Vassal)
+              * Determine parallel relationships (e.g., Military Figure, Political Figure, Strategist)
+              * Design multiple inheritance relationships (e.g., someone who is both a Military Figure and a Strategist)
+          - Design a rich set of attributes for each entity type:
+              * Basic Attributes: Identifiers, names, descriptions, etc.
+              * Type-Specific Attributes: Defined according to the characteristics of the entity type
+              * Associated Attributes: Attributes that refer to other entities
+          - Consider the temporality of entities:
+              * The timeliness of attributes (e.g., official positions change over time) (Optional)
+              * The variability of states (e.g., changes in camp) (Optional)
+          - Define a complete set of attributes for each entity type, including required and optional attributes.
+          - Ensure that there are potential association paths between entity types, while maintaining the independence of conceptual boundaries.
+
+      2. Relationship Type Design
+          - Define the relationship types between entities, including direct relationships, derived relationships, and potential relationships.
+          - Clarify the directionality of relationships (directed), design the attribute set of relationships.
+          - Verify the reachability between key entities through relationship combinations.
+          - (Optional) Consider adding inverse relationships to enhance the expressiveness of the graph.
+
+toolkit:
+  - [*content_understanding_action, *deep_recognition_action]
+
+operators:
+  - &basic_operator
+    instruction: |
+      You are a basic expert to response the question.
+    output_schema: |
+      **result**: freedom format, just the answer of the question
+    tools:
+    actions:
+      - *content_understanding_action
+
+experts:
+  - profile:
+      name: "basic Expert"
+      desc: |
+        He is a basic expert to response the question.
+      actor_name: "basic Expert"
+      thinker_name: "basic Expert"
+    workflow:
+      - [*basic_operator]
+
+knowledgebase: {}
+memory: {}
+env: {}
