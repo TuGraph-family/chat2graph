@@ -57,7 +57,10 @@ async def init_server(tool_call_ctx: ToolCallContext):
         await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
     )
 
-    await mcp_connection.call(tool_name="browser_navigate", url="https://www.aliyun.com/")
+    await mcp_connection.call(
+        tool_name="browser_navigate",
+        url="https://en.wikipedia.org/wiki/Tokyo",
+    )
     sleep(2)
     await mcp_connection.call(tool_name="browser_scroll", direction="down")
     sleep(2)
@@ -85,8 +88,7 @@ async def read_and_get_state(tool_call_ctx: ToolCallContext):
     read_and_get_state_tool = BrowserReadAndGetStateTool()
     result = await read_and_get_state_tool.browser_read_and_get_state(
         tool_call_ctx=tool_call_ctx,
-        use_vlm=True,
-        vlm_task="Can we find main News & Events?",
+        vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
     )
     print(json.dumps(result, indent=2))
 

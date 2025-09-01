@@ -57,7 +57,9 @@ async def init_server(tool_call_ctx: ToolCallContext):
         await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
     )
 
-    await mcp_connection.call(tool_name="browser_navigate", url="https://www.aliyun.com/")
+    await mcp_connection.call(
+        tool_name="browser_navigate", url="https://www.instagram.com/facebook/?hl=en/"
+    )
     sleep(2)
 
 
