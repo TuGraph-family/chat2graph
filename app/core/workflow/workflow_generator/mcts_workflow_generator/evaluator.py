@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from app.core.workflow.workflow_generator.mcts_workflow_generator.model import OptimizeResp, WorkflowLogFormat, Score
-from app.core.workflow.dataset_synthesis.data_synthesis import Row
+from app.core.workflow.dataset_synthesis.model import Row
 from app.core.prompt.workflow_generator import summary_prompt_template, optimize_prompt_template, eval_prompt_template
 from app.core.model.message import TextMessage, HybridMessage
 from app.core.common.system_env import SystemEnv

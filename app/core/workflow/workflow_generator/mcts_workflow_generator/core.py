@@ -1,5 +1,6 @@
-from app.core.workflow.dataset_synthesis.data_synthesis import WorkflowTrainDataset, Row
+from app.core.workflow.dataset_synthesis.model import Row
 from app.core.prompt.workflow_generator import init_template, eval_prompt_template, summary_prompt_template, optimize_prompt_template
+from app.core.workflow.dataset_synthesis.model import WorkflowTrainDataset
 from app.core.workflow.workflow_generator.llm_client import LLMClient
 from app.core.service.graph_db_service import GraphDb
 from app.core.common.system_env import SystemEnv
