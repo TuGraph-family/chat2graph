@@ -1,22 +1,28 @@
 import base64
 import json
 import os
-from typing import Any, Dict, List, Optional, Union
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 import uuid
 
+import google.generativeai as genai
+from google.generativeai.generative_models import ChatSession
 from mcp.types import EmbeddedResource, ImageContent, TextContent
 
+from app.core.common.system_env import SystemEnv
+from app.core.common.util import parse_jsons
 from app.core.model.task import ToolCallContext
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.mcp.mcp_service import McpService
-from app.core.toolkit.system_tool.gemini_multi_modal_tool import GeminiMultiModalTool
+from app.core.toolkit.system_tool.url_downloader import UrlDownloaderTool
 from app.core.toolkit.tool import Tool
 
 
 class BrowserReadAndGetStateTool(Tool):
-    """
-    A tool to read the current state of a webpage, including interactive elements,
-    and optionally perform a Visual Question Answering (VQA) task on a screenshot of the page.
+    """An intelligent tool that analyzes a webpage using a conversational VLM to
+    determine the single best next step towards a user's goal. It can answer
+    questions directly, find partial information while recommending interaction
+    to get more, or identify the exact element for the next interaction.
     """
 
     def __init__(self):
@@ -30,20 +36,37 @@ class BrowserReadAndGetStateTool(Tool):
         self,
         tool_call_ctx: ToolCallContext,
         vlm_task: str,
-        return_interactive_elements: bool = False,
+        task_context: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Reads the interactive elements from the current webpage, uses a VLM to analyze a screenshot, and recommends a next step. It returns the VLM's analysis result and the path to the screenshot.
+        """Analyzes the current webpage to determine the single best next step towards a user's goal.
+
+        This is a powerful visual analysis tool. In a multi-step task, you should call this tool
+        repeatedly after each action (like a click or scroll) to re-evaluate the new page state.
 
         **When to use this tool:**
-        Use this tool to get a comprehensive understanding of the current page's state.
-        It's particularly useful for visually analyzing the page to understand its layout, identify interactive elements, and get a recommendation for the next step to achieve a larger goal.
+        Use this tool as your primary 'eyes' to understand a webpage. Call it after navigating to a
+        new page, or after performing an action that changes the page content.
 
-        **How to formulate an effective `vlm_task`:**
-        The `vlm_task` should describe what the user wants to ultimately achieve. The VLM will observe the screen and recommend the best immediate next step towards that goal.
+        **Strategy for Multi-Step Tasks:**
+        This tool supports conversational context to become more efficient and accurate over time.
+        - **First Call:** On a new page, use ONLY the `vlm_task` parameter to describe the overall goal.
+        - **Subsequent Calls:** After performing an action (e.g., dismissing a pop-up, clicking 'next page'),
+          call this tool again. This time, provide BOTH:
+            1. `vlm_task`: The SAME overall goal.
+            2. `task_context`: A brief summary of the last action and the current situation.
+          This helps the VLM understand the progress and not get confused.
 
-        *   **For clicking an element:** "I want to log in." The VLM will see a 'Login' button and recommend an 'INTERACT' action with the element's index.
-        *   **For filling an input field:** "I want to search for 'laptops'." The VLM will find the search bar and recommend an 'INTERACT' action with the input's index and the value 'laptops'.
-        *   **For answering a question about the page:** "What is the price of the 'Pro Plan'?" The VLM will find the answer on the screen and recommend an 'ANSWER' action with the answer.
+        **How to formulate `vlm_task` and `task_context`:**
+
+        *   **`vlm_task` (The Unchanging Goal):**
+            - "Find and book the cheapest flight from JFK to LAX for tomorrow."
+            - "Summarize the return policy of this product."
+            - "Find the number of publications by author X published before 2020."
+
+        *   **`task_context` (The Evolving Situation):**
+            - *After dismissing a cookie banner:* "I have just dismissed the cookie banner. Now I need to see the main content."
+            - *After clicking 'next page':* "I am now on page 2 of the search results. I need to continue my search here."
+            - *In your ORCID example:* "I am on the second page of the author's works. I already counted 28 pre-2020 publications on the first page. Now I need to count the ones on this page."
 
         Input Schema (Args):
         {
@@ -51,130 +74,351 @@ class BrowserReadAndGetStateTool(Tool):
             "properties": {
                 "vlm_task": {
                     "type": "string",
-                    "description": "A prompt that describes the user's ultimate goal. The VLM will analyze the screenshot and this goal to recommend a single, immediate next step. The more context you provide in the question, the better the VLM can understand the task."
+                    "description": "The user's unchanging, high-level goal. Describe what you ultimately want to achieve on this website."
                 },
-                "return_interactive_elements": {
-                    "type": "boolean",
-                    "description": "If true, the result will include the JSON of interactive elements of the current web page, which helps you to interact with the page more effectively. This JSON may be very redundant and contain sometimes more than 300 elements info. It is recommended to use the default settings (False).",
-                    "default": false
+                "task_context": {
+                    "type": "string",
+                    "description": "Optional. A summary of what has already been accomplished or the current state of the multi-step task. Use this on all calls after the first one.",
+                    "default": null
                 }
             },
             "required": ["vlm_task"]
         }
         """  # noqa: E501
-        return_interactive_elements = False
+        mcp_service = self._get_mcp_service()
+        mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
+        temp_dir = "./.gaia_tmp/"
+        os.makedirs(temp_dir, exist_ok=True)
 
-        # get the MCP connection
+        gemini_conversation = ConversationalGeminiChat()
+        chat_session = gemini_conversation.start_chat()
+
+        try:
+            # === Turn 1: Triage Phase with Clean Screenshot ===
+            clean_results = await mcp_connection.call(
+                tool_name="browser_read_and_get_state",
+                include_screenshot=True,
+                screenshot_with_highlighted_elements=False,
+            )
+            _, clean_screenshot_base64 = self._parse_mcp_results(clean_results)
+            clean_screenshot_path = self._save_screenshot(
+                clean_screenshot_base64, temp_dir, "clean"
+            )
+
+            triage_prompt = self._get_triage_prompt(vlm_task, task_context)
+            triage_vlm_result_str = await gemini_conversation.send_message_in_chat(
+                chat=chat_session, query_prompt=triage_prompt, media_paths=[clean_screenshot_path]
+            )
+
+            triage_result = self._parse_vlm_json_output(triage_vlm_result_str)
+            action_type = triage_result.get("next_action_type")
+
+            base_response: Dict[str, Any] = {
+                "triage_analysis": triage_result,
+                "original_screenshot": clean_screenshot_path,
+            }
+
+            # === Decision Logic Based on Triage ===
+            if action_type in ["ANSWER", "NAVIGATE_OR_SEARCH", "CLARIFY"]:
+                return self._format_terminal_response(action_type, triage_result, base_response)
+
+            elif action_type == "INTERACT":
+                # === Turn 2: Execution Phase with Highlighted Screenshot ===
+                highlighted_results = await mcp_connection.call(
+                    tool_name="browser_read_and_get_state",
+                    include_screenshot=True,
+                    screenshot_with_highlighted_elements=True,
+                )
+                highlighted_page_state, highlighted_screenshot_base64 = self._parse_mcp_results(
+                    highlighted_results
+                )
+                highlighted_screenshot_path = self._save_screenshot(
+                    highlighted_screenshot_base64, temp_dir, "highlighted"
+                )
+
+                execution_prompt = self._get_conversational_execution_prompt(highlighted_page_state)
+                execution_vlm_result_str = await gemini_conversation.send_message_in_chat(
+                    chat=chat_session,
+                    query_prompt=execution_prompt,
+                    media_paths=[highlighted_screenshot_path],
+                )
+
+                execution_result = self._parse_vlm_json_output(execution_vlm_result_str)
+                return self._format_interaction_response(
+                    triage_result, execution_result, base_response, highlighted_screenshot_path
+                )
+
+            else:
+                return self._format_error_response(
+                    f"Unknown action type: {action_type}",
+                    triage_vlm_result_str,
+                    clean_screenshot_path,
+                )
+
+        except (ValueError, json.JSONDecodeError) as e:
+            return self._format_error_response(f"An error occurred during processing: {e}", "", "")
+        except Exception as e:
+            return self._format_error_response(f"An unexpected exception occurred: {e}", "", "")
+        finally:
+            gemini_conversation.cleanup_temp_files()
+
+    # --- Helper and Prompt Methods ---
+
+    def _get_mcp_service(self) -> McpService:
+        """Get the MCP service instance for browser interactions."""
+        # implementation to get MCP service
         toolkit_service: ToolkitService = ToolkitService.instance
-        mcp_service: Optional[McpService] = None
         toolkit = toolkit_service.get_toolkit()
         for item_id in toolkit.vertices():
             tool_group = toolkit.get_tool_group(item_id)
-            if tool_group and isinstance(tool_group, McpService):
-                if tool_group._tool_group_config.name == "BrowserTool":
-                    mcp_service = tool_group
-                    break
-        if not mcp_service:
-            raise ValueError("MCP service (BrowserTool) not registered in the toolkit.")
+            if (
+                tool_group
+                and isinstance(tool_group, McpService)
+                and tool_group._tool_group_config.name == "BrowserTool"
+            ):
+                return tool_group
+        raise ValueError("MCP service (BrowserTool) not registered in the toolkit.")
 
-        mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
+    def _parse_mcp_results(
+        self,
+        results: List[Union[TextContent, ImageContent, EmbeddedResource]],
+    ) -> Tuple[Dict[str, Any], str]:
+        """Parses MCP results to extract page state and screenshot."""
+        if not results or not isinstance(results[0], TextContent):
+            raise ValueError("Expected a text content block with page state info.")
+        page_state = json.loads(results[0].text)
+        screenshot_base64 = page_state.get("screenshot")
+        if not screenshot_base64:
+            raise ValueError("Screenshot not found in the page state.")
+        return page_state, screenshot_base64
 
-        # get interactive elements and screenshot
-        interactive_elements_results: List[
-            Union[TextContent, ImageContent, EmbeddedResource]
-        ] = await mcp_connection.call(
-            tool_name="browser_read_and_get_state",
-            include_screenshot=True,
+    def _save_screenshot(self, b64_string: str, directory: str, prefix: str) -> str:
+        """Saves a base64-encoded screenshot to a file."""
+        path = os.path.join(directory, f"{prefix}_{uuid.uuid4()}.png")
+        with open(path, "wb") as f:
+            f.write(base64.b64decode(b64_string))
+        print(f"Screenshot saved to {path}")
+        return path
+
+    def _parse_vlm_json_output(self, vlm_result: str) -> Dict[str, Any]:
+        """Parses the VLM's JSON output, ensuring it's valid JSON."""
+        result_jsons = parse_jsons(vlm_result)
+        if not result_jsons or isinstance(result_jsons[0], json.JSONDecodeError):
+            raise ValueError(f"VLM did not return a valid JSON. Output: {vlm_result}")
+        return result_jsons[0]
+
+    def _format_terminal_response(
+        self,
+        action_type: str,
+        triage_result: Dict[str, Any],
+        base_response: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Formats the final response for terminal actions."""
+        return {
+            **base_response,
+            "status": "COMPLETED" if action_type == "ANSWER" else "ACTION_NEEDED",
+            "result_type": action_type,
+            "data": {"answer": triage_result.get("final_answer", triage_result.get("reasoning"))},
+        }
+
+    def _format_interaction_response(
+        self,
+        triage_result: Dict[str, Any],
+        execution_result: Dict[str, Any],
+        base_response: Dict[str, Any],
+        highlighted_screenshot_path: str,
+    ):
+        """Formats the final response for interaction actions."""
+        final_data = {"interaction_recommendation": execution_result.get("recommendation")}
+        if triage_result.get("information_status") == "PARTIAL":
+            final_data["partial_answer"] = triage_result.get("partial_answer")
+
+        return {
+            **base_response,
+            "status": "ACTION_NEEDED",
+            "result_type": "INTERACT",
+            "information_status": triage_result.get("information_status", "NOT_APPLICABLE"),
+            "data": final_data,
+            "highlighted_screenshot": highlighted_screenshot_path,
+        }
+
+    def _format_error_response(
+        self,
+        message: str,
+        vlm_output: str,
+        screenshot_path: str,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Formats an error response."""
+        response = context or {}
+        response.update(
+            {
+                "status": "ERROR",
+                "error_message": message,
+                "vlm_output": vlm_output,
+            }
         )
-        assert interactive_elements_results and isinstance(
-            interactive_elements_results[0], TextContent
-        ), "Expected a text content block with the interactive elements info."
-        interactive_elements_json = interactive_elements_results[0].text
+        if (
+            screenshot_path
+            and "original_screenshot" not in response
+            and "highlighted_screenshot" not in response
+        ):
+            response["screenshot"] = screenshot_path
+        return response
 
-        try:
-            page_state: Dict[str, Any] = json.loads(interactive_elements_json)
-        except json.JSONDecodeError as e:
-            raise ValueError(
-                f"Failed to get the browser state. Received: {interactive_elements_json}"
-            ) from e
-
-        screenshot_base64s: Optional[str] = page_state.get("screenshot")
-        if not screenshot_base64s:
-            raise ValueError(
-                "Screenshot has not been captured, so that the tool can not view the web page."
-            )
-
-        # save screenshot to a temporary file
-        temp_dir = "./.gaia_tmp/"
-        os.makedirs(temp_dir, exist_ok=True)
-        b64_tile_path = os.path.join(temp_dir, f"{uuid.uuid4()}.png")
-        page_state["screenshot"] = [b64_tile_path]
-        print(f"Screenshot saved to {b64_tile_path}")
-
-        image_data = base64.b64decode(screenshot_base64s)
-        with open(b64_tile_path, "wb") as f:
-            f.write(image_data)
-
-        # call VLM
-        structured_prompt = self._get_visual_query_prompt(
-            vlm_task,
-            page_state["screenshot"],
-            page_state,
-        )
-        vlm_result_str = await GeminiMultiModalTool().call_multi_modal(
-            query_prompt=structured_prompt, media_paths=page_state["screenshot"]
-        )
-        page_state["vlm_result"] = vlm_result_str
-
-        if return_interactive_elements:
-            return page_state
-
-        return {"vlm_result": page_state["vlm_result"], "screenshot": page_state["screenshot"]}
-
-    def _get_visual_query_prompt(
-        self, question: str, media_paths: List[str], elements: Dict[str, Any]
+    def _get_triage_prompt(
+        self,
+        vlm_task: str,
+        task_context: Optional[str] = None,
     ) -> str:
-        elements_str = json.dumps(elements, indent=2)
-        prompt = f'''You are an AI assistant that analyzes a webpage to recommend the next action toward a user's goal.
-The user's goal is: "{question}"
+        """Generates the triage prompt for the VLM."""
 
-You are given two things:
-1.  A/Some screenshot(s) of the **entire webpage**. On this screenshot, there are numbered boxes drawn around the interactive elements that are **currently visible in the browser's viewport**.
-2.  A JSON list of these currently visible interactive elements. The `index` in the JSON corresponds to the number in the box on the screenshot.
+        base_prompt = f'''As an expert web agent, analyze this clean webpage screenshot to determine the strategy for the user's goal.
 
-Given screenshots:
-{media_paths}
+User's ultimate goal: "{vlm_task}"'''  # noqa: E501
 
-Your task is to analyze the user's goal, the full-page screenshot, and the labeled elements to recommend ONE single, immediate next step.
+        if task_context:
+            base_prompt += f'''
+**Current Task Context:** You are not starting from scratch. Here is what has happened so far:
+"{task_context}"'''  # noqa: E501
 
-**Attention**: If the screenshot shows a document reader (such as PDF), and you find that the view in the screenshot is limited, and you think the document on this webpage is downloadable, you can suggest that the next step is to click the download button or download the document via URL.
+        base_prompt += """
+Your Task: Triage the situation with nuance. Is the goal about finding information or performing an action?
 
-**Attention**: Information may not be fully presented on a single static page. You must proactively identify scenarios where interaction is necessary to obtain answers. This requires you to understand the page layout and anticipate where information might be hidden, just like a human user would.
-    - For example: When a long article or search results are displayed in pages, you need to navigate by clicking "Next" or the page numbers; when key information is hidden in collapsible "Show More" or "Details" sections, you need to perform clicks to expand the content; when an answer requires jumping from one link to another page, you must track that link. Ignoring these interaction needs will result in incomplete information retrieval.
+1.  **Blocker First:** Always check for blocking elements (cookie banners, popups). If present, the goal is to interact and dismiss it.
+2.  **Goal Analysis:**
+    *   **Information-Seeking Goal?** (e.g., "What is...", "Find...", "Summarize...")
+        *   Can you find the COMPLETE answer on the screen?
+        *   Can you find a PARTIAL answer, with clear indication that more is available after an interaction (e.g., "Next Page", "Read More", expanding a section)?
+        *   Is the information COMPLETELY HIDDEN behind an interactive element (e.g., a "Details" tab)?
+    *   **Action-Oriented Goal?** (e.g., "Log in", "Search for", "Click on...")
+        *   Is the target element for the action visible and ready?
 
-**Attention**: If the screenshot is about search engine summaries, especially **AI Overview** (or **AI Some Thing**), you can select information from the so-called AI content, but you must indicate that this is content from an AI overview and inform me that your information is not reliable. Then please provide the next page to facilitate my access to specific credible websites through the search engine for my next steps.
+3.  **Final Classification:** Based on your analysis, classify the situation.
 
-JSON list of currently visible interactive elements:
-{elements_str}
+Respond with a SINGLE JSON object with NO MARKDOWN formatting. Schema:
+{
+  "page_summary": "A brief, one-sentence description of the page's content and purpose.",
+  "reasoning": "Your detailed step-by-step thinking. First, blocker check. Second, analyze the user's goal type (info or action). Third, assess information availability on screen. Finally, conclude the action type and info status.",
+  "next_action_type": "Choose ONE: 'ANSWER' | 'INTERACT' | 'NAVIGATE_OR_SEARCH' | 'CLARIFY'",
+  "information_status": "Choose ONE: 'COMPLETE' | 'PARTIAL' | 'NOT_FOUND' | 'NOT_APPLICABLE' (Use for non-info goals like clicking a login button).",
+  "final_answer": "If information_status is 'COMPLETE', provide the full answer here. Otherwise, empty string.",
+  "partial_answer": "If information_status is 'PARTIAL', provide the extracted partial information here. Otherwise, empty string.",
+  "interaction_target_description": "If next_action_type is 'INTERACT', describe the target element needed to proceed (e.g., 'the `Next Page` button at the bottom', 'the `+` icon next to Shipping Policy', 'the main search input field'). Otherwise, empty string."
+}"""  # noqa: E501
+        return base_prompt
 
-Recommend one of the following actions:
-1.  **INTERACT**: To click or type into a numbered element. Use this if the target element is clearly visible and labeled in the current viewport.
-2.  **ANSWER**: To directly answer the user's question if the information is visible and labeled in the current viewport.
+    def _get_conversational_execution_prompt(self, page_state: Dict[str, Any]) -> str:
+        """Generates the execution prompt for the VLM based on highlighted elements."""
+        page_state_without_screenshot = page_state.copy()
+        page_state_without_screenshot.pop("screenshot", None)
 
-Your output MUST be a single JSON object matching this exact schema:
+        return f"""Perfect, that makes sense. Based on your previous analysis, I have now highlighted the interactive elements on the page. Here is the new screenshot and the corresponding JSON data.
 
+Please identify the exact `element_index` for the target you described in your last message.
+
+Interactive Elements JSON:
+{json.dumps(page_state_without_screenshot, indent=2)}
+
+Your task is now purely tactical: find the element number. If it's an input field, also determine the `value` to type based on our original goal.
+
+Respond with a SINGLE JSON object with NO MARKDOWN formatting. Schema:
 {{
-    "description": "A description of the view of the webpage, since you are the only one who can see it.",
-    "thinking": "Your step-by-step reasoning. First, what is the user's goal? Second, I will check if the target element or information is in the current list of labeled interactive elements. If yes, I will recommend 'INTERACT' or 'ANSWER', if not, explain it. I can suggest to interact with non-target elements (like cookie banners) if they are preventing any browser action.",
-    "recommendation": {{
-        "type": "INTERACT | ANSWER",
-        "element_index": "Integer index of the element to interact with. (Required for INTERACT)",
-        "value": "String value to type into an input field. (Optional for INTERACT)",
-        "answer": "The direct answer to the user's question. (Required for ANSWER)"
-    }}
-}}
+  "thinking": "Confirming my previous assessment with the highlighted view. The element I described as '...' corresponds to index X because...",
+  "recommendation": {{
+    "element_index": <Integer>,
+    "value": "String to type if needed, otherwise empty",
+    "ambiguous_options": [<Integer>]
+  }}
+}}"""  # noqa: E501
 
-**IMPORTANT**: Do not assume an action is impossible just because the element is not currently labeled. It may be visible elsewhere on the full-page screenshot. Prioritize scrolling if the target is not in the labeled view.
 
-'''  # noqa: E501
-        return prompt
+class ConversationalGeminiChat:
+    """Manages a multi-turn conversational session with the Google Gemini API,
+    specializing in multi-modal inputs. This is a stateful tool designed to be
+    used within a single, coherent operation.
+    """
+
+    def __init__(self):
+        try:
+            genai.configure(api_key=SystemEnv.MULTI_MODAL_LLM_APIKEY)
+            self.model = genai.GenerativeModel(model_name=SystemEnv.MULTI_MODAL_LLM_NAME)
+        except Exception as e:
+            raise RuntimeError(
+                "Failed to configure Google Generative AI. Check API key and environment variables."
+            ) from e
+        self.temp_files_to_clean: List[Path] = []
+
+    def start_chat(self) -> ChatSession:
+        """Starts a new chat session."""
+        print("Starting a new Gemini chat session...")
+        return self.model.start_chat()
+
+    async def send_message_in_chat(
+        self,
+        chat: ChatSession,
+        query_prompt: str,
+        media_paths: List[str],
+    ) -> str:
+        """Sends a message, including media, within an existing chat session."""
+        prompt_parts: List[Any] = [query_prompt]
+        error_messages: List[str] = []
+
+        for path_or_url in media_paths:
+            try:
+                file_to_process = await self._prepare_media_file(path_or_url)
+                if file_to_process:
+                    print(f"Uploading file for chat: {file_to_process.name}")
+                    uploaded_file = genai.upload_file(path=file_to_process)
+                    prompt_parts.append(uploaded_file)
+                else:
+                    error_messages.append(f"Failed to process media path: {path_or_url}")
+            except Exception as e:
+                message = f"Error processing '{path_or_url}' for chat: {e}"
+                print(message)
+                error_messages.append(message)
+
+        model_response_text = ""
+        if len(prompt_parts) > 0:
+            print("\nSending message to Gemini chat...")
+            response = await chat.send_message_async(
+                prompt_parts,
+                request_options={"timeout": 300.0},
+            )
+            model_response_text = response.text
+        else:
+            model_response_text = "Warning: No valid prompt or media to send."
+
+        if error_messages:
+            error_summary = "\n\n--- Issues During Processing ---\n" + "\n".join(error_messages)
+            return model_response_text + error_summary
+
+        return model_response_text
+
+    async def _prepare_media_file(self, path_or_url: str) -> Optional[Path]:
+        """Handles URL downloading or validates local file paths."""
+        path_or_url = path_or_url.strip()
+        is_url = path_or_url.startswith(("http://", "https://"))
+
+        if is_url:
+            downloaded_path = await UrlDownloaderTool().download_file_from_url(url=path_or_url)
+            if downloaded_path:
+                self.temp_files_to_clean.append(downloaded_path)
+                return downloaded_path
+            return None
+        else:
+            local_path = Path(path_or_url).resolve()
+            if local_path.exists():
+                return local_path
+            print(f"Skipping non-existent local file: {path_or_url}")
+            return None
+
+    def cleanup_temp_files(self):
+        """Cleans up any temporary files created during the session."""
+        print("Cleaning up temporary files...")
+        for f in self.temp_files_to_clean:
+            try:
+                os.remove(f)
+                print(f"Cleaned up temporary file: {f}")
+            except OSError as e:
+                print(f"Error cleaning up temporary file {f}: {e}")
