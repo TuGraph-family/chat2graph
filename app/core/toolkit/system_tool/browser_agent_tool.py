@@ -99,7 +99,7 @@ class BrowserAgentTool(Tool):
         )
         print(f"Logging browser agent output to: {log_file_path}")
 
-        result_queue = Queue()
+        result_queue: Queue = Queue()
         process = Process(
             target=self._run_agent_in_subprocess,
             args=(agent_config_path, task_description, log_file_path, result_queue),
