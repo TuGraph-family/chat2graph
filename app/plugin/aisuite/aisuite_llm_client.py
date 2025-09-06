@@ -119,11 +119,11 @@ class AiSuiteLlmClient(ModelService):
                     "<function_call_result>\n"
                     + "\n".join(
                         [
-                            f"{i + 1}. {result.status.value} called function "
+                            f"{j + 1}. {result.status.value} called function "
                             f"{result.func_name}:\n"
                             f"Call objective: {result.call_objective}\n"
                             f"Function Output: {result.output}"
-                            for i, result in enumerate(func_call_results)
+                            for j, result in enumerate(func_call_results)
                         ]
                     )
                     + "\n</function_call_result>"
