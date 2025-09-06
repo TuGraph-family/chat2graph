@@ -31,12 +31,6 @@ tools:
     desc: "A tool for reading the current state of a webpage, including interactive elements, and optionally performing a Visual Question Answering (VQA) task on a screenshot of the page."
     module_path: "app.plugin.mcp.browser_read_and_get_state"
 
-  - &browser_agent_tool
-    name: "BrowserAgentTool"
-    type: "LOCAL_TOOL"
-    desc: "A tool that delegates independent or parallelizable web research tasks to a self-cloned browser agent, allowing for focused and scalable web interactions."
-    module_path: "app.core.toolkit.system_tool.browser_agent_tool"
-
   - &file_tool
     name: "FileSystemTool"
     type: "MCP"
@@ -96,7 +90,6 @@ actions:
     tools:
       - *browser_tool
       - *browser_read_and_get_state_tool
-      - *browser_agent_tool
       - *url_downloader_tool
   - &navigate_browser_action
     name: "navigate browser action"

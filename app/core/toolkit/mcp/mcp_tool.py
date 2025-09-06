@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, Any, Callable, List, cast
+from typing import TYPE_CHECKING, Any, Callable, List, Union, cast
 
-from mcp.types import ContentBlock
+from mcp.types import EmbeddedResource, ImageContent, TextContent
 
 from app.core.common.type import ToolType
 from app.core.model.task import ToolCallContext
@@ -40,7 +40,9 @@ class McpTool(Tool):
     ) -> Callable[..., Any]:
         """Create a placeholder function - actual execution is handled by ToolkitService."""
 
-        async def function(tool_call_ctx: ToolCallContext, **kwargs) -> List[ContentBlock]:
+        async def function(
+            tool_call_ctx: ToolCallContext, **kwargs
+        ) -> List[Union[TextContent, ImageContent, EmbeddedResource]]:
             connection: McpConnection = cast(
                 McpConnection, await tool_group.create_connection(tool_call_ctx=tool_call_ctx)
             )

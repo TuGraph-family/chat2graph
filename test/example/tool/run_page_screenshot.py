@@ -1,5 +1,9 @@
+import asyncio
 from time import sleep
-from typing import Optional
+from typing import Optional, cast
+from uuid import uuid4
+
+from mcp.types import TextContent
 
 from app.core.common.type import ToolGroupType
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -9,16 +13,12 @@ from app.core.model.task import ToolCallContext
 from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
+from app.core.toolkit.mcp.mcp_connection import McpConnection
 from app.core.toolkit.mcp.mcp_service import McpService
-from app.core.toolkit.tool_config import (
-    McpConfig,
-    McpTransportConfig,
-    McpTransportType,
-)
-from app.plugin.mcp.page_vision_tool import PageVisionTool
+from app.core.toolkit.tool_config import McpConfig, McpTransportConfig, McpTransportType
 
 
-async def init_server():
+async def init_server(tool_call_ctx: ToolCallContext):
     """Initialize the server by setting up the database and service factory."""
 
     # initialize the database
@@ -52,16 +52,18 @@ async def init_server():
     toolkit_service.add_action(test_action, [], [])
     toolkit_service.add_tool_group(mcp_service, [(test_action, 1.0)])
 
-    tool_call_ctx = ToolCallContext(job_id="1", operator_id="2")
-    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
+    mcp_connection = cast(
+        McpConnection,
+        await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
+    )
 
-    await mcp_connection.call(tool_name="browser_navigate", url="https://www.baidu.com/")
+    await mcp_connection.call(
+        tool_name="browser_navigate", url="https://www.instagram.com/facebook/?hl=en/"
+    )
     sleep(2)
 
-    await mcp_connection.call(tool_name="browser_get_state")
 
-
-async def close_connection():
+async def close_connection(tool_call_ctx: ToolCallContext):
     """Close the MCP connection."""
     toolkit_service: ToolkitService = ToolkitService.instance
     mcp_service: Optional[McpService] = None
@@ -74,29 +76,46 @@ async def close_connection():
                 break
     if not mcp_service:
         raise ValueError("MCP service not found in the toolkit.")
-    tool_call_ctx = ToolCallContext(job_id="1", operator_id="2")
+
+    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
+    await mcp_connection.close()
+
+
+async def take_screenshot(tool_call_ctx: ToolCallContext):
+    """Take the browser screenshot"""
+    toolkit_service: ToolkitService = ToolkitService.instance
+    mcp_service: Optional[McpService] = None
+    toolkit = toolkit_service.get_toolkit()
+    for item_id in toolkit.vertices():
+        tool_group = toolkit.get_tool_group(item_id)
+        if tool_group and isinstance(tool_group, McpService):
+            if tool_group._tool_group_config.name == "BrowserTool":
+                mcp_service = tool_group
+                break
+    if not mcp_service:
+        raise ValueError("MCP service not found in the toolkit.")
+
     mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
 
-    await mcp_connection.close()
+    page_screenshot_path = cast(
+        TextContent,
+        (
+            await mcp_connection.call(
+                tool_name="browser_screenshot",
+                file_path="./test_screenshot.png",
+            )
+        )[0],
+    )
+    print(page_screenshot_path.text)
 
 
 async def main():
     """Main function to run the AnalyzeWebPageLayoutTool."""
-    await init_server()
-
-    tool = PageVisionTool()
-    task_description = "Introduce the information."
-
-    result = await tool.browser_get_page_vision(
-        tool_call_ctx=ToolCallContext(job_id="1", operator_id="2"),
-        question=task_description,
-    )
-    print(result)
-
-    await close_connection()
+    tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
+    await init_server(tool_call_ctx=tool_call_ctx)
+    await take_screenshot(tool_call_ctx=tool_call_ctx)
+    await close_connection(tool_call_ctx=tool_call_ctx)
 
 
 if __name__ == "__main__":
-    import asyncio
-
     asyncio.run(main())

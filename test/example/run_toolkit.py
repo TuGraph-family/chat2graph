@@ -172,7 +172,8 @@ def main():
         # verify subgraph properties
         actual_vertices = set(subgraph.vertices())
         assert actual_vertices == case["expected_vertices"], (
-            f"Test case {i + 1}: Expected vertices {case['expected_vertices']}, got {actual_vertices}"
+            f"Test case {i + 1}: "
+            f"Expected vertices {case['expected_vertices']}, got {actual_vertices}"
         )
 
         assert len(subgraph.edges()) == case["expected_edges"], (

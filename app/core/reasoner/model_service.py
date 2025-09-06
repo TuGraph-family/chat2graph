@@ -4,6 +4,8 @@ import json
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
+from mcp.types import TextContent
+
 from app.core.common.type import FunctionCallStatus
 from app.core.common.util import parse_jsons
 from app.core.model.message import ModelMessage
@@ -145,13 +147,21 @@ class ModelService(ABC):
                 else:
                     result = func(**func_args)
 
+                # TODO: handle MCP returns "TextContent, ImageContent, EmbeddedResource"
+                if isinstance(result, list) and all(isinstance(res, TextContent) for res in result):
+                    result_str = ""
+                    for res in result:
+                        if isinstance(res, TextContent):
+                            result_str += res.text + "\n"
+                else:
+                    result_str = str(result)
                 func_call_results.append(
                     FunctionCallResult(
                         func_name=func_name,
                         call_objective=call_objective,
                         func_args=func_args,
                         status=FunctionCallStatus.SUCCEEDED,
-                        output=str(result),
+                        output=result_str,
                     )
                 )
             except Exception as e:

@@ -62,20 +62,28 @@ def parse_jsons(
     json_matches = re.finditer(json_pattern, text, re.DOTALL | re.MULTILINE)
     results: List[Union[Dict[str, Any], json.JSONDecodeError]] = []
 
-    def find_and_replace_placeholders(obj: Any) -> None:
+    def _find_and_replace_placeholders(obj: Any, extracted_payloads: Dict[str, str]) -> None:
         """Recursively find and replace placeholders in the object."""
         if isinstance(obj, dict):
             for key, value in obj.items():
                 if isinstance(value, str) and value in extracted_payloads:
                     obj[key] = extracted_payloads[value]
                 else:
-                    find_and_replace_placeholders(value)
+                    _find_and_replace_placeholders(value, extracted_payloads)
         elif isinstance(obj, list):
             for i, item in enumerate(obj):
                 if isinstance(item, str) and item in extracted_payloads:
                     obj[i] = extracted_payloads[item]
                 else:
-                    find_and_replace_placeholders(item)
+                    _find_and_replace_placeholders(item, extracted_payloads)
+
+    def _replace_with_placeholder(m, extracted_payloads: Dict[str, str]):
+        raw_content = m.group(1)
+        # generate a unique placeholder for each match
+        placeholder = f"__PLACEHOLDER_{uuid.uuid4().hex}__"
+        extracted_payloads[placeholder] = raw_content
+        # the replacement must be a valid JSON string value
+        return f'"{placeholder}"'
 
     for match in json_matches:
         json_str = match.group(1).strip()
@@ -90,17 +98,11 @@ def parse_jsons(
                 re.DOTALL,
             )
 
-            # use a function for replacement to handle multiple occurrences
-            def replace_with_placeholder(m):
-                raw_content = m.group(1)
-                # generate a unique placeholder for each match
-                placeholder = f"__PLACEHOLDER_{uuid.uuid4().hex}__"
-                extracted_payloads[placeholder] = raw_content
-                # the replacement must be a valid JSON string value
-                return f'"{placeholder}"'
-
             # replace all occurrences of the placeholder block
-            json_str = placeholder_pattern.sub(replace_with_placeholder, json_str)
+            json_str = placeholder_pattern.sub(
+                lambda m, p=extracted_payloads: _replace_with_placeholder(m, p),
+                json_str,
+            )
 
         try:
             # the rest of the cleaning logic remains the same
@@ -159,7 +161,7 @@ def parse_jsons(
 
             # post-processing to inject back the payloads
             if use_placeholder_logic and extracted_payloads:
-                find_and_replace_placeholders(parsed_json)
+                _find_and_replace_placeholders(parsed_json, extracted_payloads)
 
             results.append(parsed_json)
         except json.JSONDecodeError as e:
