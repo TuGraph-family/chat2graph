@@ -59,8 +59,7 @@ async def init_server(tool_call_ctx: ToolCallContext):
 
     await mcp_connection.call(
         tool_name="browser_navigate",
-        # url="https://en.wikipedia.org/wiki/Tokyo",
-        url="https://orcid.org/0000-0002-0209-2784",
+        url="https://en.wikipedia.org/wiki/Tokyo",
     )
     sleep(2)
     await mcp_connection.call(tool_name="browser_scroll", direction="down")
@@ -89,8 +88,7 @@ async def read_and_get_state(tool_call_ctx: ToolCallContext):
     read_and_get_state_tool = BrowserReadAndGetStateTool()
     result = await read_and_get_state_tool.browser_read_and_get_state(
         tool_call_ctx=tool_call_ctx,
-        # vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
-        vlm_task="找到这个作者发布的 publication listed under the 'Works'，在 2020 年之前，他发布了多少篇文章？",
+        vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
     )
     print(json.dumps(result, indent=2))
 

@@ -27,7 +27,8 @@ async def main():
             print("SUCCESS: HTML page download was correctly skipped.")
     except requests.exceptions.RequestException:
         print(
-            "SUCCESS: Download failed due to a network error, as can happen, and was correctly handled."
+            "SUCCESS: Download failed due to a network error, as can happen, "
+            "and was correctly handled."
         )
     except Exception as e:
         print(f"ERROR: An unexpected exception occurred: {e}")
