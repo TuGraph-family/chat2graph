@@ -18,7 +18,7 @@ DOWNLOAD_CACHE_DIR = Path.home() / ".cache" / "huggingface" / "datasets" / "down
 
 # download function using hf_hub_download
 def download_file_with_hub(file_name: str, split: str, pbar: tqdm):
-    """使用 huggingface_hub 下载单个文件并更新进度条"""
+    """Use huggingface_hub to download a single file and update the progress bar."""
     if not file_name:
         pbar.update(1)
         return "skipped_empty_name"
