@@ -168,7 +168,11 @@ class GeminiMultiModalTool(Tool):
                 return model_response_text
 
         except Exception as e:
-            return f"An unexpected error occurred during the API call: {e}"
+            error_message = f"An unexpected error occurred during the API call: {e}"
+            if error_messages:
+                error_summary = "\n\n--- Issues During Processing ---\n" + "\n".join(error_messages)
+                return error_message + error_summary
+            return error_message
 
         finally:
             for f in temp_files_to_clean:
