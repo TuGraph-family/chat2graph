@@ -18,7 +18,7 @@ from app.core.toolkit.tool_config import McpConfig, McpTransportConfig, McpTrans
 from app.plugin.mcp.browser_read_and_get_state import BrowserReadAndGetStateTool
 
 
-async def init_server(tool_call_ctx: ToolCallContext):
+async def init_server(tool_call_ctx: ToolCallContext, url: str):
     """Initialize the server by setting up the database and service factory."""
 
     # initialize the database
@@ -57,10 +57,7 @@ async def init_server(tool_call_ctx: ToolCallContext):
         await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
     )
 
-    await mcp_connection.call(
-        tool_name="browser_navigate",
-        url="https://en.wikipedia.org/wiki/Tokyo",
-    )
+    await mcp_connection.call(tool_name="browser_navigate", url=url)
     sleep(2)
     await mcp_connection.call(tool_name="browser_scroll", direction="down")
     sleep(2)
@@ -82,13 +79,13 @@ async def close_connection(tool_call_ctx: ToolCallContext):
     mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
     await mcp_connection.close()
 
-async def read_and_get_state(tool_call_ctx: ToolCallContext):
+async def read_and_get_state(tool_call_ctx: ToolCallContext, vlm_task: str):
     """Read the current state of the browser."""
     # instantiate and call the ReadAndGetStateTool
     read_and_get_state_tool = BrowserReadAndGetStateTool()
     result = await read_and_get_state_tool.browser_read_and_get_state(
         tool_call_ctx=tool_call_ctx,
-        vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
+        vlm_task=vlm_task,
     )
     print(json.dumps(result, indent=2))
 
@@ -96,8 +93,11 @@ async def read_and_get_state(tool_call_ctx: ToolCallContext):
 async def main():
     """Main function to run the ReadAndGetStateTool."""
     tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
-    await init_server(tool_call_ctx=tool_call_ctx)
-    await read_and_get_state(tool_call_ctx=tool_call_ctx)
+    await init_server(tool_call_ctx=tool_call_ctx, url="https://en.wikipedia.org/wiki/Tokyo")
+    await read_and_get_state(
+        tool_call_ctx=tool_call_ctx,
+        vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
+    )
     await close_connection(tool_call_ctx=tool_call_ctx)
 
 

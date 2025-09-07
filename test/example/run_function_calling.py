@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
@@ -69,7 +69,7 @@ class ProcessComplexData(Tool):
 
     def process_complex_data(
         self, data_dict: dict, nested_list: List[dict], config: dict, special_str: str
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """A function that processes complex nested data structures.
 
         Args:
