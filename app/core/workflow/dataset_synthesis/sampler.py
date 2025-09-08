@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from app.core.toolkit.graph_db.graph_db import GraphDb
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Set
 import json
 import time
+import random
 
 
 class SubGraphSampler(ABC):
@@ -76,13 +77,18 @@ class SimpleRandomSubGraphSampler(SubGraphSampler):
 class EnhancedSubgraphSampler(SubGraphSampler):
     def get_random_subgraph(self, graph_db: GraphDb, max_depth: int, max_nodes: int, max_edges: int) -> str:
         self.graph_db: GraphDb = graph_db
-        nodes, relationships = self.sample_subgraph(target_size=max_nodes)
+        print(f"start sampling...")
+        start_time = time.time()
+        nodes, relationships = self._get_random_subgraph(target_size=max_nodes)
+        elapsed = time.time() - start_time
         subgraph_json = {
             "nodes": [{"id": node["node_id"], "labels": node["labels"], "properties": node["properties"]} for node in nodes],
             "relationships": [{"id": rel["rel_id"], "type": rel["rel_type"], "start_node_id": rel["start_node_id"], "end_node_id": rel["end_node_id"], "properties": rel["properties"]} for rel in relationships]
         }
+        print(f"Successfully retrieved subgraph with {len(nodes)} nodes and {len(relationships)} relationships. elapse: {elapsed: .2f}")
+        info = [node["node_id"] for node in nodes[:3]]
+        print(f"first 3 nodes id: {info}")
         return json.dumps(subgraph_json, indent=4)
-
     
     def _count_total_nodes(self, label: Optional[str] = None) -> int:
         """统计符合条件的总节点数，用于抽样概率计算
@@ -173,9 +179,7 @@ class EnhancedSubgraphSampler(SubGraphSampler):
                     )
                     neighbors.extend([record.data() for record in result])
             except Exception as e:
-                print(f"failed while get neighbour: {str(e)}")
-                random_limit += connected_limit
-                connected_limit = 0
+                raise Exception(f"failed while get neighbour: {str(e)}")
         
         # 2. 补充随机节点，确保达到目标数量
         if random_limit > 0 and len(neighbors) < limit:
@@ -225,10 +229,9 @@ class EnhancedSubgraphSampler(SubGraphSampler):
                 result = session.run(query, node_ids=node_ids)
                 return [record.data() for record in result]
         except Exception as e:
-            print(f"failed while getting relationship: {str(e)}")
-            return []
+            raise Exception(f"failed while getting relationship: {str(e)}")
     
-    def sample_subgraph(self, 
+    def _get_random_subgraph(self, 
                        target_size: int, 
                        label: Optional[str] = None,
                        seed_proportion: float = 0.2,
@@ -256,8 +259,6 @@ class EnhancedSubgraphSampler(SubGraphSampler):
         if not (0 <= connectivity_bias <= 1):
             raise ValueError("connectivity_bias must between [0, 1]")
         
-        start_time = time.time()
-        print(f"start sampling")
         
         # 1. 检查总节点数是否足够
         total_nodes = self._count_total_nodes(label)
@@ -267,13 +268,11 @@ class EnhancedSubgraphSampler(SubGraphSampler):
         
         # 2. 计算种子节点数量
         seed_count = max(1, min(int(target_size * seed_proportion), target_size - 1))
-        print(f"Number of Seed Nodes: {seed_count}, Number of Extended Nodes: {target_size - seed_count}")
         
         # 3. 选择种子节点
         seed_nodes = self._random_seed_nodes(label, seed_count)
         if not seed_nodes:
-            print("failed while getting seed_nodes")
-            return [], []
+            raise Exception("failed while getting seed_nodes")
             
         # 存储所有选中的节点，用字典去重
         all_nodes = {node['node_id']: node for node in seed_nodes}
@@ -308,13 +307,9 @@ class EnhancedSubgraphSampler(SubGraphSampler):
             # 更新当前节点列表（用于下一步扩展）
             current_ids = [n['node_id'] for n in new_neighbors]
             
-            # 输出进度
-            if (step + 1) % progress_interval == 0 or remaining <= 0:
-                print(f"Extended step {step + 1}/{expansion_steps} - {len(all_nodes)}/{target_size} nodes have been collected")
         
         # 如果还没达到目标，补充随机节点
         if remaining > 0:
-            print(f"remain {remaining} nodes to supply")
             suppls = self._smart_neighbor_selection(
                 node_ids=list(all_nodes.keys()),
                 existing_nodes=all_nodes.keys(),
@@ -332,8 +327,253 @@ class EnhancedSubgraphSampler(SubGraphSampler):
         node_ids = [n['node_id'] for n in node_list]
         relationships = self._get_relationships(node_ids)
         
-        # 6. 计算统计信息
-        elapsed = time.time() - start_time
-        print(f"Successfully retrieved subgraph with {len(node_list)} nodes and {len(relationships)} relationships. elapse: {elapsed: .2f}")
         
         return node_list, relationships
+    
+class RandomWalkSampler(SubGraphSampler):
+    def __init__(self):
+        self.sampled_nodes: Set[str] = set()
+        self.sample_counter = 0
+        # 用于控制DFS/BFS倾向的参数，每次采样随机调整以增加多样性
+        self.dfs_bias_range = (0.3, 0.7)
+
+    def get_random_subgraph(self, graph_db: GraphDb, max_depth: int, max_nodes: int, max_edges: int) -> str:
+        start_time = time.time()
+        print("start sampling")
+        nodes, relationships = self._get_random_subgraph(graph_db=graph_db, max_depth=max_depth, max_nodes=max_nodes, max_edges=max_edges)
+        if nodes and relationships:
+            subgraph_json = {
+                "nodes": [{"id": node["node_id"], "labels": node["labels"], "properties": node["properties"]} for node in nodes],
+                "relationships": [{"id": rel["rel_id"], "type": rel["rel_type"], "start_node_id": rel["start_node_id"], "end_node_id": rel["end_node_id"], "properties": rel["properties"]} for rel in relationships]
+            }
+            elapsed = time.time() - start_time
+            print(f"Successfully retrieved subgraph with {len(nodes)} nodes and {len(relationships)} relationships. elapse: {elapsed: .2f}")
+            info = [node["node_id"] for node in nodes[:3]]
+            print(f"first 3 nodes id: {info}")
+            return json.dumps(subgraph_json, indent=4)
+        else:
+            return ""
+    
+    def _get_available_start_node(self, graph_db: GraphDb) -> str:
+        """获取一个未被采样过的起始节点"""
+        # 构建排除已采样节点的条件
+        exclude_clause = ""
+        params = {}
+        if self.sampled_nodes:
+            exclude_clause = "WHERE NOT elementId(n) IN $excluded_nodes"
+            params["excluded_nodes"] = list(self.sampled_nodes)
+        
+        # 随机选择一个可用节点
+        query = f"""
+        MATCH (n)
+        {exclude_clause}
+        WITH n, rand() AS r
+        ORDER BY r
+        LIMIT 1
+        RETURN elementId(n) AS node_id
+        """
+        
+        try:
+            with graph_db.conn.session() as session:
+                result = session.run(query, params)
+                record = result.single()
+                if record.get("node_id", "") != "":
+                    return record["node_id"]
+                self.sampled_nodes.clear()
+                result = session.run(query)
+                return result.single()["node_id"]
+        except Exception as e:
+            print(f"[_get_available_start_node] failed: {str(e)}")
+            return ""
+
+    def _random_walk_step(self, graph_db: GraphDb, current_nodes: Set[int], depth: int, 
+                         max_depth: int, max_nodes: int, max_edges: int, 
+                         dfs_bias: float) -> Tuple[Set[int], Set[int]]:
+        """执行一步随机游走，返回新的节点和关系"""
+        if not current_nodes or depth >= max_depth:
+            return set(), set()
+            
+        # 构建当前节点参数
+        params = {
+            "current_nodes": list(current_nodes),
+            "dfs_bias": dfs_bias,
+            "max_possible": min(max_nodes - len(self.current_sample_nodes), max_edges - len(self.current_sample_edges))
+        }
+        
+        # 纯Cypher实现的随机游走步骤，结合DFS和BFS特性
+        query = """
+        UNWIND $current_nodes AS current_id
+        MATCH (current)-[r]-(neighbor)
+        WHERE elementId(current) = current_id
+        
+        WITH current, r, neighbor,
+             rand() AS random_val,
+             (1.0 / (size([n IN $current_nodes WHERE n = elementId(current)]) + 1)) * $dfs_bias +
+             (CASE WHEN elementId(neighbor) IN $current_nodes THEN 0 ELSE 1 END) * (1 - $dfs_bias) AS weight
+        
+        ORDER BY weight DESC, random_val
+        LIMIT $max_possible
+        
+        RETURN DISTINCT elementId(neighbor) AS node_id, elementId(r) AS rel_id
+        """
+        try:
+            with graph_db.conn.session() as session:
+                result = session.run(query, params)
+                new_nodes = set()
+                new_rels = set()
+                for record in result:
+                    if record.get("node_id", "") != "":
+                        new_nodes.add(record["node_id"])
+                    if record.get("rel_id", "") != "":
+                        new_rels.add(record["rel_id"])
+                return new_nodes, new_rels
+        except Exception as e:
+            print(f"[_random_walk_step] failed: {str(e)}")
+            return new_nodes, new_rels
+
+    def _get_random_subgraph(self, graph_db: GraphDb, max_depth: int, max_nodes: int, max_edges: int) -> Tuple[List[Dict], List[Dict]]:
+        """
+        生成随机子图的主方法
+        
+        :param graph_db: GraphDb实例，用于执行Cypher查询
+        :param max_depth: 最大游走深度
+        :param max_nodes: 最大节点数量
+        :param max_edges: 最大边数量
+        :return: 子图数据的JSON字符串，包含nodes和relationships
+        """
+        # 参数验证
+        if max_depth < 1:
+            raise ValueError("max_depth must be at least 1")
+        if max_nodes < 1:
+            raise ValueError("max_nodes must be at least 1")
+        if max_edges < 1:
+            raise ValueError("max_edges must be at least 1")
+            
+        self.sample_counter += 1
+        
+        # 选择起始节点
+        start_node = self._get_available_start_node(graph_db)
+        if not start_node or len(start_node) == "":
+            raise Exception("[_get_random_subgraph] Cann't find start_node")
+        
+        # 初始化采样集合
+        self.current_sample_nodes = {start_node}
+        self.current_sample_edges = set()
+        current_frontier = {start_node}
+        dfs_bias = random.uniform(*self.dfs_bias_range)  # 随机DFS偏向，增加多样性
+        
+        # 执行多步随机游走
+        for depth in range(max_depth):
+            # 执行一步游走
+            new_nodes, new_edges = self._random_walk_step(
+                graph_db, current_frontier, depth, max_depth,
+                max_nodes, max_edges, dfs_bias
+            )
+            
+            # 更新采样集合
+            nodes_to_add = new_nodes - self.current_sample_nodes
+            edges_to_add = new_edges - self.current_sample_edges
+            
+            # 检查是否达到限制
+            remaining_node_slots = max_nodes - len(self.current_sample_nodes)
+            remaining_edge_slots = max_edges - len(self.current_sample_edges)
+            
+            if remaining_node_slots <= 0 and remaining_edge_slots <= 0:
+                break
+                
+            # 添加新节点，不超过最大限制
+            if nodes_to_add and remaining_node_slots > 0:
+                nodes_to_add = list(nodes_to_add)[:remaining_node_slots]
+                self.current_sample_nodes.update(nodes_to_add)
+                current_frontier = set(nodes_to_add)  # 下一轮从新节点开始
+            
+            # 添加新边，不超过最大限制
+            if new_edges and remaining_edge_slots > 0:
+                edges_to_add = list(edges_to_add)[:remaining_edge_slots]
+                self.current_sample_edges.update(edges_to_add)
+            
+            # 如果没有新节点和边，提前结束
+            if not nodes_to_add and not edges_to_add:
+                break
+        
+        # 记录已采样节点，确保后续采样多样性
+        self.sampled_nodes.update(self.current_sample_nodes)
+
+
+        try:
+            with graph_db.conn.session() as session:
+                # 1. 若节点已满，边未满：基于已选节点补充边
+                remaining_edges = max_edges - len(self.current_sample_edges)
+                if len(self.current_sample_nodes) >= max_nodes and remaining_edges > 0:
+                    # 查询已选节点之间未被采样的边
+                    query = """
+                    UNWIND $node_ids AS nid
+                    MATCH (a)-[r]-(b)
+                    WHERE elementId(a) IN $node_ids 
+                        AND elementId(b) IN $node_ids
+                        AND NOT elementId(r) IN $edge_ids
+                    WITH r ORDER BY rand()  
+                    LIMIT $remaining  
+                    RETURN elementId(r) AS rel_id
+                    """
+                    
+                    result = session.run(query, {
+                        "node_ids": list(self.current_sample_nodes),
+                        "edge_ids": list(self.current_sample_edges),
+                        "remaining": remaining_edges
+                    })
+                    supply_edges = [record["rel_id"] for record in result]
+                    self.current_sample_edges.update(supply_edges)
+
+                # 2. 若边已满，节点未满：基于已选边补充节点
+                remaining_nodes = max_nodes - len(self.current_sample_nodes)
+                if len(self.current_sample_edges) >= max_edges and remaining_nodes > 0:
+                    # 查询已选边关联的未被采样的邻居节点
+                    query = """
+                    UNWIND $edge_ids AS rid
+                    MATCH ()-[r]->(m) WHERE elementId(r) = rid
+                    WITH DISTINCT m  
+                    WHERE NOT elementId(m) IN $node_ids
+                    WITH m ORDER BY rand()  
+                    LIMIT $remaining  
+                    RETURN elementId(m) AS node_id
+                    """
+                    result = session.run(query, {
+                        "edge_ids": list(self.current_sample_edges),
+                        "node_ids": list(self.current_sample_nodes),
+                        "remaining": remaining_nodes
+                    })
+                    supply_nodes = [record["node_id"] for record in result]
+                    self.current_sample_nodes.update(supply_nodes)
+                    # 同步记录已采样节点
+                    self.sampled_nodes.update(supply_nodes)
+        except Exception as e:
+            raise Exception(f"[_get_random_subgraph] supply failed: {str(e)}")
+        
+        # 获取节点详细信息
+        nodes_query = """
+        UNWIND $node_ids AS id
+        MATCH (n) WHERE elementId(n) = id
+        RETURN elementId(n) AS node_id, labels(n) AS labels, properties(n) AS properties
+        """
+
+        # 获取关系详细信息
+        rels_query = """
+        UNWIND $rel_ids AS id
+        MATCH ()-[r]->() WHERE elementId(r) = id
+        RETURN elementId(r) AS rel_id, type(r) AS rel_type,
+               elementId(startNode(r)) AS start_node_id,
+               elementId(endNode(r)) AS end_node_id,
+               properties(r) AS properties
+        """
+        
+        try:
+            with graph_db.conn.session() as session:
+                nodes_result = session.run(nodes_query, {"node_ids": list(self.current_sample_nodes)})
+                nodes = [node for node in nodes_result]
+                rels_result = session.run(rels_query, {"rel_ids": list(self.current_sample_edges)})
+                rels = [rel for rel in rels_result]
+        except Exception as e:
+            raise Exception(f"[_get_random_subgraph] failed: {str(e)}")
+
+        return nodes, rels

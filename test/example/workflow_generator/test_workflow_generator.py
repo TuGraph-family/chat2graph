@@ -48,7 +48,7 @@ async def generate_dataset(generator: DatasetGenerator, file_path):
     train_set = await generator.generate("帮我生成一些关于图上的多跳推理相关的问题。", dataset_name="test", size=10)
     print(f"end, train_set={train_set}")
     with open(file_path, "w", encoding="utf-8") as f:
-        json.dump([{"task": row.task, "verifier": row.verifier} for row in train_set.dataset], f, indent=2, ensure_ascii=False)
+        json.dump([row.model_dump() for row in train_set.dataset], f, indent=2, ensure_ascii=False)
     return train_set
     
 if __name__ == "__main__":
