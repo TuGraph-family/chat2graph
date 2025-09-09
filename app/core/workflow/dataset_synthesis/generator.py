@@ -112,7 +112,7 @@ class SamplingDatasetGenerator(DatasetGenerator):
                 messages.append(
                             ModelMessage(
                                 payload=text,
-                                source_type=MessageSourceType.MODEL,
+                                source_type=MessageSourceType.ACTOR,
                                 job_id=job_id,
                                 step=step
                             )
