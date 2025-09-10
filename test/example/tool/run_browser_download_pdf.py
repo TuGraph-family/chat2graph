@@ -1,7 +1,8 @@
 import asyncio
-from time import sleep
-from typing import Optional, cast
+from typing import cast
 from uuid import uuid4
+
+from mcp.types import TextContent
 
 from app.core.common.type import ToolGroupType
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -14,10 +15,9 @@ from app.core.toolkit.action import Action
 from app.core.toolkit.mcp.mcp_connection import McpConnection
 from app.core.toolkit.mcp.mcp_service import McpService
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig, McpTransportType
-from app.plugin.mcp.browser_read_and_get_state import BrowserReadAndGetStateTool
 
 
-async def init_server(tool_call_ctx: ToolCallContext, url: str):
+async def init_server() -> McpConnection:
     """Initialize the server by setting up the database and service factory."""
 
     # initialize the database
@@ -51,53 +51,45 @@ async def init_server(tool_call_ctx: ToolCallContext, url: str):
     toolkit_service.add_action(test_action, [], [])
     toolkit_service.add_tool_group(mcp_service, [(test_action, 1.0)])
 
+    tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
     mcp_connection = cast(
         McpConnection,
         await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
     )
+    return mcp_connection
 
-    await mcp_connection.call(tool_name="browser_navigate", url=url)
-    sleep(2)
-    await mcp_connection.call(tool_name="browser_scroll", direction="down")
-    sleep(2)
-
-async def close_connection(tool_call_ctx: ToolCallContext):
+async def close_connection(mcp_connection: McpConnection):
     """Close the MCP connection."""
-    toolkit_service: ToolkitService = ToolkitService.instance
-    mcp_service: Optional[McpService] = None
-    toolkit = toolkit_service.get_toolkit()
-    for item_id in toolkit.vertices():
-        tool_group = toolkit.get_tool_group(item_id)
-        if tool_group and isinstance(tool_group, McpService):
-            if tool_group._tool_group_config.name == "BrowserTool":
-                mcp_service = tool_group
-                break
-    if not mcp_service:
-        raise ValueError("MCP service not found in the toolkit.")
-
-    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
     await mcp_connection.close()
 
-async def read_and_get_state(tool_call_ctx: ToolCallContext, vlm_task: str):
+async def browser_download_pdf(mcp_connection:McpConnection, url: str, file_path: str):
     """Read the current state of the browser."""
-    # instantiate and call the ReadAndGetStateTool
-    read_and_get_state_tool = BrowserReadAndGetStateTool()
-    result = await read_and_get_state_tool.browser_read_and_get_state(
-        tool_call_ctx=tool_call_ctx,
-        vlm_task=vlm_task,
-    )
-    print(result)
-
+    save_path = cast(TextContent, (await mcp_connection.call(
+        tool_name="browser_download_pdf",
+        url=url,
+        file_path=file_path,
+    ))[0])
+    print(f"Browser download PDF response: {save_path.text}")
 
 async def main():
     """Main function to run the ReadAndGetStateTool."""
-    tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
-    await init_server(tool_call_ctx=tool_call_ctx, url="https://en.wikipedia.org/wiki/Tokyo")
-    await read_and_get_state(
-        tool_call_ctx=tool_call_ctx,
-        vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
+    mcp_connection = await init_server()
+    await browser_download_pdf(
+        mcp_connection=mcp_connection,
+        url="https://pmc.ncbi.nlm.nih.gov/articles/PMC7995278/pdf/zr-42-2-227.pdf",
+        file_path="./.gaia_tmp/downloaded_pdf_1.pdf",
     )
-    await close_connection(tool_call_ctx=tool_call_ctx)
+    await browser_download_pdf(
+        mcp_connection=mcp_connection,
+        url="https://www.biorxiv.org/content/10.1101/2025.09.03.672144v2.full.pdf",
+        file_path="./.gaia_tmp/downloaded_pdf_2.pdf"
+    )
+    await browser_download_pdf(
+        mcp_connection=mcp_connection,
+        url="https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0123456&type=printable",
+        file_path="./.gaia_tmp/downloaded_pdf_3.pdf"
+    )
+    await close_connection(mcp_connection=mcp_connection)
 
 
 if __name__ == "__main__":

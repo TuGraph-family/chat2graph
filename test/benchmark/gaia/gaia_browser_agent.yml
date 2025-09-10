@@ -217,7 +217,7 @@ operators:
 
       **Step 2: Initial Reconnaissance & Source Identification**
       *   Perform a broad search to identify potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
-      *   **Academic Search:** When searching for academic papers, prioritize using Google Scholar and Arxiv. You can construct direct URLs to navigate and search, for example: `https://scholar.google.com/scholar?q=[your query]` or `https://arxiv.org/search/?query=[your query]`.
+      *   **Academic Search:** When searching for academic papers, prioritize using Google Scholar and Arxiv. You can construct direct URLs to navigate and search, for example: `https://scholar.google.com/scholar?q=[your query]` or `https://arxiv.org/search/?query=[your query]`. And you should download the pdfs rather than reading the HTML page, because the HTML page often has very limited information.
       *   **Efficiency Tactic:** For this initial step, constructing and using a direct Google search URL with your query is a highly efficient method for identifying potential primary sources to investigate.
 
       **Step 3: Deep Dive & Information Verification**
@@ -228,7 +228,7 @@ operators:
           *   **Example Methods:** Wikipedia's "View history" feature and the Wayback Machine (web.archive.org).
       *   **b. The Veracity Protocol: Go to the Source.**
           *   Search engine snippets, summaries, and especially **AI Overviews** (or AI 概览 things) are for navigation only, **never for answers.**
-          *   When accessing academic resources and institutional data, please ensure the accuracy of the data, the applicability of formulas, and their availability. Some data and information may be misleading, so it is necessary to discern whether to adopt relevant information on your own.
+          *   When accessing academic resources and institutional data, please ensure the accuracy of the data, the applicability of formulas, and their availability. Some data and information may be misleading, so it is necessary to discern whether to adopt relevant information on your own. If you need to read a paper or pdf, **always try download or find a pdf url to download**, and then read the full PDF, rather than relying on the HTML abstract page, which often contains very limited information.
       *   **c. Internal Knowledge Verification: Dialectically applying one's own knowledge.**
           *   You are allowed to use your own well-established knowledge base as an anchor for reasoning. This knowledge can assist in web operations (for example, quickly identifying the most authoritative links among multiple search results) and information processing (for instance, becoming alert to obvious misinformation found online). **However, this internal knowledge is merely a tool for assistance and verification and must never replace the final validation from external authoritative sources.**
       *   **d. Interactive Exploration Principle: Insight into Interaction Needs.**

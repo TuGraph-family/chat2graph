@@ -20,9 +20,8 @@ async def main():
         "./test/benchmark/gaia/.data/2023/validation/99c9cc74-fdc8-46c6-8f8d-3ce2d3bfeea3.mp3",
         "./test/benchmark/gaia/.data/2023/validation/5b2a14e8-6e59-479c-80e3-4696e8980152.jpg",
         "https://arxiv.org/pdf/1706.03762.pdf",
-        # "https://www.youtube.com/watch?v=MRRMOD_NP2U",
-        # This link will be skipped as it cannot be downloaded directly
-        # "https://zh.wikipedia.org/wiki/%E7%8C%AB",
+        # this link will be skipped as it cannot be downloaded directly
+        "https://en.wikipedia.org/wiki/Cat",
     ]
 
     print("--- Starting multi-modal test ---")

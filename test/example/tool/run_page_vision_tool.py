@@ -102,7 +102,7 @@ async def read_page_by_vision(tool_call_ctx: ToolCallContext):
 
 async def main():
     """Main function to run the AnalyzeWebPageLayoutTool."""
-    tool_call_ctx = ToolCallContext(job_id=str(uuid4), operator_id=str(uuid4()))
+    tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
     await init_server(tool_call_ctx=tool_call_ctx)
     await read_page_by_vision(tool_call_ctx=tool_call_ctx)
     await close_connection(tool_call_ctx=tool_call_ctx)
