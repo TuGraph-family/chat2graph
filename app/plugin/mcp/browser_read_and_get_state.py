@@ -5,11 +5,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import uuid
 
 from mcp.types import EmbeddedResource, ImageContent, TextContent
+import requests
 
+from app.core.common.system_env import SystemEnv
 from app.core.model.task import ToolCallContext
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.mcp.mcp_service import McpService
-from app.core.toolkit.system_tool.gemini_multi_modal_tool import GeminiMultiModalTool
 from app.core.toolkit.tool import Tool
 
 
@@ -64,48 +65,31 @@ class BrowserReadAndGetStateTool(Tool):
             - *After clicking 'next page':* "I am now on page 2 of the search results. I need to continue my search here."
             - *In your ORCID example:* "I am on the second page of the author's works. I already counted 28 pre-2020 publications on the first page. Now I need to count the ones on this page."
 
-        **How to Use the Output (Your Action Plan):**
-
-        1.  **If `result_type` is `ANSWER`:**
-            - The task is done. The final answer is in `data.answer`.
-
-        2.  **If `result_type` is `INTERACT`:**
-            - You need to perform a UI action.
-            - The action details are in `data.interaction_recommendation` (contains `element_index`, `value`).
-            - **After performing the action**, you MUST call this tool again with an updated `task_context` to analyze the new page state.
-            - **If `information_status` is `PARTIAL`**, you've found partial data in `data.partial_answer`. Save it before you continue.
-
-        3.  **If `result_type` is `NAVIGATE_OR_SEARCH`:**
-            - The current page cannot fulfill the goal.
-            - You need to perform a different action, like using a search tool or navigating to a new URL. The reason is in `data.answer`.
-
-        4.  **If `result_type` is `CLARIFY`:**
-            - The goal is too vague.
-            - You need to ask the me for more details. The question to ask is in `data.answer`.
-
         Returns:
-            A JSON object with a clear recommendation for the next step. Your can check the `status` and `result_type` fields to decide your next action.
-            **Example 1: A Final Answer is Found**
-            ```json
-            {
-                "status": "COMPLETED",
-                "result_type": "ANSWER",
-                "data": { "answer": "The author published 65 articles before 2020." }
-            }
-            ```
+            str: returns a natural language (or semi-structured) string. The following types of content may appear (the model will choose one based on the page situation):
+                Scene 1 - Final answer:
+                    Indicates that the result has been obtained directly, usually in a format like:
+                    "Completed: The author published a total of 70 articles before 1999."
+                    or
+                    "Answer found: The contact email is support@example.com."
+                Scene 2 - Requires interactive action:
+                    Describes the single action to be performed next and provides (if determinable) element index; may include input values; if uncertain, candidates will be given. For example:
+                    "Please click the login button, element_index: 15."
+                    "It is necessary to close the pop-up window, possible elements: element_index: 42 (not very sure, candidates: 43, 57)."
+                    "Please enter 'laptops' in the search box and submit, element_index: 12, value: laptops."
+                Scene 3 - Partial information + next action:
+                    First summarizes the partial information obtained and then gives the next interaction. For example:
+                    "A total of 28 results meeting criteria have been counted on page one. Please click next page, element_index: 88."
+                    or
+                    "I have seen 10 results; the page shows Page 1 /5; continue clicking Next, element_index:34."
+                Scene 4 - Current page not suitable for achieving goal:
+                    Explains why and suggests a new direction. For example:
+                    "The current page is a news article; it cannot continue executing 'view shopping cart' goal; it is recommended to navigate to the mall homepage first."
+                Possible additional elements (optional, depending on circumstances):
+                    - partial_answer: (if for Scene 3)
+                    - ambiguous_element_indices: A list of candidate indices provided when there are uncertainties.
+                    - reasoning: A brief explanation of uncertainty or basis for judgment.
 
-            **Example 2: An Interaction is Needed (with partial info)**
-            ```json
-            {
-                "status": "ACTION_NEEDED",
-                "result_type": "INTERACT",
-                "information_status": "PARTIAL",
-                "data": {
-                    "interaction_recommendation": { "element_index": 52, "value": "" },
-                    "partial_answer": "Found 28 articles on page 1."
-                }
-            }
-            ```
         Input Schema (Args):
         {
             "type": "object",
@@ -128,8 +112,6 @@ class BrowserReadAndGetStateTool(Tool):
         temp_dir = "./.gaia_tmp/"
         os.makedirs(temp_dir, exist_ok=True)
 
-        multi_modal_tool = GeminiMultiModalTool()
-
         # get both clean and highlighted screenshots ===
         clean_results = await mcp_connection.call(
             tool_name="browser_read_and_get_state",
@@ -137,7 +119,7 @@ class BrowserReadAndGetStateTool(Tool):
             screenshot_with_highlighted_elements=False,
         )
         _, clean_screenshot_base64 = self._parse_mcp_results(clean_results)
-        clean_screenshot_path = self._save_screenshot(clean_screenshot_base64, temp_dir, "clean")
+        self._save_screenshot(clean_screenshot_base64, temp_dir, "clean")
 
         highlighted_results = await mcp_connection.call(
             tool_name="browser_read_and_get_state",
@@ -147,15 +129,13 @@ class BrowserReadAndGetStateTool(Tool):
         highlighted_page_state, highlighted_screenshot_base64 = self._parse_mcp_results(
             highlighted_results
         )
-        highlighted_screenshot_path = self._save_screenshot(
-            highlighted_screenshot_base64, temp_dir, "highlighted"
-        )
+        self._save_screenshot(highlighted_screenshot_base64, temp_dir, "highlighted")
 
-        # LLM call with both screenshots
+        # LLM call with both screenshots using OpenRouter API
         analysis_prompt = self._get_analysis_prompt(vlm_task, task_context, highlighted_page_state)
-        vlm_result_str = await multi_modal_tool.call_multi_modal(
+        vlm_result_str = await self._call_multimodal_openrouter(
             query_prompt=analysis_prompt,
-            media_paths=[clean_screenshot_path, highlighted_screenshot_path],
+            image_base64s=[clean_screenshot_base64, highlighted_screenshot_base64],
         )
 
         return vlm_result_str
@@ -209,12 +189,12 @@ class BrowserReadAndGetStateTool(Tool):
     ) -> str:
         """Generates a unified prompt for analyzing both clean and highlighted screenshots."""
 
-        base_prompt = f'''As an expert web agent, analyze the provided webpage screenshots to determine the single best next step towards my goal.
+        base_prompt = f'''As an expert web agent, your task is to analyze the provided webpage information to determine the single best next step to achieve my goal.
 
-I'm providing you with TWO screenshots of the same webpage:
-1. **FIRST IMAGE (Clean)**: The webpage without any highlighting - use this for content analysis.
-2. **SECOND IMAGE (Highlighted)**: The same webpage with interactive elements marked with numbered boxes - use this for element indices identification. All interactive elements are marked with a rectangular box and a number in the top left corner of the box. Therefore, you can visually identify which element(s) we need to interact with. Special case: sometimes many labels may cluster together, or some boxes may be misaligned, so for uncertain indices, use your best judgment.
-
+    You are provided with three sources of information:
+    1.  **FIRST IMAGE (Clean Screenshot)**: The webpage without any highlighting. Use this for overall layout, context, and content analysis.
+    2.  **SECOND IMAGE (Highlighted Screenshot)**: The same webpage where interactive elements are marked with numbered boxes. Use this for visual confirmation and disambiguation of elements.
+    3.  **Webpage Data (JSON)**: Structured data about the page, including the URL, title, and a detailed list of all `interactive_elements`. This is your primary source for finding the precise `element_index` and verifying element properties like text or links.
 
 My ultimate goal: "{vlm_task}"'''  # noqa: E501
 
@@ -222,27 +202,26 @@ My ultimate goal: "{vlm_task}"'''  # noqa: E501
             base_prompt += f'''
 **Current Task Context:** You are not starting from scratch. Here is what has happened so far:
 "{task_context}"'''
-
         page_state_without_screenshot = page_state.copy() if page_state else {}
         page_state_without_screenshot.pop("screenshot", None)
 
         base_prompt += f"""
-**Page State Data:**
+**Webpage Data:**
 {json.dumps(page_state_without_screenshot, indent=2) if page_state_without_screenshot else "No additional page data available"}
 
 
 
 **Your Analysis Process:**
 
-Please analyze the situation and give me your recommendation. Follow this thinking process carefully:**
+Please follow this thinking process carefully to formulate your recommendation:
 
 **Step 1: Strategic Analysis (using the FIRST/Clean image)**
 *   First and foremost, look for any **blocking elements** like cookie banners, login popups, or newsletter sign-ups. Is there anything preventing me from seeing or interacting with the main content? If so, dealing with that is our absolute top priority.
 *   Next, understand the page's purpose and content in relation to my goal. Can my goal be achieved on this page?
+    *   Sometimes, when we are using search engines (e.g. Google), we may see AI Overviews from the search engine, which are summaries of the content of some queried web pages related to the search query. However, the answers to the query provided by AI Overviews may be inaccurate or misleading. Therefore, for greater accuracy, I hope you can recommend that I click on a specific webpage index rather than just providing the content of the AI Overviews.
 *   Based on this, determine which of the following four scenarios we are in.
-
 **Step 2: Tactical Recommendation (using BOTH images as needed)**
-*   Now, formulate your response to me based on the scenario you identified. Speak directly to me.
+*   Now, formulate your response to me based on the scenario you identified.
 
 ---
 **Please structure your response based on ONE of these four scenarios:**
@@ -254,17 +233,17 @@ If you can fully answer my `vlm_task` just by looking at the clean screenshot, t
 **Scenario 2: You need me to perform an action to achieve the goal.**
 This applies if the page is ready for interaction (e.g., a search form) or if a blocker needs to be dismissed.
 *   Tell me what action I need to take (e.g., "You should click the 'Login' button," or "You need to accept the cookies first.").
-*   Then, look at the **SECOND/Highlighted image** to find the exact `element_index` for the target element.
-*   If you're certain, provide it like this: `element_index: 42`.
+*   Then, look at the **SECOND/Highlighted image** to find the exact `element_index` with related details for the target element.
+*   If you're certain, provide it like this: `element_index: 42 (tag: ..., text: ..., href: ..., placeholder: ...)`.
 *   If the element is an input field, also tell me what to type: `value: "laptops"`.
-*   If you're unsure about the index because of crowding or misalignment, give me your best guess and list other possibilities: `element_index: 42`, `ambiguous_element_indices: [43, 102]`. Also, briefly explain your reasoning for the uncertainty.
-*   **Example Response:** "To proceed, you need to log in. I see a 'Login' button. Looking at the highlighted image, the correct element seems to be `element_index: 15`. There's another similar button at index 16, but index 15 is more prominent."
+*   If you're unsure about the index because of crowding or misalignment, give me your best guess and list other possibilities: `element_index: 42 (tag: ..., text: ..., href: ..., placeholder: ...)`, `ambiguous_element_indices: [43 (tag: ..., text: ..., href: ..., placeholder: ...), 102 (tag: ..., text: ..., href: ..., placeholder: ...)]`. Also, briefly explain your reasoning for the uncertainty.
+*   **Example Response:** "To proceed, you need to log in. I see a 'Login' button. Looking at the highlighted image, the correct element seems to be `element_index: 15 (tag: 'a', text: 'Log in', href: 'https://...', placeholder: None)`. There's another similar button at index 16(...), but index 15 is more prominent."
 
 **Scenario 3: You found a partial answer, but more action is needed.**
 This is for situations like paginated results or "read more" sections.
 *   First, give me the partial information you found.
 *   Then, recommend the next action I need to take to get the rest of the information, following the same format as Scenario 2 (providing `element_index`, etc.).
-*   **Example Response:** "I've found 10 search results on this page that match your criteria. However, it says 'Page 1 of 5', so there's more to see. You should click the 'Next Page' button. From the highlighted image, that's `element_index: 88`."
+*   **Example Response:** "I've found 10 search results on this page that match your criteria. However, it says 'Page 1 of 5', so there's more to see. You should click the 'Next Page' button. From the highlighted image, that's `element_index: 88 (tag: ..., text: ..., href: ..., placeholder: ...)`."
 
 **Scenario 4: My goal cannot be achieved here.**
 If the current page is completely irrelevant to my goal (e.g., I'm on Google but my goal is to 'check my shopping cart').
@@ -274,3 +253,31 @@ If the current page is completely irrelevant to my goal (e.g., I'm on Google but
 **Please begin your analysis now.**"""  # noqa: E501
 
         return base_prompt
+
+    async def _call_multimodal_openrouter(self, query_prompt: str, image_base64s: List[str]) -> str:
+        """Call OpenRouter API with multimodal content."""
+        base_url: str = SystemEnv.BROWSER_LLM_ENDPOINT
+        url = f"{base_url.rstrip('/')}/chat/completions"
+
+        headers = {
+            "Authorization": f"Bearer {SystemEnv.BROWSER_LLM_APIKEY}",
+            "Content-Type": "application/json",
+        }
+
+        # build message content with text and images
+        content: List[Dict[str, Any]] = [{"type": "text", "text": query_prompt}]
+
+        # add images to the content
+        for image_base64 in image_base64s:
+            data_url = f"data:image/png;base64,{image_base64}"
+            content.append({"type": "image_url", "image_url": {"url": data_url}})
+
+        messages = [{"role": "user", "content": content}]
+
+        payload = {"model": SystemEnv.BROWSER_LLM_NAME, "messages": messages}
+
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+
+        result = response.json()
+        return result["choices"][0]["message"]["content"]
