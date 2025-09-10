@@ -39,10 +39,7 @@ class UrlDownloaderTool(Tool):
 
         Returns:
             Optional[Path]: The absolute path to the downloaded file, or None if the download
-            was skipped (e.g. HTML).
-
-        Raises:
-            requests.exceptions.RequestException: If a network error occurs.
+            was failed (e.g. HTML).
         """
         temp_file_no_ext_path = None
         save_path_obj = Path(save_path) if save_path else None
@@ -84,6 +81,8 @@ class UrlDownloaderTool(Tool):
                 temp_file_no_ext_path = downloaded_path
                 mime_type = magic.from_file(temp_file_no_ext_path, mime=True)
                 extension = mimetypes.guess_extension(mime_type)
+
+                # extension handling for common binary files
                 if not extension:
                     _, ext_from_url = os.path.splitext(urlparse(url).path)
                     extension = ext_from_url if ext_from_url else ".bin"

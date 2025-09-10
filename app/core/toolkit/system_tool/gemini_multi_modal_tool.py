@@ -30,9 +30,8 @@ class GeminiMultiModalTool(Tool):
             media_paths (List[str]): A list containing paths to local media files or public URLs.
                 - For local files, provide a relative or absolute path.
                 - For URLs, the tool will first attempt to download the resource to a temporary
-                  local path. It will print the download path upon success. The downloaded file
-                  will then be processed. If the urls are not donwloadable, this tool will
-                  export the whole web page to PDF and process it by the multi-modal model.
+                  local path. If the urls are not donwloadable, they will be skipped, and wiill be
+                  reported in the final response.
                 Supported types include images, videos, audio, and PDFs.
                 Example: ["/path/to/image.jpg", "https://arxiv.org/pdf/1301.6961.pdf", "/path/to/video.mp3"]
 
@@ -157,7 +156,8 @@ class GeminiMultiModalTool(Tool):
             else:
                 model_response_text = (
                     "Warning: No valid media files were processed. "
-                    "The model can only see the text prompt."
+                    f"The media_paths {media_paths} "
+                    "provided can not be downloaded from the page or found."
                 )
 
             # append any errors that occurred during file processing
@@ -168,7 +168,10 @@ class GeminiMultiModalTool(Tool):
                 return model_response_text
 
         except Exception as e:
-            error_message = f"An unexpected error occurred during the API call: {e}"
+            error_message = (
+                f"An unexpected error occurred during the API call, "
+                f"please retry to call multi-modal model:\n{e}"
+            )
             if error_messages:
                 error_summary = "\n\n--- Issues During Processing ---\n" + "\n".join(error_messages)
                 return error_message + error_summary

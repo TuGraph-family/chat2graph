@@ -24,11 +24,10 @@ class YouTubeTool(Tool):
         start_offset: Optional[str] = None,
         end_offset: Optional[str] = None,
     ) -> str:
-        """Analyzes a YouTube video from a given URL within an optional specified time range.
+        """Send a task to a multi-model model (Gemini) that can analyzes a YouTube video from a given URL within an optional specified time range.
 
         Args:
-            query_prompt (str): The prompt or question about the video. It is suggested to ask
-                it to think before answering, to avoid hallucinations.
+            query_prompt (str): The prompt or question for the video, that will be sent to the multi-modal model (Gemini). It is suggested to ask the tool to think before answering, to avoid hallucinations.
             youtube_url (str): The public URL of the YouTube video.
             start_offset (Optional[str]): The start time for analysis, formatted as a string with 's' suffix (e.g., '60s' for 60 seconds). Defaults to None.
             end_offset (Optional[str]): The end time for analysis, formatted as a string with 's' suffix (e.g., '120s' for 120 seconds). Defaults to None.

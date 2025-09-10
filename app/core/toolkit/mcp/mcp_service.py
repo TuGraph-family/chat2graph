@@ -1,7 +1,6 @@
 import json
-from typing import List
+from typing import List, Optional
 
-from git import Optional
 from mcp.types import Tool as McpBaseTool
 
 from app.core.model.task import ToolCallContext
