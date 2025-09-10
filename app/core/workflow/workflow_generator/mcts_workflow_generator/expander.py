@@ -278,15 +278,16 @@ class LLMExpander(Expander):
         
         operator_optimize_actions = [action for action in optimize_actions if action.optimize_object == OptimizeObject.OPERATOR]
         expert_optimize_actions = [action for action in optimize_actions if action.optimize_object == OptimizeObject.EXPERT]
-        all_result: OptimizeResp = OptimizeResp(
-            modifications=[],
-            new_configs={}
-        )
+        
             
         expand_times = 0
         extra_messages: List[ModelMessage] = []
         while expand_times < self.max_retry:
             expand_times += 1
+            all_result: OptimizeResp = OptimizeResp(
+                modifications=[],
+                new_configs={}
+            )
             if len(operator_optimize_actions) > 0:
                 operator_optimize_result = await self._expand_operator(
                     task_desc=task_tesc, 
