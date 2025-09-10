@@ -1,10 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from datasets import load_from_disk
+from datasets import load_from_disk  # type: ignore
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import HfHubHTTPError
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 # define paths and constants
 project_root = Path(__file__).resolve().parent.parent.parent.parent

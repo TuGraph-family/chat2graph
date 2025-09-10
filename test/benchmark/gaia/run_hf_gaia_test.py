@@ -11,7 +11,7 @@ import string
 from typing import Union, cast
 import warnings
 
-import datasets
+import datasets  # type: ignore
 from litellm import completion
 from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
 from litellm.types.utils import ModelResponse
