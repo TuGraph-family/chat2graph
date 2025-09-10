@@ -41,7 +41,7 @@ async def test():
         sample_size=5,
         max_retries=5
         )
-    workflow_generator.run()
+    await workflow_generator.run()
     workflow_generator.log_save()
 
 async def generate_dataset(generator: DatasetGenerator, file_path):

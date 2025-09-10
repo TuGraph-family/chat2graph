@@ -53,114 +53,6 @@ Workflow Output:
 Evaluate this answer now.
 """
 
-optimize_prompt_template = """You are building a WORKFLOW to solve problems.
-Workflow is defined by three parts: actions, operators, experts.
-**Actions**:
-    - Predefined resources available to the system.
-    - Actions represent discrete tasks or behaviors that can be performed.
-    - Actions are building blocks for Operators.
-
-**Operators**:
-    - An Operator is an agent that performs tasks.
-    - Each Operator must have:
-        - instruction: A clear description of what the Operator should do.
-        - output_schema: Defines the expected output format.
-        - actions: A list of Actions the Operator may invoke, one or more actions.
-
-**Experts**:
-    - An Expert is a higher-level agent composed of one or more Operators.
-    - Each Expert must have:
-        - profile: a profile of the experts, must have:
-            - name: Expert's name.
-            - desc: Description of the Expert’s capabilities.
-            - actor_name: The same as name.
-            - thinker_name: The same as name.
-        - workflow: Sequence of Operators the Expert executes.
-            - Sequential execution: [*op1, *op2, *op3]
-            - Parallel execution: [*op1, *op4], [*op2, *op5] (Operators in separate lists run concurrently)
-
-Example (simplified):
-```yml
-actions:
-  - &read_doc
-    name: "ReadDocument"
-    desc: "Extract key concepts from a document."
-    tools:
-      - *document_reader_tool
-
-operators:
-  - &op_example
-    instruction: "Read the document and extract key concepts."
-    output_schema: "**result**: List of key concepts"
-    actions:
-      - *read_doc
-
-experts:
-  - profile:
-      name: "Document Expert"
-      desc: "Analyzes documents and extracts structured knowledge."
-      actor_name: "Document Expert"
-      thinker_name: "Document Expert"
-    workflow:
-      - [*op_example]
-```
-
-Your task is to **define and optimize the Operators and Experts sections** of a yml configuration file to solve problems.
-    - Create Operators using the predefined Actions. Write meaningful instruction and output_schema for each Operator. Assign appropriate Actions to each Operator.
-    - Create Experts based on the Operators you defined. Provide a name and desc for each Expert. Define the workflow, combining Operators in sequential or parallel patterns.
-    - Output should be valid YML for the sections: actions, operators, and experts.
-
-<envs>
-    This environment describes the following aspects of the current workflow:
-    (1) task_description: A detailed explanation of the current task within the workflow.
-    (2) tools: The available tools you can use.
-    (3) current_workflow: The definitions of the actions, operators and experts.
-    (4) score: The average score or performance metric of the current workflow.
-    (5) modification: A description of the changes or modifications that were made to arrive at the current workflow.
-    (6) experience: Insights and experiences gained from the modification.
-    (7) feedbacks: Additional insights and experiences gained from further optimizing the current workflow.
-    
-    <task>
-    {task_description}
-    </task> 
-
-    <actions>
-    {actions}
-    </actions> 
-    
-    <current_workflow>
-    {current_workflow}
-    </current_workflow>
-
-    <score>
-    {score}
-    </score>
-
-    <modification>
-    {modification}
-    </modification>
-
-
-    <experience>
-    {experience}
-    </experience>
-
-    <feedbacks>
-    {feedbacks}
-    </feedbacks> 
-</envs>
-
-<output_format>
-Please provide the optimization response in the following format:
-{{
-    "modification": "Description of the modification made in this round.",
-    "workflow": "A yml string about the definition of operators and experts WITHOUT ACTIONS"
-}}
-
-Just output the json without anything else.
-</output_format>
-"""
-
 # TODO：这里不够充分，需要增加更多的上下文，比如：有哪些action可以调用；做的修改细粒度为增加，减少，修改；加上思考轨迹
 summary_prompt_template= """
 You are a **Workflow Analyst and Optimizer Agent**.
@@ -193,358 +85,230 @@ Next Improvement Proposal:
 - Risk: Any potential downside?
 """
 
-init_template="""
-app:
-  name: "Chat2Graph"
-  desc: "An Agentic System on Graph Database."
-  version: "0.0.1"
+get_actions_prompt_template = """
+### Instructions
+You are an expert in the design and optimization of Multi - Agent system (MAS). You are proficient in designing and optimizing MAS frameworks, especially MAS systems based on YAML configuration files. The core of our MAS system consists of three parts: Actions, Operators, and Experts. The specific definitions are as follows:
+- **Actions**: Pre - defined and unmodifiable available resources in the system, representing the actions that an Operator can take, such as browsing web pages and querying graph databases. They are components of Operators and bind the behaviors of Operators.
+- **Operators**: Basic execution units that encapsulate jobs, tools, actions, and context information into executable `Task` objects. They are composed of three parts: `instruction` (describing the role, task objective, precautions, and output style), `output_schema` (defining the format and structure of the output content), and `actions` (a list of callable Actions).
+- **Experts**: Professional executors in the agent system, responsible for handling specific - domain tasks. They complete tasks by orchestrating and executing `Operators`, organizing multiple `Operators` into a directed acyclic graph (DAG) to clarify the execution order and dependency relationships. They consist of two major parts: `profile` (including name, description, actor_name, thinker_name) and `workflow` (specifying the task execution process, which is a sequence of Operators).
 
-plugin:
-  workflow_platform: "DBGPT"
+Tasks are distributed by the system leader to each expert, and experts collaborate to complete them. When a task is input into the system, the system leader first decomposes the task and distributes it to each Expert, and then the Experts execute the task specifically. During the execution process of an Expert, Operators are certain steps in the execution. Your main task is to propose optimization actions for Operators and Experts based on the existing configuration and task description of the MAS system to enhance the system's ability to complete tasks. Optimization actions include the optimization type (add or modify), the optimization target (Operators or Experts), the reason for optimization (reason), and the optimization suggestion (suggestion). Finally, output a list of optimization actions.
 
-reasoner:
-  type: "DUAL"
+### Context
+{context}
 
-tools:
-  - &document_reader_tool
-    name: "DocumentReader"
-    module_path: "app.plugin.neo4j.resource.graph_modeling"
+### Requirements
+1. Only analyze and optimize Operators and Experts. Actions do not need to be optimized.
+2. Single responsibility: The functions of an Operator should be atomic, with each Operator only responsible for a single specific function.
+3. Each output should contain no more than 4 optimization actions, determined by the current system.
+4. Optimizations should be based on the context information and centered around the task.
 
-  - &vertex_label_adder_tool
-    name: "VertexLabelAdder"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_modeling"
+### Workflow
+1. Obtain the **task description** from the **context**. Analyze the capabilities required to complete the task through "core objective decomposition → sub - task splitting → derivation of tools/actions required for sub - tasks" to get a structured list of capabilities.
+2. Based on the list of capabilities, analyze the existing Experts and Operators in the context to determine if there are any missing or insufficient capabilities.
+3. Based on the analysis results, decide whether to add Operators and Experts:
+    - Adding an Operator: Clearly define the core responsibilities and key functional steps. Select Actions covering each step from the context to ensure that the `actions` list has no redundancy or omissions.
+    - Adding an Expert: Analyze the responsibilities and functions. Combine the existing and newly added Operators to determine the Operator composition and topology of the Expert.
+4. Similarly, based on the results of step 2, decide whether to modify and optimize Operators and Experts from the following dimensions:
+    - Operator: Check if the `instruction` covers the sub - task objective, if the `output_schema` matches the output format, and if the `actions` support the function execution. Modify if they do not meet the requirements.
+    - Expert: Check if the `desc` in the `profile` clearly defines the professional boundaries and if the DAG topology of the `workflow` conforms to the sub - task dependency relationships. Modify if they do not meet the requirements. Finally, check if the 'name' matches responsibilities and modify if necessary.
+5. Organize the analysis results and output the final optimization actions.
 
-  - &edge_label_adder_tool
-    name: "EdgeLabelAdder"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_modeling"
+### Output Format
+Output the optimization actions taken in a JSON list.
+```json
+[
+  {{
+    "action_type": "<one of: add/modify >",
+    "optimize_object": "<one of: operator/expert>",
+    "reason": "<why this optimization is needed>",
+  }}
+]
+```
+"""
 
-  - &graph_reachability_getter_tool
-    name: "GraphReachabilityGetter"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_modeling"
+optimize_op_prompt_template = """
+### Instructions
+You are an expert in the design and optimization of Multi-Agent system (MAS). 
+You specialize in designing and optimizing MAS frameworks based on YAML configuration files.
+Our MAS systems are based on yaml configuration file and composed of three parts: Actions, Operators, and Experts.
+Your task is to optimize the existing Operators (add or modify operators) based on the context information and around the tasks the system needs to complete, so as to enhance the system's ability to accomplish tasks.
 
-  - &schema_getter_tool
-    name: "SchemaGetter"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.data_importation"
+### Optimization Suggestions
+Here are some possible optimization suggestions generated by other LLMs, which can be used as a reference but do not need to be fully followed.
+{optimize_actions}
 
-  - &data_status_check_tool
-    name: "DataStatusCheck"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.data_importation"
+### Context
+{context}
 
-  - &data_import_tool
-    name: "DataImport"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.data_importation"
+### Requirements
+1. Single responsibility: The functions of an Operator should be atomic. Each operator should only be responsible for a single specific function. Pay special attention to this when adding operators.
+2. Optimizations must be based on the context information and centered around the tasks the system needs to complete.
 
-  - &cypher_executor_tool
-    name: "CypherExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_query"
+### Operator Example
+```yaml
+- &algorithms_execute_operator
+instruction: |
+  You are a professional graph algorithm execution expert. Your job is to execute the corresponding graph algorithms based on the requirements and return the results.
+  Note, you cannot ask the user for more information.
 
-  - &algorithms_getter_tool
-    name: "AlgorithmsGetter"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
+  Based on the validated algorithm and parameters, complete the algorithm execution task as required:
 
-  - &page_rank_executor_tool
-    name: "PageRankExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &betweenness_centrality_executor_tool
-    name: "BetweennessCentralityExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &louvain_executor_tool
-    name: "LouvainExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &label_propagation_executor_tool
-    name: "LabelPropagationExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &shortest_path_executor_tool
-    name: "ShortestPathExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &node_similarity_executor_tool
-    name: "NodeSimilarityExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &common_neighbors_executor_tool
-    name: "CommonNeighborsExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &kmeans_executor_tool
-    name: "KMeansExecutor"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.graph_analysis"
-
-  - &knowledge_base_retriever_tool
-    name: "KnowledgeBaseRetriever"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.question_answering"
-
-  - &browser_tool
-    name: "BrowserUsing"
-    type: "MCP"
-    mcp_transport_config:
-      transport_type: "SSE"
-      url: "http://localhost:8931/sse"
-
-  - &file_tool
-    name: "FileTool"
-    type: "MCP"
-    mcp_transport_config:
-      transport_type: "STDIO"
-      command: "npx"
-      args: ["@modelcontextprotocol/server-filesystem", "."]
-
-  - &system_status_checker_tool
-    name: "SystemStatusChecker"
-    type: "LOCAL_TOOL"
-    module_path: "app.plugin.neo4j.resource.system_checking"
-
+  1. Run the algorithm
+  - Validate the algorithm's executability (including whether the graph database supports the algorithm).
+  - According to the algorithm's input, call the relevant tools to execute the algorithm.
+output_schema: |
+  **Algorithm Called**: The algorithm(s) and parameters used (if multiple algorithms were used)
+  **Status**: Execution status of the algorithm
+  **Algorithm Result**: The result of the algorithm execution. If failed, return the reason for failure
+  ... (Free format)
 actions:
-  # graph modeling actions
-  - &content_understanding_action
-    name: "content_understanding"
-    desc: "Understand the main content and structure of the document through reading and annotating (requires calling one or more tools)."
-    tools:
-      - *document_reader_tool
+  - *content_understanding_action_3
+  - *algorithms_intention_identification_action
+  - *algorithms_execution_action
+```
+```
+This is an example of writing a graph algorithm operator. The `instruction` part describes the role, responsibilities, etc. of the operator; the `output_schema` defines the output format, including three parts: `Algorithm Called`, `Status`, and `Algorithm Result`, corresponding to the called algorithm, the execution status of the algorithm, and the result of the algorithm execution respectively; the `Action` binds the actions that the operator can perform, including `content_understanding_action_3`, `algorithms_intention_identification_action`, and `algorithms_execution_action`, which are used for text understanding, algorithm intention identification, and algorithm execution respectively.
 
-  - &deep_recognition_action
-    name: "deep_recognition"
-    desc: |
-      Identify key concepts and terms in the analyzed text (in text form), categorize the concepts, discover relationship patterns and interaction methods between concepts, and establish a hierarchical relationship.
+### Operator Writing Guide
+The functions of an Operator should be split as much as possible. Each Operator should have a single responsibility, and its capabilities should be atomized to decouple the system capabilities.
 
-      1. Semantic Layer Analysis
-          - Explicit Information (e.g., keywords, topics, term definitions)
-          - Implicit Information (e.g., deep semantics, contextual associations, domain mapping)
+**Definition**
+An Operator is defined using `&operator_name`, creating a YAML anchor, such as `&algorithms_execute_operator`.
+Key points:
+1. Do not omit the `&` to create the anchor.
+2. The operator name should correspond to its responsibilities and accurately describe the main responsibilities, avoiding vague and generalized definitions.
 
-      2. Relational Layer Analysis
-          - Entity Relationships (e.g., direct relationships, indirect relationships, hierarchical relationships). Temporal Relationships (e.g., state transitions, evolutionary laws, causal chains)
+**instruction**
+The `Instruction` should clearly describe the role, responsibilities, core functions, core principles, and workflow of the Operator.
+1. The content should only focus on the core functions of the Operator, and irrelevant functions should not be mentioned.
+2. Avoid using vague words such as "maybe" and "approximately", and use clear expressions.
+3. Include 3 - 5 core working principles, focusing on "how to do it correctly and how to avoid mistakes". Each principle should correspond to the pain points of the core functions of the Operator and include specific operation guidelines.
+4. Clearly define the standard workflow for completing the task, including step dependencies, operations at each step, possible actions to be performed, step results, and failure handling.
 
-      3. Knowledge Reasoning
-          - Pattern Reasoning, Knowledge Completion
+**output_schema**
+Define the expected output format with the following syntax:
+**field1**: Description of field1
+**field2**: Description of field2
 
-      Thinking Dimensions for Graph Schema Modeling:
+Principles:
+1. Do not omit key information and do not output redundant information.
+2. Be able to identify whether the operator has executed successfully. If it fails, return the reason for failure.
+3. Explain the detailed steps of the operator's task execution. For example, when querying a web page, the query parameters should be known.
+4. Determine whether overall statistical information is needed.
 
-      1. Entity Type Definition
-          - Think about and define entity types from the following dimensions:
-              * Temporal Dimension: Temporal entities such as events, periods, dynasties, etc.
-              * Spatial Dimension: Spatial entities such as places, regions, geographical features, etc.
-              * Social Dimension: Social entities such as people, organizations, forces, etc. (Optional)
-              * Cultural Dimension: Abstract entities such as ideas, culture, allusions, etc. (Optional)
-              * Physical Dimension: Concrete entities such as objects, resources, buildings, etc. (Optional)
-          - Establish a hierarchical system of entity types:
-              * Define superordinate and subordinate relationships (e.g., Person - Monarch - Vassal)
-              * Determine parallel relationships (e.g., Military Figure, Political Figure, Strategist)
-              * Design multiple inheritance relationships (e.g., someone who is both a Military Figure and a Strategist)
-          - Design a rich set of attributes for each entity type:
-              * Basic Attributes: Identifiers, names, descriptions, etc.
-              * Type-Specific Attributes: Defined according to the characteristics of the entity type
-              * Associated Attributes: Attributes that refer to other entities
-          - Consider the temporality of entities:
-              * The timeliness of attributes (e.g., official positions change over time) (Optional)
-              * The variability of states (e.g., changes in camp) (Optional)
-          - Define a complete set of attributes for each entity type, including required and optional attributes.
-          - Ensure that there are potential association paths between entity types, while maintaining the independence of conceptual boundaries.
+**actions**
+Syntax:
+`actions` is a YAML list that references the pre - defined actions in the system, indicating the actions that the current operator can take when performing tasks. The format is as follows:
+actions:
+  - *action1
+  - *action2
+where `*` is the anchor reference in YAML, and `action1` is the name of the corresponding action.
 
-      2. Relationship Type Design
-          - Define the relationship types between entities, including direct relationships, derived relationships, and potential relationships.
-          - Clarify the directionality of relationships (directed), design the attribute set of relationships.
-          - Verify the reachability between key entities through relationship combinations.
-          - (Optional) Consider adding inverse relationships to enhance the expressiveness of the graph.
-  - &entity_type_definition_action
-    name: "entity_type_definition"
-    desc: "Core entity types identified in the definition and classification document."
+Principles:
+1. Completeness: Ensure completeness when writing actions, which should cover all the capabilities required for the operator to complete the task.
+2. Minimality: On the premise of covering the operator's capabilities, use as few actions as possible.
+3. Authenticity: All actions can only reference the actions that appear in the `actions` part of the **context**, and no fabricated actions are allowed.
+4. Independence: Actions should be independent of each other, and their functions should not overlap.
 
-  - &relation_type_definition_action
-    name: "relation_type_definition"
-    desc: "Design the types and attributes of relationships between entities."
+### Workflow
+1. Obtain the **task description** from the **context**. Analyze the capabilities required to complete the task through "core objective decomposition → sub - task splitting → derivation of tools/actions required for sub - tasks" to get a structured list of capabilities.
+2. Based on the list of capabilities, analyze the existing Operators in the context to determine if there are any missing or insufficient capabilities.
+3. Refer to the **optimization suggestions**, evaluate their rationality, and modify and supplement them if they are unreasonable or insufficient to get the final list of optimization actions to be executed.
+4. Refer to the **Operator writing guide** and the list of optimization actions to perform specific optimizations. You can optimize the operators beyond the guide based on your own understanding and thinking.
+5. Organize the optimization results and output the final optimization actions.
 
-  - &schema_design_and_import_action
-    name: "schema_design_and_import"
-    desc: "Transform the conceptual model into graph database labels, and use relevant tools to create the graph schema in the graph database (if necessary, tools can be called multiple times and labels created in the database to ensure the given task is completed) (Requires calling one or more tools)"
-    tools:
-      - *schema_getter_tool
-      - *vertex_label_adder_tool
-      - *edge_label_adder_tool
+### Output Format
+Output the optimization results taken in JSON .
+```json
+{{
+  "modifications": <A JSON list indicating what optimizations have been made, with each item being a string>,
+  "new_configs": {{
+      "operators": "operators:<A string begin with 'operators:' including the complete YAML configuration content of the operator part (including the original operators)>"
+  }}
+}}
+```
+"""
 
-  - &graph_validation_action
-    name: "graph_validation"
-    desc: "Reflect on and check the reachability of the graph (Requires calling one or more tools)"
-    tools:
-      - *graph_reachability_getter_tool
+optimize_expert_prompt_template  = """
+### Instructions
+You are an expert in the design and optimization of Multi - Agent system (MAS). You specialize in designing and optimizing MAS frameworks based on YAML configuration files. Our MAS system is configured using YAML configuration files and mainly consists of three parts: actions, operators, and experts.
+Your task is to optimize the existing Experts (add or modify experts) based on the context information and around the tasks the system needs to complete, so as to enhance the system's ability to accomplish tasks.
 
-  # data importation actions
-  - &schema_understanding_action
-    name: "schema_understanding"
-    desc: "Call relevant tools to obtain the graph model, and analyze and understand the graph model (Requires calling one or more tools)"
-    tools:
-      - *schema_getter_tool
+### Optimization Suggestions
+Here are some possible optimization suggestions generated by other LLMs, which can be used as a reference but do not need to be fully followed.
+{optimize_actions}
 
-  - &data_status_check_action
-    name: "data_status_check"
-    desc: "Check the status of the current data in the graph database to understand the existing data situation and ensure the consistency of subsequent data import (Requires calling one or more tools)"
-    tools:
-      - *data_status_check_tool
+### Context
+{context}
 
-  - &content_understanding_action_2
-    name: "content_understanding_2"
-    desc: "Call relevant tools to obtain the original text content, and analyze and understand it in combination with the graph model (schema) (Requires calling one or more tools)"
-    tools:
-      - *document_reader_tool
+### Requirements
+1. Single responsibility: The functions of an expert should be atomic. Each expert should only be responsible for a single specific function. Pay special attention to this when adding experts.
+2. Optimizations must be based on the context information and centered around the tasks the system needs to complete.
 
-  - &triplet_data_generation_action
-    name: "triplet_data_generation"
-    desc: "Based on the understanding of the graph model and the text content, extract triple data and store it in the graph database (if necessary, extraction and import into the database can be performed multiple times to ensure the given task is completed) (Requires calling one or more tools)"
-    tools:
-      - *data_import_tool
-
-  - &output_result_action
-    name: "output_result"
-    desc: "Output summary information of the data import results."
-
-  # graph query actions
-  - &vertex_type_and_condition_validation_action
-    name: "vertex_type_and_condition_validation"
-    desc: "Read the existing schema of the graph data to check whether the query intention and requirements match the corresponding model, and check whether the conditions match the corresponding model. If they do not match, the corresponding query handle needs to be modified (Requires calling one or more tools)."
-    tools:
-      - *schema_getter_tool
-
-  - &supplement_action
-    name: "supplement"
-    desc: "If the query conditions/node types are missing or do not match, it is necessary to supplement the missing query content through one's own thinking and reasoning (if multiple attempts fail, then it is necessary to stop the loss in a timely manner)."
-
-  - &query_execution_action
-    name: "query_execution"
-    desc: "According to the graph query syntax, the existing graph schema, and the query requirements, call the graph database tool function to execute the query statement on the corresponding graph to obtain the results (Requires calling one or more tools)."
-    tools:
-      - *schema_getter_tool
-      - *cypher_executor_tool
-
-  # graph analysis actions
-  - &content_understanding_action_3
-    name: "content_understanding_3"
-    desc: "Understand and analyze the user's needs."
-
-  - &algorithms_intention_identification_action
-    name: "algorithms_intention_identification"
-    desc: "Determine the algorithm(s) to be executed (possibly multiple) and identify their names and other relevant information."
-    tools:
-      - *algorithms_getter_tool
-
-  - &algorithms_execution_action
-    name: "algorithms_execution"
-    desc: |
-      Call the relevant algorithm execution tools to execute the algorithm(s). (Requires calling one or more tools).
-      When encountering tricky problems with using algorithm tools, you can query the current graph database schema or execute Cypher query statements to help you better understand and configure the algorithm tool's input parameters.
-      On the other hand, graph database algorithms have strict requirements for input parameters, but in LLMs, algorithm input parameters are often ambiguous, especially data node and edge parameters. For example, you might want to input "Romeo", but the graph database only has "romeo". You can query the graph database schema or execute Cypher query statements to help you better understand and configure the algorithm tool's input parameters.
-      Note: You are not allowed to ask the user for more information.
-    tools:
-      - *page_rank_executor_tool
-      - *betweenness_centrality_executor_tool
-      - *louvain_executor_tool
-      - *label_propagation_executor_tool
-      - *shortest_path_executor_tool
-      - *node_similarity_executor_tool
-      - *common_neighbors_executor_tool
-      - *kmeans_executor_tool
-      - *cypher_executor_tool
-      - *schema_getter_tool
-
-  # question answering actions
-  - &knowledge_base_retrieving_action
-    name: "knowledge_base_retrieving"
-    desc: "Call the knowledge_base_search tool to retrieve relevant documents from the external knowledge base. If multiple retrievals fail to produce relevant results, abandon calling the tool. (Requires calling one or more tools)."
-    tools:
-      - *knowledge_base_retriever_tool
-
-  - &web_research_action
-    name: "web_research"
-    desc: "Conduct comprehensive web research using browser tools to collect information from authoritative web sources. Can execute multiple browsing tasks and dynamically adjust search strategies based on findings. (Requires calling one or more tools)."
-    tools:
-      - *browser_tool
-
-  - &reference_listing_action
-    name: "reference_listing"
-    desc: "Return the original text and web links involved in the reasoning process in Markdown format for easy display."
-    tools:
-      - *file_tool
-
-  # job decomposition actions
-  - &query_system_status_action
-    name: "query_system_status"
-    desc: "Call relevant tools to query the system status and obtain system status information. The large language model needs to understand the system's state in order to better reason and make decisions. (Requires calling one or more tools)."
-    tools:
-      - *system_status_checker_tool
-      - *document_reader_tool
-
-  - &job_decomposition_action
-    name: "job_decomposition"
-    desc: "Manually decompose the task into multiple sub-tasks (jobs) according to the relevant requirements and assign each sub-task to the corresponding expert."
-
-toolkit:
-  - [*content_understanding_action, *deep_recognition_action]
-  - [
-      *entity_type_definition_action,
-      *relation_type_definition_action,
-      *schema_design_and_import_action,
-      *graph_validation_action,
-    ]
-  - [
-      *schema_understanding_action,
-      *data_status_check_action,
-      *content_understanding_action_2,
-      *triplet_data_generation_action,
-      *output_result_action,
-    ]
-  - [
-      *vertex_type_and_condition_validation_action,
-      *supplement_action,
-      *query_execution_action,
-    ]
-  - [
-      *content_understanding_action_3,
-      *algorithms_intention_identification_action,
-      *algorithms_execution_action,
-    ]
-  - [*knowledge_base_retrieving_action, *web_research_action]
-  - [*reference_listing_action]
-  - [*query_system_status_action, *job_decomposition_action]
-
-operators:
-  - &basic_operator
-    instruction: |
-      You are a basic expert to response the question.
-    output_schema: |
-      **result**: freedom format, just the answer of the question
-    actions:
-      - *content_understanding_action
-
+### Expert Example
+```yaml
 experts:
   - profile:
-      name: "basic Expert"
+      name: "Browser Use Expert"
       desc: |
-        He is a basic expert to response the question.
-      actor_name: "basic Expert"
-      thinker_name: "basic Expert"
+        An autonomous and efficient web intelligence expert focused on deep research and information synthesis. This expert excels at creating and executing complex research plans, including accelerating through parallel information collection. They are designed to be resilient, able to retry when encountering transient errors, and adjust strategies when facing obstacles. Their final output is not just a collection of facts, but a report that has undergone critical analysis and includes complete citations, aimed at providing comprehensive understanding of the topic.
+    reasoner:
+      actor_name: "Browser Use Expert"
+      thinker_name: "Browser Use Expert"
     workflow:
-      - [*basic_operator]
+      - [*web_research_operator]
+```
+```
+This is an example of writing a browser expert, which mainly consists of three parts: profile, reasoner, and workflow.
+The profile is the "identity manual" of an Expert, which needs to clearly define its domain positioning, core capabilities, and output goals to avoid overlapping responsibilities with other Experts. The "name" represents the name of the expert; the "desc" describes the expert's role positioning, core capabilities, execution characteristics, and output standards from a **third - person** perspective; the "reasoner" part indicates the name of the reasoning engine behind it, and the name can simply be the same as that of the expert; the "workflow" represents the orchestration of operators, organizing multiple `Operators` into a directed acyclic graph (DAG) to clarify the execution order and dependency relationships, which is a standard process for executing tasks.
 
-knowledgebase: {}
-memory: {}
-env: {}
+### Expert Writing Guide
+There are multiple Experts in the entire MAS system, and they collaborate to complete tasks. An Expert is the specific executor of a task. When a task is input into the system, it will be completed through the collaboration of multiple experts. Therefore, the functions of Experts should be split as much as possible, and each Expert should focus on completing a specific - domain task. However, there is no need to atomically split the capabilities of an expert. An expert may have multiple capabilities and call multiple operators at the same time. The key is that it focuses on completing one thing.
+
+**Definition**
+An Expert is defined through three parts: profile, reasoner, and workflow.
+
+**profile**
+The "name" is the name of the expert, which should accurately describe its responsibilities and role.
+The "desc" needs to clearly describe the expert's role, responsibilities, core functions, and final output results. The "desc" should be written from a **third - person perspective**, with the focus being to make others understand the expert's role positioning, responsibilities, and functions.
+
+**reasoner**
+The "reasoner" includes two fields: "actor_name" and "thinker_name", which can simply be the same as the expert's name.
+
+**workflow**
+The "workflow" defines the orchestration of operators, organizing multiple operators into a directed acyclic graph (DAG) to clarify the execution order and dependency relationships, which is a standard process for executing tasks.
+Syntax:
+The "workflow" is a YAML array, and each item in the array is a one - dimensional array that defines a dependency relationship. For example, `[*op1, *op2]` indicates the execution order of `op1 -> op2`. Operators are referenced in the form of `*op_name`, and the `*` cannot be omitted. The following is an example:
+workflow:
+  - [*op1, *op2, *op4, *op5, ...]
+  - [*op1, *op3]
+Here, `*` is the anchor reference in YAML, and `op1` and `op2` are the names of the corresponding operators.
+This "workflow" defines two dependency relationships: `op1 -> op2 -> op4 -> op5` and `op1 -> op3`.
+These two dependency relationships together form a DAG, which means that `op1` is executed first. After `op1` is completed, `op2` and `op3` can be executed in parallel. After `op2` is executed, `op4` and `op5` can be executed, and so on.
+
+Principles:
+The "workflow" is the core of an expert, representing a standard process when it executes tasks.
+1. Completeness: Ensure completeness when writing the "workflow", and the involved operators should cover the capabilities required for the expert to complete the task.
+2. Dependency: Correctly identify the dependency relationships between tasks, such as "data acquisition → data cleaning".
+3. Authenticity: All operators can only reference the operators that appear in the "operators" part of the **context**, and no fabricated operators are allowed.
+4. Parallelism: If tasks are independent of each other and have no dependency relationships, parallelize them as much as possible to improve the task execution speed.
+
+### Workflow
+1. Obtain the **task description** from the **context**. Analyze the capabilities required to complete the task through "core objective decomposition → sub - task splitting → decomposition of capabilities required for sub - tasks" to get a structured list of capabilities.
+2. Based on the list of capabilities, analyze the existing Experts in the context to determine if there are any missing or insufficient capabilities.
+3. Refer to the **optimization suggestions**, evaluate their rationality, and modify and supplement them if they are unreasonable or insufficient to get the final list of optimizations to be executed.
+4. Refer to the **Expert writing guide** and the list of optimizations. You can optimize the experts beyond the guide based on your own understanding and thinking, and perform specific optimizations.
+5. Output the optimization results.
+
+### Output Format
+Output in JSON format. When outputting the content of experts, note that the three parts of profile, reasoner, and workflow are at the same level.
+```json
+{{
+  "modifications": <A JSON list indicating what optimizations have been made, with each item being a string>,
+  "new_configs": {{
+      "experts": <A string begin with `experts:`, including the complete YAML configuration content of the expert part (including the original experts)>
+  }}
+}}
+```
 """

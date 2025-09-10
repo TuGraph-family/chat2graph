@@ -1,11 +1,12 @@
 from abc import abstractmethod
-from app.core.workflow.workflow_generator.mcts_workflow_generator.model import OptimizeResp, WorkflowLogFormat, Score
+from app.core.workflow.workflow_generator.mcts_workflow_generator.model import Score
 from app.core.workflow.dataset_synthesis.model import Row
-from app.core.prompt.workflow_generator import summary_prompt_template, optimize_prompt_template, eval_prompt_template
+from app.core.prompt.workflow_generator import summary_prompt_template, eval_prompt_template
 from app.core.model.message import TextMessage, HybridMessage
 from app.core.common.system_env import SystemEnv
 from app.core.workflow.workflow_generator.llm_client import LLMClient
-from app.core.workflow.workflow_generator.mcts_workflow_generator.utils import load_workflow
+from app.core.workflow.workflow_generator.mcts_workflow_generator.utils import load_agentic_service
+from typing import List, Dict, Tuple
 import json
 import sys
 import io
@@ -14,35 +15,33 @@ from pathlib import Path
 
 class Evaluator:
     @abstractmethod
-    def evaluate_workflow(self, round_num: int, dataset: list[Row], modification: str, optimized_path: str) ->  tuple[float, str]:
+    def evaluate_workflow(self, round_num: int, dataset: List[Row], modifications: List[str], optimized_path: str) ->  Tuple[float, str]:
         ...
 
 class LLMEvaluator(Evaluator):
     def __init__(self):
         super().__init__()
-        self.client = LLMClient(
+        self.client = LLMClient( # TODO: modify to chat2graph agenticservice
             model=SystemEnv.LLM_NAME,
             api_key=SystemEnv.LLM_APIKEY,
             api_base=SystemEnv.LLM_ENDPOINT
         )
     
-    def evaluate_workflow(self, round_num: int, dataset: list[Row], modification: str, optimized_path: str) ->  tuple[float, str]:
+    def evaluate_workflow(self, round_num: int, dataset: List[Row], modifications: List[str], optimized_path: str) ->  Tuple[float, str]:
         total_score = 0.0
-        results: dict[str, str] = []
+        results: Dict[str, str] = []
         try :
-            workflow = load_workflow(optimized_path=optimized_path, round_num=round_num) 
+            agent_sys = load_agentic_service(optimized_path=optimized_path, round_num=round_num) 
             for qa in dataset:
                 try:
                     result = None
                     message = TextMessage(
                         payload=qa.task,
-                        assigned_expert_name=None
                     )
-
                     original_stdout = sys.stdout
                     f = io.StringIO()
                     sys.stdout = f
-                    model_message = workflow.session().submit(message).wait()
+                    model_message = agent_sys.session().submit(message).wait()
                     sys.stdout = original_stdout
 
                     if isinstance(model_message, TextMessage):
@@ -82,7 +81,7 @@ class LLMEvaluator(Evaluator):
         with open(results_file, "w", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
         avg_score = total_score / len(dataset)
-        experience_summary = self.summarize_experience(modification=modification, results=results, avg_score=avg_score)
+        experience_summary = self.summarize_experience(modification=modifications, results=results, avg_score=avg_score)
         return avg_score, experience_summary
 
     def summarize_experience(self, modification, results, avg_score):

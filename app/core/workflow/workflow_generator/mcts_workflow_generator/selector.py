@@ -1,19 +1,19 @@
 from abc import abstractmethod
-from app.core.workflow.workflow_generator.mcts_workflow_generator.model import OptimizeResp, WorkflowLogFormat
-from app.core.prompt.workflow_generator import optimize_prompt_template
+from app.core.workflow.workflow_generator.mcts_workflow_generator.model import WorkflowLogFormat
+from typing import Dict, List
 import numpy as np
 
 
 class Selector:
     @abstractmethod
-    def select(self, sample_size: int, logs: dict[int, WorkflowLogFormat]) -> WorkflowLogFormat:
+    def select(self, sample_size: int, logs: Dict[int, WorkflowLogFormat]) -> WorkflowLogFormat:
         ...
 
 class MixedProbabilitySelector(Selector):
-    def select(self, sample_size: int, logs: dict[int, WorkflowLogFormat]) -> WorkflowLogFormat:
+    def select(self, sample_size: int, logs: Dict[int, WorkflowLogFormat]) -> WorkflowLogFormat:
         # 获取sample个top的score的workflow，包含初始workflow
         list_items = [log_format for _, log_format in logs.items()]
-        top_items: list[WorkflowLogFormat] = []
+        top_items: List[WorkflowLogFormat] = []
         list_items.sort(key= lambda x: x.score, reverse=True)
         top_items.extend(list_items[:sample_size - 1])
         has_round1 = False
@@ -34,7 +34,7 @@ class MixedProbabilitySelector(Selector):
         index = np.random.choice(len(top_items), p=probabilities)
         return top_items[index]
 
-    def _compute_probabilities(self, scores: list[float], alpha=0.2, lambda_=0.3):
+    def _compute_probabilities(self, scores: List[float], alpha=0.2, lambda_=0.3):
         scores = np.array(scores, dtype=np.float64)
         n = len(scores)
 
