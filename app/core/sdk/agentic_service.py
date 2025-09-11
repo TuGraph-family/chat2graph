@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
+from app.core.common.logger import Chat2GraphLogger
 from app.core.common.singleton import Singleton
 from app.core.common.type import ReasonerType, WorkflowPlatformType
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -41,6 +42,9 @@ class AgenticService(metaclass=Singleton):
 
     def __init__(self, service_name: Optional[str] = None):
         self._service_name = service_name or "Chat2Graph"
+
+        # initialize logging
+        Chat2GraphLogger()
 
         # initialize the dao
         DaoFactory.initialize(DbSession())

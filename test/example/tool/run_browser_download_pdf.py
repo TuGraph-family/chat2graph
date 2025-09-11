@@ -82,12 +82,17 @@ async def main():
     await browser_download_pdf(
         mcp_connection=mcp_connection,
         url="https://www.biorxiv.org/content/10.1101/2025.09.03.672144v2.full.pdf",
-        file_path="./.gaia_tmp/downloaded_pdf_2.pdf"
+        file_path="./.gaia_tmp/downloaded_pdf_2.pdf",
     )
     await browser_download_pdf(
         mcp_connection=mcp_connection,
         url="https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0123456&type=printable",
-        file_path="./.gaia_tmp/downloaded_pdf_3.pdf"
+        file_path="./.gaia_tmp/downloaded_pdf_3.pdf",
+    )
+    await browser_download_pdf(
+        mcp_connection=mcp_connection,
+        url="https://www.mdpi.com/2304-8158/8/10/484/pdf",
+        file_path="./.gaia_tmp/downloaded_pdf_4.pdf",
     )
     await close_connection(mcp_connection=mcp_connection)
 
