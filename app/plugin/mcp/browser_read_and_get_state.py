@@ -337,7 +337,7 @@ If the current page is completely irrelevant to my goal (e.g., I'm on Google but
                 or "temporarily unavailable" in primary_result.lower()
             ):  # noqa: E501
                 raise ValueError("Gemini service quota exceeded or temporarily unavailable.")
-            return f"[Using Gemini primary]\n{primary_result}"
+            return primary_result
         except Exception as gemini_error:
             print(f"Gemini primary failed: {gemini_error}")
             print("Falling back to OpenRouter multimodal model...")
@@ -354,8 +354,7 @@ If the current page is completely irrelevant to my goal (e.g., I'm on Google but
                     max_retries=2,
                 )
                 assert isinstance(response, ModelResponse)
-                print(response)
-                return "[Fallback OpenRouter]\n" + response["choices"][0]["message"]["content"]
+                return response["choices"][0]["message"]["content"]
             except Exception as openrouter_error:
                 print(f"OpenRouter fallback also failed: {openrouter_error}")
                 error_str = str(openrouter_error)
