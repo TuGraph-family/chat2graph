@@ -1,7 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from datasets import load_from_disk  # type: ignore
+from datasets import (
+    load_dataset,  # type: ignore
+    load_from_disk,  # type: ignore
+)
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import HfHubHTTPError
 from tqdm import tqdm  # type: ignore
@@ -60,8 +63,12 @@ def main():
     """Main function to orchestrate the dataset download and verification."""
     print(f"📁 loading dataset metadata from local path: {local_data_path}")
     if not local_data_path.exists():
-        print(f"❌ error: local dataset path does not exist '{local_data_path}'.")
-        return
+        print(f"  - local dataset path not found: '{local_data_path}'")
+        print("  - downloading from hub...")
+
+        dataset = load_dataset(REPO_ID)
+        dataset.save_to_disk(str(local_data_path))
+        print(f"✅ dataset metadata downloaded and saved to {local_data_path}")
     dataset = load_from_disk(str(local_data_path))
     print("✅ dataset metadata loaded successfully.")
 
@@ -78,6 +85,7 @@ def main():
         return
 
     print(f"\n found {len(files_to_download)} unique files to download/verify.")
+    DOWNLOAD_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     print(f"📂 target directory: {DOWNLOAD_CACHE_DIR}")
 
     # parallel download with thread pool
