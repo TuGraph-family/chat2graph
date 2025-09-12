@@ -10,7 +10,7 @@ title: 推理机
 
 ### 2.1. 模型服务
 
-模型服务 (`ModelService`) 在 Chat2Graph 中扮演着与大型语言模型 (LLM) 交互的底层接口和实现层的角色。它封装了不同 LLM 平台（如 DB-GPT, AiSuite）的调用细节，并且支持所有 OpenAI API 兼容的模型（例如 Gemini、Qwen、DeepSeek 等，相关配置实例可见于 `.env.template` 文件）。
+模型服务 (`ModelService`) 在 Chat2Graph 中扮演着与大型语言模型 (LLM) 交互的底层接口和实现层的角色。它封装了不同 LLM 平台（如 LiteLLM）的调用细节，并且支持所有 OpenAI API 兼容的模型（例如 Gemini、Qwen、DeepSeek 等，相关配置实例可见于 `.env.template` 文件）。
 
 在工具调用方面，模型服务依赖特定的标签格式（如 `<function_call>...</function_call>`）从 LLM 的输出中提取工具调用请求。此外，它还支持通过 `app.core.reasoner.injection_mapping` 定义的系统内部服务（例如 `GraphDbService`）作为工具调用时的参数，自动注入到目标工具中，从而增强了工具的灵活性和功能。工具调用的标准格式详见：`FUNC_CALLING_PROMPT`。
 
@@ -29,7 +29,7 @@ title: 推理机
 
 | 模型参数                        | 说明                                                                                   |
 | --------------------------------- | -------------------------------------------------------------------------------------- |
-| MODEL_PLATFORM_TYPE               | 指定所用模型平台类型（LiteLLM、DB-GPT、AiSuite 等）。推荐使用兼容 OpenAI API 的模型。         |
+| MODEL_PLATFORM_TYPE               | 指定所用模型平台类型（LiteLLM 等）。推荐使用兼容 OpenAI API 的模型。         |
 | LLM_NAME                          | 大语言模型的名称，包括 OpenAI API 的模型，具体格式要根据模型平台适配）。                                   |
 | LLM_ENDPOINT                      | 模型服务的 API 访问地址，即 `base_url`。                                                              |
 | LLM_APIKEY                        | 用于访问模型服务的 API 密钥。                                                          |

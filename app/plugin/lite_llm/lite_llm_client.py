@@ -112,7 +112,7 @@ class LiteLlmClient(ModelService):
             sys_message = sys_prompt.strip()
         base_messages: List[Dict[str, str]] = [{"role": "system", "content": sys_message}]
 
-        # convert the conversation messages for AiSuite LLM
+        # convert the conversation messages for LiteLLM
         for i, message in enumerate(messages):
             # handle the func call information in the agent message
             base_message_content = message.get_payload()

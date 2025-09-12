@@ -5,7 +5,6 @@ class ModelPlatformType(Enum):
     """Model platform type enum."""
 
     LITELLM = "LITELLM"
-    AISUITE = "AISUITE"
 
 
 class WorkflowPlatformType(Enum):

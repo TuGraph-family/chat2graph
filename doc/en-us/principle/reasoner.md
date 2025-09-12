@@ -10,7 +10,7 @@ The Reasoner module is the core component in Chat2Graph responsible for interact
 
 ### 2.1. Model Service
 
-The Model Service (`ModelService`) in Chat2Graph acts as the underlying interface and implementation layer for interacting with Large Language Models (LLMs). It encapsulates the calling details for different LLM platforms (e.g., DB-GPT, AiSuite) and supports all OpenAI API-compatible models (e.g., Gemini, Qwen, DeepSeek, with configuration examples available in the `.env.template` file).
+The Model Service (`ModelService`) in Chat2Graph acts as the underlying interface and implementation layer for interacting with Large Language Models (LLMs). It encapsulates the calling details for different LLM platforms (e.g., LiteLLM) and supports all OpenAI API-compatible models (e.g., Gemini, Qwen, DeepSeek, with configuration examples available in the `.env.template` file).
 
 In terms of tool calling, the Model Service relies on specific tag formats (e.g., `<function_call>...</function_call>`) to extract tool call requests from the LLM's output. Furthermore, it supports the automatic injection of inner system services (e.g., `GraphDbService`), defined via `app.core.reasoner.injection_mapping`, as parameters into target tools during tool calls, thereby enhancing the flexibility and functionality of the tools. The standard format for tool calls is detailed in: `FUNC_CALLING_PROMPT`.
 
@@ -29,7 +29,7 @@ Model configuration is centrally managed via environment variables (`SystemEnv`)
 
 | Model Parameter                        | Description                                                                                   |
 | --------------------------------- | -------------------------------------------------------------------------------------- |
-| MODEL_PLATFORM_TYPE               | Specifies the model platform type (LiteLLM, DB-GPT, AiSuite, etc.). Models compatible with the OpenAI API are recommended.         |
+| MODEL_PLATFORM_TYPE               | Specifies the model platform type (LiteLLM, etc.). Models compatible with the OpenAI API are recommended.         |
 | LLM_NAME                          | Name of the large language model, indicating OpenAI API compatibility; the specific format should be adapted to the model platform.                                   |
 | LLM_ENDPOINT                      | API access address for the model service, i.e., `base_url`.                                                              |
 | LLM_APIKEY                        | API key for accessing the model service.                                                          |
