@@ -50,15 +50,15 @@ class MemoryService(metaclass=Singleton):
 
                 if SystemEnv.PRINT_MEMORY_LOG:
                     print(
-                        f"[memory] using MemFuseMemory for job={job_id} operator={operator_id}"
+                        f"[memory] MemoryService: creating MemFuseMemory for job={job_id} operator={operator_id}"
                     )
                 return MemFuseMemory(job_id=job_id, operator_id=operator_id)
             except Exception as e:  # noqa: BLE001
                 if SystemEnv.PRINT_MEMORY_LOG:
                     print(
-                        f"[memory] MemFuseMemory unavailable, falling back to BuiltinReasonerMemory. Error: {e}"
+                        f"[memory] MemoryService: MemFuseMemory unavailable, falling back to BuiltinReasonerMemory. Error: {e}"
                     )
         # fallback
         if SystemEnv.PRINT_MEMORY_LOG:
-            print(f"[memory] using BuiltinReasonerMemory for job={job_id} operator={operator_id}")
+            print(f"[memory] MemoryService: creating BuiltinReasonerMemory for job={job_id} operator={operator_id}")
         return BuiltinReasonerMemory()
