@@ -1,8 +1,9 @@
 import asyncio
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
+from app.core.model.task import ToolCallContext
 from app.core.reasoner.model_service import ModelService
 from app.core.toolkit.tool import Tool
 from test.resource.init_server import init_server
@@ -68,7 +69,7 @@ class ProcessComplexData(Tool):
 
     def process_complex_data(
         self, data_dict: dict, nested_list: List[dict], config: dict, special_str: str
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """A function that processes complex nested data structures.
 
         Args:
@@ -94,6 +95,7 @@ class TestModelService(ModelService):
         sys_prompt: str,
         messages: List[ModelMessage],
         tools: Optional[List[Tool]] = None,
+        tool_call_ctx: Optional[ToolCallContext] = None,
     ) -> ModelMessage:
         """Implement abstract method."""
         return ModelMessage(

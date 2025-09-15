@@ -1,5 +1,7 @@
+import asyncio
 from time import sleep
-from typing import Optional
+from typing import Optional, cast
+from uuid import uuid4
 
 from app.core.common.type import ToolGroupType
 from app.core.dal.dao.dao_factory import DaoFactory
@@ -9,16 +11,13 @@ from app.core.model.task import ToolCallContext
 from app.core.service.service_factory import ServiceFactory
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
+from app.core.toolkit.mcp.mcp_connection import McpConnection
 from app.core.toolkit.mcp.mcp_service import McpService
-from app.core.toolkit.tool_config import (
-    McpConfig,
-    McpTransportConfig,
-    McpTransportType,
-)
-from app.plugin.mcp.page_vision_tool import PageVisionTool
+from app.core.toolkit.tool_config import McpConfig, McpTransportConfig, McpTransportType
+from app.plugin.mcp.browser_read_and_get_state import BrowserReadAndGetStateTool
 
 
-async def init_server():
+async def init_server(tool_call_ctx: ToolCallContext, url: str):
     """Initialize the server by setting up the database and service factory."""
 
     # initialize the database
@@ -52,16 +51,17 @@ async def init_server():
     toolkit_service.add_action(test_action, [], [])
     toolkit_service.add_tool_group(mcp_service, [(test_action, 1.0)])
 
-    tool_call_ctx = ToolCallContext(job_id="1", operator_id="2")
-    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
+    mcp_connection = cast(
+        McpConnection,
+        await mcp_service.create_connection(tool_call_ctx=tool_call_ctx),
+    )
 
-    await mcp_connection.call(tool_name="browser_navigate", url="https://www.baidu.com/")
+    await mcp_connection.call(tool_name="browser_navigate", url=url)
+    sleep(2)
+    await mcp_connection.call(tool_name="browser_scroll", direction="down")
     sleep(2)
 
-    await mcp_connection.call(tool_name="browser_get_state")
-
-
-async def close_connection():
+async def close_connection(tool_call_ctx: ToolCallContext):
     """Close the MCP connection."""
     toolkit_service: ToolkitService = ToolkitService.instance
     mcp_service: Optional[McpService] = None
@@ -74,29 +74,31 @@ async def close_connection():
                 break
     if not mcp_service:
         raise ValueError("MCP service not found in the toolkit.")
-    tool_call_ctx = ToolCallContext(job_id="1", operator_id="2")
-    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
 
+    mcp_connection = await mcp_service.create_connection(tool_call_ctx=tool_call_ctx)
     await mcp_connection.close()
 
-
-async def main():
-    """Main function to run the AnalyzeWebPageLayoutTool."""
-    await init_server()
-
-    tool = PageVisionTool()
-    task_description = "Introduce the information."
-
-    result = await tool.browser_get_page_vision(
-        tool_call_ctx=ToolCallContext(job_id="1", operator_id="2"),
-        question=task_description,
+async def read_and_get_state(tool_call_ctx: ToolCallContext, vlm_task: str):
+    """Read the current state of the browser."""
+    # instantiate and call the ReadAndGetStateTool
+    read_and_get_state_tool = BrowserReadAndGetStateTool()
+    result = await read_and_get_state_tool.browser_read_and_get_state(
+        tool_call_ctx=tool_call_ctx,
+        vlm_task=vlm_task,
     )
     print(result)
 
-    await close_connection()
+
+async def main():
+    """Main function to run the ReadAndGetStateTool."""
+    tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
+    await init_server(tool_call_ctx=tool_call_ctx, url="https://en.wikipedia.org/wiki/Tokyo")
+    await read_and_get_state(
+        tool_call_ctx=tool_call_ctx,
+        vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
+    )
+    await close_connection(tool_call_ctx=tool_call_ctx)
 
 
 if __name__ == "__main__":
-    import asyncio
-
     asyncio.run(main())

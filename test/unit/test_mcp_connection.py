@@ -114,8 +114,8 @@ async def test_connect_sse_success(sse_mcp_config, mock_session):
     conn = McpConnection(tool_group_config=sse_mcp_config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         # mock the transport
         mock_transport = (AsyncMock(), AsyncMock())
@@ -138,8 +138,8 @@ async def test_connect_stdio_success(stdio_mcp_config, mock_session):
     conn = McpConnection(tool_group_config=stdio_mcp_config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.stdio_client") as mock_stdio_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.stdio_client") as mock_stdio_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         # mock the transport
         mock_transport = (AsyncMock(), AsyncMock())
@@ -161,8 +161,8 @@ async def test_connect_websocket_success(websocket_mcp_config, mock_session):
     conn = McpConnection(tool_group_config=websocket_mcp_config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.websocket_client") as mock_ws_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.websocket_client") as mock_ws_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         # mock the transport
         mock_transport = (AsyncMock(), AsyncMock())
@@ -197,7 +197,7 @@ async def test_connect_initialization_failure(sse_mcp_config):
     """Test connection failure during initialization."""
     conn = McpConnection(tool_group_config=sse_mcp_config)
 
-    with patch("app.core.toolkit.mcp_connection.sse_client") as mock_sse_client:
+    with patch("app.core.toolkit.mcp.mcp_connection.sse_client") as mock_sse_client:
         mock_sse_client.side_effect = Exception("Connection failed")
 
         with pytest.raises(Exception, match="Connection failed"):
@@ -227,8 +227,8 @@ async def test_get_tools_without_cache(sse_mcp_config, mock_session, mock_tools)
     conn = McpConnection(tool_group_config=sse_mcp_config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         # mock successful connection
         mock_transport = (AsyncMock(), AsyncMock())
@@ -255,8 +255,8 @@ async def test_call_tool_success(sse_mcp_config, mock_session):
     conn = McpConnection(tool_group_config=sse_mcp_config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         # mock successful connection
         mock_transport = (AsyncMock(), AsyncMock())
@@ -286,8 +286,8 @@ async def test_call_tool_without_params(sse_mcp_config, mock_session):
     conn = McpConnection(tool_group_config=sse_mcp_config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         # mock successful connection
         mock_transport = (AsyncMock(), AsyncMock())
@@ -322,8 +322,8 @@ async def test_url_joining_for_sse(mock_session):
     conn = McpConnection(tool_group_config=config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.sse_client") as mock_sse_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.sse_client") as mock_sse_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         mock_transport = (AsyncMock(), AsyncMock())
         mock_sse_client.return_value.__aenter__ = AsyncMock(return_value=mock_transport)
@@ -352,8 +352,8 @@ async def test_websocket_url_conversion(mock_session):
     conn = McpConnection(tool_group_config=config)
 
     with (
-        patch("app.core.toolkit.mcp_connection.websocket_client") as mock_ws_client,
-        patch("app.core.toolkit.mcp_connection.ClientSession") as mock_client_session,
+        patch("app.core.toolkit.mcp.mcp_connection.websocket_client") as mock_ws_client,
+        patch("app.core.toolkit.mcp.mcp_connection.ClientSession") as mock_client_session,
     ):
         mock_transport = (AsyncMock(), AsyncMock())
         mock_ws_client.return_value.__aenter__ = AsyncMock(return_value=mock_transport)

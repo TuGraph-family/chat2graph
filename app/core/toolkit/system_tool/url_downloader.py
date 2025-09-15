@@ -38,15 +38,13 @@ class UrlDownloaderTool(Tool):
                 Defaults to None.
 
         Returns:
-            Optional[Path]: The absolute path to the downloaded file, or None if the download was skipped (e.g. HTML).
-
-        Raises:
-            requests.exceptions.RequestException: If a network error occurs.
+            Optional[Path]: The absolute path to the downloaded file, or None if the download
+            was failed (e.g. HTML).
         """
         temp_file_no_ext_path = None
         save_path_obj = Path(save_path) if save_path else None
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"  # noqa: E501
         }
 
         try:
@@ -83,6 +81,8 @@ class UrlDownloaderTool(Tool):
                 temp_file_no_ext_path = downloaded_path
                 mime_type = magic.from_file(temp_file_no_ext_path, mime=True)
                 extension = mimetypes.guess_extension(mime_type)
+
+                # extension handling for common binary files
                 if not extension:
                     _, ext_from_url = os.path.splitext(urlparse(url).path)
                     extension = ext_from_url if ext_from_url else ".bin"

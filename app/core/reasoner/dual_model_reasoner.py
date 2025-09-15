@@ -56,7 +56,7 @@ class DualModelReasoner(Reasoner):
         actor_sys_prompt = self._format_actor_sys_prompt(task=task)
         thinker_sys_prompt = self._format_thinker_sys_prompt(task=task)
         if SystemEnv.PRINT_SYSTEM_PROMPT:
-            print(f"\033[38;5;245mSystem:\n{actor_sys_prompt}\033[0m\n")
+            print(f"\033[38;5;245mjob_id: {task.job.id}\nSystem:\n{actor_sys_prompt}\033[0m\n")
 
         # trigger the reasoning process
         init_message = ModelMessage(
@@ -86,7 +86,7 @@ class DualModelReasoner(Reasoner):
 
             # TODO: use standard logging instead of print
             if print_messages:
-                print(f"\033[94mThinker:\n{response.get_payload()}\033[0m\n")
+                print(f"\033[94mjob_id: {task.job.id}\nThinker:\n{response.get_payload()}\033[0m\n")
 
             # actor
             response = await self._actor_model.generate(
@@ -100,7 +100,7 @@ class DualModelReasoner(Reasoner):
 
             # TODO: use standard logging instead of print
             if print_messages:
-                print(f"\033[92mActor:\n{response.get_payload()}\033[0m\n")
+                print(f"\033[92mjob_id: {task.job.id}\nActor:\n{response.get_payload()}\033[0m\n")
                 func_call_results = response.get_function_calls()
                 if func_call_results:
                     print(
