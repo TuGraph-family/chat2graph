@@ -129,7 +129,13 @@ class MemFuseMemory(ReasonerMemory):
                 if SystemEnv.PRINT_MEMORY_LOG:
                     print("[memory] MemFuseMemory.aretrieve: using metadata filter for operator context")
 
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] MemFuseMemory.aretrieve: calling mem.query with params={query_params} is_operator={is_operator}")
+
             resp = await mem.query(**query_params)
+
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] MemFuseMemory.aretrieve: received response={resp} is_operator={is_operator}")
             results = resp.get("data", {}).get("results", [])
             snippets: List[str] = []
             for item in results:
@@ -213,6 +219,13 @@ class MemFuseMemory(ReasonerMemory):
                     print(f"[memory] MemFuseMemory.awrite_turn: ... and {len(oa_messages) - 2} more messages")
 
             # Add messages to MemFuse with embedded metadata
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] MemFuseMemory.awrite_turn: calling mem.add with {len(oa_messages)} messages")
+                for i, msg in enumerate(oa_messages):
+                    content_preview = msg.get("content", "")[:100] + "..." if len(msg.get("content", "")) > 100 else msg.get("content", "")
+                    metadata_str = f" metadata={msg.get('metadata', {})}" if msg.get('metadata') else ""
+                    print(f"[memory] MemFuseMemory.awrite_turn: adding message[{i}] role={msg.get('role', 'unknown')} content='{content_preview}'{metadata_str}")
+
             await mem.add(oa_messages)  # type: ignore[arg-type]
             if SystemEnv.PRINT_MEMORY_LOG:
                 context_type = "operator" if is_operator else "reasoner"
