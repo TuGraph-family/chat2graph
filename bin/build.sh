@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 cd "$(dirname "$(readlink -f "$0")")" &> /dev/null && source utils.sh || exit
 
+BUILD_WEB=true
+if [[ "$1" == "--no-gui" ]]; then
+  BUILD_WEB=false
+fi
+
 check_env() {
   info "Checking environment:"
   check_command python 2 || fatal
@@ -110,7 +115,9 @@ lock_file="/tmp/chat2graph.lock"
 acquire_lock $lock_file
 check_env
 build_python $project_root
-build_web $project_root
+if [ "$BUILD_WEB" = true ]; then
+  build_web $project_root
+fi
 release_lock $lock_file
 
 info "Build success !"

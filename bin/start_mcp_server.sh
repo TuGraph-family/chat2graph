@@ -10,14 +10,38 @@ timestamp=$(date +"%Y%m%d_%H%M%S")
 new_mcp_log_path="$(dirname ${MCP_LOG_PATH})/mcp_${timestamp}.log"
 ln -sf "$new_mcp_log_path" "${MCP_LOG_PATH}"
 
+is_port_in_use() {
+    local port=$1
+    # try with lsof (macOS, Linux)
+    if command -v lsof >/dev/null; then
+        if lsof -i :$port >/dev/null; then return 0; else return 1; fi
+    fi
+    # try with ss (modern Linux)
+    if command -v ss >/dev/null; then
+        if ss -tuln | grep -q ":$port "; then return 0; else return 1; fi
+    fi
+    # try with netstat (Linux, macOS, etc.)
+    if command -v netstat >/dev/null; then
+        if netstat -tuln | grep -q ":$port "; then return 0; else return 1; fi
+    fi
+    warning "Could not find lsof, ss, or netstat to check port status. Assuming port is free."
+    return 1 # assume port is not in use
+}
+
+# check if there are any MCP servers to start
+if [ ${#mcp_server_configs[@]} -eq 0 ]; then
+    info "No MCP servers configured to start."
+    exit 0
+fi
+
 # start each MCP tool
-for config in "${mcp_tools_config[@]}"; do
+for config in "${mcp_server_configs[@]}"; do
     mcp_name=$(get_mcp_name "$config")
     port=$(get_mcp_port "$config")
     command=$(get_mcp_command "$config")
 
     # check if the port is in use
-    if lsof -i :$port > /dev/null; then
+    if is_port_in_use $port; then
         info "Port $port is already in use. Assuming ${mcp_name} is running."
         continue
     fi
@@ -41,4 +65,4 @@ for config in "${mcp_tools_config[@]}"; do
     fi
 done
 
-echo "MCP tools logs in ${new_mcp_log_path}"
+echo "MCP servers logs in ${new_mcp_log_path}"

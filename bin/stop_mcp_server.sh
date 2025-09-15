@@ -5,7 +5,7 @@ cd "$(dirname "$(readlink -f "$0")")" &> /dev/null && source utils.sh || exit
 source mcp_server_config.sh
 
 # stop each MCP tool
-for config in "${mcp_tools_config[@]}"; do
+for config in "${mcp_server_configs[@]}"; do
     mcp_name=$(get_mcp_name "$config")
     port=$(get_mcp_port "$config")
 
