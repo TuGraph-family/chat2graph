@@ -6,13 +6,13 @@ title: Quickstart
 
 Prepare the required versions of Python and NodeJS.
 
-* Install Python: [Python == 3.10](https://www.python.org/downloads) recommended.
-* Install NodeJS: [NodeJS >= v16](https://nodejs.org/en/download) recommended.
+* Install Python: [Python >= 3.10, < 3.12](https://www.python.org/downloads) recommended.
+* Install NodeJS: [NodeJS >= v16, < v21](https://nodejs.org/en/download) recommended.
 
 You can also use tools like [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) to install the python environment.
 
 ```bash
-conda create -n chat2graph_env python=3.10
+conda create -n chat2graph_env python=3.10  # or python=3.11
 conda activate chat2graph_env
 ```
 

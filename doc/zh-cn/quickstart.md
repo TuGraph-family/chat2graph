@@ -6,13 +6,13 @@ title: 快速开始
 
 准备符合要求的 Python 和 NodeJS 版本。
 
-* Install Python: 推荐 [Python == 3.10](https://www.python.org/downloads)。
-* Install NodeJS: 推荐 [NodeJS >= v16](https://nodejs.org/en/download)。
+* Install Python: 推荐使用 [Python >= 3.10, < 3.12](https://www.python.org/downloads)。
+* Install NodeJS: 推荐 [NodeJS >= v16, < v21](https://nodejs.org/en/download)。
 
 你也可以使用 [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) 等工具安装Python环境。
 
 ```bash
-conda create -n chat2graph_env python=3.10
+conda create -n chat2graph_env python=3.10  # or python=3.11
 conda activate chat2graph_env
 ```
 
