@@ -58,7 +58,7 @@ check_env() {
 # install Playwright system dependencies for Linux distributions
 install_playwright_deps_linux() {
   info "Installing Playwright system dependencies for Linux..."
-  
+
   # try playwright install-deps first (simplest approach)
   if command -v sudo >/dev/null 2>&1 && playwright install-deps >/dev/null 2>&1; then
     info "Successfully installed Playwright dependencies"
@@ -84,7 +84,6 @@ install_python_extras() {
 
   # Install Playwright system dependencies for Linux only
   if [[ "$os_type" == "Linux" ]]; then
-    info "Installing playwright system dependencies for Linux..."
     if ! install_playwright_deps_linux; then
       PLAYWRIGHT_ISSUES=true
       warn "Failed to install some playwright dependencies. You may need to install them manually."
