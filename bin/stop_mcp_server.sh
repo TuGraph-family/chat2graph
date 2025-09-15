@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-cd "$(dirname "$(readlink -f "$0")")" &> /dev/null && source utils.sh || exit
+cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && source utils.sh || exit
 
 # load MCP server configuration
 source mcp_server_config.sh
