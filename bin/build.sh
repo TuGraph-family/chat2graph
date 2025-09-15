@@ -55,6 +55,41 @@ check_env() {
   fi
 }
 
+# hard-coded fixes for Alibaba Cloud Linux
+install_alinux_browsers() {
+  info "Applying Alibaba Cloud Linux specific browser fixes..."
+  
+  # set up environment variables for alinux
+  export PLAYWRIGHT_BROWSERS_PATH="/opt/playwright"
+  
+  # create necessary directories
+  sudo mkdir -p /opt/playwright
+  sudo chown -R $(whoami):$(whoami) /opt/playwright 2>/dev/null || true
+  
+  # try to download chromium directly
+  local chromium_url="https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1097615/chrome-linux.zip"
+  local temp_dir="/tmp/playwright-chromium"
+  
+  info "    Attempting to download Chromium directly for alinux..."
+  if command -v wget >/dev/null 2>&1; then
+    mkdir -p "$temp_dir"
+    if wget -q -O "$temp_dir/chrome-linux.zip" "$chromium_url" 2>/dev/null; then
+      cd "$temp_dir"
+      if command -v unzip >/dev/null 2>&1 && unzip -q chrome-linux.zip; then
+        sudo mkdir -p /opt/playwright/chromium-1097615
+        sudo cp -r chrome-linux/* /opt/playwright/chromium-1097615/ 2>/dev/null || true
+        sudo chmod +x /opt/playwright/chromium-1097615/chrome 2>/dev/null || true
+        info "    Successfully installed Chromium manually for alinux"
+        rm -rf "$temp_dir"
+        return 0
+      fi
+    fi
+    rm -rf "$temp_dir"
+  fi
+  
+  return 1
+}
+
 # install Playwright system dependencies for Linux distributions
 install_playwright_deps_linux() {
   info "Installing Playwright system dependencies for Linux..."
@@ -65,17 +100,49 @@ install_playwright_deps_linux() {
     distro_id=$(bash -c 'source /etc/os-release && echo $ID')
   fi
   
+  # hard-coded solution for Alibaba Cloud Linux (alinux)
+  if [[ "$distro_id" == "alinux" ]]; then
+    info "    Detected Alibaba Cloud Linux - applying hardcoded fixes"
+    
+    # install essential packages for alinux
+    if command -v yum >/dev/null 2>&1; then
+      sudo yum install -y \
+        nss \
+        atk \
+        at-spi2-atk \
+        libX11 \
+        libXcomposite \
+        libXdamage \
+        libXext \
+        libXfixes \
+        libXrandr \
+        mesa-libgbm \
+        cairo \
+        pango \
+        alsa-lib \
+        liberation-fonts \
+        gtk3 \
+        libdrm \
+        libxkbcommon \
+        libxss \
+        glib2 >/dev/null 2>&1
+      
+      info "    Installed alinux-specific dependencies"
+    fi
+    return 0
+  fi
+  
   # only use playwright install-deps for supported distributions
   if [[ "$distro_id" == "ubuntu" || "$distro_id" == "debian" ]]; then
     if command -v sudo >/dev/null 2>&1 && playwright install-deps >/dev/null 2>&1; then
-      info "Successfully installed Playwright dependencies via playwright install-deps"
+      info "    Successfully installed Playwright dependencies via playwright install-deps"
       return 0
     fi
   else
-    info "Detected $distro_id - using manual dependency installation"
+    info "    Detected $distro_id - using manual dependency installation"
   fi
 
-  # manual installation for all distributions
+  # Manual installation for all other distributions
   if command -v apt-get >/dev/null 2>&1; then
     sudo apt-get update >/dev/null 2>&1
     sudo apt-get install -y libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libxss1 libasound2 >/dev/null 2>&1
@@ -101,14 +168,42 @@ install_python_extras() {
   fi
 
   info "Installing playwright browsers..."
-  # use Python playwright instead of npx for more reliable installation
-  if python -m playwright install chromium >/dev/null 2>&1; then
-    info "Successfully installed Playwright Chromium via Python"
-  elif playwright install chromium >/dev/null 2>&1; then
-    info "Successfully installed Playwright Chromium"
+  
+  # hard-coded solution for Alibaba Cloud Linux (alinux)
+  local distro_id=""
+  if [[ -f /etc/os-release ]]; then
+    distro_id=$(bash -c 'source /etc/os-release && echo $ID')
+  fi
+  
+  if [[ "$distro_id" == "alinux" ]]; then
+    info "    Applying alinux-specific browser installation..."
+
+    # try standard installation first
+    if python -m playwright install chromium >/dev/null 2>&1; then
+      info "    Successfully installed Playwright Chromium via Python"
+    elif install_alinux_browsers; then
+      info "    Successfully installed browsers using alinux-specific method"
+    else
+      # last resort: try to use system chromium if available
+      if command -v chromium-browser >/dev/null 2>&1; then
+        info "    Using system chromium-browser as fallback"
+      elif command -v google-chrome >/dev/null 2>&1; then
+        info "    Using system google-chrome as fallback"
+      else
+        PLAYWRIGHT_ISSUES=true
+        warn "Failed to install Playwright browsers on alinux. Manual installation may be required."
+      fi
+    fi
   else
-    PLAYWRIGHT_ISSUES=true
-    warn "Failed to install Playwright Chromium. You may need to install it manually."
+    # standard installation for other distributions
+    if python -m playwright install chromium >/dev/null 2>&1; then
+      info "    Successfully installed Playwright Chromium via Python"
+    elif playwright install chromium >/dev/null 2>&1; then
+      info "    Successfully installed Playwright Chromium"
+    else
+      PLAYWRIGHT_ISSUES=true
+      warn "Failed to install Playwright Chromium. You may need to install it manually."
+    fi
   fi
 
   info "Installing browser-use..."
