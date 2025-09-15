@@ -59,13 +59,23 @@ check_env() {
 install_playwright_deps_linux() {
   info "Installing Playwright system dependencies for Linux..."
 
-  # try playwright install-deps first (simplest approach)
-  if command -v sudo >/dev/null 2>&1 && playwright install-deps >/dev/null 2>&1; then
-    info "Successfully installed Playwright dependencies"
-    return 0
+  # skip playwright install-deps for unsupported distributions like alinux
+  local distro_id=""
+  if [[ -f /etc/os-release ]]; then
+    distro_id=$(bash -c 'source /etc/os-release && echo $ID')
+  fi
+  
+  # only use playwright install-deps for supported distributions
+  if [[ "$distro_id" == "ubuntu" || "$distro_id" == "debian" ]]; then
+    if command -v sudo >/dev/null 2>&1 && playwright install-deps >/dev/null 2>&1; then
+      info "Successfully installed Playwright dependencies via playwright install-deps"
+      return 0
+    fi
+  else
+    info "Detected $distro_id - using manual dependency installation"
   fi
 
-  # fallback to manual installation only if above fails
+  # manual installation for all distributions
   if command -v apt-get >/dev/null 2>&1; then
     sudo apt-get update >/dev/null 2>&1
     sudo apt-get install -y libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libxss1 libasound2 >/dev/null 2>&1
@@ -82,7 +92,7 @@ install_playwright_deps_linux() {
 install_python_extras() {
   local os_type=$(uname -s)
 
-  # Install Playwright system dependencies for Linux only
+  # install Playwright system dependencies for Linux only
   if [[ "$os_type" == "Linux" ]]; then
     if ! install_playwright_deps_linux; then
       PLAYWRIGHT_ISSUES=true
@@ -91,8 +101,12 @@ install_python_extras() {
   fi
 
   info "Installing playwright browsers..."
-  # Keep it simple - just install chromium
-  if ! playwright install chromium; then
+  # use Python playwright instead of npx for more reliable installation
+  if python -m playwright install chromium >/dev/null 2>&1; then
+    info "Successfully installed Playwright Chromium via Python"
+  elif playwright install chromium >/dev/null 2>&1; then
+    info "Successfully installed Playwright Chromium"
+  else
     PLAYWRIGHT_ISSUES=true
     warn "Failed to install Playwright Chromium. You may need to install it manually."
   fi
