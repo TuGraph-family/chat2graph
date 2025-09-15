@@ -15,26 +15,38 @@ check_env() {
   info "Checking for libmagic..."
   local os_type
   os_type=$(uname -s)
-  local instal_libmagic_cmd=""
+  local install_libmagic_cmd=""
 
   if [[ "$os_type" == "Darwin" ]]; then # macOS
     if ! brew list libmagic &>/dev/null; then
-      instal_libmagic_cmd="brew install libmagic"
+      install_libmagic_cmd="brew install libmagic"
     fi
   elif [[ "$os_type" == "Linux" ]]; then # Linux
-    if ! dpkg -s libmagic1 &>/dev/null; then # Debian/Ubuntu
-      instal_libmagic_cmd="sudo apt-get update && sudo apt-get install -y libmagic1"
+    if command -v dpkg &> /dev/null; then # Debian/Ubuntu
+        if ! dpkg -s libmagic1 &>/dev/null; then
+            install_libmagic_cmd="sudo apt-get update && sudo apt-get install -y libmagic1"
+        fi
+    elif command -v rpm &> /dev/null; then # CentOS/RHEL/Fedora
+        if ! rpm -q file-libs &>/dev/null; then
+            if command -v dnf &> /dev/null; then
+                install_libmagic_cmd="sudo dnf install -y file-libs"
+            elif command -v yum &> /dev/null; then
+                install_libmagic_cmd="sudo yum install -y file-libs"
+            fi
+        fi
+    else
+        warn "Unsupported Linux distribution for automatic libmagic installation."
     fi
   elif [[ "$os_type" == MINGW64* || "$os_type" == CYGWIN* ]]; then # Windows
     warn "Windows support for libmagic is not automated. Please install it manually."
   fi
 
-  if [[ -n "$instal_libmagic_cmd" ]]; then
+  if [[ -n "$install_libmagic_cmd" ]]; then
     read -t 30 -p "libmagic is not found. Do you want to install it now? (y/n): " -r response
     echo
     if [[ "$response" =~ ^[Yy]$ ]]; then
       info "Installing libmagic..."
-      eval "$instal_libmagic_cmd" || fatal "Failed to install libmagic."
+      eval "$install_libmagic_cmd" || fatal "Failed to install libmagic."
     else
       fatal "libmagic is required. Please install it and retry."
     fi
