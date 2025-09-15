@@ -1,14 +1,21 @@
 from contextlib import AsyncExitStack
+import os
+from pathlib import Path
+import threading
+from typing import List, Optional, cast
 from threading import Lock
 from typing import List, Optional, Union, cast
 from urllib.parse import urljoin
 
 from mcp.client.session import ClientSession
+import mcp.types as mcp_types
 from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.client.websocket import websocket_client
-from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool as McpBaseTool
+from app.core.toolkit.mcp.types_compat import ContentBlock
+from mcp.types import Tool as McpBaseTool
+from mcp.types import TextContent, ImageContent, EmbeddedResource
 
 from app.core.common.type import McpTransportType
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
@@ -113,12 +120,21 @@ class McpConnection(ToolConnection):
         """Initialize STDIO transport connection using AsyncExitStack."""
         config = self.transport_config
         server_params = StdioServerParameters(
-            command=config.command, args=config.args or [], env=config.env
+            command=config.command,
+            args=config.args or [],
+            env=config.env,
+            # Be tolerant of any non-UTF8 bytes from child processes
+            encoding_error_handler="replace",
         )
         transport = await self._exit_stack.enter_async_context(stdio_client(server_params))
         read_stream, write_stream = transport
         self._session = await self._exit_stack.enter_async_context(
-            ClientSession(read_stream, write_stream)
+            ClientSession(
+                read_stream,
+                write_stream,
+                # Declare roots capability to avoid server fallback warnings
+                list_roots_callback=_empty_list_roots_callback,
+            )
         )
 
     async def _connect_sse(self):
@@ -135,7 +151,11 @@ class McpConnection(ToolConnection):
         )
         read_stream, write_stream = transport
         self._session = await self._exit_stack.enter_async_context(
-            ClientSession(read_stream, write_stream)
+            ClientSession(
+                read_stream,
+                write_stream,
+                list_roots_callback=_empty_list_roots_callback,
+            )
         )
 
     async def _connect_websocket(self):
@@ -146,7 +166,11 @@ class McpConnection(ToolConnection):
         transport = await self._exit_stack.enter_async_context(websocket_client(joined_url))
         read_stream, write_stream = transport
         self._session = await self._exit_stack.enter_async_context(
-            ClientSession(read_stream, write_stream)
+            ClientSession(
+                read_stream,
+                write_stream,
+                list_roots_callback=_empty_list_roots_callback,
+            )
         )
 
     async def _connect_streamable_http(self):
@@ -158,7 +182,11 @@ class McpConnection(ToolConnection):
         )
         read_stream, write_stream, _ = transport
         self._session = await self._exit_stack.enter_async_context(
-            ClientSession(read_stream, write_stream)
+            ClientSession(
+                read_stream,
+                write_stream,
+                list_roots_callback=_empty_list_roots_callback,
+            )
         )
 
     async def list_tools(self) -> List[McpBaseTool]:
@@ -179,3 +207,18 @@ class McpConnection(ToolConnection):
         await self.close()
         self._cached_tools = response.tools
         return self._cached_tools
+
+# --- helpers ---
+async def _empty_list_roots_callback(context) -> mcp_types.ListRootsResult | mcp_types.ErrorData:  # type: ignore[override]
+    """Return a valid project root for servers that request roots.
+
+    We return the current working directory as a file:// URI, which is
+    compatible with the filesystem MCP server and constrained by its
+    startup arguments (we launch it with '.' as the allowed directory).
+    """
+    try:
+        cwd = Path(os.getcwd()).resolve()
+        root_uri = cwd.as_uri()  # yields file:///<abs-path>
+        return mcp_types.ListRootsResult(roots=[mcp_types.Root(uri=root_uri, name=cwd.name)])
+    except Exception as e:
+        return mcp_types.ErrorData(code=mcp_types.INTERNAL_ERROR, message=str(e))

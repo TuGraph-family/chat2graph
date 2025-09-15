@@ -7,9 +7,17 @@ if [[ -n $pids ]]; then
   fatal "Chat2Graph server already started (pid: $pids)"
 fi
 
-# start MCP servers
-echo "Starting MCP servers..."
-bash start_mcp_server.sh
+# start MCP servers (unless disabled)
+disable_mcp="${CHAT2GRAPH_DISABLE_MCP}"
+case "$disable_mcp" in
+  1|true|TRUE|True|yes|YES|Yes|y|Y)
+    echo "MCP disabled via CHAT2GRAPH_DISABLE_MCP; skipping MCP servers."
+    ;;
+  *)
+    echo "Starting MCP servers..."
+    bash start_mcp_server.sh
+    ;;
+esac
 
 # prepare log path
 mkdir -p "$(dirname ${SERVER_LOG_PATH})"

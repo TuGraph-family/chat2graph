@@ -1,5 +1,6 @@
 import json
 from typing import List, Optional
+import os
 
 from mcp.types import Tool as McpBaseTool
 
@@ -37,6 +38,10 @@ class McpService(ToolGroup):
 
     async def list_tools(self) -> List[Tool]:
         """Get available tool list from MCP server, with caching support."""
+        # Allow disabling MCP entirely via env var
+        if os.getenv("CHAT2GRAPH_DISABLE_MCP", "").lower() in ("1", "true", "yes", "y"):  # noqa: E501
+            print("MCP disabled via CHAT2GRAPH_DISABLE_MCP; skipping MCP tool discovery")
+            return []
         connection = await self.create_connection()
         mcp_base_tools: List[McpBaseTool] = await connection.list_tools()
         tools: List[Tool] = []

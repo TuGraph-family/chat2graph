@@ -6,7 +6,10 @@ import tempfile
 from typing import Optional, Union
 from urllib.parse import urlparse
 
-import magic
+try:
+    import magic  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    magic = None  # type: ignore
 import requests
 
 from app.core.toolkit.tool import Tool

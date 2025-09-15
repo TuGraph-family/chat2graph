@@ -13,6 +13,13 @@ from app.core.service.message_service import MessageService
 from app.core.service.tool_connection_service import ToolConnectionService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator_config import OperatorConfig
+from app.core.common.system_env import SystemEnv
+
+# Lazy import enhanced operator hook; safe if missing
+try:
+    from app.core.memory.enhanced.hook import get_operator_hook
+except Exception:  # noqa: BLE001
+    get_operator_hook = None  # type: ignore[assignment]
 
 
 class Operator:
@@ -53,6 +60,16 @@ class Operator:
 
         # infer by the reasoner
         result = await reasoner.infer(task=task)
+
+        # post-execution hook to persist operator experience (best-effort)
+        try:
+            if SystemEnv.ENABLE_MEMFUSE and get_operator_hook:  # type: ignore[truthy-bool]
+                hook = get_operator_hook()  # type: ignore[operator]
+                await hook.post_execute(task, result)
+        except Exception as e:  # noqa: BLE001
+            # swallow hook errors to keep operator stable
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] operator post_execute hook failed: {e}")
 
         # destroy MCP connections for the operator
         tool_connection_service: ToolConnectionService = ToolConnectionService.instance
