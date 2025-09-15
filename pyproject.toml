@@ -25,9 +25,8 @@ pyfiglet = "^1.0.3"
 playwright = "^1.53.0"
 python-magic = "^0.4.27"
 google-generativeai = "^0.8.5"
-google-genai= "^1.36.0"
+google-genai = "^1.36.0"
 datasets = "<=3.6.0"  # required by benchmark of huggingface
-pysqlite3-binary = "^0.5.3"  # required by dbgpt for SQLite support
 
 [[tool.poetry.source]]
 name = "PyPI"
