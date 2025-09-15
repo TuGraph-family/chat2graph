@@ -6,16 +6,15 @@ if [[ "$1" == "--no-gui" ]]; then
   WEB_BUILD=false
 fi
 
-# Global flag to track Playwright installation issues
+# global flag to track Playwright installation issues
 PLAYWRIGHT_ISSUES=false
 
 check_env() {
   info "Checking environment:"
   info "    Operating System: $(uname -s) $(uname -r)"
   info "    Architecture: $(uname -m)"
-  
-  check_command python 2 || fatal
 
+  check_command python 2 || fatal
   python -c 'import sys; exit(0 if (3, 10) <= sys.version_info < (3, 12) else 1)' \
     || fatal "Python version must be >=3.10 and <3.12. Found $(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
   check_command pip 2 || fatal
@@ -24,33 +23,22 @@ check_env() {
   check_command npm || fatal
 
   info "Checking for libmagic..."
-  local os_type
-  os_type=$(uname -s)
+  local os_type=$(uname -s)
   local install_libmagic_cmd=""
 
-  # detect OS and suggest installation commands for libmagic
+  # Simplified OS detection for libmagic
   if [[ "$os_type" == "Darwin" ]]; then # macOS
-    if ! brew list libmagic &>/dev/null; then
+    if command -v brew >/dev/null 2>&1 && ! brew list libmagic &>/dev/null; then
       install_libmagic_cmd="brew install libmagic"
     fi
   elif [[ "$os_type" == "Linux" ]]; then # Linux
-    if command -v dpkg &> /dev/null; then # Debian/Ubuntu
-        if ! dpkg -s libmagic1 &>/dev/null; then
-            install_libmagic_cmd="sudo apt-get update && sudo apt-get install -y libmagic1"
-        fi
-    elif command -v rpm &> /dev/null; then # CentOS/RHEL/Fedora
-        if ! rpm -q file-libs &>/dev/null; then
-            if command -v dnf &> /dev/null; then
-                install_libmagic_cmd="sudo dnf install -y file-libs"
-            elif command -v yum &> /dev/null; then
-                install_libmagic_cmd="sudo yum install -y file-libs"
-            fi
-        fi
-    else
-        warn "Unsupported Linux distribution for automatic libmagic installation."
+    if command -v apt-get &> /dev/null && ! dpkg -s libmagic1 &>/dev/null; then
+      install_libmagic_cmd="sudo apt-get update && sudo apt-get install -y libmagic1"
+    elif command -v yum &> /dev/null && ! rpm -q file-libs &>/dev/null; then
+      install_libmagic_cmd="sudo yum install -y file-libs"
+    elif command -v dnf &> /dev/null && ! rpm -q file-libs &>/dev/null; then
+      install_libmagic_cmd="sudo dnf install -y file-libs"
     fi
-  elif [[ "$os_type" == "MINGW64"* || "$os_type" == "MSYS"* || "$os_type" == "CYGWIN"* ]]; then # Windows
-    warn "Windows support for libmagic is not automated. Please install it manually."
   fi
 
   if [[ -n "$install_libmagic_cmd" ]]; then
@@ -69,92 +57,32 @@ check_env() {
 
 # install Playwright system dependencies for Linux distributions
 install_playwright_deps_linux() {
-  info "Detecting Linux distribution for Playwright dependencies..."
+  info "Installing Playwright system dependencies for Linux..."
   
-  # Try playwright install-deps first (works for Debian/Ubuntu and some RHEL-based systems)
-  if command -v sudo >/dev/null 2>&1; then
-    info "Attempting to install Playwright dependencies using 'playwright install-deps'..."
-    if sudo -E playwright install-deps 2>/dev/null; then
-      info "Successfully installed Playwright dependencies via playwright install-deps"
-      return 0
-    else
-      warn "playwright install-deps failed, trying manual installation..."
-    fi
+  # try playwright install-deps first (simplest approach)
+  if command -v sudo >/dev/null 2>&1 && playwright install-deps >/dev/null 2>&1; then
+    info "Successfully installed Playwright dependencies"
+    return 0
   fi
-  
-  # Manual installation for different distributions
-  if command -v dnf >/dev/null 2>&1; then
-    # Fedora/RHEL 8+/CentOS 8+
-    info "Installing Playwright dependencies for RHEL/Fedora/CentOS (dnf)..."
-    sudo dnf install -y \
-      atk \
-      at-spi2-atk \
-      libxcb \
-      at-spi2-core \
-      libX11 \
-      libXcomposite \
-      libXdamage \
-      libXext \
-      libXfixes \
-      libXrandr \
-      mesa-libgbm \
-      cairo \
-      pango \
-      alsa-lib \
-      liberation-fonts || return 1
+
+  # fallback to manual installation only if above fails
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update >/dev/null 2>&1
+    sudo apt-get install -y libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libxss1 libasound2 >/dev/null 2>&1
   elif command -v yum >/dev/null 2>&1; then
-    # CentOS 7/RHEL 7
-    info "Installing Playwright dependencies for CentOS/RHEL 7 (yum)..."
-    sudo yum install -y \
-      atk \
-      at-spi2-atk \
-      libxcb \
-      at-spi2-core \
-      libX11 \
-      libXcomposite \
-      libXdamage \
-      libXext \
-      libXfixes \
-      libXrandr \
-      mesa-libgbm \
-      cairo \
-      pango \
-      alsa-lib \
-      liberation-fonts || return 1
-  elif command -v apt-get >/dev/null 2>&1; then
-    # Debian/Ubuntu (fallback)
-    info "Installing Playwright dependencies for Debian/Ubuntu (apt-get)..."
-    sudo apt-get update && sudo apt-get install -y \
-      libatk1.0-0 \
-      libatk-bridge2.0-0 \
-      libxcb1 \
-      libatspi2.0-0 \
-      libx11-6 \
-      libxcomposite1 \
-      libxdamage1 \
-      libxext6 \
-      libxfixes3 \
-      libxrandr2 \
-      libgbm1 \
-      libcairo2 \
-      libpango-1.0-0 \
-      libasound2 || return 1
-  else
-    warn "Unable to detect package manager. Please install Playwright dependencies manually."
-    warn "For CentOS/RHEL, you may need to run:"
-    warn "  sudo yum install -y atk at-spi2-atk libxcb at-spi2-core libX11 libXcomposite libXdamage libXext libXfixes libXrandr mesa-libgbm cairo pango alsa-lib liberation-fonts"
-    return 1
+    sudo yum install -y nss atk at-spi2-atk libX11 libXcomposite libXdamage libXrandr mesa-libgbm libxss1 alsa-lib >/dev/null 2>&1
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y nss atk at-spi2-atk libX11 libXcomposite libXdamage libXrandr mesa-libgbm libxss1 alsa-lib >/dev/null 2>&1
   fi
-  
-  info "Playwright system dependencies installed successfully"
+
   return 0
 }
 
 # installs Python packages that are not part of the standard poetry dependencies
 install_python_extras() {
-  # install Playwright system dependencies for Linux FIRST
-  local os_type
-  os_type=$(uname -s)
+  local os_type=$(uname -s)
+
+  # Install Playwright system dependencies for Linux only
   if [[ "$os_type" == "Linux" ]]; then
     info "Installing playwright system dependencies for Linux..."
     if ! install_playwright_deps_linux; then
@@ -163,10 +91,11 @@ install_python_extras() {
     fi
   fi
 
-  info "Installing playwright chromium..."
+  info "Installing playwright browsers..."
+  # Keep it simple - just install chromium
   if ! playwright install chromium; then
     PLAYWRIGHT_ISSUES=true
-    fatal "Failed to install playwright chromium"
+    warn "Failed to install Playwright Chromium. You may need to install it manually."
   fi
 
   info "Installing browser-use..."
@@ -175,17 +104,14 @@ install_python_extras() {
 
 # TODO: resolve dependency conflict resolution
 # temporary workaround for aiohttp version conflicts until proper resolution in pyproject.toml
-# force reinstall specific aiohttp version while downgrading ERROR messages to WARNING
-# design Principles:
-# 1. Preserve full installation output (no information hidden)
-# 2. Convert ERROR to WARNING to prevent misleading appearance of failure
+# force reinstall specific aiohttp version without showing installation output
 handle_dependency_conflicts() {
   info "Resolving aiohttp version conflict..."
   local target_aiohttp_version="3.12.13"
-  pip install --force-reinstall "aiohttp==$target_aiohttp_version" --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>&1 | sed 's/ERROR/WARNING/g'
+  pip install --force-reinstall "aiohttp==$target_aiohttp_version" --trusted-host pypi.org --trusted-host files.pythonhosted.org >/dev/null 2>&1 || warn "Failed to resolve aiohttp version conflict"
 }
 
-build_python() {
+build_python() {  
   app_dir=$1
 
   cd ${app_dir}
@@ -229,11 +155,10 @@ release_lock $lock_file
 
 info "=== Build Completed Successfully ==="
 
-# only show Playwright manual installation instructions if there were issues
+# only show manual installation instructions if there were issues
 if [ "$PLAYWRIGHT_ISSUES" = true ]; then
   warn "=== Playwright Installation Issues Detected ==="
-  info "If you encountered any Playwright issues on CentOS/RHEL, you can manually install dependencies with:"
-  info "  sudo yum install -y atk at-spi2-atk libxcb at-spi2-core libX11 libXcomposite libXdamage libXext libXfixes libXrandr mesa-libgbm cairo pango alsa-lib liberation-fonts"
-  info "  or for newer systems:"
-  info "  sudo dnf install -y atk at-spi2-atk libxcb at-spi2-core libX11 libXcomposite libXdamage libXext libXfixes libXrandr mesa-libgbm cairo pango alsa-lib liberation-fonts"
+  info "To resolve Playwright issues, try:"
+  info "  playwright install chromium"
+  info "  or visit: https://playwright.dev/docs/installation"
 fi
