@@ -51,7 +51,7 @@ class MonoModelReasoner(Reasoner):
         sys_prompt = self._format_system_prompt(task=task)
         # logging
         if SystemEnv.PRINT_SYSTEM_PROMPT:
-            print(f"\033[38;5;245mSystem:\n{sys_prompt}\033[0m\n")
+            print(f"\033[38;5;245mjob_id: {task.job.id}\nSystem:\n{sys_prompt}\033[0m\n")
 
         # trigger the reasoning process
         init_message = ModelMessage(
@@ -80,7 +80,7 @@ class MonoModelReasoner(Reasoner):
 
             # TODO: use standard logging instead of print
             if print_messages:
-                print(f"\033[92mActor:\n{response.get_payload()}\033[0m\n")
+                print(f"\033[92mjob_id: {task.job.id}\nModel:\n{response.get_payload()}\033[0m\n")
                 func_call_results = response.get_function_calls()
                 if func_call_results:
                     print(

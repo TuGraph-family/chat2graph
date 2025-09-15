@@ -1,7 +1,6 @@
-from typing import List
+from typing import List, Optional
 from unittest.mock import AsyncMock
 
-from git import Optional
 import pytest
 
 from app.core.common.type import MessageSourceType

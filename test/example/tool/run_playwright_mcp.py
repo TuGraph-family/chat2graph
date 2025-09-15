@@ -20,17 +20,17 @@ async def main():
     browse_action = Action(
         id="browse_webpage",
         name="Browse Webpage",
-        description="Uses a web browsing tool to visit a given URL and retrieve its raw HTML content for analysis.",
+        description="Uses a web browsing tool to visit a given URL and retrieve its raw HTML content for analysis.",  # noqa: E501
     )
     analyze_action = Action(
         id="analyze_content",
         name="Analyze Content",
-        description="Intelligently analyzes provided text or HTML content to find, extract, and understand specific information relevant to the user's goal.",
+        description="Intelligently analyzes provided text or HTML content to find, extract, and understand specific information relevant to the user's goal.",  # noqa: E501
     )
     generate_action = Action(
         id="generate_response",
         name="Generate Final Response",
-        description="Synthesizes all gathered and analyzed information to formulate a final, comprehensive answer for the user.",
+        description="Synthesizes all gathered and analyzed information to formulate a final, comprehensive answer for the user.",  # noqa: E501
     )
     # make sure the MCP server is started and running on the specified port
     # e.g. npx @playwright/mcp@latest --port 8931
@@ -87,8 +87,8 @@ Your goal is to be efficient and accurate. Directly address the user's request i
     )
     operator = Operator(config=operator_config)
 
-    job_goal = "Visit the official OpenAI website, find the company's mission statement, and report it back verbatim."
-    job_context = """The user is asking for specific, factual information from a company's homepage. The primary URL to start with is https://openai.com. The agent must first browse this page, then intelligently search the retrieved content for phrases like 'mission', 'our mission', 'our goal', 'about us' etc., to locate the required information."""
+    job_goal = "Visit the official OpenAI website, find the company's mission statement, and report it back verbatim."  # noqa: E501
+    job_context = """The user is asking for specific, factual information from a company's homepage. The primary URL to start with is https://openai.com. The agent must first browse this page, then intelligently search the retrieved content for phrases like 'mission', 'our mission', 'our goal', 'about us' etc., to locate the required information."""  # noqa: E501
     job = SubJob(
         id="job_find_openai_mission",
         session_id="session_agentic_test",

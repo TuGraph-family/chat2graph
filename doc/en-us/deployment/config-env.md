@@ -137,41 +137,6 @@ Chat2Graph Request
 
 **Code implementation reference:** `lite_llm_client.py`
 
-### 1.2. AISuite Configuration Rules (No longer updated)
-
-> **Note:** AISuite project hasn't been updated for months, recommend using LiteLLM
-
-#### How it works:
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Chat2Graph     │───▶│    AISuite      │───▶│  Model Provider │
-│  Application    │    │    Client       │    │  (OpenAI/etc)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                            │
-                            ▼
-                       Hardcoded config routing
-```
-
-#### Model Name Format
-
-Format: `provider:model_name` (Note: use colon, not slash)
-
-**Examples:**
-
-- **OpenAI**: `openai:gpt-4o`, `openai:gpt-3.5-turbo`
-- **Anthropic**: `anthropic:claude-sonnet-4-20250514`
-- **Google**: `google:gemini-pro`
-- **Custom deployment**: `openai:custom-model-name`
-- **SiliconFlow (Third-party Platform)**: `openai:deepseek-ai/DeepSeek-V3`
-
-#### Configuration Limitations
-
-- Does not support dynamic configuration via environment variables, poor flexibility
-- Can only support new providers or endpoints through code modification
-
-**Code implementation reference:** `aisuite_client.py`
-
 ## 2. Embedding Model Configuration
 
 The embedding model uses an independent configuration system, not dependent on `MODEL_PLATFORM_TYPE`.

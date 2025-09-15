@@ -137,41 +137,6 @@ Chat2Graph Request
 
 **代码实现参考：** `lite_llm_client.py`
 
-### 1.2. AISuite 配置规则（不再更新）
-
-> **注意：** AISuite 项目已数月未更新，建议使用 LiteLLM
-
-#### 工作原理
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Chat2Graph     │───▶│    AISuite      │───▶│  Model Provider │
-│  Application    │    │    Client       │    │  (OpenAI/etc)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                            │
-                            ▼
-                       Hardcoded config routing
-```
-
-#### 模型名称格式
-
-格式: `provider:model_name`（注意：使用冒号，不是斜杠）
-
-**示例:**
-
-- **OpenAI**: `openai:gpt-4o`, `openai:gpt-3.5-turbo`
-- **Google**: `google:gemini-2.5-pro`
-- **Anthropic**: `anthropic:claude-sonnet-4-20250514`
-- **自定义部署**: `openai:custom-model-name`
-- **硅基流动（第三方平台）**: `openai:deepseek-ai/DeepSeek-V3`
-
-#### 配置限制
-
-- 不支持通过环境变量进行动态配置，灵活性差
-- 只能通过代码修改来支持新的提供商或端点
-
-**代码实现参考:** `aisuite_client.py`
-
 ## 2. 嵌入模型配置
 
 嵌入模型使用独立的配置系统，不依赖于 `MODEL_PLATFORM_TYPE`。
