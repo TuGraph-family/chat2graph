@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && source utils.sh || exit
 
-WEB_BUILD=true
+WEB_BUILD=false
 if [[ "$1" == "--no-gui" ]]; then
-  WEB_BUILD=false
+  WEB_BUILD=true
 fi
 
 # global flag to track Playwright installation issues
@@ -63,30 +63,60 @@ install_alinux_browsers() {
   export PLAYWRIGHT_BROWSERS_PATH="/opt/playwright"
   
   # create necessary directories
-  sudo mkdir -p /opt/playwright
+  if ! sudo mkdir -p /opt/playwright; then
+    warn "Failed to create /opt/playwright directory"
+    return 1
+  fi
+
   sudo chown -R $(whoami):$(whoami) /opt/playwright 2>/dev/null || true
+  
+  # check if wget and unzip are available
+  if ! command -v wget >/dev/null 2>&1; then
+    warn "wget not found, installing..."
+    sudo yum install -y wget >/dev/null 2>&1 || return 1
+  fi
+  
+  if ! command -v unzip >/dev/null 2>&1; then
+    warn "unzip not found, installing..."
+    sudo yum install -y unzip >/dev/null 2>&1 || return 1
+  fi
   
   # try to download chromium directly
   local chromium_url="https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1097615/chrome-linux.zip"
   local temp_dir="/tmp/playwright-chromium"
   
   info "    Attempting to download Chromium directly for alinux..."
-  if command -v wget >/dev/null 2>&1; then
-    mkdir -p "$temp_dir"
-    if wget -q -O "$temp_dir/chrome-linux.zip" "$chromium_url" 2>/dev/null; then
-      cd "$temp_dir"
-      if command -v unzip >/dev/null 2>&1 && unzip -q chrome-linux.zip; then
-        sudo mkdir -p /opt/playwright/chromium-1097615
-        sudo cp -r chrome-linux/* /opt/playwright/chromium-1097615/ 2>/dev/null || true
-        sudo chmod +x /opt/playwright/chromium-1097615/chrome 2>/dev/null || true
+  
+  # clean up any existing temp directory
+  rm -rf "$temp_dir"
+  mkdir -p "$temp_dir"
+  
+  info "    Downloading Chromium from $chromium_url..."
+  if wget --timeout=30 --tries=3 -O "$temp_dir/chrome-linux.zip" "$chromium_url"; then
+    info "    Download completed, extracting..."
+    local original_dir=$(pwd)
+    cd "$temp_dir"
+    if unzip -q chrome-linux.zip; then
+      info "    Extraction completed, installing to /opt/playwright..."
+      if sudo mkdir -p /opt/playwright/chromium-1097615 && \
+         sudo cp -r chrome-linux/* /opt/playwright/chromium-1097615/ && \
+         sudo chmod +x /opt/playwright/chromium-1097615/chrome; then
         info "    Successfully installed Chromium manually for alinux"
+        cd "$original_dir"
         rm -rf "$temp_dir"
         return 0
+      else
+        warn "Failed to copy or set permissions for Chromium"
       fi
+    else
+      warn "Failed to extract Chromium archive"
     fi
-    rm -rf "$temp_dir"
+    cd "$original_dir"
+  else
+    warn "Failed to download Chromium from $chromium_url"
   fi
   
+  rm -rf "$temp_dir"
   return 1
 }
 
@@ -158,6 +188,7 @@ install_playwright_deps_linux() {
 # installs Python packages that are not part of the standard poetry dependencies
 install_python_extras() {
   local os_type=$(uname -s)
+  local work_dir=$(pwd)
 
   # install Playwright system dependencies for Linux only
   if [[ "$os_type" == "Linux" ]]; then
@@ -224,7 +255,7 @@ build_python() {
   handle_dependency_conflicts
 }
 
-WEB_BUILD() {
+build_web() {
   project_dir=$1
   web_dir=${project_dir}/web
   server_web_dir=${project_dir}/app/server/web
@@ -250,8 +281,8 @@ info "Build configuration: WEB_BUILD=$WEB_BUILD"
 
 check_env
 build_python $project_root
-if [ "$WEB_BUILD" = true ]; then
-  WEB_BUILD $project_root
+if [ "$WEB_BUILD" = false ]; then
+  build_web $project_root
 fi
 
 release_lock $lock_file
