@@ -178,21 +178,16 @@ install_python_extras() {
   if [[ "$distro_id" == "alinux" ]]; then
     info "    Applying alinux-specific browser installation..."
 
-    # try standard installation first
-    if python -m playwright install chromium >/dev/null 2>&1; then
-      info "    Successfully installed Playwright Chromium via Python"
-    elif install_alinux_browsers; then
+    # for alinux, use our custom installation method directly
+    if install_alinux_browsers; then
       info "    Successfully installed browsers using alinux-specific method"
+    elif command -v chromium-browser >/dev/null 2>&1; then
+      info "    Using system chromium-browser as fallback"
+    elif command -v google-chrome >/dev/null 2>&1; then
+      info "    Using system google-chrome as fallback"
     else
-      # last resort: try to use system chromium if available
-      if command -v chromium-browser >/dev/null 2>&1; then
-        info "    Using system chromium-browser as fallback"
-      elif command -v google-chrome >/dev/null 2>&1; then
-        info "    Using system google-chrome as fallback"
-      else
-        PLAYWRIGHT_ISSUES=true
-        warn "Failed to install Playwright browsers on alinux. Manual installation may be required."
-      fi
+      PLAYWRIGHT_ISSUES=true
+      warn "Failed to install Playwright browsers on alinux. Manual installation may be required."
     fi
   else
     # standard installation for other distributions
