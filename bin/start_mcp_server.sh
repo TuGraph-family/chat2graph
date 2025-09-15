@@ -34,7 +34,7 @@ if [ ${#mcp_server_configs[@]} -eq 0 ]; then
     exit 0
 fi
 
-# start each MCP tool
+# start each MCP server
 for config in "${mcp_server_configs[@]}"; do
     mcp_name=$(get_mcp_name "$config")
     port=$(get_mcp_port "$config")
@@ -48,7 +48,7 @@ for config in "${mcp_server_configs[@]}"; do
 
     # check if the process is already running
     if pgrep -f "$command --port $port" > /dev/null; then
-        info "${mcp_name} MCP tool is already running."
+        info "${mcp_name} MCP server is already running."
         continue
     fi
 
@@ -59,9 +59,9 @@ for config in "${mcp_server_configs[@]}"; do
     sleep 2
 
     if ps -p $pid > /dev/null; then
-        info "${mcp_name} MCP tool started successfully! (pid: $pid)"
+        info "${mcp_name} MCP server started successfully! (pid: $pid)"
     else
-        error "Failed to start ${mcp_name} MCP tool. Check the log for details: ${new_mcp_log_path}"
+        error "Failed to start ${mcp_name} MCP server. Check the log for details: ${new_mcp_log_path}"
     fi
 done
 
