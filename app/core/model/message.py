@@ -111,7 +111,7 @@ class WorkflowMessage(Message):
     def __init__(
         self,
         payload: Dict[str, Any],
-        job_id=str,
+        job_id: str,
         artifact_ids: Optional[List[str]] = None,
         timestamp: Optional[int] = None,
         id: Optional[str] = None,
