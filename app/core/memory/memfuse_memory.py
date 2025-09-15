@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from app.core.common.system_env import SystemEnv
 from app.core.memory.reasoner_memory import ReasonerMemory
@@ -119,7 +119,7 @@ class MemFuseMemory(ReasonerMemory):
         mem = await self._ensure_context()
         if mem is None:
             if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] MemFuseMemory.aretrieve: context unavailable, returning empty results")
+                print("[memory] MemFuseMemory.aretrieve: context unavailable, returning empty results")
             return []
         try:
             # For operator retrieval, include metadata to filter by task and operator
@@ -127,7 +127,7 @@ class MemFuseMemory(ReasonerMemory):
             if is_operator:
                 query_params["metadata"] = {"task": self._operator_id}
                 if SystemEnv.PRINT_MEMORY_LOG:
-                    print(f"[memory] MemFuseMemory.aretrieve: using metadata filter for operator context")
+                    print("[memory] MemFuseMemory.aretrieve: using metadata filter for operator context")
 
             resp = await mem.query(**query_params)
             results = resp.get("data", {}).get("results", [])
@@ -171,7 +171,7 @@ class MemFuseMemory(ReasonerMemory):
         return []
 
     async def awrite_turn(
-        self, sys_prompt: str, messages: List[ModelMessage], job_id: str, operator_id: str, is_operator: bool = False
+        self, sys_prompt: str, messages: List[ModelMessage], job_id: str, operator_id: str, is_operator: bool = False, extra_metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         if not SystemEnv.ENABLE_MEMFUSE:
             return None
@@ -185,40 +185,39 @@ class MemFuseMemory(ReasonerMemory):
         mem = await self._ensure_context()
         if mem is None:
             if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] MemFuseMemory.awrite_turn: context unavailable, write skipped")
+                print("[memory] MemFuseMemory.awrite_turn: context unavailable, write skipped")
             return None
         try:
-            oa_messages = self._to_openai_messages(sys_prompt, messages)
+            # For operator operations, include metadata; for reasoner operations, exclude it
+            metadata = None
+            if is_operator:
+                metadata = {"task": operator_id}
+                # Add extra metadata if provided
+                if extra_metadata:
+                    metadata.update(extra_metadata)
+                    # Log explicitly when task_eos is being set
+                    if extra_metadata.get("task_eos"):
+                        if SystemEnv.PRINT_MEMORY_LOG:
+                            print(f"[memory] MemFuseMemory.awrite_turn: *** WRITING WITH task_eos=true *** for job={job_id} op={operator_id}")
+
+            # Convert to OpenAI format with embedded metadata
+            oa_messages = self._to_openai_messages(sys_prompt, messages, metadata)
 
             if SystemEnv.PRINT_MEMORY_LOG:
                 print(f"[memory] MemFuseMemory.awrite_turn: converted to {len(oa_messages)} OpenAI format messages")
                 for i, oa_msg in enumerate(oa_messages[:2]):  # Show first 2 messages
                     content_preview = oa_msg.get("content", "")[:100] + "..." if len(oa_msg.get("content", "")) > 100 else oa_msg.get("content", "")
-                    print(f"[memory] MemFuseMemory.awrite_turn: oa_message[{i}] role={oa_msg.get('role', 'unknown')} content='{content_preview}'")
+                    metadata_info = f" metadata={oa_msg.get('metadata', {})}" if oa_msg.get('metadata') else ""
+                    print(f"[memory] MemFuseMemory.awrite_turn: oa_message[{i}] role={oa_msg.get('role', 'unknown')} content='{content_preview}'{metadata_info}")
                 if len(oa_messages) > 2:
                     print(f"[memory] MemFuseMemory.awrite_turn: ... and {len(oa_messages) - 2} more messages")
 
-            # For operator operations, include metadata; for reasoner operations, exclude it
-            if is_operator:
-                metadata = {"task": operator_id}
-                if SystemEnv.PRINT_MEMORY_LOG:
-                    print(f"[memory] MemFuseMemory.awrite_turn: using metadata for operator context: {metadata}")
-                try:
-                    await mem.add(oa_messages, metadata=metadata)  # type: ignore[arg-type]
-                    if SystemEnv.PRINT_MEMORY_LOG:
-                        print(f"[memory] MemFuseMemory.awrite_turn: successfully added {len(oa_messages)} messages to MemFuse with metadata")
-                except TypeError:
-                    # Older SDKs may not accept metadata; try without it
-                    await mem.add(oa_messages)  # type: ignore[arg-type]
-                    if SystemEnv.PRINT_MEMORY_LOG:
-                        print(f"[memory] MemFuseMemory.awrite_turn: successfully added {len(oa_messages)} messages to MemFuse (metadata not supported)")
-            else:
-                # Reasoner operations: no metadata
-                if SystemEnv.PRINT_MEMORY_LOG:
-                    print(f"[memory] MemFuseMemory.awrite_turn: no metadata for reasoner context")
-                await mem.add(oa_messages)  # type: ignore[arg-type]
-                if SystemEnv.PRINT_MEMORY_LOG:
-                    print(f"[memory] MemFuseMemory.awrite_turn: successfully added {len(oa_messages)} messages to MemFuse (no metadata)")
+            # Add messages to MemFuse with embedded metadata
+            await mem.add(oa_messages)  # type: ignore[arg-type]
+            if SystemEnv.PRINT_MEMORY_LOG:
+                context_type = "operator" if is_operator else "reasoner"
+                metadata_msg = " with embedded metadata" if metadata else " (no metadata)"
+                print(f"[memory] MemFuseMemory.awrite_turn: successfully added {len(oa_messages)} messages to MemFuse{metadata_msg} for {context_type} context")
         except Exception as e:  # noqa: BLE001
             if SystemEnv.PRINT_MEMORY_LOG:
                 print(f"[memory] MemFuse add error: {e}")
@@ -238,11 +237,20 @@ class MemFuseMemory(ReasonerMemory):
         return None
 
     # ------------------------ Helpers ------------------------
-    def _to_openai_messages(self, sys_prompt: str, messages: List[ModelMessage]) -> List[dict]:
+    def _to_openai_messages(self, sys_prompt: str, messages: List[ModelMessage], metadata: Optional[Dict[str, Any]] = None) -> List[dict]:
         max_len = SystemEnv.MEMFUSE_MAX_CONTENT_LENGTH or 10000
         out: List[dict] = [{"role": "system", "content": self._truncate(sys_prompt, max_len)}]
+
+        # Add metadata to system message if provided
+        if metadata:
+            out[0]["metadata"] = metadata
+
         for m in messages:
-            out.append({"role": "assistant", "content": self._truncate(m.get_payload(), max_len)})
+            msg_dict = {"role": "assistant", "content": self._truncate(m.get_payload(), max_len)}
+            # Add metadata to each message if provided
+            if metadata:
+                msg_dict["metadata"] = metadata
+            out.append(msg_dict)
         return out
 
     @staticmethod

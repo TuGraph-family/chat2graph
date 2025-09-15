@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List
 
 from app.core.common.system_env import SystemEnv
 from app.core.env.insight.insight import TextInsight
@@ -89,7 +89,7 @@ class MemFuseReasonerHook(ReasonerHook):
                     print(f"[memory] pre_reasoning inject failed: {e}")
         else:
             if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] pre_reasoning: no snippets retrieved, task unchanged")
+                print("[memory] pre_reasoning: no snippets retrieved, task unchanged")
 
         return task
 
@@ -180,6 +180,95 @@ class NoopOperatorHook(OperatorHook):
 
 
 class MemFuseOperatorHook(OperatorHook):
+    @staticmethod
+    def _is_operator_completing(task: Task, operation_result: str) -> bool:
+        """Check if the current operator is completing its specific task.
+
+        This focuses on individual operator completion rather than overall job completion.
+        An operator is considered complete when it has finished its designated work,
+        regardless of whether the job continues with other operators.
+
+        Args:
+            task: The task being executed by this operator
+            operation_result: The result/output from the operator execution
+
+        Returns:
+            bool: True if this operator has completed its work, False otherwise
+        """
+        if not task.operator_config or not operation_result:
+            return False
+
+        job_id = task.job.id
+        operator_id = task.operator_config.id
+
+        try:
+            completion_indicators = []
+
+            # 1. Check for explicit completion signals in the result
+            completion_signals = [
+                "TASK_DONE",
+                "task is complete",
+                "task has been completed",
+                "successfully completed",
+                "implementation and validated",
+                "<deliverable>",
+                "</deliverable>",
+                "final_output",
+                "</final_output>"
+            ]
+
+            result_lower = operation_result.lower()
+            for signal in completion_signals:
+                if signal.lower() in result_lower:
+                    completion_indicators.append(f"completion_signal_{signal.replace(' ', '_')}")
+
+            # 2. Check for structured completion markers
+            if "<deliverable>" in operation_result and "</deliverable>" in operation_result:
+                completion_indicators.append("structured_deliverable")
+
+            if "final_output" in result_lower and ("</final_output>" in operation_result or "deliverable" in result_lower):
+                completion_indicators.append("final_output_marker")
+
+            # 3. Assume operator completion if result is substantial and contains conclusion-like patterns
+            if len(operation_result.strip()) > 100:  # Substantial result
+                conclusion_patterns = [
+                    "in conclusion",
+                    "to summarize",
+                    "summary:",
+                    "result:",
+                    "output:",
+                    "final",
+                    "complete",
+                    "done",
+                    "finished"
+                ]
+
+                for pattern in conclusion_patterns:
+                    if pattern in result_lower:
+                        completion_indicators.append(f"conclusion_pattern_{pattern.replace(' ', '_')}")
+                        break  # Only count one conclusion pattern
+
+            # 4. For single-operator tasks, assume completion after execution
+            if completion_indicators:
+                completion_indicators.append("operator_task_completion")
+
+            is_completing = len(completion_indicators) > 0
+
+            if SystemEnv.PRINT_MEMORY_LOG:
+                if is_completing:
+                    indicators_str = ", ".join(completion_indicators)
+                    print(f"[memory] operator completion detected: job={job_id} op={operator_id} indicators=[{indicators_str}] completing=True")
+                else:
+                    result_preview = operation_result[:200].replace('\n', ' ') + ("..." if len(operation_result) > 200 else "")
+                    print(f"[memory] operator completion check: job={job_id} op={operator_id} result='{result_preview}' completing=False")
+
+            return is_completing
+
+        except Exception as e:  # noqa: BLE001
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] operator completion check failed for job={job_id} op={operator_id}: {e}")
+            return False
+
     async def pre_execute(self, task: Task) -> Task:
         if not SystemEnv.ENABLE_MEMFUSE:
             return task
@@ -238,7 +327,7 @@ class MemFuseOperatorHook(OperatorHook):
                     print(f"[memory] operator pre_execute experience injection failed: {e}")
         else:
             if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] operator pre_execute: no experience retrieved, task unchanged")
+                print("[memory] operator pre_execute: no experience retrieved, task unchanged")
 
         return task
 
@@ -280,23 +369,36 @@ class MemFuseOperatorHook(OperatorHook):
             mem_service = MemoryService()
             mem = mem_service.get_or_create_operator_memory(job_id, operator_id)
 
+            # Check if this operator is completing its task to add task_eos flag
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] operator post_execute: checking operator completion for job={job_id} op={operator_id}")
+            is_completing = MemFuseOperatorHook._is_operator_completing(task, result)
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] operator post_execute: operator completion check result: is_completing={is_completing}")
+
+            # Prepare extra metadata for MemFuse write
+            extra_metadata = {"task_eos": True} if is_completing else None
+            if SystemEnv.PRINT_MEMORY_LOG and extra_metadata:
+                print(f"[memory] operator post_execute: will write with extra_metadata={extra_metadata}")
+
             # Check if MemFuseMemory supports is_operator parameter
             awrite_turn = getattr(mem, "awrite_turn", None)
             if callable(awrite_turn):  # type: ignore[truthy-function]
-                # Try with is_operator parameter first
+                # Use enhanced awrite_turn with extra_metadata parameter
                 try:
+                    await awrite_turn(sys_prompt, [msg], job_id, operator_id, is_operator=True, extra_metadata=extra_metadata)  # type: ignore[misc]
+                    if SystemEnv.PRINT_MEMORY_LOG:
+                        status_msg = " with task_eos=true" if is_completing else ""
+                        print(f"[memory] operator post_execute: successfully wrote experience to MemFuse{status_msg} for job={job_id} op={operator_id}")
+                except TypeError:
+                    # Fallback for older interface that doesn't support extra_metadata
                     await awrite_turn(sys_prompt, [msg], job_id, operator_id, is_operator=True)  # type: ignore[misc]
                     if SystemEnv.PRINT_MEMORY_LOG:
-                        print(f"[memory] operator post_execute: successfully wrote experience to MemFuse with metadata")
-                except TypeError:
-                    # Fallback for older interface
-                    await awrite_turn(sys_prompt, [msg], job_id, operator_id)  # type: ignore[misc]
-                    if SystemEnv.PRINT_MEMORY_LOG:
-                        print(f"[memory] operator post_execute: successfully wrote experience to MemFuse (no metadata)")
+                        print(f"[memory] operator post_execute: successfully wrote experience to MemFuse (no extra metadata support) for job={job_id} op={operator_id}")
             else:
                 mem.write_turn(sys_prompt, [msg], job_id, operator_id)
                 if SystemEnv.PRINT_MEMORY_LOG:
-                    print(f"[memory] operator post_execute: successfully wrote experience to MemFuse (sync)")
+                    print(f"[memory] operator post_execute: successfully wrote experience to MemFuse (sync) for job={job_id} op={operator_id}")
         except Exception as e:  # noqa: BLE001
             if SystemEnv.PRINT_MEMORY_LOG:
                 print(f"[memory] operator post_execute write failed: {e}")
