@@ -66,7 +66,7 @@ def main():
         print(f"  - local dataset path not found: '{local_data_path}'")
         print("  - downloading from hub...")
 
-        dataset = load_dataset(REPO_ID, trust_remote_code=True)
+        dataset = load_dataset(REPO_ID, "2023_all", trust_remote_code=True)
         dataset.save_to_disk(str(local_data_path))
         print(f"✅ dataset metadata downloaded and saved to {local_data_path}")
     dataset = load_from_disk(str(local_data_path))
