@@ -24,6 +24,9 @@ tools:
       transport_type: "STDIO"
       command: "uvx"
       args: ["browser-use", "--mcp"]
+      env:
+        BROWSER_USE_HEADLESS: "true"
+        ANONYMIZED_TELEMETRY: "false"
 
   - &browser_read_and_get_state_tool
     name: "BrowserReadAndGetStateTool"
