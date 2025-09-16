@@ -384,10 +384,6 @@ def main():
     print("=" * 50)
 
 
-if __name__ == "__main__":
-    main()
-
-
 def summarize(question: str, verbose_answer: str) -> str:
     """
     Uses an LLM to summarize the agent's verbose output into a concise final answer
@@ -522,3 +518,7 @@ def normalize_str(input_str, remove_punct=True) -> str:
         return no_spaces.lower().translate(translator)
     else:
         return no_spaces.lower()
+
+
+if __name__ == "__main__":
+    main()
