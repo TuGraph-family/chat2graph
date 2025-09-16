@@ -4,7 +4,12 @@ from app.core.env.insight.insight import Insight
 from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.job import Job, SubJob
 from app.core.model.knowledge import Knowledge
-from app.core.model.message import FileMessage, HybridMessage, MessageType, WorkflowMessage
+from app.core.model.message import (
+    FileMessage,
+    HybridMessage,
+    MessageType,
+    WorkflowMessage,
+)
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.file_service import FileService
@@ -39,11 +44,32 @@ class Operator:
         Args:
             reasoner (Reasoner): The reasoner.
             job (Job): The job assigned to the expert.
-            workflow_messages (Optional[List[WorkflowMessage]]): The outputs of previous operators.
-            previous_expert_outputs (Optional[List[WorkflowMessage]]): The outputs of previous
-                experts in workflow message type.
-            lesson (Optional[str]): The lesson learned (provided by the successor expert).
+            workflow_messages (Optional[List[WorkflowMessage]]): The outputs of
+                previous operators.
+            previous_expert_outputs (Optional[List[WorkflowMessage]]): The
+                outputs of previous experts in workflow message type.
+            lesson (Optional[str]): The lesson learned (provided by the
+                successor expert).
         """
+        # Execute pre-execution hooks for Memory integration
+        workflow_msgs = workflow_messages or []
+        operator_id = self.get_id()
+
+        try:
+            from app.core.memory.enhanced.hook import hook_manager
+            pre_hook_results = await hook_manager.execute_pre_operator_hooks(
+                job, reasoner, workflow_msgs, lesson, operator_id
+            )
+
+            # Check for early return from hooks
+            for result in pre_hook_results:
+                if (result.success and result.data and
+                        "early_return" in result.data):
+                    return result.data["early_return"]
+        except ImportError:
+            # Memory enhancement not available, continue with normal execution
+            pass
+
         task = self._build_task(
             job=job,
             workflow_messages=workflow_messages,
@@ -55,10 +81,29 @@ class Operator:
         result = await reasoner.infer(task=task)
 
         # destroy MCP connections for the operator
-        tool_connection_service: ToolConnectionService = ToolConnectionService.instance
-        await tool_connection_service.release_connection(call_tool_ctx=task.get_tool_call_ctx())
+        tool_connection_service: ToolConnectionService = (
+            ToolConnectionService.instance
+        )
+        await tool_connection_service.release_connection(
+            call_tool_ctx=task.get_tool_call_ctx()
+        )
 
-        return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
+        operator_message = WorkflowMessage(
+            payload={"scratchpad": result}, job_id=job.id
+        )
+
+        # Execute post-execution hooks for Memory integration
+        try:
+            from app.core.memory.enhanced.hook import hook_manager
+            await hook_manager.execute_post_operator_hooks(
+                job, reasoner, workflow_msgs, lesson, operator_message,
+                operator_id
+            )
+        except ImportError:
+            # Memory enhancement not available, continue with normal execution
+            pass
+
+        return operator_message
 
     def _build_task(
         self,
@@ -77,14 +122,19 @@ class Operator:
             hops=self._config.hops,
         )
 
-        merged_workflow_messages: List[WorkflowMessage] = workflow_messages or []
+        merged_workflow_messages: List[WorkflowMessage] = (
+            workflow_messages or []
+        )
         merged_workflow_messages.extend(previous_expert_outputs or [])
 
-        # get the file descriptors, to provide some way of an access to the content of the files
+        # get the file descriptors, to provide some way of an access to the
+        # content of the files
         file_descriptors: List[FileDescriptor] = []
         if isinstance(job, SubJob):
             original_job_id: Optional[str] = job.original_job_id
-            assert original_job_id is not None, "SubJob must have an original job id"
+            assert original_job_id is not None, (
+                "SubJob must have an original job id"
+            )
         else:
             original_job_id = job.id
         hybrid_messages: List[HybridMessage] = cast(
@@ -118,8 +168,13 @@ class Operator:
 
     def get_knowledge(self, job: Job) -> Knowledge:
         """Get the knowledge from the knowledge base."""
-        query = "[JOB TARGET GOAL]:\n" + job.goal + "\n[INPUT INFORMATION]:\n" + job.context
-        knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
+        query = (
+            "[JOB TARGET GOAL]:\n" + job.goal +
+            "\n[INPUT INFORMATION]:\n" + job.context
+        )
+        knowledge_base_service: KnowledgeBaseService = (
+            KnowledgeBaseService.instance
+        )
         return knowledge_base_service.get_knowledge(query, job.session_id)
 
     def get_env_insights(self) -> Optional[List[Insight]]:

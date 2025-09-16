@@ -14,10 +14,21 @@ class ReasonerService(metaclass=Singleton):
         self._reasoners: Optional[Reasoner] = None
 
     def get_reasoner(self) -> Reasoner:
-        """Get the reasoner."""
+        """Get the reasoner with Memory enhancement if enabled."""
         if not self._reasoners:
             self.init_reasoner(reasoner_type=ReasonerType.DUAL)
-        return cast(Reasoner, self._reasoners)
+
+        base_reasoner = cast(Reasoner, self._reasoners)
+
+        # Enhance with Memory functionality if available
+        try:
+            from app.core.memory.enhanced.integration import (
+                memory_integration_manager
+            )
+            return memory_integration_manager.wrap_reasoner(base_reasoner)
+        except ImportError:
+            # Memory enhancement not available, return base reasoner
+            return base_reasoner
 
     def init_reasoner(
         self,
@@ -32,6 +43,8 @@ class ReasonerService(metaclass=Singleton):
                 thinker_name or MessageSourceType.THINKER.value,
             )
         elif reasoner_type == ReasonerType.MONO:
-            self._reasoners = MonoModelReasoner(actor_name or MessageSourceType.MODEL.value)
+            self._reasoners = MonoModelReasoner(
+                actor_name or MessageSourceType.MODEL.value
+            )
         else:
             raise ValueError("Invalid reasoner type.")
