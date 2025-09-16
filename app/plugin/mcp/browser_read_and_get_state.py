@@ -170,7 +170,8 @@ class BrowserReadAndGetStateTool(Tool):
                 "special rendering or other non-standard web page. "
                 "You can download the page instead."
             )
-            print(f"Warning: {screenshot_context}")
+            print(f"Error: {screenshot_context}")
+            raise ValueError(f"Error: {screenshot_context}")
 
         # LLM call with both screenshots using OpenRouter API (with Gemini fallback)
         analysis_prompt = self._get_analysis_prompt(
