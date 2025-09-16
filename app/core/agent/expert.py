@@ -92,6 +92,7 @@ class Expert(Agent):
             )
         except Exception as e:
             workflow_message = WorkflowMessage(
+                job_id=job.id,
                 payload={
                     "scratchpad": f"The current job {job.id} failed: "
                     f"{str(e)}\n{traceback.format_exc()}\n",
