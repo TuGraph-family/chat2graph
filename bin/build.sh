@@ -160,6 +160,7 @@ install_playwright_deps_linux() {
         pango \
         alsa-lib \
         liberation-fonts \
+        libXScrnSaver \
         gtk3 \
         libdrm \
         libxkbcommon \
