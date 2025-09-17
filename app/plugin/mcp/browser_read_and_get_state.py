@@ -213,7 +213,12 @@ class BrowserReadAndGetStateTool(Tool):
         """Parses MCP results to extract page state and screenshot."""
         if not results or not isinstance(results[0], TextContent):
             raise ValueError("Expected a text content block with page state info.")
-        page_state = json.loads(results[0].text)
+        try:
+            page_state = json.loads(results[0].text)
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"Failed to parse page state JSON: {e}\nContent: {results[0].text}"
+            ) from e
         screenshot_base64: Optional[str] = page_state.get("screenshot", None)
         return page_state, screenshot_base64
 
