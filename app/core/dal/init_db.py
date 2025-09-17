@@ -13,7 +13,6 @@ def init_db() -> None:
     """Initialize database tables."""
     # Do.metadata.drop_all(bind=engine)
 
-    # create tables in order
     print(f"System database url: {SystemEnv.DATABASE_URL}")
 
     # create tables in an order that respects potential dependencies

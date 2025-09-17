@@ -42,6 +42,7 @@ async def init_server() -> McpConnection:
                 env={
                     "BROWSER_USE_HEADLESS": "true",
                     "ANONYMIZED_TELEMETRY": "false",
+                    "BROWSER_USE_NO_SANDBOX": "true",
                 },
             ),
         )
