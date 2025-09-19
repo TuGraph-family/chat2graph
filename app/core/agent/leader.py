@@ -583,7 +583,7 @@ class Leader(Agent):
         # save the final system message with the error information
         error_payload = (
             f"An error occurred during the execution of the job:\n\n{message_payload}\n\n"
-            f'Please check the job `{original_job.id}` ("{original_job.goal[:50]}...") '
+            f'Please check the job `{original_job.id}` ("{original_job.goal}...") '
             "for more details. Or you can re-try to send your message."
         )
         original_job_id = original_job.id
