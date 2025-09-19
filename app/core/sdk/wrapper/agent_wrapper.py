@@ -3,14 +3,11 @@ from typing import Optional, Tuple, Union
 from app.core.agent.agent import Agent, AgentConfig, Profile
 from app.core.agent.expert import Expert
 from app.core.agent.leader import Leader
-from app.core.common.system_env import SystemEnv
 from app.core.common.type import WorkflowPlatformType
 from app.core.prompt.eval_operator import (
     EVAL_OPERATION_INSTRUCTION_PROMPT,
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.reasoner.reasoner import Reasoner
 from app.core.sdk.wrapper.operator_wrapper import OperatorWrapper
 from app.core.sdk.wrapper.workflow_wrapper import WorkflowWrapper
@@ -19,7 +16,6 @@ from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.workflow.workflow import Workflow
-from app.plugin.lite_llm.lite_llm_client import LiteLlmClient
 
 
 class AgentWrapper:
@@ -94,39 +90,6 @@ class AgentWrapper:
         if not self._reasoner:
             reasoner_service: ReasonerService = ReasonerService.instance
             self._reasoner = reasoner_service.get_reasoner()
-            if "leader" in self._profile.name.lower():
-                if isinstance(self._reasoner, DualModelReasoner):
-                    assert isinstance(self._reasoner._actor_model, LiteLlmClient)
-                    self._reasoner._actor_model._model_alias = SystemEnv.LEADER_LLM_NAME
-                    self._reasoner._actor_model._api_base = SystemEnv.LEADER_LLM_ENDPOINT
-                    self._reasoner._actor_model._api_key = SystemEnv.LEADER_LLM_APIKEY
-                    print(
-                        "Leader uses LiteLLM for actor model: "
-                        f"{self._reasoner._actor_model._model_alias}"
-                    )
-                    assert isinstance(self._reasoner._thinker_model, LiteLlmClient)
-                    self._reasoner._thinker_model._model_alias = SystemEnv.LEADER_LLM_NAME
-                    self._reasoner._thinker_model._api_base = SystemEnv.LEADER_LLM_ENDPOINT
-                    self._reasoner._thinker_model._api_key = SystemEnv.LEADER_LLM_APIKEY
-                    print(
-                        "Leader uses LiteLLM for thinker reasoner: "
-                        f"{self._reasoner._thinker_model._model_alias}"
-                    )
-                elif isinstance(self._reasoner, MonoModelReasoner):
-                    assert isinstance(self._reasoner._model, LiteLlmClient)
-                    self._reasoner._model._model_alias = SystemEnv.LEADER_LLM_NAME
-                    self._reasoner._model._api_base = SystemEnv.LEADER_LLM_ENDPOINT
-                    self._reasoner._model._api_key = SystemEnv.LEADER_LLM_APIKEY
-                    print(
-                        "Leader uses LiteLLM for mono reasoner: "
-                        f"{self._reasoner._model._model_alias}"
-                    )
-            elif "expert" in self._profile.name.lower():
-                if isinstance(self._reasoner, DualModelReasoner):
-                    assert isinstance(self._reasoner._thinker_model, LiteLlmClient)
-                    self._reasoner._thinker_model._model_alias = SystemEnv.LEADER_LLM_NAME
-                    self._reasoner._thinker_model._api_base = SystemEnv.LEADER_LLM_ENDPOINT
-                    self._reasoner._thinker_model._api_key = SystemEnv.LEADER_LLM_APIKEY
         if not self._workflow:
             raise ValueError("Workflow is required.")
         if not self._type:

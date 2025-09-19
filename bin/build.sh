@@ -255,7 +255,7 @@ handle_dependency_conflicts() {
   pip install --force-reinstall "aiohttp==$target_aiohttp_version" --trusted-host pypi.org --trusted-host files.pythonhosted.org >/dev/null 2>&1 || warn "Failed to resolve aiohttp version conflict"
 }
 
-build_python() {  
+build_python() {
   app_dir=$1
 
   cd ${app_dir}
