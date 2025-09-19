@@ -318,64 +318,65 @@ If the current page is completely irrelevant to my goal (e.g., I'm on Google but
     async def _call_multimodal_model(
         self, query_prompt: str, image_base64s: List[str], temp_dir: str
     ) -> str:
-        """Call Gemini first for multimodal analysis; fallback to OpenRouter if Gemini fails."""
-        # build message content (used only if we need to fallback to OpenRouter)
+        """Call OpenRouter first for multimodal analysis; fallback to Gemini if OpenRouter fails."""
+        # build message content for OpenRouter
         content: List[Dict[str, Any]] = [{"type": "text", "text": query_prompt}]
         for image_base64 in image_base64s:
             data_url = f"data:image/png;base64,{image_base64}"
             content.append({"type": "image_url", "image_url": {"url": data_url}})
         messages = [{"role": "user", "content": content}]
 
-        # primary: Gemini
+        # Primary: OpenRouter
         try:
-            temp_image_paths = []
-            for i, image_base64 in enumerate(image_base64s):
-                image_type = "clean" if i == 0 else "highlighted"
-                temp_path = self._save_screenshot(image_base64, temp_dir, f"gemini_{image_type}")
-                temp_image_paths.append(temp_path)
-            gemini_tool = GeminiMultiModalTool()
-            primary_result = await gemini_tool.call_multi_modal(
-                query_prompt=query_prompt,
-                media_paths=temp_image_paths,
+            response: Union[ModelResponse, CustomStreamWrapper] = completion(
+                model=SystemEnv.BROWSER_LLM_NAME,
+                api_base=SystemEnv.BROWSER_LLM_ENDPOINT,
+                api_key=SystemEnv.BROWSER_LLM_APIKEY,
+                messages=messages,
+                temperature=SystemEnv.TEMPERATURE,
+                stream=False,
+                timeout=60,
+                max_retries=2,
             )
-            if (
-                "quota" in primary_result.lower()
-                or "temporarily unavailable" in primary_result.lower()
-            ):  # noqa: E501
-                raise ValueError("Gemini service quota exceeded or temporarily unavailable.")
-            return primary_result
-        except Exception as gemini_error:
-            print(f"Gemini primary failed: {gemini_error}")
-            print("Falling back to OpenRouter multimodal model...")
-            # Fallback: OpenRouter
+            assert isinstance(response, ModelResponse)
+            # Check for error messages in response content
+            response_content = response["choices"][0]["message"]["content"]
+            if "error" in response_content.lower() and (
+                "service unavailable" in response_content.lower()
+                or "rate limit" in response_content.lower()
+            ):
+                raise ValueError(f"OpenRouter service error: {response_content}")
+            return response_content
+        except Exception as openrouter_error:
+            print(f"OpenRouter primary failed: {openrouter_error}")
+            print("Falling back to Gemini multimodal model...")
+            # Fallback: Gemini
             try:
-                response: Union[ModelResponse, CustomStreamWrapper] = completion(
-                    model=SystemEnv.BROWSER_LLM_NAME,
-                    api_base=SystemEnv.BROWSER_LLM_ENDPOINT,
-                    api_key=SystemEnv.BROWSER_LLM_APIKEY,
-                    messages=messages,
-                    temperature=SystemEnv.TEMPERATURE,
-                    stream=False,
-                    timeout=60,
-                    max_retries=2,
+                temp_image_paths = []
+                for i, image_base64 in enumerate(image_base64s):
+                    image_type = "clean" if i == 0 else "highlighted"
+                    temp_path = self._save_screenshot(
+                        image_base64, temp_dir, f"gemini_{image_type}"
+                    )
+                    temp_image_paths.append(temp_path)
+                gemini_tool = GeminiMultiModalTool()
+                gemini_result = await gemini_tool.call_multi_modal(
+                    query_prompt=query_prompt,
+                    media_paths=temp_image_paths,
                 )
-                assert isinstance(response, ModelResponse)
-                return response["choices"][0]["message"]["content"]
-            except Exception as openrouter_error:
-                print(f"OpenRouter fallback also failed: {openrouter_error}")
-                error_str = str(openrouter_error)
-                if "openrouter.ai" in error_str or "Temporarily unavailable" in error_str:
-                    return (
-                        "Error: Both Gemini (primary) and OpenRouter (fallback) visual analysis "
-                        "services failed. "
-                        f"Gemini error: {gemini_error}. "
-                        f"OpenRouter: Service temporarily unavailable ({openrouter_error}). "
-                        "Please try again later. You can still use other browser tools like "
-                        "navigation, clicking, or typing if you know what actions to take."
-                    )
-                else:
-                    return (
-                        "Error: Both visual analysis services failed. "
-                        f"Gemini error: {gemini_error}. "
-                        f"OpenRouter error: {error_str}"
-                    )
+                if (
+                    "quota" in gemini_result.lower()
+                    or "temporarily unavailable" in gemini_result.lower()
+                ):
+                    raise ValueError("Gemini service quota exceeded or temporarily unavailable.")
+                return gemini_result
+            except Exception as gemini_error:
+                print(f"Gemini fallback also failed: {gemini_error}")
+                return (
+                    "Error: Both OpenRouter (primary) and Gemini (fallback) visual analysis "
+                    "services failed. "
+                    f"OpenRouter error: {openrouter_error}. "
+                    f"Gemini error: {gemini_error}. "
+                    "Please try again later. You can still use other browser tools like "
+                    "navigation, clicking, or typing if you know what actions to take."
+                )

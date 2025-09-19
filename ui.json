@@ -1,0 +1,130 @@
+{
+    "schema-protocol": "pai-v1",
+    // 这配置组件的输入输出桩
+    "anchors": {
+        // 该组件没有数据输入桩
+        "input": [
+            {
+                // 这里输入第一个输入桩的描述
+                "description": "调度 geaflow 作业（该 input 置空即可）",
+                // 这里配置输入桩的类型, odpsTable|ossFile|, 默认使用odpsTable即可.
+                "resourceType": "odpsTable"
+            },
+        ],
+        // 该组件没有数据输出桩
+        "output": [
+            {
+                // 这里输入第一个输出桩的描述
+                "description": "geaflow 作业停止（该 output 置空即可）",
+                // 这里配置输出桩的类型, odpsTable|ossFile|, 默认使用odpsTable即可.
+                "resourceType": "odpsTable"
+            },
+        ]
+    },
+    // 这里配置组件的UI界面
+    "UI": [
+        {
+            "icon": "setting",
+            "key": "setting",
+            "label": "geaflow 作业参数配置",
+            "schema": [
+                {
+                    // 参数的唯一标识符，用于后端代码获取参数值
+                    "key": "graphUniqueId",
+                    // 在UI界面上展示的标签
+                    "label": "*Graph Unique ID",
+                    // 参数的默认值，此处为空字符串
+                    "defaultValue": ""
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "jobId",
+                    // 在UI界面上展示的标签
+                    "label": "*Job ID",
+                    // 参数的默认值
+                    "defaultValue": ""
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "uniqueId",
+                    // 在UI界面上展示的标签
+                    "label": "*Unique ID",
+                    // 参数的默认值
+                    "defaultValue": ""
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "userId",
+                    // 在UI界面上展示的标签
+                    "label": "*User ID（工号）",
+                    // 参数的默认值
+                    "defaultValue": ""
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "accessId",
+                    // 在UI界面上展示的标签
+                    "label": "*Access ID（请联系 GeaMaker 同学）",
+                    // 参数的默认值
+                    "defaultValue": "antgraph"
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "accessKey",
+                    // 在UI界面上展示的标签
+                    "label": "*Access Key（请联系 GeaMaker 同学）",
+                    // 参数的默认值
+                    "defaultValue": "antgraph"
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "read_start_time",
+                    // 在UI界面上展示的标签
+                    "label": "读取 OPPS 表的开始时间（格式：YYYY-MM-DD HH:mm:ss）",
+                    // 参数的默认值
+                    "defaultValue": "2025-06-30 00:00:00（需要修改）"
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "read_end_time",
+                    // 在UI界面上展示的标签
+                    "label": "读取 OPPS 表的结束时间（格式：YYYY-MM-DD HH:mm:ss）",
+                    // 参数的默认值
+                    "defaultValue": "2025-07-01 00:00:00（需要修改）"
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "write_data_time",
+                    // 在UI界面上展示的标签
+                    "label": "写入 OPPS 表的时间（格式：YYYYMMDD HH:mm:ss），对应到 dt 分区",
+                    // 参数的默认值
+                    "defaultValue": "20250701 00:00:00（需要修改）"
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "window_date_time",
+                    // 在UI界面上展示的标签
+                    "label": "for 循环的窗口时间（图仿真专用）（格式：YYYY-MM-DD）",
+                    // 参数的默认值
+                    "defaultValue": "2025-06-30（需要修改）"
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "input_opds_table",
+                    // 在UI界面上展示的标签
+                    "label": "*输入的 ODPS 表名",
+                    // 参数的默认值
+                    "defaultValue": ""
+                },
+                {
+                    // 参数的唯一标识符
+                    "key": "output_opds_table",
+                    // 在UI界面上展示的标签
+                    "label": "输出的 ODPS 表名（图仿真专用）",
+                    // 参数的默认值
+                    "defaultValue": ""
+                }
+            ]
+        }
+    ]
+}
