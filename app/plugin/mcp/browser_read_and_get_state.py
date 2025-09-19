@@ -36,41 +36,31 @@ class BrowserReadAndGetStateTool(Tool):
         tool_call_ctx: ToolCallContext,
         vlm_task: str,
         vlm_task_context: str,
+        agent_full_context: str,
     ) -> str:
-        """Analyzes the current webpage to determine the single best next step towards your goal.
+        """Analyzes the current webpage to determine the single best next step towards your goal by inheriting the main Agent's full context.
 
         This is a powerful visual analysis tool. In a multi-step task, you should call this tool
         repeatedly after each action (like a click or type) to re-evaluate the new page state.
 
         **When to use this tool:**
-        Use this tool as your primary 'eyes' to understand a webpage. Call it after navigating to a
-        new page, or after performing an action that changes the page content.
+        Use this tool as your primary 'eyes' to understand a webpage. It acts as an extension of your own reasoning, equipped with your full operational context.
 
-        **Strategy for Multi-Step Tasks:**
-        This tool supports conversational context to become more efficient and accurate over time.
-        You always provide both `vlm_task` (the overall goal) and `vlm_task_context` (the current situation).
-
-        - **First Call:** On a new page, set `vlm_task_context` to indicate this is the first step.
-          For example: "I have just landed on this page ..."
-        - **Subsequent Calls:** After performing an action (e.g., dismissing a pop-up, clicking 'next page'),
-          update `vlm_task_context` to describe the last action and the current situation.
-
-        **How to formulate `vlm_task` and `vlm_task_context`:**
+        **How to formulate parameters:**
 
         *   **`vlm_task` (The Unchanging Goal):**
             - "Find and book the cheapest flight from JFK to LAX for tomorrow."
             - "Summarize the return policy of this product."
-            - "Find the number of publications by author X published before 2020."
-            - "I have now used Google to search for a certain keyword. Please tell me what the search results are and what the index of the element I need to interact with next is?"
 
         *   **`vlm_task_context` (The Evolving Situation):**
-            - *Initial state:* "I have just navigated to the page to ..."
-            - *After dismissing a cookie banner:* "I have just dismissed the cookie banner. Now I need to see the main content."
-            - *After clicking 'next page':* "I am now on page 2 of the search results. I need to continue my search here."
-            - *In your ORCID example:* "I am on the second page of the author's works. I already counted 28 pre-2020 publications on the first page. Now I need to count the ones on this page."
+            - *Initial state:* "I have just navigated to the page to begin the task."
+            - *After an action:* "I have just dismissed the cookie banner. Now I need to see the main content."
+
+        *   **`agent_full_context` (Your Entire Mind):**
+            - This is the most critical parameter. You must pass your **complete System Prompt and the full conversation history** here. This ensures the visual analysis module operates with the exact same rules, principles, and memory that you do.
 
         Returns:
-            str: returns a natural language (or semi-structured) string. The following types of content may appear (the model will choose one based on the page situation):
+            str: returns a natural language (or semi-structured) string, analyzed with the full agent context, describing the next best step or final answer based on the visual information. The output format will follow the familiar 4-scenario structure:
                 Scene 1 - Final answer:
                     Indicates that the result has been obtained directly, usually in a format like:
                     "Completed: The author published a total of 70 articles before 1999."
@@ -94,20 +84,25 @@ class BrowserReadAndGetStateTool(Tool):
                     - ambiguous_element_indices: A list of candidate indices provided when there are uncertainties.
                     - reasoning: A brief explanation of uncertainty or basis for judgment.
 
+
         Input Schema (Args):
         {
             "type": "object",
             "properties": {
                 "vlm_task": {
                     "type": "string",
-                    "description": "Describe what you ultimately want to achieve on this website."
+                    "description": "Describe what you ultimately want to achieve on this website. This is the overall mission."
                 },
                 "vlm_task_context": {
                     "type": "string",
-                    "description": "A summary of what has already been accomplished or the current state of the multi-step task."
+                    "description": "A summary of what has already been accomplished or the current state of the multi-step task. This is the immediate situation."
+                },
+                "agent_full_context": {
+                    "type": "string",
+                    "description": "CRITICAL: The main agent's full context, including its System Prompt and the entire conversation history. This allows the visual model to adopt the agent's persona and reasoning."
                 }
             },
-            "required": ["vlm_task", "vlm_task_context"]
+            "required": ["vlm_task", "vlm_task_context", "agent_full_context"]
         }
         """  # noqa: E501
         mcp_service = self._get_mcp_service()
@@ -115,7 +110,7 @@ class BrowserReadAndGetStateTool(Tool):
         temp_dir = "./.gaia_tmp/"
         os.makedirs(temp_dir, exist_ok=True)
 
-        # get both clean and highlighted screenshots ===
+        # get both clean and highlighted screenshots
         clean_results = await mcp_connection.call(
             tool_name="browser_read_and_get_state",
             include_screenshot=True,
@@ -175,12 +170,12 @@ class BrowserReadAndGetStateTool(Tool):
 
         # LLM call with both screenshots using OpenRouter API (with Gemini fallback)
         analysis_prompt = self._get_analysis_prompt(
-            vlm_task, vlm_task_context, screenshot_context, highlighted_page_state
+            vlm_task,
+            vlm_task_context,
+            agent_full_context,
+            screenshot_context,
+            highlighted_page_state,
         )
-        # vlm_result_str = await self._call_gemini_multimodal_model(
-        #     query_prompt=analysis_prompt,
-        #     image_paths=image_paths,
-        # )
         vlm_result_str = await self._call_multimodal_model(
             query_prompt=analysis_prompt,
             image_base64s=image_base64s,
@@ -234,10 +229,21 @@ class BrowserReadAndGetStateTool(Tool):
         self,
         vlm_task: str,
         vlm_task_context: str,
+        agent_full_context: str,
         screenshot_context: Optional[str] = None,
         page_state: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Generates a unified prompt for analyzing both clean and highlighted screenshots."""
+        agent_context_prompt = f"""
+---
+**OVERARCHING DIRECTIVES & CONTEXT FROM THE PRIMARY AGENT**
+Before analyzing the webpage, you must first internalize the following context. This information contains the primary agent's core principles, rules, and conversation history. Your entire analysis and all recommendations MUST be fully compliant with these directives. This is your foundational knowledge.
+
+{agent_full_context}
+---
+
+With the above context fully understood, you will now perform a specific visual analysis task. All the instructions below must be interpreted through the lens of the primary agent's directives you have just read.
+"""  # noqa: E501
 
         base_prompt = f'''As an expert web agent, your task is to analyze the provided webpage information to determine the single best next step to achieve my goal.
 
@@ -294,7 +300,7 @@ This applies if the page is ready for interaction (e.g., a search form) or if a 
 **Scenario 3: You found a partial answer, but more action is needed.**
 This is for situations like paginated results or "read more" sections.
 *   First, give me the partial information you found.
-*   Then, recommend the next action I need to take to get the rest of the information, following the same format as Scenario 2 (providing `element_index`, etc.).
+*   Then, recommend the next action I need to take to get the rest of the information, following the same format as Scenario 2 (providing `element_index`, etc.). And waht is more, if you are asked to find information that info resource/page is likely to be a PDF reader, please recommend me to download the PDF to let me read it locally.
 *   **Example Response:** "I've found 10 search results on this page that match your criteria. However, it says 'Page 1 of 5', so there's more to see. You should click the 'Next Page' button. From the highlighted image, that's `element_index: 88 (tag: ..., text: ..., href: ..., placeholder: ...)`."
 
 **Scenario 4: My goal cannot be achieved here.**
@@ -304,7 +310,7 @@ If the current page is completely irrelevant to my goal (e.g., I'm on Google but
 
 **Please begin your analysis now.**"""  # noqa: E501
 
-        return base_prompt
+        return agent_context_prompt + base_prompt
 
     async def _call_gemini_multimodal_model(self, query_prompt: str, image_paths: List[str]) -> str:
         """Call Gemini first for multimodal analysis"""
