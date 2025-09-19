@@ -6,7 +6,7 @@ app:
 
 # plugin configuration
 plugin:
-  workflow_platform: "DBGPT"
+  workflow_platform: "BUILTIN"
 
 # reasoner configuration
 reasoner:

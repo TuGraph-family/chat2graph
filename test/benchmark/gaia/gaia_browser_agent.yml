@@ -10,7 +10,7 @@ app:
 
 # 2. Plugin and Reasoner Configuration
 plugin:
-  workflow_platform: "DBGPT"
+  workflow_platform: "BUILTIN"
 reasoner:
   type: "DUAL" # Using DUAL reasoner for complex problem-solving and planning.
 
