@@ -35,7 +35,7 @@ class BrowserReadAndGetStateTool(Tool):
         self,
         tool_call_ctx: ToolCallContext,
         vlm_task: str,
-        task_context: Optional[str] = None,
+        vlm_task_context: str,
     ) -> str:
         """Analyzes the current webpage to determine the single best next step towards your goal.
 
@@ -48,14 +48,14 @@ class BrowserReadAndGetStateTool(Tool):
 
         **Strategy for Multi-Step Tasks:**
         This tool supports conversational context to become more efficient and accurate over time.
-        - **First Call:** On a new page, use ONLY the `vlm_task` parameter to describe the overall goal.
-        - **Subsequent Calls:** After performing an action (e.g., dismissing a pop-up, clicking 'next page'),
-          call this tool again. This time, provide BOTH:
-            1. `vlm_task`: The SAME overall goal, including the conditions or the constraints something else.
-            2. `task_context`: A brief summary of the last action and the current situation.
-          This helps the VLM understand the progress and not get confused.
+        You always provide both `vlm_task` (the overall goal) and `vlm_task_context` (the current situation).
 
-        **How to formulate `vlm_task` and `task_context`:**
+        - **First Call:** On a new page, set `vlm_task_context` to indicate this is the first step.
+          For example: "I have just landed on this page ..."
+        - **Subsequent Calls:** After performing an action (e.g., dismissing a pop-up, clicking 'next page'),
+          update `vlm_task_context` to describe the last action and the current situation.
+
+        **How to formulate `vlm_task` and `vlm_task_context`:**
 
         *   **`vlm_task` (The Unchanging Goal):**
             - "Find and book the cheapest flight from JFK to LAX for tomorrow."
@@ -63,7 +63,8 @@ class BrowserReadAndGetStateTool(Tool):
             - "Find the number of publications by author X published before 2020."
             - "I have now used Google to search for a certain keyword. Please tell me what the search results are and what the index of the element I need to interact with next is?"
 
-        *   **`task_context` (The Evolving Situation):**
+        *   **`vlm_task_context` (The Evolving Situation):**
+            - *Initial state:* "I have just navigated to the page to ..."
             - *After dismissing a cookie banner:* "I have just dismissed the cookie banner. Now I need to see the main content."
             - *After clicking 'next page':* "I am now on page 2 of the search results. I need to continue my search here."
             - *In your ORCID example:* "I am on the second page of the author's works. I already counted 28 pre-2020 publications on the first page. Now I need to count the ones on this page."
@@ -101,13 +102,12 @@ class BrowserReadAndGetStateTool(Tool):
                     "type": "string",
                     "description": "Describe what you ultimately want to achieve on this website."
                 },
-                "task_context": {
+                "vlm_task_context": {
                     "type": "string",
-                    "description": "Optional. A summary of what has already been accomplished or the current state of the multi-step task. Use this on all calls after the first one.",
-                    "default": null
+                    "description": "A summary of what has already been accomplished or the current state of the multi-step task."
                 }
             },
-            "required": ["vlm_task"]
+            "required": ["vlm_task", "vlm_task_context"]
         }
         """  # noqa: E501
         mcp_service = self._get_mcp_service()
@@ -175,7 +175,7 @@ class BrowserReadAndGetStateTool(Tool):
 
         # LLM call with both screenshots using OpenRouter API (with Gemini fallback)
         analysis_prompt = self._get_analysis_prompt(
-            vlm_task, task_context, screenshot_context, highlighted_page_state
+            vlm_task, vlm_task_context, screenshot_context, highlighted_page_state
         )
         # vlm_result_str = await self._call_gemini_multimodal_model(
         #     query_prompt=analysis_prompt,
@@ -233,7 +233,7 @@ class BrowserReadAndGetStateTool(Tool):
     def _get_analysis_prompt(
         self,
         vlm_task: str,
-        task_context: Optional[str] = None,
+        vlm_task_context: str,
         screenshot_context: Optional[str] = None,
         page_state: Optional[Dict[str, Any]] = None,
     ) -> str:
@@ -248,10 +248,9 @@ class BrowserReadAndGetStateTool(Tool):
 
 My ultimate goal: "{vlm_task}"'''  # noqa: E501
 
-        if task_context:
-            base_prompt += f'''
+        base_prompt += f'''
 **Current Task Context:** You are not starting from scratch. Here is what has happened so far:
-"{task_context}"'''
+"{vlm_task_context}"'''
         if screenshot_context:
             base_prompt += f"""
 **Screenshot Context Note:** {screenshot_context}"""
