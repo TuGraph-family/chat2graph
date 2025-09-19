@@ -3,11 +3,10 @@
 # MCP tools configuration
 # format: "name:port:command"
 # for example: "npx @playwright/mcp@latest --port 8931"
-# --convert--> "playwright:8931:npx @playwright/mcp@latest"
-mcp_tools_config=(
-    "playwright:8931:npx @playwright/mcp@latest --isolated"
+# --convert--> "playwright:8931:npx @playwright/mcp@latest --isolated"
+mcp_server_configs=(
+    "playwright:8931:npx @playwright/mcp@latest --isolated --no-sandbox"
 )
-
 get_mcp_name() {
     echo "$1" | cut -d: -f1
 }

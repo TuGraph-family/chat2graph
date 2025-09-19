@@ -9,6 +9,7 @@ from app.core.common.singleton import Singleton
 from app.core.common.type import ReasonerType, WorkflowPlatformType
 from app.core.dal.dao.dao_factory import DaoFactory
 from app.core.dal.database import DbSession
+from app.core.dal.init_db import init_db
 from app.core.model.agentic_config import AgenticConfig, ExpertConfig, LocalToolConfig
 from app.core.model.graph_db_config import GraphDbConfig
 from app.core.model.job import Job
@@ -46,7 +47,8 @@ class AgenticService(metaclass=Singleton):
         # initialize logging
         Chat2GraphLogger()
 
-        # initialize the dao
+        # initialize the database
+        init_db()
         DaoFactory.initialize(DbSession())
 
         # initialize the services

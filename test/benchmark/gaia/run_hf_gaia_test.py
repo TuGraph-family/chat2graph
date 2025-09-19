@@ -30,9 +30,9 @@ Based on the original question and the agent's verbose answer below, provide ONL
 
 **Formatting Rules (Follow Strictly):**
 - Your response must contain ONLY the final answer, with no extra text, explanations, or prefixes like "FINAL ANSWER:".
-- If the answer is a number, return only the number without any units unless specified otherwise.
-- If the answer is a string, don't use abbreviations (e.g. for states).
-- If the answer is a comma separated list, apply the above rules to each element in the list.
+- Do not include units, symbols (like $, %), or thousand separators (,) unless the original question specifically requires them.
+- Provide it directly. Do not use abbreviations (e.g., write "New York" instead of "NY").
+- If the answer is a list of items, format it as a single line of text with items separated by a comma (e.g., "item1,item2,item3").
 
 **Original Question:**
 {question}
@@ -384,10 +384,6 @@ def main():
     print("=" * 50)
 
 
-if __name__ == "__main__":
-    main()
-
-
 def summarize(question: str, verbose_answer: str) -> str:
     """
     Uses an LLM to summarize the agent's verbose output into a concise final answer
@@ -522,3 +518,7 @@ def normalize_str(input_str, remove_punct=True) -> str:
         return no_spaces.lower().translate(translator)
     else:
         return no_spaces.lower()
+
+
+if __name__ == "__main__":
+    main()
