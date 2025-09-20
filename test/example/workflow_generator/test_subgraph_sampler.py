@@ -1,7 +1,12 @@
-from app.core.workflow.dataset_synthesis.sampler import SubGraphSampler
-from app.core.workflow.dataset_synthesis.sampler import SimpleRandomSubGraphSampler, EnhancedSubgraphSampler
-from test.example.workflow_generator.utils import register_and_get_graph_db
 from typing import List, Type
+
+from app.core.workflow.dataset_synthesis.sampler import (
+    EnhancedSubgraphSampler,
+    # SimpleRandomSubGraphSampler,
+    SubGraphSampler,
+)
+from test.example.workflow_generator.utils import register_and_get_graph_db
+
 
 def test():
     test_samplers: List[Type[SubGraphSampler]] = [

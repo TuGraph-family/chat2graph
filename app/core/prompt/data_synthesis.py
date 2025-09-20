@@ -151,7 +151,7 @@ Please output the results in JSON list format, where each element contains two f
 ```
 """
 
-generate_non_query_tv_template = "" # TODO
+generate_non_query_tv_template = ""  # TODO
 
 strategy_indentify_template = """
 ## Role
@@ -190,4 +190,4 @@ Output: mixed
 **Please analyze the following task descriptions:**
 ## Task Description
 {task_desc}
-""" 
+"""

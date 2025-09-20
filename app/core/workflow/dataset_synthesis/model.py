@@ -1,9 +1,12 @@
-from pydantic import BaseModel
-from typing import Literal, Dict, List, get_args
+from typing import List, Literal
 
-TASK_TYPES = Literal["query", "non-query"] # 描述了生成的具体的tv对的类型
-GENERATOR_STRATEGY = Literal["query", "non-query", "mixed", None] # 描述generator需要生成的数据集是纯query， non-query 还是 混合mixed的
-TASK_LEVEL = Literal["L1", "L2", "L3", "L4"] 
+from pydantic import BaseModel
+
+TASK_TYPES = Literal["query", "non-query"]  # 描述了生成的具体的tv对的类型
+GENERATOR_STRATEGY = Literal[
+    "query", "non-query", "mixed", None
+]  # 描述generator需要生成的数据集是纯query， non-query 还是 混合mixed的
+TASK_LEVEL = Literal["L1", "L2", "L3", "L4"]
 
 
 class Row(BaseModel):
@@ -25,6 +28,7 @@ class SubTaskType(BaseModel):
     name: str
     desc: str
     examples: list[str]
+
 
 class LevelInfo(BaseModel):
     level: TASK_LEVEL
