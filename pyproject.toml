@@ -78,6 +78,7 @@ ignore = [
     "UP006",    # use List not list
     "UP035",
     "UP007",
+    "UP045",
 ]
 
 [tool.ruff.lint.isort]
