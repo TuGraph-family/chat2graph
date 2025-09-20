@@ -4,7 +4,7 @@ app:
   version: "0.0.1"
 
 plugin:
-  workflow_platform: "DBGPT"
+  workflow_platform: "BUILTIN"
 
 reasoner:
   type: "DUAL"

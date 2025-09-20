@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 import threading
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import networkx as nx  # type: ignore
 
+from app.core.common.async_func import run_async_function
 from app.core.common.type import WorkflowStatus
 from app.core.model.job import Job
 from app.core.model.message import WorkflowMessage
@@ -151,16 +152,77 @@ class BuiltinWorkflow(Workflow):
         _evaluator (Optional[Operator]): The operator to evaluate the progress of the workflow.
     """
 
-    def _build_workflow(self, reasoner: Reasoner) -> Any:
+    def _build_workflow(self, reasoner: Reasoner) -> nx.DiGraph:
         """Build the workflow."""
-        raise NotImplementedError("This method is not implemented.")
+        self._reasoner = reasoner  # noqa: W0212
+        if self._operator_graph.number_of_nodes() == 0:
+            raise ValueError("There is no operator in the workflow.")
+        return self._operator_graph
+
+    @staticmethod
+    def _merge_workflow_messages(
+        job: Job,
+        previous_expert_outputs: List[WorkflowMessage],
+        previous_operator_outputs: List[WorkflowMessage],
+        lesson: Optional[str],
+    ) -> Tuple[Job, List[WorkflowMessage], List[WorkflowMessage], Optional[str]]:
+        """Combine the outputs from the previous operators and the initial expert messages."""
+        return job, previous_expert_outputs, previous_operator_outputs, lesson
 
     def _execute_workflow(
         self,
-        workflow: Any,
+        workflow: nx.DiGraph,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         """Execute the workflow."""
-        raise NotImplementedError("This method is not implemented.")
+        if workflow_messages is None:
+            workflow_messages = []
+
+        # use a dictionary to store the output of each operator
+        operator_outputs: Dict[str, WorkflowMessage] = {}
+
+        # execute operators in topological order.
+        for op_id in nx.topological_sort(workflow):
+            operator: Operator = workflow.nodes[op_id]["operator"]
+            predecessor_ids = list(workflow.predecessors(op_id))
+
+            # collect outputs from all predecessor operators within the current workflow.
+            previous_operator_outputs = [
+                operator_outputs[pred_id]
+                for pred_id in predecessor_ids
+                if pred_id in operator_outputs
+            ]
+
+            output_message = run_async_function(
+                operator.execute,
+                reasoner=self._reasoner,
+                job=job,
+                workflow_messages=previous_operator_outputs,
+                previous_expert_outputs=workflow_messages,
+                lesson=lesson,
+            )
+
+            # store the output
+            operator_outputs[op_id] = output_message
+
+        # find the tail operator(s) to get the final result.
+        tail_op_ids = [node for node, out_degree in workflow.out_degree() if out_degree == 0]
+        if not tail_op_ids:
+            raise ValueError("Workflow has a cycle or is empty and has no tail operator.")
+
+        final_op_id = tail_op_ids[0]
+        final_message = operator_outputs[final_op_id]
+
+        if self._evaluator:
+            final_message = run_async_function(
+                self._evaluator.execute,
+                reasoner=self._reasoner,
+                job=job,
+                workflow_messages=[final_message],
+                previous_expert_outputs=workflow_messages,
+                lesson=lesson,
+            )
+
+        return final_message

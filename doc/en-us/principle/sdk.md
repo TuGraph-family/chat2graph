@@ -69,7 +69,7 @@ app:
 
 # Plugin Configuration
 plugin:
-  workflow_platform: "DBGPT" # Specifies the platform the workflow depends on, e.g., "DBGPT".
+  workflow_platform: "BUILTIN" # Specifies the platform the workflow depends on, e.g., "BUILTIN, DBGPT".
 
 # Reasoner Configuration
 reasoner:

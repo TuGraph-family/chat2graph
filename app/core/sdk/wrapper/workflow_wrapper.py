@@ -14,6 +14,8 @@ class WorkflowWrapper:
     ):
         if platform is None:
             self._workflow: Workflow = workflow or BuiltinWorkflow()
+        elif platform == WorkflowPlatformType.BUILTIN:
+            self._workflow = BuiltinWorkflow()
         elif platform == WorkflowPlatformType.DBGPT:
             # pylint: disable=import-outside-toplevel
             from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
