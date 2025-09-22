@@ -69,7 +69,7 @@ app:
 
 # 插件配置
 plugin:
-  workflow_platform: "DBGPT" # 指定工作流依赖的平台，例如："DBGPT"
+  workflow_platform: "BUILTIN" # 指定工作流依赖的平台，例如："BUILTIN, DBGPT"
 
 # 推理器配置
 reasoner:
