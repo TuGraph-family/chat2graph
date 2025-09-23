@@ -10,6 +10,7 @@ class ModelPlatformType(Enum):
 class WorkflowPlatformType(Enum):
     """Workflow platform type enum."""
 
+    BUILTIN = "BUILTIN"
     DBGPT = "DBGPT"
 
 

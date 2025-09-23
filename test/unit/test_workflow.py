@@ -9,6 +9,7 @@ from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
+from app.core.workflow.workflow import BuiltinWorkflow
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
 from test.resource.init_server import init_server
 
@@ -81,7 +82,8 @@ class MockOperator(Operator):
         )
 
 
-def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):
+@pytest.mark.parametrize("workflow_class", [BuiltinWorkflow, DbgptWorkflow])
+def test_basic_workflow_execution(workflow_class, job: Job, mock_reasoner: Reasoner):
     """Test basic workflow execution with sequential operators."""
     execution_order = []
 
@@ -90,7 +92,7 @@ def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):
     op2 = MockOperator("op2", execution_order)
 
     # create and configure workflow
-    workflow = DbgptWorkflow()
+    workflow = workflow_class()
     workflow.add_operator(op1)
     workflow.add_operator(op2, previous_ops=[op1])
 
@@ -102,7 +104,8 @@ def test_basic_workflow_execution(job: Job, mock_reasoner: Reasoner):
     assert result.scratchpad == "Output from op2"
 
 
-def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
+@pytest.mark.parametrize("workflow_class", [BuiltinWorkflow, DbgptWorkflow])
+def test_parallel_workflow_execution(workflow_class, job: Job, mock_reasoner: Reasoner):
     """Test parallel workflow execution."""
     execution_order = []
 
@@ -112,7 +115,7 @@ def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
     op3 = MockOperator("op3", execution_order)
 
     # create workflow with parallel paths
-    workflow = DbgptWorkflow()
+    workflow = workflow_class()
     workflow.add_operator(op1)
     workflow.add_operator(op2)
     workflow.add_operator(op3, previous_ops=[op1, op2])
@@ -127,7 +130,8 @@ def test_parallel_workflow_execution(job: Job, mock_reasoner: Reasoner):
     assert result.scratchpad == "Output from op3"
 
 
-def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
+@pytest.mark.parametrize("workflow_class", [BuiltinWorkflow, DbgptWorkflow])
+def test_workflow_error_handling(workflow_class, job: Job, mock_reasoner: Reasoner):
     """Test workflow error handling."""
 
     class ErrorOperator(MockOperator):
@@ -144,7 +148,7 @@ def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
             raise ValueError("Test error")
 
     # create workflow with error operator
-    workflow = DbgptWorkflow()
+    workflow = workflow_class()
     workflow.add_operator(ErrorOperator(id="error_op", execution_order=[]))
 
     # verify error propagation
@@ -152,7 +156,8 @@ def test_workflow_error_handling(job: Job, mock_reasoner: Reasoner):
         workflow.execute(job=job, reasoner=mock_reasoner)
 
 
-def test_complex_workflow_topology(job: Job, mock_reasoner: Reasoner):
+@pytest.mark.parametrize("workflow_class", [BuiltinWorkflow, DbgptWorkflow])
+def test_complex_workflow_topology(workflow_class, job: Job, mock_reasoner: Reasoner):
     """Test complex workflow topology with multiple parallel and sequential paths."""
     execution_order = []
 
@@ -164,7 +169,7 @@ def test_complex_workflow_topology(job: Job, mock_reasoner: Reasoner):
     op5 = MockOperator("op5", execution_order)
 
     # create workflow with complex topology
-    workflow = DbgptWorkflow()
+    workflow = workflow_class()
     workflow.add_operator(op1)
     workflow.add_operator(op2)
     workflow.add_operator(op3, previous_ops=[op1])
