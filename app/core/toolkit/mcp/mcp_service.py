@@ -1,6 +1,5 @@
 import json
 from typing import List, Optional
-import os
 
 from mcp.types import Tool as McpBaseTool
 

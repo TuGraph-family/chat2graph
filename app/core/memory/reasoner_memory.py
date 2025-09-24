@@ -117,7 +117,6 @@ class BuiltinReasonerMemory(ReasonerMemory):
         """Get all the messages in the memory in json format."""
         return [message.__dict__ for message in self._history_messages]
 
-    # no-op external memory hooks for builtin memory
     def retrieve(self, query_text: str, top_k: int) -> List[str]:
         return []
 
