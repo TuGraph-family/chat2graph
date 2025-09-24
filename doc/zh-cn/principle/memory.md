@@ -63,7 +63,6 @@ title: 记忆系统
 ## 4. 实现
 
 我们引入 MemFuse 服务作为 Chat2Graph 的记忆后端。通过一个 MemoryService 单例来协调与 MemFuse 的所有交互，该单例在推理和操作执行的前后通过钩子(pre- 与 post- hooks)方式调用。
-We introduces the MemFuse service as the memory backend for Chat2Graph. A MemoryService singleton mediates all interactions with MemFuse and is invoked through pre- and post- hooks around reasoning and operator execution.
 
 ### 系统架构流程
 
