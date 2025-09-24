@@ -1,7 +1,8 @@
 from typing import List, Optional
 
+from app.core.common.system_env import SystemEnv
 from app.core.toolkit.action import Action
-from app.core.workflow.operator import Operator
+from app.core.workflow.operator import Operator, create_operator
 from app.core.workflow.operator_config import OperatorConfig
 
 
@@ -48,7 +49,10 @@ class OperatorWrapper:
             actions=self._actions,
         )
 
-        self._operator = Operator(config=config)
+        if SystemEnv.PRINT_MEMORY_LOG:
+            print(f"[memory] OperatorWrapper.build: creating operator with config={config.id}")
+
+        self._operator = create_operator(config)
 
         return self
 

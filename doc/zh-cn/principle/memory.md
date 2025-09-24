@@ -60,3 +60,120 @@ title: 记忆系统
 
 借助于「工具」这座桥梁，可以深层次地打通记忆系统与环境状态，构建智能体的「精神世界」与外部环境的「物理世界」的映射关系，即世界知识模型。
 
+## 4. 实现
+
+我们引入 MemFuse 服务作为 Chat2Graph 的记忆后端。通过一个 MemoryService 单例来协调与 MemFuse 的所有交互，该单例在推理和操作执行的前后通过钩子(pre- 与 post- hooks)方式调用。
+
+### 系统架构流程
+
+```mermaid
+graph TB
+    subgraph "Chat2Graph Enhanced System"
+        A[User Request] --> B[Leader Agent]
+        B --> C[Task Decomposition]
+        C --> D[Enhanced Reasoner]
+        C --> E[Enhanced Operator]
+
+        subgraph "Memory Enhancement Layer"
+            F[Pre-Reasoning Hook]
+            G[Post-Reasoning Hook]
+            H[Pre-Execution Hook]
+            I[Post-Execution Hook]
+            J[MemoryService Singleton]
+        end
+
+        D --> F
+        F --> K[Memory Retrieval]
+        K --> L[Context Enhancement]
+        L --> M[Original Reasoning]
+        M --> G
+        G --> N[Memory Write]
+
+        E --> H
+        H --> O[Experience Retrieval]
+        O --> P[Context Enhancement]
+        P --> Q[Original Execution]
+        Q --> I
+        I --> R[Experience Write]
+    end
+
+    subgraph "MemFuse External Service"
+        S[M1: Episodic Memory]
+        T[M2: Semantic Memory]
+        U[M3: Procedural Memory]
+        V[Query API]
+        W[Messages API]
+    end
+
+    J --> W
+    J --> V
+    K --> V
+    O --> V
+    N --> W
+    R --> W
+
+    style D fill:#e1f5fe
+    style E fill:#e8f5e8
+    style J fill:#fff3e0
+    style S fill:#f3e5f5
+    style T fill:#f3e5f5
+    style U fill:#f3e5f5
+```
+
+### 数据流程图
+
+#### Reasoner 记忆增强流程
+
+```mermaid
+sequenceDiagram
+    participant T as Task
+    participant ER as EnhancedReasoner
+    participant H as Hook Manager
+    participant MS as MemoryService
+    participant MF as MemFuse API
+    participant BR as Base Reasoner
+
+    T->>ER: infer(task)
+    ER->>H: execute_pre_reasoning_hooks()
+    H->>MS: retrieve_relevant_memories()
+    MS->>MF: POST /api/v1/users/{user_id}/query
+    MF-->>MS: historical memories
+    MS-->>H: RetrievalResult[]
+    H-->>ER: enhanced context
+    ER->>ER: enhance_task_context()
+    ER->>BR: infer(enhanced_task)
+    BR-->>ER: reasoning_result
+    ER->>H: execute_post_reasoning_hooks()
+    H->>MS: write_reasoning_log()
+    MS->>MF: POST /sessions/{session_id}/messages
+    MF-->>MS: success
+    ER-->>T: reasoning_result
+```
+
+#### Operator 经验学习流程图
+
+```mermaid
+sequenceDiagram
+    participant J as Job
+    participant EO as EnhancedOperator
+    participant H as Hook Manager
+    participant MS as MemoryService
+    participant MF as MemFuse API
+    participant BO as Base Operator
+
+    J->>EO: execute(job)
+    EO->>H: execute_pre_execution_hooks()
+    H->>MS: retrieve_relevant_memories()
+    MS->>MF: POST /api/v1/users/{user_id}/query?tag=m3
+    MF-->>MS: execution experiences
+    MS-->>H: RetrievalResult[]
+    H-->>EO: enhanced context
+    EO->>EO: enhance_job_context()
+    EO->>BO: execute(enhanced_job)
+    BO-->>EO: execution_result
+    EO->>H: execute_post_execution_hooks()
+    H->>MS: write_operator_log()
+    MS->>MF: POST /sessions/{session_id}/messages?tag=m3
+    MF-->>MS: success
+    EO-->>J: execution_result
+```

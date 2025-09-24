@@ -56,6 +56,15 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "SCHEMA_FILE_NAME": (str, "graph.db.schema.json"),
     "SCHEMA_FILE_ID": (str, "schema_file_id"),
     "LANGUAGE": (str, "en-US"),
+    "ENABLE_MEMFUSE": (bool, False),  # enable MemFuse as agent memory module
+    "PRINT_MEMORY_LOG": (bool, False),
+    "MEMFUSE_BASE_URL": (str, "http://localhost:8001"),
+    "MEMFUSE_TIMEOUT": (float, 30.0),
+    "MEMFUSE_RETRY_COUNT": (int, 3),
+    "MEMFUSE_RETRIEVAL_TOP_K": (int, 5),
+    "MEMFUSE_MAX_CONTENT_LENGTH": (int, 10000),
+    "MEMFUSE_ASYNC_WRITE": (bool, True),
+    "MEMFUSE_API_KEY": (str, None),
 }
 
 # system environment variable value cache.
@@ -97,6 +106,7 @@ class SystemEnvMeta(type):
             val = str(val).lower() in ("true", "1", "yes") if val else None
         else:
             val = key_type(val) if val else None
+
         _env_values[key] = val
         return val
 

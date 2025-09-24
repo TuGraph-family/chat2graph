@@ -13,6 +13,15 @@ from app.core.service.message_service import MessageService
 from app.core.service.tool_connection_service import ToolConnectionService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator_config import OperatorConfig
+from app.core.common.system_env import SystemEnv
+
+# Lazy import enhanced operator components; safe if missing
+try:
+    from app.core.memory.enhanced.hook import get_operator_hook
+    from app.core.memory.enhanced.integration import EnhancedOperator
+except Exception:  # noqa: BLE001
+    get_operator_hook = None  # type: ignore[assignment]
+    EnhancedOperator = None  # type: ignore[assignment]
 
 
 class Operator:
@@ -51,12 +60,36 @@ class Operator:
             lesson=lesson,
         )
 
-        # infer by the reasoner
-        result = await reasoner.infer(task=task)
+        # pre-execution hook to retrieve operator experience (best-effort)
+        enriched_task = task
+        try:
+            if SystemEnv.ENABLE_MEMFUSE and get_operator_hook:  # type: ignore[truthy-bool]
+                hook = get_operator_hook()  # type: ignore[operator]
+                enriched_task = await hook.pre_execute(task)
+                if SystemEnv.PRINT_MEMORY_LOG:
+                    print(f"[memory] operator pre_execute hook completed for operator={self._config.id}")
+        except Exception as e:  # noqa: BLE001
+            # swallow hook errors to keep operator stable, continue with original task
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] operator pre_execute hook failed: {e}")
+            enriched_task = task
+
+        # infer by the reasoner using enriched task
+        result = await reasoner.infer(task=enriched_task)
+
+        # post-execution hook to persist operator experience (best-effort)
+        try:
+            if SystemEnv.ENABLE_MEMFUSE and get_operator_hook:  # type: ignore[truthy-bool]
+                hook = get_operator_hook()  # type: ignore[operator]
+                await hook.post_execute(enriched_task, result)
+        except Exception as e:  # noqa: BLE001
+            # swallow hook errors to keep operator stable
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] operator post_execute hook failed: {e}")
 
         # destroy MCP connections for the operator
         tool_connection_service: ToolConnectionService = ToolConnectionService.instance
-        await tool_connection_service.release_connection(call_tool_ctx=task.get_tool_call_ctx())
+        await tool_connection_service.release_connection(call_tool_ctx=enriched_task.get_tool_call_ctx())
 
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
@@ -130,3 +163,29 @@ class Operator:
     def get_id(self) -> str:
         """Get the operator id."""
         return self._config.id
+
+
+def create_operator(config: OperatorConfig):
+    """Factory function to create an operator, optionally enhanced with memory capabilities.
+
+    When ENABLE_MEMFUSE is True and enhanced components are available, returns an
+    EnhancedOperator wrapped with memory hooks. Otherwise returns a standard Operator.
+    """
+    base_operator = Operator(config)
+
+    # Conditionally wrap with enhanced memory when enabled and available
+    if SystemEnv.ENABLE_MEMFUSE and EnhancedOperator and get_operator_hook:  # type: ignore[truthy-bool]
+        try:
+            hook = get_operator_hook()  # type: ignore[call-arg]
+            enhanced = EnhancedOperator(base_operator, hook)  # type: ignore[call-arg]
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] create_operator: created EnhancedOperator for operator={config.id}")
+            return enhanced
+        except Exception as e:  # noqa: BLE001
+            if SystemEnv.PRINT_MEMORY_LOG:
+                print(f"[memory] create_operator: EnhancedOperator creation failed, using base: {e}")
+
+    if SystemEnv.PRINT_MEMORY_LOG and SystemEnv.ENABLE_MEMFUSE:
+        print(f"[memory] create_operator: created base Operator for operator={config.id} (enhanced components unavailable)")
+
+    return base_operator

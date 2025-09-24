@@ -46,6 +46,33 @@ class ReasonerMemory(ABC):
     def get_messages_metadata(self) -> List[dict]:
         """Get all the messages in the memory in json format."""
 
+    @abstractmethod
+    def retrieve(self, query_text: str, top_k: int) -> List[str]:
+        """Retrieve relevant memories.
+
+        Args:
+            query_text (str): The query text used to retrieve memories.
+            top_k (int): The maximum number of memories to return.
+
+        Returns:
+            List[str]: Retrieved memory snippets. Empty list if unsupported.
+        """
+
+    @abstractmethod
+    def write_turn(
+        self, sys_prompt: str, messages: List[ModelMessage], job_id: str, operator_id: str
+    ) -> None:
+        """Persist a conversation turn to the memory backend.
+
+        Implementations may choose to be no-ops. Should never raise.
+
+        Args:
+            sys_prompt (str): The system prompt used for generation.
+            messages (List[ModelMessage]): The message history for the turn.
+            job_id (str): The job id scope.
+            operator_id (str): The operator id scope.
+        """
+
 
 class BuiltinReasonerMemory(ReasonerMemory):
     """Agent message memory."""
@@ -89,3 +116,12 @@ class BuiltinReasonerMemory(ReasonerMemory):
     def get_messages_metadata(self) -> List[dict]:
         """Get all the messages in the memory in json format."""
         return [message.__dict__ for message in self._history_messages]
+
+    def retrieve(self, query_text: str, top_k: int) -> List[str]:
+        return []
+
+    def write_turn(
+        self, sys_prompt: str, messages: List[ModelMessage], job_id: str, operator_id: str
+    ) -> None:
+        """Persist a conversation turn (no-op for builtin memory)."""
+        return None
