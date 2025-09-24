@@ -104,7 +104,7 @@ tools:
     type: "MCP"
     mcp_transport_config:
       transport_type: "SSE"
-      url: "http://127.0.0.1:8931"
+      url: "http://localhost:8931/sse"
 
   - &file_tool
     name: "FileTool"

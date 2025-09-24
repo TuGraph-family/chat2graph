@@ -56,8 +56,7 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "SCHEMA_FILE_NAME": (str, "graph.db.schema.json"),
     "SCHEMA_FILE_ID": (str, "schema_file_id"),
     "LANGUAGE": (str, "en-US"),
-    # MemFuse integration toggles and config
-    "ENABLE_MEMFUSE": (bool, False),
+    "ENABLE_MEMFUSE": (bool, False),  # enable MemFuse as agent memory module
     "PRINT_MEMORY_LOG": (bool, False),
     "MEMFUSE_BASE_URL": (str, "http://localhost:8001"),
     "MEMFUSE_TIMEOUT": (float, 30.0),
@@ -85,27 +84,28 @@ class SystemEnvMeta(type):
         """Get value following priority: .env > os env > default value"""
         key = name.upper()
 
-        # 1) If we've explicitly set a value in runtime, always return it (even if falsy)
-        if key in _env_values:
-            return _env_values[key]
+        # get value from .env
+        val = _env_values.get(key, None)
+        if val:
+            return val
 
-        # 2) Read from OS env (string) if present
-        raw = os.getenv(key, None)
+        # get value from system env
+        val = os.getenv(key, None)
 
-        # 3) Lookup type and default
-        key_type, default_value = _env_vars.get(key, (None, None))
+        # get key declaration
+        (key_type, default_value) = _env_vars.get(key, (None, None))
         if not key_type:
-            _env_values[key] = raw
-            return raw
+            _env_values[key] = val
+            return val
 
-        # 4) Compute final value: prefer OS env if provided, else default
-        if raw is None:
-            val = default_value
+        # use default value
+        val = val if val else default_value
+
+        # cast value by type
+        if key_type is bool:
+            val = str(val).lower() in ("true", "1", "yes") if val else None
         else:
-            if key_type is bool:
-                val = str(raw).strip().lower() in ("true", "1", "yes")
-            else:
-                val = key_type(raw)
+            val = key_type(val) if val else None
 
         _env_values[key] = val
         return val

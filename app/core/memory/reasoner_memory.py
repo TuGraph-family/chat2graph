@@ -46,7 +46,6 @@ class ReasonerMemory(ABC):
     def get_messages_metadata(self) -> List[dict]:
         """Get all the messages in the memory in json format."""
 
-    # extended hooks for external memory systems
     @abstractmethod
     def retrieve(self, query_text: str, top_k: int) -> List[str]:
         """Retrieve relevant memories.
@@ -120,7 +119,6 @@ class BuiltinReasonerMemory(ReasonerMemory):
 
     # no-op external memory hooks for builtin memory
     def retrieve(self, query_text: str, top_k: int) -> List[str]:
-        """Retrieve relevant memories (not supported for builtin memory)."""
         return []
 
     def write_turn(
