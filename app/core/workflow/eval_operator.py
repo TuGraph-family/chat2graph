@@ -139,7 +139,7 @@ class EvalOperator(Operator):
             tools=rec_tools,
             actions=rec_actions,
             knowledge=self.get_knowledge(job),
-            insights=self.get_env_insights(),
+            insights=None,  # TODO: get insights from memory for the evaluation
             lesson=lesson,
         )
         return task

@@ -62,8 +62,10 @@ handle_dependency_conflicts() {
   # 1. Preserve full installation output (no information hidden)
   # 2. Convert ERROR to WARNING to prevent misleading appearance of failure
   info "Resolving aiohttp version conflict..."
-  local target_aiohttp_version="3.12.13"
-  pip install --force-reinstall "aiohttp==$target_aiohttp_version" --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>&1 | sed 's/ERROR/WARNING/g'
+  pip install --force-reinstall "aiohttp==3.12.13" --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>&1 | sed 's/ERROR/WARNING/g'
+  # install memfuse (^0.3.2)
+  info "Resolved memfuse dependency..."
+  pip install --force-reinstall "memfuse>=0.3.2" --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>&1 | sed 's/ERROR/WARNING/g'
 }
 
 build_python() {

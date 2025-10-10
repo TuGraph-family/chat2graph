@@ -3,13 +3,14 @@ from typing import Any
 
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
-from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
+from app.core.memory.memory import Memory
 from app.core.model.message import ModelMessage
 from app.core.model.task import Task
 from app.core.prompt.reasoner import ACTOR_PROMPT_TEMPLATE, THINKER_PROMPT_TEMPLATE
 from app.core.reasoner.model_service import ModelService
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.reasoner.reasoner import Reasoner
+from app.core.service.memory_service import MemoryService
 
 
 class DualModelReasoner(Reasoner):
@@ -71,7 +72,10 @@ class DualModelReasoner(Reasoner):
         )
 
         # init the memory
-        reasoner_memory = self.init_memory(task=task)
+        memory_service: MemoryService = MemoryService.instance
+        reasoner_memory = memory_service.get_or_create_reasoner_memory(
+            reasoner_memory_key=task.get_reasoner_memory_key()
+        )
         reasoner_memory.add_message(init_message)
 
         for _ in range(max_reasoning_rounds):
@@ -130,7 +134,7 @@ class DualModelReasoner(Reasoner):
         """Evaluate the inference process, used to debug the process."""
         # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
-    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+    async def conclude(self, reasoner_memory: Memory) -> str:
         """Conclude the inference results."""
 
         content = reasoner_memory.get_message_by_index(-1).get_payload()
@@ -214,25 +218,7 @@ class DualModelReasoner(Reasoner):
             functions=func_description,
         )
 
-    def init_memory(self, task: Task) -> ReasonerMemory:
-        """Initialize the memory."""
-        if not task.operator_config:
-            return BuiltinReasonerMemory()
-
-        session_id = task.job.session_id
-        job_id = task.job.id
-        operator_id = task.operator_config.id
-
-        if session_id not in self._memories:
-            self._memories[session_id] = {}
-        if job_id not in self._memories[session_id]:
-            self._memories[session_id][job_id] = {}
-        reasoner_memory = BuiltinReasonerMemory()
-        self._memories[session_id][job_id][operator_id] = reasoner_memory
-
-        return reasoner_memory
-
-    def get_memory(self, task: Task) -> ReasonerMemory:
+    def get_memory(self, task: Task) -> Memory:
         """Get the memory."""
         session_id = task.job.session_id
         job_id = task.job.id
@@ -242,7 +228,10 @@ class DualModelReasoner(Reasoner):
             operator_id = task.operator_config.id
             return self._memories[session_id][job_id][operator_id]
         except (KeyError, AssertionError, AttributeError):
-            return self.init_memory(task=task)
+            memory_service: MemoryService = MemoryService.instance
+            return memory_service.get_or_create_reasoner_memory(
+                reasoner_memory_key=task.get_reasoner_memory_key()
+            )
 
     @staticmethod
     def stopped(message: ModelMessage) -> bool:

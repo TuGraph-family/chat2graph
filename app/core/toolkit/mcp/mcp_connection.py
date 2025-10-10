@@ -90,17 +90,31 @@ class McpConnection(ToolConnection):
 
             transport_config = self.transport_config
 
-            # Establish transport connection
-            if transport_config.transport_type == McpTransportType.STDIO:
-                await self._connect_stdio()
-            elif transport_config.transport_type == McpTransportType.SSE:
-                await self._connect_sse()
-            elif transport_config.transport_type == McpTransportType.WEBSOCKET:
-                await self._connect_websocket()
-            elif transport_config.transport_type == McpTransportType.STREAMABLE_HTTP:
-                await self._connect_streamable_http()
-            else:
-                raise ValueError(f"Unsupported transport type: {transport_config.transport_type}")
+            # establish transport connection
+            try:
+                if transport_config.transport_type == McpTransportType.STDIO:
+                    await self._connect_stdio()
+                elif transport_config.transport_type == McpTransportType.SSE:
+                    await self._connect_sse()
+                elif transport_config.transport_type == McpTransportType.WEBSOCKET:
+                    await self._connect_websocket()
+                elif transport_config.transport_type == McpTransportType.STREAMABLE_HTTP:
+                    await self._connect_streamable_http()
+                else:
+                    raise ValueError(
+                        f"Unsupported transport type: {transport_config.transport_type}"
+                    )
+            except ValueError:
+                await self._exit_stack.aclose()
+                self._session = None
+                raise
+            except Exception as e:
+                await self._exit_stack.aclose()
+                self._session = None
+                raise RuntimeError(
+                    "Failed to connect to MCP server. "
+                    f"Please check out the port/connection of the MCP server:\n{e}"
+                ) from e
 
             if self._session is None:
                 raise RuntimeError("MCP session was not properly connected.")

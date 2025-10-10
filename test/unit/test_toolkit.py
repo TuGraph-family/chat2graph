@@ -5,6 +5,7 @@ import networkx as nx
 import pytest
 
 from app.core.common.type import McpTransportType, ToolGroupType
+from app.core.sdk.init_server import init_server
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.mcp.mcp_service import McpService
@@ -12,10 +13,35 @@ from app.core.toolkit.mcp.mcp_tool import McpTool
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
 from app.core.toolkit.toolkit import Toolkit
-from test.resource.init_server import init_server
-from test.resource.tool_resource import ExampleQuery
 
 init_server()
+
+
+# example tool
+class ExampleQuery(Tool):
+    """The query tool in the toolkit."""
+
+    def __init__(self):
+        super().__init__(
+            name="query_tool",
+            description="A test query tool",
+            function=self.query,
+        )
+
+    async def query(self, text: str) -> str:
+        """Query the database/document by the text.
+
+        Args:
+            text: The text to query.
+
+        Returns:
+            The result of the query from the database/document.
+        """
+        return "This is a mocked query result"
+
+    def copy(self) -> "ExampleQuery":
+        """Create a copy of the ExampleQuery tool."""
+        return ExampleQuery()
 
 
 def create_mock_mcp_tool(name: str, description: str) -> McpBaseTool:

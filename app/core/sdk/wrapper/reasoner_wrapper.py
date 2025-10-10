@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from app.core.common.type import ReasonerType
-from app.core.memory.reasoner_memory import ReasonerMemory
+from app.core.memory.memory import Memory
 from app.core.model.job import Job
 from app.core.model.message import ModelMessage
 from app.core.model.task import Task
@@ -32,7 +32,7 @@ class ReasonerWrapper:
 
         return self
 
-    def get_memory(self, job: Job) -> ReasonerMemory:
+    def get_memory(self, job: Job) -> Memory:
         """Get the memory of the reasoner."""
         if not self._reasoner:
             raise ValueError("Reasoner is not set.")

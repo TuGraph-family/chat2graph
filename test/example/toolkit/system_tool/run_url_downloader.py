@@ -2,7 +2,7 @@ import asyncio
 import os
 from pathlib import Path
 
-import requests
+import requests  # type: ignore
 
 from app.core.toolkit.system_tool.url_downloader import UrlDownloaderTool
 

@@ -6,15 +6,41 @@ import pytest
 from app.core.sdk.wrapper.toolkit_wrapper import ToolkitWrapper
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
 from app.core.toolkit.tool_config import ToolGroupConfig
 from app.core.toolkit.tool_group import ToolPackage
-from test.resource.tool_resource import ExampleQuery
 
-# Initialize the singleton service instance for tests
+# initialize the singleton service instance for tests
 ToolkitService()
 
 
-# --- Helper function to create mocks for clarity ---
+# example tool
+class ExampleQuery(Tool):
+    """The query tool in the toolkit."""
+
+    def __init__(self):
+        super().__init__(
+            name="query_tool",
+            description="A test query tool",
+            function=self.query,
+        )
+
+    async def query(self, text: str) -> str:
+        """Query the database/document by the text.
+
+        Args:
+            text: The text to query.
+
+        Returns:
+            The result of the query from the database/document.
+        """
+        return "This is a mocked query result"
+
+    def copy(self) -> "ExampleQuery":
+        """Create a copy of the ExampleQuery tool."""
+        return ExampleQuery()
+
+
 def mock_toolkit_service(mocker):
     """Mocks all relevant methods of ToolkitService."""
     mock_add_action = mocker.patch(

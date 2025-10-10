@@ -4,8 +4,8 @@ from typing import Any, Dict, List
 from app.core.model.job import SubJob
 from app.core.model.task import Task
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.sdk.init_server import init_server
 from app.core.toolkit.tool import Tool
-from test.resource.init_server import init_server
 
 init_server()
 

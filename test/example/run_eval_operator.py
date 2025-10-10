@@ -1,7 +1,5 @@
 import asyncio
 
-import matplotlib.pyplot as plt
-
 from app.core.common.type import WorkflowStatus
 from app.core.model.job import SubJob
 from app.core.model.message import WorkflowMessage
@@ -10,11 +8,11 @@ from app.core.prompt.eval_operator import (
     EVAL_OPERATION_OUTPUT_PROMPT,
 )
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.sdk.init_server import init_server
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.workflow.eval_operator import EvalOperator
 from app.core.workflow.operator_config import OperatorConfig
-from test.resource.init_server import init_server
 
 init_server()
 
@@ -55,18 +53,14 @@ async def main():
         },
         job_id=job.id,
     )
-    input_message_1 = WorkflowMessage(
-        payload={"scratchpad": "The start value is 1."},
-        job_id=job.id,
-    )
-    input_message_2 = WorkflowMessage(
-        payload={"scratchpad": "The end value is 21."},
+    input_message = WorkflowMessage(
+        payload={"scratchpad": "The start value is 1.\n\nThe end value is 21."},
         job_id=job.id,
     )
     result: WorkflowMessage = await operator.execute(
         reasoner=reasoner,
         job=job,
-        workflow_messages=[input_message_1, input_message_2],
+        workflow_messages=[input_message],
         previous_expert_outputs=[execution_message],
     )
 
@@ -80,8 +74,6 @@ async def main():
         f"scratchpad: {result.scratchpad}"
     )
     print("Operator execution completed successfully")
-
-    plt.show()
 
 
 if __name__ == "__main__":

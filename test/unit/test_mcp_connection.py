@@ -4,9 +4,9 @@ from mcp.types import CallToolResult, TextContent, Tool as McpBaseTool
 import pytest
 
 from app.core.common.type import McpTransportType, ToolGroupType
+from app.core.sdk.init_server import init_server
 from app.core.toolkit.mcp.mcp_connection import McpConnection
 from app.core.toolkit.tool_config import McpConfig, McpTransportConfig
-from test.resource.init_server import init_server
 
 init_server()
 

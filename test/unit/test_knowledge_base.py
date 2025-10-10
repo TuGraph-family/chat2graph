@@ -4,9 +4,9 @@ from uuid import uuid4
 from dbgpt.core import Chunk
 
 from app.core.model.job import SubJob
+from app.core.sdk.init_server import init_server
 from app.core.service.knowledge_base_service import KnowledgeBaseService
 from app.plugin.dbgpt.dbgpt_knowledge_store import VectorKnowledgeStore
-from test.resource.init_server import init_server
 
 init_server()
 

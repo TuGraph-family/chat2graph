@@ -1,5 +1,5 @@
+from app.core.sdk.init_server import init_server
 from app.core.service.graph_db_service import GraphDbService
-from test.resource.init_server import init_server
 
 init_server()
 

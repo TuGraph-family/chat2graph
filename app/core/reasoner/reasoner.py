@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-from app.core.memory.reasoner_memory import ReasonerMemory
+from app.core.memory.memory import Memory
 from app.core.model.task import Task
 from app.core.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
 
@@ -11,7 +11,7 @@ class Reasoner(ABC):
 
     def __init__(self):
         self._memories: Dict[
-            str, Dict[str, Dict[str, ReasonerMemory]]
+            str, Dict[str, Dict[str, Memory]]
         ] = {}  # session_id -> job_id -> operator_id -> memory
 
     @abstractmethod
@@ -27,15 +27,11 @@ class Reasoner(ABC):
         """Evaluate the inference process."""
 
     @abstractmethod
-    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+    async def conclude(self, reasoner_memory: Memory) -> str:
         """Conclude the inference results."""
 
     @abstractmethod
-    def init_memory(self, task: Task) -> ReasonerMemory:
-        """Initialize the memory."""
-
-    @abstractmethod
-    def get_memory(self, task: Task) -> ReasonerMemory:
+    def get_memory(self, task: Task) -> Memory:
         """Get the memory."""
 
     def _build_task_context(self, task: Task) -> str:

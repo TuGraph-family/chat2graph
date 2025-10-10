@@ -3,11 +3,11 @@ from typing import Any, Dict, List
 
 from app.core.model.job import SubJob
 from app.core.model.task import Task
+from app.core.sdk.init_server import init_server
 from app.core.service.reasoner_service import ReasonerService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 from app.core.workflow.operator_config import OperatorConfig
-from test.resource.init_server import init_server
 
 init_server()
 

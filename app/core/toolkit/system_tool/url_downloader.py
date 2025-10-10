@@ -7,7 +7,7 @@ from typing import Optional, Union
 from urllib.parse import urlparse
 
 import magic
-import requests
+import requests  # type: ignore
 
 from app.core.toolkit.tool import Tool
 
