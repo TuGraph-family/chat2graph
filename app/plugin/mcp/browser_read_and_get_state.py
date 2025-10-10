@@ -35,41 +35,32 @@ class BrowserReadAndGetStateTool(Tool):
         self,
         tool_call_ctx: ToolCallContext,
         vlm_task: str,
-        task_context: Optional[str] = None,
+        vlm_task_context: str,
+        agent_full_context: str,
     ) -> str:
-        """Analyzes the current webpage to determine the single best next step towards your goal.
+        """Analyzes the current webpage to determine the single best next step towards your goal by inheriting the main Agent's full context.
 
         This is a powerful visual analysis tool. In a multi-step task, you should call this tool
         repeatedly after each action (like a click or type) to re-evaluate the new page state.
 
         **When to use this tool:**
-        Use this tool as your primary 'eyes' to understand a webpage. Call it after navigating to a
-        new page, or after performing an action that changes the page content.
+        Use this tool as your primary 'eyes' to understand a webpage. It acts as an extension of your own reasoning, equipped with your full operational context.
 
-        **Strategy for Multi-Step Tasks:**
-        This tool supports conversational context to become more efficient and accurate over time.
-        - **First Call:** On a new page, use ONLY the `vlm_task` parameter to describe the overall goal.
-        - **Subsequent Calls:** After performing an action (e.g., dismissing a pop-up, clicking 'next page'),
-          call this tool again. This time, provide BOTH:
-            1. `vlm_task`: The SAME overall goal, including the conditions or the constraints something else.
-            2. `task_context`: A brief summary of the last action and the current situation.
-          This helps the VLM understand the progress and not get confused.
-
-        **How to formulate `vlm_task` and `task_context`:**
+        **How to formulate parameters:**
 
         *   **`vlm_task` (The Unchanging Goal):**
             - "Find and book the cheapest flight from JFK to LAX for tomorrow."
             - "Summarize the return policy of this product."
-            - "Find the number of publications by author X published before 2020."
-            - "I have now used Google to search for a certain keyword. Please tell me what the search results are and what the index of the element I need to interact with next is?"
 
-        *   **`task_context` (The Evolving Situation):**
-            - *After dismissing a cookie banner:* "I have just dismissed the cookie banner. Now I need to see the main content."
-            - *After clicking 'next page':* "I am now on page 2 of the search results. I need to continue my search here."
-            - *In your ORCID example:* "I am on the second page of the author's works. I already counted 28 pre-2020 publications on the first page. Now I need to count the ones on this page."
+        *   **`vlm_task_context` (The Evolving Situation):**
+            - *Initial state:* "I have just navigated to the page to begin the task."
+            - *After an action:* "I have just dismissed the cookie banner. Now I need to see the main content."
+
+        *   **`agent_full_context` (Your Entire Mind):**
+            - This is the most critical parameter. You must pass your **complete System Prompt (without the function calls usage, <function_call> symbol, </function_call> symbol and the output schema) and the full conversation history** here. This ensures the visual analysis module operates with the exact same rules, principles, and memory that you do.
 
         Returns:
-            str: returns a natural language (or semi-structured) string. The following types of content may appear (the model will choose one based on the page situation):
+            str: returns a natural language (or semi-structured) string, analyzed with the full agent context, describing the next best step or final answer based on the visual information. The output format will follow the familiar 4-scenario structure:
                 Scene 1 - Final answer:
                     Indicates that the result has been obtained directly, usually in a format like:
                     "Completed: The author published a total of 70 articles before 1999."
@@ -93,21 +84,25 @@ class BrowserReadAndGetStateTool(Tool):
                     - ambiguous_element_indices: A list of candidate indices provided when there are uncertainties.
                     - reasoning: A brief explanation of uncertainty or basis for judgment.
 
+
         Input Schema (Args):
         {
             "type": "object",
             "properties": {
                 "vlm_task": {
                     "type": "string",
-                    "description": "Describe what you ultimately want to achieve on this website."
+                    "description": "Describe what you ultimately want to achieve on this website. This is the overall mission."
                 },
-                "task_context": {
+                "vlm_task_context": {
                     "type": "string",
-                    "description": "Optional. A summary of what has already been accomplished or the current state of the multi-step task. Use this on all calls after the first one.",
-                    "default": null
+                    "description": "A summary of what has already been accomplished or the current state of the multi-step task. This is the immediate situation."
+                },
+                "agent_full_context": {
+                    "type": "string",
+                    "description": "CRITICAL: The main agent's full context, including its System Prompt and the entire conversation history. This allows the visual model to adopt the agent's persona and reasoning."
                 }
             },
-            "required": ["vlm_task"]
+            "required": ["vlm_task", "vlm_task_context", "agent_full_context"]
         }
         """  # noqa: E501
         mcp_service = self._get_mcp_service()
@@ -115,7 +110,7 @@ class BrowserReadAndGetStateTool(Tool):
         temp_dir = "./.gaia_tmp/"
         os.makedirs(temp_dir, exist_ok=True)
 
-        # get both clean and highlighted screenshots ===
+        # get both clean and highlighted screenshots
         clean_results = await mcp_connection.call(
             tool_name="browser_read_and_get_state",
             include_screenshot=True,
@@ -128,9 +123,11 @@ class BrowserReadAndGetStateTool(Tool):
         )
 
         _, clean_screenshot_base64 = self._parse_mcp_results(clean_results)
+        print("Got clean screenshot from MCP.")
         highlighted_page_state, highlighted_screenshot_base64 = self._parse_mcp_results(
             highlighted_results
         )
+        print("Got highlighted screenshot and page state from MCP.")
         image_base64s: List[str] = []
         image_paths: List[str] = []
         screenshot_context: Optional[str] = None
@@ -167,19 +164,21 @@ class BrowserReadAndGetStateTool(Tool):
             screenshot_context = (
                 "\nSystem unexpected situation: No screenshots could be captured from "
                 "the current page. The current page might be a PDF, embedded media, pages with "
-                "special rendering or other non-standard web page. "
-                "You can download the page instead."
+                "special rendering or other non-standard web page. Or the page might need to "
+                "take some time to load. You can download the page (only if downloadable) or "
+                "retry browser_read_and_get_state tool instead."
             )
-            print(f"Warning: {screenshot_context}")
+            print(f"Error: {screenshot_context}")
+            raise ValueError(f"Error: {screenshot_context}")
 
         # LLM call with both screenshots using OpenRouter API (with Gemini fallback)
         analysis_prompt = self._get_analysis_prompt(
-            vlm_task, task_context, screenshot_context, highlighted_page_state
+            vlm_task,
+            vlm_task_context,
+            agent_full_context,
+            screenshot_context,
+            highlighted_page_state,
         )
-        # vlm_result_str = await self._call_gemini_multimodal_model(
-        #     query_prompt=analysis_prompt,
-        #     image_paths=image_paths,
-        # )
         vlm_result_str = await self._call_multimodal_model(
             query_prompt=analysis_prompt,
             image_base64s=image_base64s,
@@ -212,7 +211,12 @@ class BrowserReadAndGetStateTool(Tool):
         """Parses MCP results to extract page state and screenshot."""
         if not results or not isinstance(results[0], TextContent):
             raise ValueError("Expected a text content block with page state info.")
-        page_state = json.loads(results[0].text)
+        try:
+            page_state = json.loads(results[0].text)
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"Failed to parse page state JSON: {e}\nContent: {results[0].text}"
+            ) from e
         screenshot_base64: Optional[str] = page_state.get("screenshot", None)
         return page_state, screenshot_base64
 
@@ -227,11 +231,22 @@ class BrowserReadAndGetStateTool(Tool):
     def _get_analysis_prompt(
         self,
         vlm_task: str,
-        task_context: Optional[str] = None,
+        vlm_task_context: str,
+        agent_full_context: str,
         screenshot_context: Optional[str] = None,
         page_state: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Generates a unified prompt for analyzing both clean and highlighted screenshots."""
+        agent_context_prompt = f"""
+---
+**OVERARCHING DIRECTIVES & CONTEXT FROM THE PRIMARY AGENT**
+Before analyzing the webpage, you must first internalize the following context. This information contains the primary agent's core principles, rules, and conversation history. Your entire analysis and all recommendations MUST be fully compliant with these directives. This is your foundational knowledge.
+
+{agent_full_context}
+---
+
+With the above context fully understood, you will now perform a specific visual analysis task. All the instructions below must be interpreted through the lens of the primary agent's directives you have just read.
+"""  # noqa: E501
 
         base_prompt = f'''As an expert web agent, your task is to analyze the provided webpage information to determine the single best next step to achieve my goal.
 
@@ -242,10 +257,9 @@ class BrowserReadAndGetStateTool(Tool):
 
 My ultimate goal: "{vlm_task}"'''  # noqa: E501
 
-        if task_context:
-            base_prompt += f'''
+        base_prompt += f'''
 **Current Task Context:** You are not starting from scratch. Here is what has happened so far:
-"{task_context}"'''
+"{vlm_task_context}"'''
         if screenshot_context:
             base_prompt += f"""
 **Screenshot Context Note:** {screenshot_context}"""
@@ -289,7 +303,7 @@ This applies if the page is ready for interaction (e.g., a search form) or if a 
 **Scenario 3: You found a partial answer, but more action is needed.**
 This is for situations like paginated results or "read more" sections.
 *   First, give me the partial information you found.
-*   Then, recommend the next action I need to take to get the rest of the information, following the same format as Scenario 2 (providing `element_index`, etc.).
+*   Then, recommend the next action I need to take to get the rest of the information, following the same format as Scenario 2 (providing `element_index`, etc.). And waht is more, if you are asked to find information that info resource/page is likely to be a PDF reader, please recommend me to download the PDF to let me read it locally.
 *   **Example Response:** "I've found 10 search results on this page that match your criteria. However, it says 'Page 1 of 5', so there's more to see. You should click the 'Next Page' button. From the highlighted image, that's `element_index: 88 (tag: ..., text: ..., href: ..., placeholder: ...)`."
 
 **Scenario 4: My goal cannot be achieved here.**
@@ -299,7 +313,7 @@ If the current page is completely irrelevant to my goal (e.g., I'm on Google but
 
 **Please begin your analysis now.**"""  # noqa: E501
 
-        return base_prompt
+        return agent_context_prompt + base_prompt
 
     async def _call_gemini_multimodal_model(self, query_prompt: str, image_paths: List[str]) -> str:
         """Call Gemini first for multimodal analysis"""
@@ -312,64 +326,65 @@ If the current page is completely irrelevant to my goal (e.g., I'm on Google but
     async def _call_multimodal_model(
         self, query_prompt: str, image_base64s: List[str], temp_dir: str
     ) -> str:
-        """Call Gemini first for multimodal analysis; fallback to OpenRouter if Gemini fails."""
-        # build message content (used only if we need to fallback to OpenRouter)
+        """Call OpenRouter first for multimodal analysis; fallback to Gemini if OpenRouter fails."""
+        # build message content for OpenRouter
         content: List[Dict[str, Any]] = [{"type": "text", "text": query_prompt}]
         for image_base64 in image_base64s:
             data_url = f"data:image/png;base64,{image_base64}"
             content.append({"type": "image_url", "image_url": {"url": data_url}})
         messages = [{"role": "user", "content": content}]
 
-        # primary: Gemini
+        # Primary: OpenRouter
         try:
-            temp_image_paths = []
-            for i, image_base64 in enumerate(image_base64s):
-                image_type = "clean" if i == 0 else "highlighted"
-                temp_path = self._save_screenshot(image_base64, temp_dir, f"gemini_{image_type}")
-                temp_image_paths.append(temp_path)
-            gemini_tool = GeminiMultiModalTool()
-            primary_result = await gemini_tool.call_multi_modal(
-                query_prompt=query_prompt,
-                media_paths=temp_image_paths,
+            response: Union[ModelResponse, CustomStreamWrapper] = completion(
+                model=SystemEnv.BROWSER_LLM_NAME,
+                api_base=SystemEnv.BROWSER_LLM_ENDPOINT,
+                api_key=SystemEnv.BROWSER_LLM_APIKEY,
+                messages=messages,
+                temperature=SystemEnv.TEMPERATURE,
+                stream=False,
+                timeout=60,
+                max_retries=2,
             )
-            if (
-                "quota" in primary_result.lower()
-                or "temporarily unavailable" in primary_result.lower()
-            ):  # noqa: E501
-                raise ValueError("Gemini service quota exceeded or temporarily unavailable.")
-            return primary_result
-        except Exception as gemini_error:
-            print(f"Gemini primary failed: {gemini_error}")
-            print("Falling back to OpenRouter multimodal model...")
-            # Fallback: OpenRouter
+            assert isinstance(response, ModelResponse)
+            # Check for error messages in response content
+            response_content = response["choices"][0]["message"]["content"]
+            if "error" in response_content.lower() and (
+                "service unavailable" in response_content.lower()
+                or "rate limit" in response_content.lower()
+            ):
+                raise ValueError(f"OpenRouter service error: {response_content}")
+            return response_content
+        except Exception as openrouter_error:
+            print(f"OpenRouter primary failed: {openrouter_error}")
+            print("Falling back to Gemini multimodal model...")
+            # Fallback: Gemini
             try:
-                response: Union[ModelResponse, CustomStreamWrapper] = completion(
-                    model=SystemEnv.BROWSER_LLM_NAME,
-                    api_base=SystemEnv.BROWSER_LLM_ENDPOINT,
-                    api_key=SystemEnv.BROWSER_LLM_APIKEY,
-                    messages=messages,
-                    temperature=SystemEnv.TEMPERATURE,
-                    stream=False,
-                    timeout=60,
-                    max_retries=2,
+                temp_image_paths = []
+                for i, image_base64 in enumerate(image_base64s):
+                    image_type = "clean" if i == 0 else "highlighted"
+                    temp_path = self._save_screenshot(
+                        image_base64, temp_dir, f"gemini_{image_type}"
+                    )
+                    temp_image_paths.append(temp_path)
+                gemini_tool = GeminiMultiModalTool()
+                gemini_result = await gemini_tool.call_multi_modal(
+                    query_prompt=query_prompt,
+                    media_paths=temp_image_paths,
                 )
-                assert isinstance(response, ModelResponse)
-                return response["choices"][0]["message"]["content"]
-            except Exception as openrouter_error:
-                print(f"OpenRouter fallback also failed: {openrouter_error}")
-                error_str = str(openrouter_error)
-                if "openrouter.ai" in error_str or "Temporarily unavailable" in error_str:
-                    return (
-                        "Error: Both Gemini (primary) and OpenRouter (fallback) visual analysis "
-                        "services failed. "
-                        f"Gemini error: {gemini_error}. "
-                        f"OpenRouter: Service temporarily unavailable ({openrouter_error}). "
-                        "Please try again later. You can still use other browser tools like "
-                        "navigation, clicking, or typing if you know what actions to take."
-                    )
-                else:
-                    return (
-                        "Error: Both visual analysis services failed. "
-                        f"Gemini error: {gemini_error}. "
-                        f"OpenRouter error: {error_str}"
-                    )
+                if (
+                    "quota" in gemini_result.lower()
+                    or "temporarily unavailable" in gemini_result.lower()
+                ):
+                    raise ValueError("Gemini service quota exceeded or temporarily unavailable.")
+                return gemini_result
+            except Exception as gemini_error:
+                print(f"Gemini fallback also failed: {gemini_error}")
+                return (
+                    "Error: Both OpenRouter (primary) and Gemini (fallback) visual analysis "
+                    "services failed. "
+                    f"OpenRouter error: {openrouter_error}. "
+                    f"Gemini error: {gemini_error}. "
+                    "Please try again later. You can still use other browser tools like "
+                    "navigation, clicking, or typing if you know what actions to take."
+                )

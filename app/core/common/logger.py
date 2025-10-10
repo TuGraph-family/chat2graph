@@ -20,8 +20,8 @@ class Chat2GraphLoggerMeta(type):
             return
 
         logging.basicConfig(
-            level=logging.INFO, 
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
 
         # suppress LiteLLM INFO messages

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-cd "$(dirname "$(readlink -f "$0")")" &> /dev/null && source utils.sh || exit
+cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && source utils.sh || exit
 
 # load MCP server configuration
 source mcp_server_config.sh
 
-# stop each MCP tool
-for config in "${mcp_tools_config[@]}"; do
+# stop each MCP server
+for config in "${mcp_server_configs[@]}"; do
     mcp_name=$(get_mcp_name "$config")
     port=$(get_mcp_port "$config")
 
@@ -13,8 +13,8 @@ for config in "${mcp_tools_config[@]}"; do
     mcp_pids=$(lsof -ti:${port} 2>/dev/null)
 
     if [[ -n $mcp_pids ]]; then
-        kill -9 $mcp_pids && info "${mcp_name} MCP tool stopped success !"
+        kill -9 $mcp_pids && info "${mcp_name} MCP server stopped success !"
     else
-        warn "${mcp_name} MCP tool not found"
+        warn "${mcp_name} MCP server not found"
     fi
 done

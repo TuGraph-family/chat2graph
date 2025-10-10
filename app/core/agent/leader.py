@@ -142,12 +142,14 @@ class Leader(Agent):
                 # color: orange
                 print("\033[38;5;208m[INFO]: Retrying decomposition with lesson...\033[0m")
                 lesson = (
-                    "LLM output format (<decomposition> format) specification is crucial "
-                    "for reliable parsing and validation. Ensure the JSON structure is correct, "
-                    f"all required keys are present: {subjob_required_keys}, dependencies are "
-                    f"valid task IDs, and assigned_expert is one of {expert_names}. Do not forget "
-                    " <decomposition> prefix and </decomposition> suffix when you generate the "
-                    "subtasks dict block in <final_output>...</final_output>.\nExpected format: "
+                    "LLM final output format (<decomposition> format) specification is crucial "
+                    "for reliable parsing and validation. And your task is not to resolve the "
+                    "given task, instead, you are asked to decompose the given task. Ensure "
+                    "the JSON structure is correct, all required keys are present: "
+                    f"{subjob_required_keys}, dependencies are valid task IDs, and assigned_expert "
+                    f"is one of {expert_names}. Do not forget <decomposition> prefix and "
+                    "</decomposition> suffix when you generate the subtasks dict block in "
+                    "<final_output>...</final_output>.\nExpected format: "
                     f"{JOB_DECOMPOSITION_OUTPUT_SCHEMA}\nError info: " + str(e)
                 )
                 try:
@@ -583,7 +585,7 @@ class Leader(Agent):
         # save the final system message with the error information
         error_payload = (
             f"An error occurred during the execution of the job:\n\n{message_payload}\n\n"
-            f'Please check the job `{original_job.id}` ("{original_job.goal[:10]}...") '
+            f'Please check the job `{original_job.id}` (job goal: "{original_job.goal}...") '
             "for more details. Or you can re-try to send your message."
         )
         original_job_id = original_job.id
