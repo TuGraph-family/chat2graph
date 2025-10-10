@@ -18,7 +18,25 @@ check_env() {
   python -c 'import sys; exit(0 if (3, 10) <= sys.version_info < (3, 12) else 1)' \
     || fatal "Python version must be >=3.10 and <3.12. Found $(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
   check_command pip 2 || fatal
-  check_command poetry 3 ' |)' || fatal "Run with 'pip install poetry' and retry."
+  # check for poetry. if missing, show a help message and exit
+  if ! command -v poetry >/dev/null 2>&1; then
+    echo -n "poetry is not installed. Do you want to install it now? (y/n): "
+    read -r _response_poetry
+    if [[ "$_response_poetry" =~ ^[Yy]$ ]]; then
+      info "Installing poetry via pip install poetry..."
+      if pip install poetry; then
+        info "poetry installed successfully."
+      else
+        echo
+        echo "Automatic installation failed. You can run the following command manually and retry:"
+        echo "pip install poetry"
+        echo
+        fatal "Failed to install poetry automatically."
+      fi
+    else
+      fatal "poetry is required. Please install it and retry."
+    fi
+  fi
   check_command node 2 'v' || fatal
   check_command npm || fatal
 

@@ -57,7 +57,7 @@ class BrowserReadAndGetStateTool(Tool):
             - *After an action:* "I have just dismissed the cookie banner. Now I need to see the main content."
 
         *   **`agent_full_context` (Your Entire Mind):**
-            - This is the most critical parameter. You must pass your **complete System Prompt and the full conversation history** here. This ensures the visual analysis module operates with the exact same rules, principles, and memory that you do.
+            - This is the most critical parameter. You must pass your **complete System Prompt (without the function calls usage, <function_call> symbol, </function_call> symbol and the output schema) and the full conversation history** here. This ensures the visual analysis module operates with the exact same rules, principles, and memory that you do.
 
         Returns:
             str: returns a natural language (or semi-structured) string, analyzed with the full agent context, describing the next best step or final answer based on the visual information. The output format will follow the familiar 4-scenario structure:
@@ -123,9 +123,11 @@ class BrowserReadAndGetStateTool(Tool):
         )
 
         _, clean_screenshot_base64 = self._parse_mcp_results(clean_results)
+        print("Got clean screenshot from MCP.")
         highlighted_page_state, highlighted_screenshot_base64 = self._parse_mcp_results(
             highlighted_results
         )
+        print("Got highlighted screenshot and page state from MCP.")
         image_base64s: List[str] = []
         image_paths: List[str] = []
         screenshot_context: Optional[str] = None
@@ -162,8 +164,9 @@ class BrowserReadAndGetStateTool(Tool):
             screenshot_context = (
                 "\nSystem unexpected situation: No screenshots could be captured from "
                 "the current page. The current page might be a PDF, embedded media, pages with "
-                "special rendering or other non-standard web page. "
-                "You can download the page instead."
+                "special rendering or other non-standard web page. Or the page might need to "
+                "take some time to load. You can download the page (only if downloadable) or "
+                "retry browser_read_and_get_state tool instead."
             )
             print(f"Error: {screenshot_context}")
             raise ValueError(f"Error: {screenshot_context}")

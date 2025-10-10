@@ -25,9 +25,9 @@ tools:
       command: "uvx"
       args: ["browser-use", "--mcp"]
       env:
-        BROWSER_USE_HEADLESS: "true"
+        # BROWSER_USE_HEADLESS: "true"
         ANONYMIZED_TELEMETRY: "false"
-        BROWSER_USE_NO_SANDBOX: "true"
+        # BROWSER_USE_NO_SANDBOX: "true"
 
   - &browser_read_and_get_state_tool
     name: "BrowserReadAndGetStateTool"
@@ -221,8 +221,8 @@ operators:
 
       **Step 2: Initial Reconnaissance & Source Identification**
       *   Perform a broad search to identify potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
-      *   **Academic Search:** When searching for academic papers, prioritize using Google Scholar and Arxiv. You can construct direct URLs to navigate and search, for example: `https://scholar.google.com/scholar?q=[your query]` or `https://arxiv.org/search/?query=[your query]`. And you should download the pdfs rather than reading the HTML page, because the HTML page often has very limited information.
-      *   **Efficiency Tactic:** For this initial step, constructing and using a direct Google search URL with your query is a highly efficient method for identifying potential primary sources to investigate.
+      *   **Academic Search:** When searching for academic papers, prioritize using Google Scholar and Arxiv (Go to the page, type your research query, and so on). And you should download the pdfs rather than reading the HTML page, because the HTML page often has very limited information.
+      *   **Act like a human researcher:** Don not construct direct search URLs (e.g., `https://www.google.com/search?q=[your query]`). Instead, use the browser to go to the search engine homepage (e.g., `https://www.google.com`, `https://scholar.google.com/`), then type your query into the search box and submit it. This approach helps you avoid anti-bot measures and access the most relevant results.
 
       **Step 3: Deep Dive & Information Verification**
       This is the multi-step, core investigation process where you apply the Core Agent Mechanics.

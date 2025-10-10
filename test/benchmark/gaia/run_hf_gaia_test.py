@@ -329,8 +329,15 @@ def main():
     # --- parallel processing ---
     results = []
     agent_config_path = os.path.join(project_root, "test/benchmark/gaia/gaia_agents.yml")
+    log_dir = Path(project_root) / "test/benchmark/gaia/running_logs"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_filename = f"gaia_results_{args.split}_level-{args.level}_{timestamp}.jsonl"
+    output_path = log_dir / output_filename
 
-    with ProcessPoolExecutor(max_workers=args.parallel_num) as executor:
+    with (
+        open(output_path, "w", encoding="utf-8") as f,
+        ProcessPoolExecutor(max_workers=args.parallel_num) as executor,
+    ):
         future_to_sample = {
             executor.submit(
                 process_single_sample, sample, agent_config_path, project_root, args.split
@@ -342,34 +349,21 @@ def main():
             sample = future_to_sample[future]
             try:
                 result = future.result()
-                results.append(result)
                 print(f"✅ Finished processing task: {sample['task_id']}")
             except Exception as exc:
                 print(f"❌ Task {sample['task_id']} raised exception: {exc}")
-                results.append(
-                    {
-                        "task_id": sample["task_id"],
-                        "model_answer": "EXECUTION_ERROR",
-                        "reasoning_trace": str(exc),
-                        "is_correct": False,
-                    }
-                )
-
-    # --- save and report results ---
-    log_dir = Path(project_root) / "test/benchmark/gaia/running_logs"
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"gaia_results_{args.split}_level-{args.level}_{timestamp}.jsonl"
-    output_path = log_dir / output_filename
-
-    correct_count = 0
-    with open(output_path, "w", encoding="utf-8") as f:
-        for res in results:
-            if res.get("is_correct"):
-                correct_count += 1
+                result = {
+                    "task_id": sample["task_id"],
+                    "model_answer": "EXECUTION_ERROR",
+                    "reasoning_trace": str(exc),
+                    "is_correct": False,
+                }
+            results.append(result)
             # Remove temporary fields from the results to comply with the official submission format.
-            submission_entry = {k: v for k, v in res.items() if k != "is_correct"}
+            submission_entry = {k: v for k, v in result.items() if k != "is_correct"}
             f.write(json.dumps(submission_entry) + "\n")
 
+    correct_count = sum(1 for res in results if res.get("is_correct"))
     total_processed = len(results)
     accuracy = (correct_count / total_processed * 100) if total_processed > 0 else 0
 
