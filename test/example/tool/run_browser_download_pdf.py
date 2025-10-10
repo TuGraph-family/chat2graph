@@ -39,6 +39,11 @@ async def init_server() -> McpConnection:
                 transport_type=McpTransportType.STDIO,
                 command="uvx",
                 args=["browser-use", "--mcp"],
+                env={
+                    "BROWSER_USE_HEADLESS": "true",
+                    "ANONYMIZED_TELEMETRY": "false",
+                    "BROWSER_USE_NO_SANDBOX": "true",
+                },
             ),
         )
     )

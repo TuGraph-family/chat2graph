@@ -30,9 +30,9 @@ Based on the original question and the agent's verbose answer below, provide ONL
 
 **Formatting Rules (Follow Strictly):**
 - Your response must contain ONLY the final answer, with no extra text, explanations, or prefixes like "FINAL ANSWER:".
-- If the answer is a number, return only the number without any units unless specified otherwise.
-- If the answer is a string, don't use abbreviations (e.g. for states).
-- If the answer is a comma separated list, apply the above rules to each element in the list.
+- Do not include units, symbols (like $, %), or thousand separators (,) unless the original question specifically requires them.
+- Provide it directly. Do not use abbreviations (e.g., write "New York" instead of "NY").
+- If the answer is a list of items, format it as a single line of text with items separated by a comma (e.g., "item1,item2,item3").
 
 **Original Question:**
 {question}
@@ -329,8 +329,15 @@ def main():
     # --- parallel processing ---
     results = []
     agent_config_path = os.path.join(project_root, "test/benchmark/gaia/gaia_agents.yml")
+    log_dir = Path(project_root) / "test/benchmark/gaia/running_logs"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_filename = f"gaia_results_{args.split}_level-{args.level}_{timestamp}.jsonl"
+    output_path = log_dir / output_filename
 
-    with ProcessPoolExecutor(max_workers=args.parallel_num) as executor:
+    with (
+        open(output_path, "w", encoding="utf-8") as f,
+        ProcessPoolExecutor(max_workers=args.parallel_num) as executor,
+    ):
         future_to_sample = {
             executor.submit(
                 process_single_sample, sample, agent_config_path, project_root, args.split
@@ -342,34 +349,21 @@ def main():
             sample = future_to_sample[future]
             try:
                 result = future.result()
-                results.append(result)
                 print(f"✅ Finished processing task: {sample['task_id']}")
             except Exception as exc:
                 print(f"❌ Task {sample['task_id']} raised exception: {exc}")
-                results.append(
-                    {
-                        "task_id": sample["task_id"],
-                        "model_answer": "EXECUTION_ERROR",
-                        "reasoning_trace": str(exc),
-                        "is_correct": False,
-                    }
-                )
-
-    # --- save and report results ---
-    log_dir = Path(project_root) / "test/benchmark/gaia/running_logs"
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"gaia_results_{args.split}_level-{args.level}_{timestamp}.jsonl"
-    output_path = log_dir / output_filename
-
-    correct_count = 0
-    with open(output_path, "w", encoding="utf-8") as f:
-        for res in results:
-            if res.get("is_correct"):
-                correct_count += 1
+                result = {
+                    "task_id": sample["task_id"],
+                    "model_answer": "EXECUTION_ERROR",
+                    "reasoning_trace": str(exc),
+                    "is_correct": False,
+                }
+            results.append(result)
             # Remove temporary fields from the results to comply with the official submission format.
-            submission_entry = {k: v for k, v in res.items() if k != "is_correct"}
+            submission_entry = {k: v for k, v in result.items() if k != "is_correct"}
             f.write(json.dumps(submission_entry) + "\n")
 
+    correct_count = sum(1 for res in results if res.get("is_correct"))
     total_processed = len(results)
     accuracy = (correct_count / total_processed * 100) if total_processed > 0 else 0
 
@@ -382,10 +376,6 @@ def main():
     print(f"\n📄 Detailed submission file saved to: {output_path}")
     print(f"🪵 Individual task logs stored in: {log_dir}")
     print("=" * 50)
-
-
-if __name__ == "__main__":
-    main()
 
 
 def summarize(question: str, verbose_answer: str) -> str:
@@ -522,3 +512,7 @@ def normalize_str(input_str, remove_punct=True) -> str:
         return no_spaces.lower().translate(translator)
     else:
         return no_spaces.lower()
+
+
+if __name__ == "__main__":
+    main()

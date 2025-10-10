@@ -24,6 +24,10 @@ tools:
       transport_type: "STDIO"
       command: "uvx"
       args: ["browser-use", "--mcp"]
+      env:
+        # BROWSER_USE_HEADLESS: "true"
+        ANONYMIZED_TELEMETRY: "false"
+        # BROWSER_USE_NO_SANDBOX: "true"
 
   - &browser_read_and_get_state_tool
     name: "BrowserReadAndGetStateTool"
@@ -224,8 +228,8 @@ operators:
 
       **Step 2: Initial Reconnaissance & Source Identification**
       *   Perform a broad search to identify potential authoritative sources (e.g., Wikipedia, official government sites, specific databases like arXiv, USGS, PubChem).
-      *   **Academic Search:** When searching for academic papers, prioritize using Google Scholar and Arxiv. You can construct direct URLs to navigate and search, for example: `https://scholar.google.com/scholar?q=[your query]` or `https://arxiv.org/search/?query=[your query]`. And you should download the pdfs rather than reading the HTML page, because the HTML page often has very limited information.
-      *   **Efficiency Tactic:** For this initial step, constructing and using a direct Google search URL with your query is a highly efficient method for identifying potential primary sources to investigate.
+      *   **Academic Search:** When searching for academic papers, prioritize using Google Scholar and Arxiv (Go to the page, type your research query, and so on). And you should download the pdfs rather than reading the HTML page, because the HTML page often has very limited information.
+      *   **Act like a human researcher:** Don not construct direct search URLs (e.g., `https://www.google.com/search?q=[your query]`). Instead, use the browser to go to the search engine homepage (e.g., `https://www.google.com`, `https://scholar.google.com/`), then type your query into the search box and submit it. This approach helps you avoid anti-bot measures and access the most relevant results.
 
       **Step 3: Deep Dive & Information Verification**
       This is the multi-step, core investigation process where you apply the Core Agent Mechanics.
@@ -311,9 +315,9 @@ operators:
       Synthesize these pieces of information into a single, clear, and complete final answer.
     output_schema: |
       - Return only your answer, which should be a number, or a short phrase with as few words as possible, or a comma separated list of numbers and/or strings.
-      - If the answer is a number, return only the number without any units unless specified otherwise.
-      - If the answer is a string, don't use abbreviations (e.g. for states).
-      - If the answer is a comma separated list, apply the above rules to each element in the list.
+      - Do not include units, symbols (like $, %), or thousand separators (,) unless the original question specifically requires them.
+      - Provide it directly. Do not use abbreviations (e.g., write "New York" instead of "NY").
+      - If the answer is a list of items, format it as a single line of text with items separated by a comma (e.g., "item1,item2,item3").
     actions:
       - *synthesis_action
 

@@ -39,6 +39,11 @@ async def init_server(tool_call_ctx: ToolCallContext, url: str):
                 transport_type=McpTransportType.STDIO,
                 command="uvx",
                 args=["browser-use", "--mcp"],
+                env={
+                    # "BROWSER_USE_HEADLESS": "true",
+                    "ANONYMIZED_TELEMETRY": "false",
+                    # "BROWSER_USE_NO_SANDBOX": "true",
+                },
             ),
         )
     )
@@ -85,6 +90,8 @@ async def read_and_get_state(tool_call_ctx: ToolCallContext, vlm_task: str):
     result = await read_and_get_state_tool.browser_read_and_get_state(
         tool_call_ctx=tool_call_ctx,
         vlm_task=vlm_task,
+        vlm_task_context="   ",  # provide empty context for testing
+        agent_full_context="   ",  # provide empty context for testing
     )
     print(result)
 
@@ -92,7 +99,8 @@ async def read_and_get_state(tool_call_ctx: ToolCallContext, vlm_task: str):
 async def main():
     """Main function to run the ReadAndGetStateTool."""
     tool_call_ctx = ToolCallContext(job_id=str(uuid4()), operator_id=str(uuid4()))
-    await init_server(tool_call_ctx=tool_call_ctx, url="https://en.wikipedia.org/wiki/Tokyo")
+    # await init_server(tool_call_ctx=tool_call_ctx, url="https://en.wikipedia.org/wiki/Tokyo")
+    await init_server(tool_call_ctx=tool_call_ctx, url="https://en.wikipedia.org/wiki/Wiki")
     await read_and_get_state(
         tool_call_ctx=tool_call_ctx,
         vlm_task="As of 1987, which cities/states were sister cities/states with Tokyo?",
