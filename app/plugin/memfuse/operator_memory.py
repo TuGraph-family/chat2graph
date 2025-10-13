@@ -10,7 +10,7 @@ from app.plugin.memfuse.memory import MemFuseMemory
 class MemFuseOperatorMemory(MemFuseMemory):
     """OperatorMemory backed by MemFuse."""
 
-    def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Insight]:
+    async def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Insight]:
         """Pre execute"""
         job_id = memory_key.job_id
         operator_id = memory_key.operator_id
@@ -25,7 +25,7 @@ class MemFuseOperatorMemory(MemFuseMemory):
             print(f"[memory] operator retrieve: query='{query_preview}' top_k={top_k}")
 
         snippets: List[str] = []
-        snippets = self._retrieve(query_text, top_k)
+        snippets = await self._retrieve(query_text, top_k)
 
         if SystemEnv.PRINT_MEMORY_LOG:
             print(
@@ -65,7 +65,7 @@ class MemFuseOperatorMemory(MemFuseMemory):
 
         return insights
 
-    def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
+    async def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
         """Post execute hook to persist operator experience."""
         job_id = memory_key.job_id
         operator_id = memory_key.operator_id
@@ -96,7 +96,7 @@ class MemFuseOperatorMemory(MemFuseMemory):
                 f"[memory] operator memorize: will write with extra_metadata={extra_metadata}"
             )
 
-        self._memorize(memory_text, [msg], extra_metadata)
+        await self._memorize(memory_text, [msg], extra_metadata)
         if SystemEnv.PRINT_MEMORY_LOG:
             print(
                 "[memory] operator memorize: successfully wrote experience to MemFuse (sync) "

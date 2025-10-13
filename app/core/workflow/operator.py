@@ -47,7 +47,7 @@ class Operator:
                 experts in workflow message type.
             lesson (Optional[str]): The lesson learned (provided by the successor expert).
         """
-        task = self._build_task(
+        task = await self._build_task(
             job=job,
             workflow_messages=workflow_messages,
             previous_expert_outputs=previous_expert_outputs,
@@ -58,7 +58,7 @@ class Operator:
         result = await reasoner.infer(task=task)
 
         # post-execution hook to persist operator experience (best-effort)
-        self.memorize(task=task, result=result)
+        await self.memorize(task=task, result=result)
 
         # destroy MCP connections for the operator
         tool_connection_service: ToolConnectionService = ToolConnectionService.instance
@@ -66,7 +66,7 @@ class Operator:
 
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
-    def _build_task(
+    async def _build_task(
         self,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
@@ -110,7 +110,7 @@ class Operator:
                     file_descriptors.append(file_descriptor)
 
         # get insights from the memory
-        insights = self.get_mem_insights(
+        insights = await self.get_mem_insights(
             memory_key=MemoryKey(job_id=job.id, operator_id=self.get_id()),
             instruction=self._config.instruction,
             goal=job.goal,
@@ -136,7 +136,7 @@ class Operator:
         knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
         return knowledge_base_service.get_knowledge(query, job.session_id)
 
-    def get_mem_insights(
+    async def get_mem_insights(
         self,
         memory_key: MemoryKey,
         instruction: str,
@@ -147,13 +147,13 @@ class Operator:
         # TODO: get the memory information
         if SystemEnv.ENABLE_MEMFUSE:
             memory_service: MemoryService = MemoryService.instance
-            memory = memory_service.get_or_create_operator_memory(memory_key)
+            memory = await memory_service.get_or_create_operator_memory(memory_key)
             assert isinstance(memory, MemFuseOperatorMemory)
             query_text = f"{goal}\n{context or ''}\n{instruction}"
-            return memory.retrieve(memory_key=memory_key, query_text=query_text)
+            return await memory.retrieve(memory_key=memory_key, query_text=query_text)
         return None
 
-    def memorize(self, task: Task, result: str) -> None:
+    async def memorize(self, task: Task, result: str) -> None:
         """Persist the memory information."""
         if task.operator_config is None:
             return None
@@ -161,7 +161,7 @@ class Operator:
         if SystemEnv.ENABLE_MEMFUSE:
             memory_key = task.get_operator_memory_key()
             memory_service: MemoryService = MemoryService.instance
-            memory = memory_service.get_or_create_operator_memory(memory_key)
+            memory = await memory_service.get_or_create_operator_memory(memory_key)
             assert isinstance(memory, MemFuseOperatorMemory)
             # build a compact system prompt for operator experience
             instruction = task.operator_config.instruction
@@ -172,7 +172,7 @@ class Operator:
                 f"goal: {task.job.goal}\n"
                 f"context: {task.job.context}"
             )
-            memory.memorize(memory_key=memory_key, memory_text=memory_text, result=result)
+            await memory.memorize(memory_key=memory_key, memory_text=memory_text, result=result)
         return None
 
     def get_id(self) -> str:

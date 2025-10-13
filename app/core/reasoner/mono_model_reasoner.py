@@ -10,7 +10,6 @@ from app.core.prompt.reasoner import MONO_PROMPT_TEMPLATE
 from app.core.reasoner.model_service import ModelService
 from app.core.reasoner.model_service_factory import ModelServiceFactory
 from app.core.reasoner.reasoner import Reasoner
-from app.core.service.memory_service import MemoryService
 
 
 class MonoModelReasoner(Reasoner):
@@ -66,10 +65,7 @@ class MonoModelReasoner(Reasoner):
         )
 
         # init the memory
-        memory_service: MemoryService = MemoryService.instance
-        reasoner_memory = memory_service.get_or_create_reasoner_memory(
-            reasoner_memory_key=task.get_reasoner_memory_key()
-        )
+        reasoner_memory = await self.get_memory(memory_key=task.get_reasoner_memory_key())
         reasoner_memory.add_message(init_message)
 
         for _ in range(max_reasoning_rounds):
@@ -176,21 +172,6 @@ class MonoModelReasoner(Reasoner):
             functions=func_description,
             output_schema=output_schema,
         )
-
-    def get_memory(self, task: Task) -> Memory:
-        """Get the memory."""
-        session_id = task.job.session_id
-        job_id = task.job.id
-
-        try:
-            assert task.operator_config
-            operator_id = task.operator_config.id
-            return self._memories[session_id][job_id][operator_id]
-        except (KeyError, AssertionError, AttributeError):
-            memory_service: MemoryService = MemoryService.instance
-            return memory_service.get_or_create_reasoner_memory(
-                reasoner_memory_key=task.get_reasoner_memory_key()
-            )
 
     @staticmethod
     def stopped(message: ModelMessage) -> bool:

@@ -64,7 +64,6 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "MEMFUSE_RETRY_COUNT": (int, 3),
     "MEMFUSE_RETRIEVAL_TOP_K": (int, 5),
     "MEMFUSE_MAX_CONTENT_LENGTH": (int, 10000),
-    "MEMFUSE_ASYNC_WRITE": (bool, True),
 }
 
 # system environment variable value cache.

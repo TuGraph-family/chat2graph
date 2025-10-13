@@ -6,7 +6,7 @@ from app.core.common.type import WorkflowStatus
 from app.core.memory.memory import BuiltinMemory, Memory
 from app.core.model.job import Job, SubJob
 from app.core.model.message import WorkflowMessage
-from app.core.model.task import Task
+from app.core.model.task import MemoryKey, Task
 from app.core.reasoner.reasoner import Reasoner
 from app.core.sdk.init_server import init_server
 from app.core.workflow.operator import Operator
@@ -33,11 +33,7 @@ class TestReasoner(Reasoner):
         """Conclude the inference results."""
         return "Test conclusion"
 
-    def init_memory(self, task: Task) -> Memory:
-        """Initialize the memory."""
-        return BuiltinMemory()
-
-    def get_memory(self, task: Task) -> Memory:
+    async def get_memory(self, memory_key: MemoryKey) -> Memory:
         """Get the memory."""
         return BuiltinMemory()
 

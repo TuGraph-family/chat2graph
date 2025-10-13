@@ -35,7 +35,7 @@ Traditional memory systems typically employ a single storage architecture, prima
 
 ## 3. Memory System Extension
 
-Broadly speaking, the layered memory design can better accommodate the concepts of Knowledge Base and Environment. In other words, from a technical implementation perspective, the architectures of the memory system, knowledge base, and environment can be unified.
+Broadly speaking, the layered memory design allows the memory system itself, the Knowledge Base, and the Environment to follow one coherent architecture. Memory provides the common substrate, while knowledge bases and environments become specialized projections on top of it.
 
 ### 3.1. Knowledge Base
 
@@ -49,120 +49,87 @@ The environment refers to the external space with which an Agent interacts durin
 
 Using "tools" as a bridge, the memory system and environmental state can be deeply interconnected, constructing a mapping relationship between the agent's "mental world" and the external environment's "physical world"—the world knowledge model.
 
-## 4. Implementation
+### 3.3. Memory
 
-We introduces the MemFuse service as the memory backend for Chat2Graph. A MemoryService singleton mediates all interactions with MemFuse and is invoked through pre- and post- hooks around reasoning and operator execution.
+Chat2Graph integrates the layered memory philosophy into the runtime by combining an in-process `MemoryService` with extensible memory providers. The previous hook-based "enhanced" reasoner/operator wrappers have been removed—memory retrieval and persistence now happen inside the core execution path, which keeps the flow simpler and easier to observe.
 
-### System Architecture Flow
+#### 3.3.1. MemoryService orchestration
+
+`MemoryService` is a singleton that owns two caches keyed by job and operator identifiers. At configuration time we decide which backend to use: when `ENABLE_MEMFUSE=true`, the service wires MemFuse-backed memories; otherwise it sticks with the builtin in-process memory. There is no runtime rollback—if MemFuse is enabled but misconfigured, initialization raises immediately.
+
+Initialization of MemFuse clients happens lazily the first time a job/operator pair is encountered. This keeps the startup lightweight while ensuring subsequent retrieval and write calls reuse the same asynchronous MemFuse session managed by the plugin.
 
 ```mermaid
-graph TB
-    subgraph "Chat2Graph Enhanced System"
-        A[User Request] --> B[Leader Agent]
-        B --> C[Task Decomposition]
-        C --> D[Enhanced Reasoner]
-        C --> E[Enhanced Operator]
-
-        subgraph "Memory Enhancement Layer"
-            F[Pre-Reasoning Hook]
-            G[Post-Reasoning Hook]
-            H[Pre-Execution Hook]
-            I[Post-Execution Hook]
-            J[MemoryService Singleton]
-        end
-
-        D --> F
-        F --> K[Memory Retrieval]
-        K --> L[Context Enhancement]
-        L --> M[Original Reasoning]
-        M --> G
-        G --> N[Memory Write]
-
-        E --> H
-        H --> O[Experience Retrieval]
-        O --> P[Context Enhancement]
-        P --> Q[Original Execution]
-        Q --> I
-        I --> R[Experience Write]
-    end
-
-    subgraph "MemFuse External Service"
-        S[M1: Episodic Memory]
-        T[M2: Semantic Memory]
-        U[M3: Procedural Memory]
-        V[Query API]
-        W[Messages API]
-    end
-
-    J --> W
-    J --> V
-    K --> V
-    O --> V
-    N --> W
-    R --> W
-
-    style D fill:#e1f5fe
-    style E fill:#e8f5e8
-    style J fill:#fff3e0
-    style S fill:#f3e5f5
-    style T fill:#f3e5f5
-    style U fill:#f3e5f5
+graph TD
+    A[Reasoner / Operator] -->|get memory| B[MemoryService]
+    B -->|ENABLE_MEMFUSE=true| C[MemFuse*Memory]
+    B -->|ENABLE_MEMFUSE=false| D[BuiltinMemory]
+    C --> E[(MemFuse Session)]
 ```
 
-### Data Flow Diagram
+#### 3.3.2. Builtin memory
 
-#### Reasoner Memory Enhancement Flow
+`BuiltinMemory` is the default in-process message store. It keeps the streaming conversation (L0 history) inside the application, supporting add, remove, upsert, and retrieval of the latest messages. No external dependencies are required, making it ideal for local development or minimalist deployments.
+
+#### 3.3.3. MemFuse plugin
+
+MemFuse support lives in `app/plugin/memfuse`. The plugin ships `MemFuseMemory`, a base class that centralizes the logic required to talk to the external MemFuse service:
+
+* it creates the async MemFuse client using `MEMFUSE_BASE_URL`, `MEMFUSE_TIMEOUT`, and `MEMFUSE_API_KEY`.
+* it exposes `_retrieve` and `_memorize` helpers that convert Chat2Graph messages into the OpenAI-style payload expected by MemFuse.
+* it reuses the same event loop that performed the initialization, avoiding cross-thread pitfalls.
+
+Because the module is packaged as a plugin, projects can swap or augment memory providers without modifying the core runtime.
+
+#### 3.3.4. Reasoner memory
+
+`MemFuseReasonerMemory` extends `MemFuseMemory` to manage the reasoner's conversational history. It stores all generation rounds and, when asked to retrieve, returns `Insight` objects that can be fed back into subsequent reasoning rounds. The builtin memory exposes the same interface (without external persistence), allowing the reasoner to work identically regardless of backend.
 
 ```mermaid
 sequenceDiagram
-    participant T as Task
-    participant ER as EnhancedReasoner
-    participant H as Hook Manager
+    participant RS as Reasoner
     participant MS as MemoryService
-    participant MF as MemFuse API
-    participant BR as Base Reasoner
+    participant RM as ReasonerMemory
 
-    T->>ER: infer(task)
-    ER->>H: execute_pre_reasoning_hooks()
-    H->>MS: retrieve_relevant_memories()
-    MS->>MF: POST /api/v1/users/{user_id}/query
-    MF-->>MS: historical memories
-    MS-->>H: RetrievalResult[]
-    H-->>ER: enhanced context
-    ER->>ER: enhance_task_context()
-    ER->>BR: infer(enhanced_task)
-    BR-->>ER: reasoning_result
-    ER->>H: execute_post_reasoning_hooks()
-    H->>MS: write_reasoning_log()
-    MS->>MF: POST /sessions/{session_id}/messages
-    MF-->>MS: success
-    ER-->>T: reasoning_result
+    RS->>MS: get_or_create_reasoner_memory(memory_key)
+    MS-->>RS: RM
+    RS->>RM: add_message(response)
+    RS->>RM: get_messages()
 ```
 
-#### Operator Experience Learning Flow
+#### 3.3.5. Operator memory
+
+`MemFuseOperatorMemory` focuses on cross-task knowledge sharing. During operator task construction, the operator queries the memory for relevant experiences without going through any external hook manager. The resulting insights are merged into the task before the reasoner starts generating. For environment configuration details (e.g., `ENABLE_MEMFUSE`, `MEMFUSE_BASE_URL`), see the [Configure .env guide](../deployment/config-env.md).
 
 ```mermaid
 sequenceDiagram
-    participant J as Job
-    participant EO as EnhancedOperator
-    participant H as Hook Manager
+    participant OP as Operator
     participant MS as MemoryService
+    participant MM as MemFuseOperatorMemory
     participant MF as MemFuse API
-    participant BO as Base Operator
 
-    J->>EO: execute(job)
-    EO->>H: execute_pre_execution_hooks()
-    H->>MS: retrieve_relevant_memories()
-    MS->>MF: POST /api/v1/users/{user_id}/query?tag=m3
-    MF-->>MS: execution experiences
-    MS-->>H: RetrievalResult[]
-    H-->>EO: enhanced context
-    EO->>EO: enhance_job_context()
-    EO->>BO: execute(enhanced_job)
-    BO-->>EO: execution_result
-    EO->>H: execute_post_execution_hooks()
-    H->>MS: write_operator_log()
-    MS->>MF: POST /sessions/{session_id}/messages?tag=m3
-    MF-->>MS: success
-    EO-->>J: execution_result
+    OP->>MS: get_or_create_operator_memory(job_id, operator_id)
+    MS-->>OP: MM
+    OP->>MM: retrieve(memory_key, query_text)
+    MM->>MF: POST /query
+    MF-->>MM: snippets
+    MM-->>OP: TextInsight[]
+    OP->>OP: build Task with insights
+```
+
+After the reasoner finishes, the operator composes a compact summary of the instruction, job goal, and execution result. This summary is persisted to whichever backend is active. No automatic downgrade occurs—if the plugin encounters an error the exception bubbles up to the caller.
+
+```mermaid
+sequenceDiagram
+    participant OP as Operator
+    participant MS as MemoryService
+    participant MM as MemFuseOperatorMemory
+    participant MF as MemFuse API
+
+    OP->>MS: get_or_create_operator_memory(memory_key)
+    MS-->>OP: MM
+    OP->>MM: memorize(memory_key, memory_text, result)
+    MM->>MF: POST /messages
+    MF-->>MM: ack
+    MM-->>OP: success
 ```

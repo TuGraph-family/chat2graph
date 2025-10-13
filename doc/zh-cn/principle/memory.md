@@ -41,7 +41,7 @@ title: 记忆系统
 
 ## 3. 记忆系统扩展
 
-广义上，基于分层记忆的设计，可以更好地兼容知识库（Knowledge Base）和环境（Environment）的概念。换言之，从技术实现角度来看，记忆系统、知识库和环境的架构可以统一。
+广义上，分层记忆的设计让记忆系统本身、知识库（Knowledge Base）与环境（Environment）可以遵循同一套架构。记忆扮演底层的统一载体，知识库和环境则是在其之上的特化表达。
 
 
 
@@ -60,120 +60,87 @@ title: 记忆系统
 
 借助于「工具」这座桥梁，可以深层次地打通记忆系统与环境状态，构建智能体的「精神世界」与外部环境的「物理世界」的映射关系，即世界知识模型。
 
-## 4. 实现
+## 3.3. 记忆
 
-我们引入 MemFuse 服务作为 Chat2Graph 的记忆后端。通过一个 MemoryService 单例来协调与 MemFuse 的所有交互，该单例在推理和操作执行的前后通过钩子(pre- 与 post- hooks)方式调用。
+Chat2Graph 将分层记忆理念落实到运行时的方式，是把内存中的 `MemoryService` 与可插拔的记忆实现组合在一起。早期的“增强型”推理机/算子以及 pre/post 钩子已经移除，现在的记忆检索与写入直接发生在核心执行路径中，可观察性更强也更易维护。
 
-### 系统架构流程
+### 3.3.1. MemoryService 调度
+
+`MemoryService` 是一个单例，内部维护按任务（job）和算子（operator）划分的缓存。是否启用 MemFuse 完全取决于配置：当 `ENABLE_MEMFUSE=true` 时，服务会创建 MemFuse 支持的记忆实例；否则仅使用内建的内存实现。如果 MemFuse 配置错误，初始化会直接抛出异常，并不会自动降级。
+
+MemFuse 客户端会在首次请求某个 job/operator 组合时懒加载初始化，之后的检索与写入会复用同一个由插件管理的异步会话，从而避免重复建连。
 
 ```mermaid
-graph TB
-    subgraph "Chat2Graph Enhanced System"
-        A[User Request] --> B[Leader Agent]
-        B --> C[Task Decomposition]
-        C --> D[Enhanced Reasoner]
-        C --> E[Enhanced Operator]
-
-        subgraph "Memory Enhancement Layer"
-            F[Pre-Reasoning Hook]
-            G[Post-Reasoning Hook]
-            H[Pre-Execution Hook]
-            I[Post-Execution Hook]
-            J[MemoryService Singleton]
-        end
-
-        D --> F
-        F --> K[Memory Retrieval]
-        K --> L[Context Enhancement]
-        L --> M[Original Reasoning]
-        M --> G
-        G --> N[Memory Write]
-
-        E --> H
-        H --> O[Experience Retrieval]
-        O --> P[Context Enhancement]
-        P --> Q[Original Execution]
-        Q --> I
-        I --> R[Experience Write]
-    end
-
-    subgraph "MemFuse External Service"
-        S[M1: Episodic Memory]
-        T[M2: Semantic Memory]
-        U[M3: Procedural Memory]
-        V[Query API]
-        W[Messages API]
-    end
-
-    J --> W
-    J --> V
-    K --> V
-    O --> V
-    N --> W
-    R --> W
-
-    style D fill:#e1f5fe
-    style E fill:#e8f5e8
-    style J fill:#fff3e0
-    style S fill:#f3e5f5
-    style T fill:#f3e5f5
-    style U fill:#f3e5f5
+graph TD
+    A[Reasoner / 算子] -->|获取记忆| B[MemoryService]
+    B -->|ENABLE_MEMFUSE=true| C[MemFuse*Memory]
+    B -->|ENABLE_MEMFUSE=false| D[BuiltinMemory]
+    C --> E[(MemFuse 会话)]
 ```
 
-### 数据流程图
+### 3.3.2. 内建记忆
 
-#### Reasoner 记忆增强流程
+`BuiltinMemory` 是默认的进程内消息存储，负责维护当前对话（L0 历史）的增删改查，不依赖任何外部服务，适用于本地开发或轻量场景。
+
+### 3.3.3. MemFuse 插件
+
+MemFuse 支持位于 `app/plugin/memfuse`，提供 `MemFuseMemory` 基类封装：
+
+* 使用 `MEMFUSE_BASE_URL`、`MEMFUSE_TIMEOUT`、`MEMFUSE_API_KEY` 创建异步客户端；
+* 暴露 `_retrieve` 与 `_memorize` 工具方法，把 Chat2Graph 的消息转换成 MemFuse 需要的 OpenAI 样式；
+* 绑定初始化时所在的事件循环，避免跨线程事件循环的推送问题。
+
+借助插件化设计，项目可以在不修改核心逻辑的前提下扩展或替换记忆后端。
+
+### 3.3.4. 推理记忆
+
+`MemFuseReasonerMemory` 继承自 `MemFuseMemory`，负责管理推理过程中的消息往来。当需要检索时会返回可直接注入推理流程的 `Insight` 对象。即便切换到 `BuiltinMemory`，推理机调用的接口也保持一致。
 
 ```mermaid
 sequenceDiagram
-    participant T as Task
-    participant ER as EnhancedReasoner
-    participant H as Hook Manager
+    participant RS as Reasoner（推理机）
     participant MS as MemoryService
-    participant MF as MemFuse API
-    participant BR as Base Reasoner
+    participant RM as ReasonerMemory
 
-    T->>ER: infer(task)
-    ER->>H: execute_pre_reasoning_hooks()
-    H->>MS: retrieve_relevant_memories()
-    MS->>MF: POST /api/v1/users/{user_id}/query
-    MF-->>MS: historical memories
-    MS-->>H: RetrievalResult[]
-    H-->>ER: enhanced context
-    ER->>ER: enhance_task_context()
-    ER->>BR: infer(enhanced_task)
-    BR-->>ER: reasoning_result
-    ER->>H: execute_post_reasoning_hooks()
-    H->>MS: write_reasoning_log()
-    MS->>MF: POST /sessions/{session_id}/messages
-    MF-->>MS: success
-    ER-->>T: reasoning_result
+    RS->>MS: get_or_create_reasoner_memory(memory_key)
+    MS-->>RS: RM
+    RS->>RM: add_message(response)
+    RS->>RM: get_messages()
 ```
 
-#### Operator 经验学习流程图
+### 3.3.5. 算子记忆
+
+`MemFuseOperatorMemory` 聚焦于跨任务的经验沉淀。算子在构建任务时会直接向记忆请求相关体验，再把洞察拼装进任务上下文，无需额外的钩子层。关于环境变量（如 `ENABLE_MEMFUSE`、`MEMFUSE_BASE_URL`）的配置说明，请参阅[配置 .env 指南](../deployment/config-env.md)。
 
 ```mermaid
 sequenceDiagram
-    participant J as Job
-    participant EO as EnhancedOperator
-    participant H as Hook Manager
+    participant OP as Operator（算子）
     participant MS as MemoryService
+    participant MM as MemFuseOperatorMemory
     participant MF as MemFuse API
-    participant BO as Base Operator
 
-    J->>EO: execute(job)
-    EO->>H: execute_pre_execution_hooks()
-    H->>MS: retrieve_relevant_memories()
-    MS->>MF: POST /api/v1/users/{user_id}/query?tag=m3
-    MF-->>MS: execution experiences
-    MS-->>H: RetrievalResult[]
-    H-->>EO: enhanced context
-    EO->>EO: enhance_job_context()
-    EO->>BO: execute(enhanced_job)
-    BO-->>EO: execution_result
-    EO->>H: execute_post_execution_hooks()
-    H->>MS: write_operator_log()
-    MS->>MF: POST /sessions/{session_id}/messages?tag=m3
-    MF-->>MS: success
-    EO-->>J: execution_result
+    OP->>MS: get_or_create_operator_memory(job_id, operator_id)
+    MS-->>OP: MM
+    OP->>MM: retrieve(memory_key, query_text)
+    MM->>MF: POST /query
+    MF-->>MM: snippets
+    MM-->>OP: TextInsight[]
+    OP->>OP: 构建包含洞察的 Task
+```
+
+推理完成后，算子会整理包含指令、任务目标与执行结果的概要文本，并写入当前启用的记忆后端。如果插件出现异常，错误会原样抛出，系统不会自动切换。
+
+```mermaid
+sequenceDiagram
+    participant OP as Operator（算子）
+    participant MS as MemoryService
+    participant MM as MemFuseOperatorMemory
+    participant MF as MemFuse API
+
+    OP->>MS: get_or_create_operator_memory(memory_key)
+    MS-->>OP: MM
+    OP->>MM: memorize(memory_key, memory_text, result)
+    MM->>MF: POST /messages
+    MF-->>MM: ack
+    MM-->>OP: success
 ```

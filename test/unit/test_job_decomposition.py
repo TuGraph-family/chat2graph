@@ -18,8 +18,7 @@ from app.core.sdk.init_server import init_server
 from app.core.service.job_service import JobService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
-from app.core.workflow.workflow import Workflow
-from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
+from app.core.workflow.workflow import BuiltinWorkflow, Workflow
 
 init_server()
 
@@ -104,7 +103,7 @@ def leader(mock_reasoner: Reasoner):
     )
     decomposition_operator = Operator(config=decomp_operator_config)
 
-    workflow = DbgptWorkflow()
+    workflow = BuiltinWorkflow()
     workflow.add_operator(decomposition_operator)
 
     config = AgentConfig(
@@ -222,8 +221,7 @@ Final Delivery:
     assert job_service.get_subjob(sub_job.id).is_legacy
 
 
-@pytest.mark.asyncio
-async def test_execute_error_handling(leader: Leader, mock_reasoner: AsyncMock):
+def test_execute_error_handling(leader: Leader, mock_reasoner: AsyncMock):
     """Test job decomposition with empty job."""
     mock_response = """<Initial state ψ>
 Analyzing the task...

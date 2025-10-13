@@ -50,7 +50,7 @@ async def test_infer_basic_flow(mock_reasoner: MonoModelReasoner, task: Task):
     assert mock_reasoner._model.generate.called
 
     # verify memory management
-    reasoner_memory = mock_reasoner.get_memory(task=task)
+    reasoner_memory = await mock_reasoner.get_memory(memory_key=task.get_reasoner_memory_key())
     messages = reasoner_memory.get_messages()
 
     # check initial message
@@ -72,7 +72,7 @@ async def test_infer_error_handling(mock_reasoner: MonoModelReasoner, task: Task
 
     assert str(exc_info.value) == "Model error"
 
-    reasoner_memory = mock_reasoner.get_memory(task=task)
+    reasoner_memory = await mock_reasoner.get_memory(memory_key=task.get_reasoner_memory_key())
     messages = reasoner_memory.get_messages()
     assert len(messages) == 1
     assert messages[0].get_source_type() == MessageSourceType.MODEL
@@ -87,6 +87,6 @@ async def test_infer_without_operator(mock_reasoner: MonoModelReasoner, task: Ta
     assert mock_reasoner._model.generate.called
 
     # although there is no operator, the reasoner will persist the memory
-    reasoner_memory = mock_reasoner.get_memory(task=task)
+    reasoner_memory = await mock_reasoner.get_memory(memory_key=task.get_reasoner_memory_key())
     messages = reasoner_memory.get_messages()
     assert len(messages) == 101

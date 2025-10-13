@@ -40,7 +40,7 @@ class Memory(ABC):
         """Get a message by id."""
 
     @abstractmethod
-    def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Any]:
+    async def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Any]:
         """Retrieve relevant memories.
 
         Args:
@@ -52,7 +52,7 @@ class Memory(ABC):
         """
 
     @abstractmethod
-    def memorize(self, memory_key, memory_text: str, result: str) -> None:
+    async def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
         """Persist a conversation turn to the memory backend.
 
         Implementations may choose to be no-ops. Should never raise.
@@ -100,10 +100,10 @@ class BuiltinMemory(Memory):
 
         return None
 
-    def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Any]:
+    async def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Any]:
         """Retrieve relevant memories (no-op for builtin memory)."""
         return []
 
-    def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
+    async def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
         """Persist a conversation turn (no-op for builtin memory)."""
         return None

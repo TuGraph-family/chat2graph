@@ -1,14 +1,18 @@
+import pytest
+
 from app.core.common.system_env import SystemEnv
 from app.core.memory.memory import BuiltinMemory
 from app.core.model.message import ModelMessage
 from app.core.model.task import MemoryKey
 from app.core.sdk.init_server import init_server
+from app.plugin.memfuse.operator_memory import MemFuseOperatorMemory
 from app.plugin.memfuse.reasoner_memory import MemFuseReasonerMemory
 
 init_server()
 
 
-def test_builtin_reasoner_memory_basic_ops():
+@pytest.mark.asyncio
+async def test_builtin_reasoner_memory_basic_ops():
     """Test basic operations of BuiltinMemory."""
     mem = BuiltinMemory()
     m1 = ModelMessage(payload="a", job_id="job", step=1)
@@ -26,7 +30,7 @@ def test_builtin_reasoner_memory_basic_ops():
     assert not mem.get_messages()
 
     # external hooks are no-ops
-    assert not mem.retrieve(
+    assert not await mem.retrieve(
         MemoryKey(
             job_id="test_job_id",
             operator_id="test_operator_id",
@@ -34,7 +38,7 @@ def test_builtin_reasoner_memory_basic_ops():
         "q",
     )
     assert (
-        mem.memorize(
+        await mem.memorize(
             MemoryKey(job_id="test_job_id", operator_id="test_operator_id"),
             "sys",
             "job_result",
@@ -45,12 +49,18 @@ def test_builtin_reasoner_memory_basic_ops():
 
 def test_memfuse_memory_local_history_only():
     """Test MemFuseReasonerMemory basic operations with local history only."""
-    mem = MemFuseReasonerMemory(job_id="job", operator_id="op")
+    reasoner_mem = MemFuseReasonerMemory(job_id="job", operator_id="op")
     m1 = ModelMessage(payload="hello", job_id="job", step=1)
-    mem.add_message(m1)
-    assert mem.get_messages()[0].get_payload() == "hello"
+    reasoner_mem.add_message(m1)
+    assert reasoner_mem.get_messages()[0].get_payload() == "hello"
+
+    operator_mem = MemFuseOperatorMemory(job_id="job", operator_id="op")
+    m2 = ModelMessage(payload="world", job_id="job", step=1)
+    operator_mem.add_message(m2)
+    assert operator_mem.get_messages()[0].get_payload() == "world"
 
 
+@pytest.mark.asyncio
 def test_to_openai_messages_truncation():
     """Test _to_openai_messages with truncation."""
     SystemEnv.MEMFUSE_MAX_CONTENT_LENGTH = 10
@@ -64,4 +74,3 @@ def test_to_openai_messages_truncation():
     assert out[1]["role"] == "assistant"
     assert out[0]["content"].endswith("...")
     assert out[1]["content"].endswith("...")
-

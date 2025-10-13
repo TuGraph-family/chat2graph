@@ -19,7 +19,7 @@ chromadb = "^1.0.12"
 neo4j = "^5.28.1"
 sqlalchemy-utils = "^0.41.2"
 matplotlib = "^3.10.3"
-# memfuse = "^0.3.2"
+memfuse = "^0.3.3"
 networkx = "^3.4.2"
 mcp = "^1.9.3"
 pyfiglet = "^1.0.3"
@@ -58,8 +58,8 @@ pytest-cov = "6.2.1"
 pytest-mock = "^3.14.1"
 
 [tool.poetry.group.db-gpt.dependencies]
-dbgpt = { version = "0.7.3", extras = ["agent", "simple_framework", "framework"] }
-dbgpt-ext = { version = "0.7.3", extras = ["rag", "graph_rag", "storage_chromadb"] }
+# dbgpt = { version = "0.7.3", extras = ["agent", "simple_framework", "framework"] }
+# dbgpt-ext = { version = "0.7.3", extras = ["rag", "graph_rag", "storage_chromadb"] }
 
 [tool.ruff]
 line-length = 100

@@ -10,7 +10,7 @@ from app.plugin.memfuse.memory import MemFuseMemory
 class MemFuseReasonerMemory(MemFuseMemory):
     """ReasonerMemory backed by MemFuse."""
 
-    def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Insight]:
+    async def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Insight]:
         """Retrieve relevant past experiences for the reasoner before execution."""
         job_id = memory_key.job_id
         operator_id = memory_key.operator_id
@@ -24,7 +24,7 @@ class MemFuseReasonerMemory(MemFuseMemory):
             query_preview = query_text[:100] + "..." if len(query_text) > 100 else query_text
             print(f"[memory] operator retrieve: query='{query_preview}' top_k={top_k}")
 
-        snippets = self._retrieve(query_text, top_k)
+        snippets = await self._retrieve(query_text, top_k)
 
         if SystemEnv.PRINT_MEMORY_LOG:
             print(
@@ -64,7 +64,7 @@ class MemFuseReasonerMemory(MemFuseMemory):
 
         return insights
 
-    def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
+    async def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
         """Memorize the reasoner's execution result after execution."""
         job_id = memory_key.job_id
         operator_id = memory_key.operator_id
@@ -95,7 +95,7 @@ class MemFuseReasonerMemory(MemFuseMemory):
                 f"[memory] operator memorize: will write with extra_metadata={extra_metadata}"
             )
 
-        self._memorize(memory_text, [msg], extra_metadata)
+        await self._memorize(memory_text, [msg], extra_metadata)
         if SystemEnv.PRINT_MEMORY_LOG:
             print(
                 "[memory] operator memorize: successfully wrote experience to MemFuse (sync) "

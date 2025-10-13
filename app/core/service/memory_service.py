@@ -21,7 +21,7 @@ class MemoryService(metaclass=Singleton):
         self._reasoner_memories: Dict[str, Dict[str, Memory]] = {}
         self._operator_memories: Dict[str, Dict[str, Memory]] = {}
 
-    def get_or_create_reasoner_memory(self, reasoner_memory_key: MemoryKey) -> Memory:
+    async def get_or_create_reasoner_memory(self, reasoner_memory_key: MemoryKey) -> Memory:
         """Get or create a ReasonerMemory instance for a job/operator pair.
 
         If `ENABLE_MEMFUSE` is set, create a MemFuse-backed memory.
@@ -32,14 +32,14 @@ class MemoryService(metaclass=Singleton):
             self._reasoner_memories[job_id] = {}
         if operator_id not in self._reasoner_memories[job_id]:
             if SystemEnv.ENABLE_MEMFUSE:
-                self._reasoner_memories[job_id][operator_id] = MemFuseReasonerMemory(
-                    job_id=job_id, operator_id=operator_id
-                )
+                memory = MemFuseReasonerMemory(job_id=job_id, operator_id=operator_id)
+                await memory.initialize()
+                self._reasoner_memories[job_id][operator_id] = memory
             else:
                 self._reasoner_memories[job_id][operator_id] = BuiltinMemory()
         return self._reasoner_memories[job_id][operator_id]
 
-    def get_or_create_operator_memory(self, operator_memory_key: MemoryKey) -> Memory:
+    async def get_or_create_operator_memory(self, operator_memory_key: MemoryKey) -> Memory:
         """Get or create an Operator memory instance for a job/operator pair.
 
         If `ENABLE_MEMFUSE` is set, create a MemFuse-backed memory.
@@ -50,9 +50,9 @@ class MemoryService(metaclass=Singleton):
             self._operator_memories[job_id] = {}
         if operator_id not in self._operator_memories[job_id]:
             if SystemEnv.ENABLE_MEMFUSE:
-                self._operator_memories[job_id][operator_id] = MemFuseOperatorMemory(
-                    job_id=job_id, operator_id=operator_id
-                )
+                memory = MemFuseOperatorMemory(job_id=job_id, operator_id=operator_id)
+                await memory.initialize()
+                self._operator_memories[job_id][operator_id] = memory
             else:
                 self._operator_memories[job_id][operator_id] = BuiltinMemory()
         return self._operator_memories[job_id][operator_id]

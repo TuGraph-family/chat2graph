@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 from app.core.memory.memory import Memory
-from app.core.model.task import Task
+from app.core.model.task import MemoryKey, Task
 from app.core.prompt.model_service import TASK_DESCRIPTOR_PROMPT_TEMPLATE
+from app.core.service.memory_service import MemoryService
 
 
 class Reasoner(ABC):
@@ -30,9 +31,10 @@ class Reasoner(ABC):
     async def conclude(self, reasoner_memory: Memory) -> str:
         """Conclude the inference results."""
 
-    @abstractmethod
-    def get_memory(self, task: Task) -> Memory:
+    async def get_memory(self, memory_key: MemoryKey) -> Memory:
         """Get the memory."""
+        memory_service: MemoryService = MemoryService.instance
+        return await memory_service.get_or_create_reasoner_memory(reasoner_memory_key=memory_key)
 
     def _build_task_context(self, task: Task) -> str:
         """Build the task context string for system prompts."""

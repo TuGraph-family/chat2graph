@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 import pytest
 
 from app.core.common.system_env import SystemEnv
-from app.core.model.message import ModelMessage
+from app.core.env.insight.insight import TextInsight
 from app.core.model.task import MemoryKey
 from app.core.sdk.init_server import init_server
 from app.plugin.memfuse.operator_memory import MemFuseOperatorMemory
@@ -14,6 +14,7 @@ init_server()
 
 class DummyMem:
     """A dummy MemFuse client for testing."""
+
     def __init__(self, results: List[Any] | None = None, raise_on: str | None = None):
         self._results = results or []
         self._raise_on = raise_on
@@ -21,6 +22,7 @@ class DummyMem:
 
     async def query(self, *args, **kwargs):
         """Query method that can raise or return preset results."""
+        del args, kwargs
         if self._raise_on == "query":
             raise RuntimeError("query failed")
         return {"data": {"results": self._results}}
@@ -34,7 +36,7 @@ class DummyMem:
 
 
 @pytest.mark.asyncio
-async def test_reasoner_retrieve_success(monkeypatch):
+async def test_reasoner_retrieve_success():
     """Test successful retrieval with various result formats."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseReasonerMemory(job_id="job_x", operator_id="op_1")
@@ -48,9 +50,11 @@ async def test_reasoner_retrieve_success(monkeypatch):
             {"unknown": 123},
         ]
     )
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
-    out = mem.retrieve(MemoryKey(job_id="job_x", operator_id="op_1"), "hello")
+    out = await mem.retrieve(MemoryKey(job_id="job_x", operator_id="op_1"), "hello")
+    assert out
+    assert isinstance(out[0], TextInsight)
     assert len(out) == 1
     content = out[0].content
     assert "raw string result" in content
@@ -59,43 +63,44 @@ async def test_reasoner_retrieve_success(monkeypatch):
     assert "from snippet" in content
     assert "unknown" in content
 
-
-def test_reasoner_retrieve_failure_raises_runtime_error(monkeypatch):
+@pytest.mark.asyncio
+async def test_reasoner_retrieve_failure_raises_runtime_error():
     """Test that retrieval errors are handled gracefully and return empty list."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseReasonerMemory(job_id="job_y", operator_id="op_2")
 
     dummy = DummyMem(raise_on="query")
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
     with pytest.raises(RuntimeError):
-        mem.retrieve(MemoryKey(job_id="job_y", operator_id="op_2"), "hello")
+        await mem.retrieve(MemoryKey(job_id="job_y", operator_id="op_2"), "hello")
 
-
-def test_reasoner_retrieve_sync_without_event_loop(monkeypatch):
+@pytest.mark.asyncio
+async def test_reasoner_retrieve_sync_without_event_loop():
     """Test that retrieve works in sync context when no event loop is running."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseReasonerMemory(job_id="job_z", operator_id="op_3")
 
     dummy = DummyMem(results=["a", "b"])
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
-    out = mem.retrieve(MemoryKey(job_id="job_z", operator_id="op_3"), "hello")
+    out = await mem.retrieve(MemoryKey(job_id="job_z", operator_id="op_3"), "hello")
+    assert out
+    assert isinstance(out[0], TextInsight)
     assert len(out) == 1
     assert "a" in out[0].content
     assert "b" in out[0].content
 
-
-def test_reasoner_memorize_includes_metadata(monkeypatch):
+@pytest.mark.asyncio
+async def test_reasoner_memorize_includes_metadata():
     """Test successful memorize with metadata."""
     SystemEnv.ENABLE_MEMFUSE = True
     SystemEnv.MEMFUSE_MAX_CONTENT_LENGTH = 50
     mem = MemFuseReasonerMemory(job_id="job_meta", operator_id="op_meta")
 
     dummy = DummyMem()
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
-    reasoner_messages = [ModelMessage(payload="hi", job_id="job_meta", step=1)]
-    mem.memorize(MemoryKey(job_id="job_meta", operator_id="op_meta"), "sys", "result")
+    await mem.memorize(MemoryKey(job_id="job_meta", operator_id="op_meta"), "sys", "result")
 
     assert len(dummy.add_calls) == 1
     call = dummy.add_calls[0]
@@ -104,21 +109,21 @@ def test_reasoner_memorize_includes_metadata(monkeypatch):
     assert call["messages"][0]["role"] == "system"
     assert call["messages"][1]["role"] == "assistant"
 
-
-def test_reasoner_memorize_failure_raises_runtime_error(monkeypatch):
+@pytest.mark.asyncio
+async def test_reasoner_memorize_failure_raises_runtime_error():
     """Test that memorize errors are handled gracefully and do not raise."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseReasonerMemory(job_id="job_err", operator_id="op_err")
 
     dummy = DummyMem(raise_on="add")
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
     with pytest.raises(RuntimeError):
-        mem.memorize(MemoryKey(job_id="job_err", operator_id="op_err"), "sys", "result")
+        await mem.memorize(MemoryKey(job_id="job_err", operator_id="op_err"), "sys", "result")
 
 # ---- Operator Memory ----
 @pytest.mark.asyncio
-async def test_operator_memory_retrieve_success(monkeypatch):
+async def test_operator_memory_retrieve_success():
     """Test successful retrieval with various result formats."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseOperatorMemory(job_id="job_x", operator_id="op_1")
@@ -132,9 +137,11 @@ async def test_operator_memory_retrieve_success(monkeypatch):
             {"unknown": 123},
         ]
     )
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
-    out = mem.retrieve(MemoryKey(job_id="job_x", operator_id="op_1"), "hello")
+    out = await mem.retrieve(MemoryKey(job_id="job_x", operator_id="op_1"), "hello")
+    assert out
+    assert isinstance(out[0], TextInsight)
     assert len(out) == 1
     content = out[0].content
     assert "raw string result" in content
@@ -143,42 +150,46 @@ async def test_operator_memory_retrieve_success(monkeypatch):
     assert "from snippet" in content
     assert "unknown" in content
 
-
-def test_operator_memory_retrieve_failure_raises_runtime_error(monkeypatch):
+@pytest.mark.asyncio
+async def test_operator_memory_retrieve_failure_raises_runtime_error():
     """Test that retrieval errors are handled gracefully and return empty list."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseOperatorMemory(job_id="job_y", operator_id="op_2")
 
     dummy = DummyMem(raise_on="query")
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
     with pytest.raises(RuntimeError):
-        mem.retrieve(MemoryKey(job_id="job_y", operator_id="op_2"), "hello")
+        await mem.retrieve(MemoryKey(job_id="job_y", operator_id="op_2"), "hello")
 
 
-def test_operator_memory_retrieve_sync_without_event_loop(monkeypatch):
-    """Test that retrieve works in sync context when no event loop is running."""
+@pytest.mark.asyncio
+async def test_operator_memory_retrieve_sync_without_event_loop():
+    """Test that retrieve works when executed from an async context."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseOperatorMemory(job_id="job_z", operator_id="op_3")
 
     dummy = DummyMem(results=["a", "b"])
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
-    out = mem.retrieve(MemoryKey(job_id="job_z", operator_id="op_3"), "hello")
+    out = await mem.retrieve(MemoryKey(job_id="job_z", operator_id="op_3"), "hello")
+    assert out
+    assert isinstance(out[0], TextInsight)
     assert len(out) == 1
     assert "a" in out[0].content
     assert "b" in out[0].content
 
 
-def test_operator_memory_memorize_includes_metadata(monkeypatch):
+@pytest.mark.asyncio
+async def test_operator_memory_memorize_includes_metadata():
     """Test successful memorize with metadata."""
     SystemEnv.ENABLE_MEMFUSE = True
     SystemEnv.MEMFUSE_MAX_CONTENT_LENGTH = 50
     mem = MemFuseOperatorMemory(job_id="job_meta", operator_id="op_meta")
 
     dummy = DummyMem()
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
-    mem.memorize(MemoryKey(job_id="job_meta", operator_id="op_meta"), "some_input", "result")
+    await mem.memorize(MemoryKey(job_id="job_meta", operator_id="op_meta"), "some_input", "result")
 
     assert len(dummy.add_calls) == 1
     call = dummy.add_calls[0]
@@ -188,14 +199,16 @@ def test_operator_memory_memorize_includes_metadata(monkeypatch):
     assert call["messages"][1]["role"] == "assistant"
 
 
-def test_operator_memory_memorize_failure_raises_runtime_error(monkeypatch):
+@pytest.mark.asyncio
+async def test_operator_memory_memorize_failure_raises_runtime_error():
     """Test that memorize errors are handled gracefully and do not raise."""
     SystemEnv.ENABLE_MEMFUSE = True
     mem = MemFuseOperatorMemory(job_id="job_err", operator_id="op_err")
 
     dummy = DummyMem(raise_on="add")
-    mem._memory = dummy
+    mem.__dict__["_memory"] = dummy
 
     with pytest.raises(RuntimeError):
-        mem.memorize(MemoryKey(job_id="job_err", operator_id="op_err"), "some_input", "result")
-        mem.memorize(MemoryKey(job_id="job_err", operator_id="op_err"), "some_input", "result")
+        await mem.memorize(
+            MemoryKey(job_id="job_err", operator_id="op_err"), "some_input", "result"
+        )
