@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Any, Dict, List, Optional
 
@@ -31,8 +32,14 @@ class SchemaGetter(Tool):
         schema = graph_db_service.get_schema_metadata(
             graph_db_config=graph_db_service.get_default_graph_db_config()
         )
-        if len(schema) == 0:
-            return "The schema is not defined yet. Please define the schema first."
+        if len(schema) == 0 or ("nodes" not in schema or "relationships" not in schema) or (len(schema["nodes"]) and len(schema["relationships"])) == 0:
+            # To get schema from cypher
+            schema = await self._get_schema_from_cypher(graph_db_service=graph_db_service)
+            if len(schema) == 0:
+                return "The schema is not defined yet. Please define the schema first."
+            else:
+                return schema
+            
 
         result = "# Neo4j Graph Schema\n\n"
 
@@ -68,6 +75,58 @@ class SchemaGetter(Tool):
 
         return result
 
+    async def _get_schema_from_cypher(self, graph_db_service: GraphDbService) -> str:
+        db = graph_db_service.get_default_graph_db()
+        schema: Dict[str, Any] = {}
+        with db.conn.session() as session:
+            # 执行 Cypher 查询
+            result = session.run(
+                "RETURN 1 AS ping"
+            ).single()
+            print(f"{result}, conn successfully!")
+            
+            # get node schema
+            result = session.run(
+                """
+                MATCH (n)
+                WITH DISTINCT head(labels(n)) AS label, keys(n) AS props
+                UNWIND props AS prop
+                RETURN label, collect(DISTINCT prop) AS properties
+                ORDER BY label
+                """
+            )
+            nodes = []
+            for record in result:
+                node = {
+                    "label": record["label"],
+                    "properties": record["properties"]
+                }
+                nodes.append(node)
+            
+            rels = []
+            result = session.run(
+                """
+                MATCH ()-[r]->()
+                WITH DISTINCT type(r) AS rel_type, keys(r) AS props
+                UNWIND props AS prop
+                RETURN rel_type, collect(DISTINCT prop) AS properties
+                ORDER BY rel_type
+                """
+            )
+            for record in result:
+                relationship = {
+                    "label": record["rel_type"],
+                    "properties": record["properties"]
+                }
+                rels.append(relationship)
+            
+            schema["nodes"] = nodes
+            schema["relationships"] = rels
+        
+        return json.dumps(schema, ensure_ascii=False, indent=2)
+            
+            
+        
 
 class DataStatusCheck(Tool):
     """Tool for checking the current status of data in the graph database."""

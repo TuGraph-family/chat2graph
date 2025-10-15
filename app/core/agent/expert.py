@@ -100,6 +100,7 @@ class Expert(Agent):
                     "evaluation": f"There occurs some errors during the execution: {str(e)}",
                     "lesson": "",
                 },
+                job_id=job_id,
             )
 
         # save the workflow message in the database
