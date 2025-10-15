@@ -10,6 +10,7 @@ from app.core.common.type import MessageSourceType
 from app.core.model.message import HybridMessage, ModelMessage, TextMessage
 from app.core.prompt.workflow_generator import eval_prompt_template, reflect_prompt_template
 from app.core.reasoner.model_service_factory import ModelService, ModelServiceFactory
+from app.core.sdk.wrapper.job_wrapper import JobWrapper
 from app.core.workflow.dataset_synthesis.model import Row
 from app.core.workflow.workflow_generator.mcts_workflow_generator.model import (
     ExecuteResult,
@@ -36,12 +37,13 @@ class Evaluator:
 
 
 class LLMEvaluator(Evaluator):
-    def __init__(self):
+    def __init__(self, need_reflect = True):
         super().__init__()
         self._llm: ModelService = ModelServiceFactory.create(
             model_platform_type=SystemEnv.MODEL_PLATFORM_TYPE
         )
         self.job_id = "[LLMEvaluator]"
+        self.need_reflect = need_reflect
 
     async def evaluate_workflow(
         self,
@@ -67,60 +69,7 @@ class LLMEvaluator(Evaluator):
         try:
             agent_sys = load_agentic_service(
                 optimized_path=optimized_path, round_num=round_num
-            )  # TODO: 改成并发，提高eval的速度
-            for data in dataset:
-                try:
-                    result = None
-                    message = TextMessage(
-                        payload=data.task,
-                    )
-                    original_stdout = sys.stdout
-                    f = io.StringIO()
-                    sys.stdout = f
-                    model_message = agent_sys.session().submit(message).wait()
-                    sys.stdout = original_stdout
-
-                    if isinstance(model_message, TextMessage):
-                        result = model_message.get_payload()
-                    elif isinstance(model_message, HybridMessage):
-                        result = model_message.get_instruction_message().get_payload()
-                        # result = "I don't known"
-                    score = await self._llm_scoring(
-                        question=data.task, model_output=str(result), expected_answer=data.verifier
-                    )
-                    total_score += score
-                    parent_score = parent_scores.get(data.task, -1)
-                    succeed = "unknown"
-                    if parent_score < 0:
-                        succeed = "unknown"
-                    elif score > parent_score:
-                        succeed = "yes"
-                    else:
-                        succeed = "no"
-
-                    results.append(
-                        ExecuteResult(
-                            task=data.task,
-                            verifier=data.verifier,
-                            model_output=str(result),
-                            ori_score=parent_score,
-                            score=score,
-                            error="",
-                            succeed=succeed,
-                        )
-                    )
-                except Exception as e:
-                    results.append(
-                        ExecuteResult(
-                            task=data.task,
-                            verifier=data.verifier,
-                            model_output=str(result),
-                            ori_score=-1,
-                            score=0,
-                            error=f"{e}",
-                            succeed="no",
-                        )
-                    )
+            )  
         except Exception as e:
             results.append(
                 ExecuteResult(
@@ -133,14 +82,95 @@ class LLMEvaluator(Evaluator):
                     succeed="no",
                 )
             )
+            
+            agent_sys = None
+            
+        class Blackhole:
+            def write(self, *args, **kwargs):
+                pass  # 吃掉所有写入的数据，什么也不做
+            
+            def flush(self):
+                pass  # 有些库会调用 flush，也需要处理
+        if agent_sys is not None:
+            original_stdout = sys.stdout
+            f = io.StringIO()
+            sys.stdout = Blackhole()
+            step_size = len(dataset)
+            for start in range(0, len(dataset), step_size):
+                jobs: List[tuple[Row, JobWrapper]] = []
+                batch = dataset[start:start + step_size]
+                for data in batch:
+                    result = None
+                    message = TextMessage(
+                        payload=data.task,
+                    )
+                    jobs.append((data, agent_sys.session().submit(message)))
+                        
 
-        with open(results_file, "w", encoding="utf-8") as f:
-            json.dump([result.model_dump() for result in results], f, ensure_ascii=False, indent=2)
+                for data, jobwrapper in jobs:
+                    f.flush()
+                    try:
+                        parent_score = parent_scores.get(data.task, -1)
+                        model_message = jobwrapper.wait()
+                        if isinstance(model_message, TextMessage):
+                            result = model_message.get_payload()
+                        elif isinstance(model_message, HybridMessage):
+                            result = model_message.get_instruction_message().get_payload()
+
+                        score = await self._llm_scoring(
+                            question=data.task, model_output=str(result), expected_answer=data.verifier # TODO: async tasks
+                        )
+                        
+                        total_score += score
+                        succeed = "unknown"
+                        if parent_score < 0:
+                            succeed = "unknown"
+                        elif score > parent_score:
+                            succeed = "yes"
+                        else:
+                            succeed = "no"
+
+                        results.append(
+                            ExecuteResult(
+                                task=data.task,
+                                verifier=data.verifier,
+                                model_output=str(result),
+                                ori_score=parent_score,
+                                score=score,
+                                error="",
+                                succeed=succeed,
+                            )
+                        )
+                    except Exception as e:
+                        results.append(
+                            ExecuteResult(
+                                task=data.task,
+                                verifier=data.verifier,
+                                model_output=str(result),
+                                ori_score=parent_score,
+                                score=0,
+                                error=f"{e}",
+                                succeed="no",
+                            )
+                        )
+                    
+            sys.stdout = original_stdout
 
         avg_score = total_score / len(dataset)
-        reflect_reuslt = await self._reflect(
-            modifications=modifications, results=results, avg_score=avg_score
-        )
+        with open(results_file, "w", encoding="utf-8") as f:
+            # result = [{"avg_score": avg_score}]
+            # result.extend()
+            json.dump([result.model_dump() for result in results], f, ensure_ascii=False, indent=2)
+
+        if self.need_reflect:
+            reflect_reuslt = await self._reflect(
+                modifications=modifications, results=results, avg_score=avg_score
+            )
+        else:
+            reflect_reuslt = ReflectResult(
+                failed_reason=[],
+                optimize_suggestion=[]
+            )
 
         return avg_score, reflect_reuslt.model_dump_json(indent=2)
 

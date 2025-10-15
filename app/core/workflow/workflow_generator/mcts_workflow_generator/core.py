@@ -28,9 +28,9 @@ class MCTSWorkflowGenerator:
         optimize_grain: List[AgenticConfigSection],
         init_template_path: str = "app/core/workflow/workflow_generator/mcts_workflow_generator/init_template/basic_template.yml",
         max_rounds: int = 30,
-        validate_rounds: int = 5,
+        # validate_rounds: int = 5,
         optimized_path: str = "workflow_space",
-        sample_size: int = 5,
+        top_k: int = 5,
         max_retries: int = 5,
     ):
         if optimize_grain is None:
@@ -42,14 +42,16 @@ class MCTSWorkflowGenerator:
         self.evaluator: Evaluator = evaluator
 
         self.max_rounds = max_rounds
-        self.validate_rounds = validate_rounds
+        # self.validate_rounds = validate_rounds
         self.optimized_path = f"{optimized_path}/{self.dataset.name}_{str(int(time.time()))}"
-        self.sample_size = sample_size
+        self.top_k = top_k
         self.max_retries = max_retries
         self.logs: dict[int, WorkflowLogFormat] = {}
         self.optimize_grain = optimize_grain
         self.init_template_path = init_template_path
         self.init_config_dict: Dict[str, str] = {}
+        self.max_score = -1
+        self.optimal_round = 0
 
     def init_workflow(self):
         """
@@ -82,7 +84,7 @@ class MCTSWorkflowGenerator:
         self, test_size: float = 0.5, random_state: int = 42
     ) -> Tuple[List[Row], List[Row]]:
         """Split the dataset into training and validation sets."""
-        data = self.dataset.dataset
+        data = self.dataset.data
         random.seed(random_state)
         random.shuffle(data)
         split_index = int(test_size * len(data))
@@ -112,14 +114,33 @@ class MCTSWorkflowGenerator:
         save_dir = Path(self.optimized_path) / "log"
         save_dir.mkdir(parents=True, exist_ok=True)
         log_file = save_dir / "log.json"
+        config_file = save_dir / "config.json"
         with open(log_file, "w", encoding="utf-8") as f:
+            logs = [v.model_dump(mode="json") for k, v in self.logs.items()]
             json.dump(
-                [v.model_dump(mode="json") for k, v in self.logs.items()],
+                logs,
                 f,
                 ensure_ascii=False,
                 indent=2,
             )
 
+        with open(config_file, "w", encoding = "utf-8") as f:
+            config = [
+                {
+                    "max_rounds": self.max_rounds,
+                    "top_k": self.top_k,
+                    "init_template_path": self.init_template_path,
+                    "max_score": self.max_score,
+                    "optimal_round": self.optimal_round,
+                }
+            ]
+            json.dump(
+                config,
+                f,
+                ensure_ascii=False,
+                indent=2
+            ) 
+            
     async def run(self):
         train_data, test_data = self.split_dataset()
 
@@ -129,7 +150,7 @@ class MCTSWorkflowGenerator:
         score, reflection = await self.evaluator.evaluate_workflow(
             round_num=1,
             parent_round=-1,
-            dataset=self.dataset.dataset,
+            dataset=self.dataset.data,
             modifications=[],
             optimized_path=self.optimized_path,
         )
@@ -144,7 +165,7 @@ class MCTSWorkflowGenerator:
             select_retry_times = 0
             while select_retry_times < self.max_retries:
                 select_retry_times += 1
-                select_round = self.selector.select(sample_size=self.sample_size, logs=self.logs)
+                select_round = self.selector.select(top_k=self.top_k, logs=self.logs)
                 round_context = self.logs.get(select_round.round_number, None)
                 if round_context is not None:
                     break
@@ -208,5 +229,10 @@ class MCTSWorkflowGenerator:
 
             # update exprience for father node
             self.update_parent_feedbacks(select_round.round_number, round_num)
+            
+            if self.logs[round_num].score > self.max_score:
+                self.max_score = self.logs[round_num].score
+                self.optimal_round = round_num
             self.log_save()
-        # TODO: 选出最优的
+
+        return self.max_score, self.optimal_round

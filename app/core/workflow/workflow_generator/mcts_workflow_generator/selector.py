@@ -8,16 +8,16 @@ from app.core.workflow.workflow_generator.mcts_workflow_generator.model import W
 
 class Selector:
     @abstractmethod
-    def select(self, sample_size: int, logs: Dict[int, WorkflowLogFormat]) -> WorkflowLogFormat: ...
+    def select(self, top_k: int, logs: Dict[int, WorkflowLogFormat]) -> WorkflowLogFormat: ...
 
 
 class MixedProbabilitySelector(Selector):
-    def select(self, sample_size: int, logs: Dict[int, WorkflowLogFormat]) -> WorkflowLogFormat:
+    def select(self, top_k: int, logs: Dict[int, WorkflowLogFormat]) -> WorkflowLogFormat:
         # 获取sample个top的score的workflow，包含初始workflow
         list_items = [log_format for _, log_format in logs.items()]
         top_items: List[WorkflowLogFormat] = []
         list_items.sort(key=lambda x: x.score, reverse=True)
-        top_items.extend(list_items[: sample_size - 1])
+        top_items.extend(list_items[: top_k - 1])
         has_round1 = False
         for item in top_items:
             if item.round_number == 1:
@@ -27,8 +27,8 @@ class MixedProbabilitySelector(Selector):
         if not has_round1:
             top_items.append(logs[1])
 
-        elif sample_size <= len(list_items):
-            top_items.append(list_items[sample_size - 1])
+        elif top_k <= len(list_items):
+            top_items.append(list_items[top_k - 1])
 
         # 计算概率分布
         scores = [item.score * 20 for item in top_items]

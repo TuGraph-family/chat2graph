@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import json
 import random
 import time
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from app.core.toolkit.graph_db.graph_db import GraphDb
 
@@ -12,7 +12,6 @@ class SubGraphSampler(ABC):
     def get_random_subgraph(
         self, graph_db: GraphDb, max_depth: int, max_nodes: int, max_edges: int
     ) -> str: ...
-
 
 class SimpleRandomSubGraphSampler(SubGraphSampler):
     def get_random_subgraph(
@@ -94,281 +93,6 @@ class SimpleRandomSubGraphSampler(SubGraphSampler):
             else:
                 return None
 
-
-class EnhancedSubgraphSampler(SubGraphSampler):
-    def get_random_subgraph(
-        self, graph_db: GraphDb, max_depth: int, max_nodes: int, max_edges: int
-    ) -> str:
-        self.graph_db: GraphDb = graph_db
-        print("start sampling...")
-        start_time = time.time()
-        nodes, relationships = self._get_random_subgraph(target_size=max_nodes)
-        elapsed = time.time() - start_time
-        subgraph_json = {
-            "nodes": [
-                {"id": node["node_id"], "labels": node["labels"], "properties": node["properties"]}
-                for node in nodes
-            ],
-            "relationships": [
-                {
-                    "id": rel["rel_id"],
-                    "type": rel["rel_type"],
-                    "start_node_id": rel["start_node_id"],
-                    "end_node_id": rel["end_node_id"],
-                    "properties": rel["properties"],
-                }
-                for rel in relationships
-            ],
-        }
-        print(
-            f"Successfully retrieved subgraph with {len(nodes)} nodes and {len(relationships)} relationships. elapse: {elapsed: .2f}"
-        )
-        info = [node["node_id"] for node in nodes[:3]]
-        print(f"first 3 nodes id: {info}")
-        return json.dumps(subgraph_json, indent=4)
-
-    def _count_total_nodes(self, label: Optional[str] = None) -> int:
-        """统计符合条件的总节点数，用于抽样概率计算
-
-        :param label: 节点标签，None表示所有节点
-        :return: 节点总数
-        """
-        query = f"""
-        MATCH (n{":" + label if label else ""})
-        RETURN count(n) AS total
-        """
-
-        try:
-            with self.graph_db.conn.session() as session:
-                result = session.run(query)
-                return result.single()["total"]
-        except Exception as e:
-            print(f"failed while statistic: {str(e)}")
-            return 0
-
-    def _random_seed_nodes(self, label: Optional[str] = None, count: int = 5) -> List[Dict]:
-        """随机选择种子节点
-
-        :param label: 节点标签
-        :param count: 种子节点数量
-        :return: 种子节点列表
-        """
-        if count <= 0:
-            return []
-
-        query = f"""
-        MATCH (n{":" + label if label else ""})
-        WITH n, rand() AS r
-        ORDER BY r
-        LIMIT $count
-        RETURN elementId(n) AS node_id, labels(n) AS labels, properties(n) AS properties
-        """
-
-        try:
-            with self.graph_db.conn.session() as session:
-                result = session.run(query, count=count)
-                return [record.data() for record in result]
-        except Exception as e:
-            print(f"failed while get seed node: {str(e)}")
-            return []
-
-    def _smart_neighbor_selection(
-        self, node_ids: List[int], existing_nodes: set, limit: int, prefer_connected: float = 0.7
-    ) -> List[Dict]:
-        """智能选择邻居节点，优先选择能增强连通性的节点
-
-        :param node_ids: 基准节点ID列表
-        :param existing_nodes: 已有的节点集合
-        :param limit: 最大选择数量
-        :param prefer_connected: 优先选择与已有节点连接的概率(0-1)
-        :return: 选中的邻居节点列表
-        """
-        if not node_ids or limit <= 0:
-            return []
-
-        # 混合策略：部分邻居来自与已有节点的连接，部分来自随机
-        connected_limit = int(limit * prefer_connected)
-        random_limit = limit - connected_limit
-
-        neighbors = []
-
-        # 1. 优先选择与已有节点有连接的邻居
-        if connected_limit > 0:
-            query = """
-            UNWIND $node_ids AS n_id
-            MATCH (n)-[r]-(m)
-            WHERE elementId(n) = n_id AND NOT elementId(m) IN $existing_nodes
-            WITH m, count(r) AS connection_strength, rand() AS r
-            ORDER BY connection_strength DESC, r
-            LIMIT $limit
-            RETURN elementId(m) AS node_id, labels(m) AS labels, properties(m) AS properties
-            """
-
-            try:
-                with self.graph_db.conn.session() as session:
-                    result = session.run(
-                        query,
-                        node_ids=node_ids,
-                        existing_nodes=list(existing_nodes),
-                        limit=connected_limit,
-                    )
-                    neighbors.extend([record.data() for record in result])
-            except Exception as e:
-                print(f"failed while get neighbour: {str(e)}")
-                return []
-
-        # 2. 补充随机节点，确保达到目标数量
-        if random_limit > 0 and len(neighbors) < limit:
-            remaining = limit - len(neighbors)
-            query = """
-            MATCH (m)
-            WHERE NOT elementId(m) IN $existing_nodes
-            WITH m, rand() AS r
-            ORDER BY r
-            LIMIT $limit
-            RETURN elementId(m) AS node_id, labels(m) AS labels, properties(m) AS properties
-            """
-
-            try:
-                with self.graph_db.conn.session() as session:
-                    result = session.run(
-                        query,
-                        existing_nodes=list(existing_nodes) + [n["node_id"] for n in neighbors],
-                        limit=remaining,
-                    )
-                    neighbors.extend([record.data() for record in result])
-            except Exception as e:
-                print(f"failed while get neighbour: {str(e)}")
-
-        return neighbors[:limit]  # 确保不超过限制数量
-
-    def _get_relationships(self, node_ids: List[int]) -> List[Dict]:
-        """获取节点集合之间的所有关系
-
-        :param node_ids: 节点ID列表
-        :return: 关系列表
-        """
-        if len(node_ids) < 2:
-            return []
-
-        query = """
-        UNWIND $node_ids AS source_id
-        MATCH (s)-[r]->(t)
-        WHERE elementId(s) = source_id AND elementId(t) IN $node_ids
-        RETURN elementId(r) AS rel_id, type(r) AS rel_type,
-               elementId(s) AS start_node_id, elementId(t) AS end_node_id,
-               properties(r) AS properties
-        """
-
-        try:
-            with self.graph_db.conn.session() as session:
-                result = session.run(query, node_ids=node_ids)
-                return [record.data() for record in result]
-        except Exception as e:
-            print(f"failed while getting relationship: {str(e)}")
-            return []
-
-    def _get_random_subgraph(
-        self,
-        target_size: int,
-        label: Optional[str] = None,
-        seed_proportion: float = 0.2,
-        expansion_steps: int = 2,
-        connectivity_bias: float = 0.7,
-        progress_interval: int = 10,
-    ) -> Tuple[List[Dict], List[Dict]]:
-        """
-        抽样子图，尽可能保持连通性同时控制规模
-
-        :param target_size: 目标子图节点数量
-        :param label: 节点标签，None表示所有类型节点
-        :param seed_proportion: 种子节点占目标规模的比例(0-1)
-        :param expansion_steps: 邻居扩展步数，越大连通性可能越好
-        :param connectivity_bias: 连接偏向系数(0-1)，越高越优先选择增强连通性的节点
-        :param progress_interval: 进度日志输出间隔
-        :return: (节点列表, 关系列表)
-        """
-        # 参数验证
-        if target_size <= 0:
-            raise ValueError("target size must be positive")
-        if not (0 < seed_proportion < 1):
-            raise ValueError("seed_proportion must between (0, 1)")
-        if expansion_steps < 1:
-            raise ValueError("expansion_steps must be at least 1")
-        if not (0 <= connectivity_bias <= 1):
-            raise ValueError("connectivity_bias must between [0, 1]")
-
-        # 1. 检查总节点数是否足够
-        total_nodes = self._count_total_nodes(label)
-        if total_nodes < target_size:
-            print(
-                f"If the number of available nodes ({total_nodes}) is less than the target size ({target_size}), all nodes will be returned"
-            )
-            target_size = total_nodes
-
-        # 2. 计算种子节点数量
-        seed_count = max(1, min(int(target_size * seed_proportion), target_size - 1))
-
-        # 3. 选择种子节点
-        seed_nodes = self._random_seed_nodes(label, seed_count)
-        if not seed_nodes:
-            raise Exception("failed while getting seed_nodes")
-
-        # 存储所有选中的节点，用字典去重
-        all_nodes = {node["node_id"]: node for node in seed_nodes}
-        current_ids = [node["node_id"] for node in seed_nodes]
-
-        # 4. 多步扩展邻居节点
-        remaining = target_size - len(all_nodes)
-        step_size = max(1, remaining // expansion_steps)
-
-        for _ in range(expansion_steps):
-            if remaining <= 0:
-                break
-
-            # 每步扩展的节点数量
-            current_step_size = min(remaining, step_size)
-
-            # 智能选择邻居
-            new_neighbors = self._smart_neighbor_selection(
-                node_ids=current_ids,
-                existing_nodes=set(all_nodes.keys()),
-                limit=current_step_size,
-                prefer_connected=connectivity_bias,
-            )
-
-            # 添加新节点
-            for neighbor in new_neighbors:
-                n_id = neighbor["node_id"]
-                if n_id not in all_nodes:
-                    all_nodes[n_id] = neighbor
-                    remaining -= 1
-
-            # 更新当前节点列表（用于下一步扩展）
-            current_ids = [n["node_id"] for n in new_neighbors]
-
-        # 如果还没达到目标，补充随机节点
-        if remaining > 0:
-            suppls = self._smart_neighbor_selection(
-                node_ids=list(all_nodes.keys()),
-                existing_nodes=set(all_nodes.keys()),
-                limit=remaining,
-                prefer_connected=0.5,  # 降低连接偏向，确保能快速补充节点
-            )
-            for node in suppls:
-                n_id = node["node_id"]
-                if n_id not in all_nodes:
-                    all_nodes[n_id] = node
-                    remaining -= 1
-
-        # 5. 获取所有选中节点之间的关系
-        node_list = list(all_nodes.values())
-        node_ids = [n["node_id"] for n in node_list]
-        relationships = self._get_relationships(node_ids)
-
-        return node_list, relationships
-
-
 class RandomWalkSampler(SubGraphSampler):
     def __init__(self):
         self.sampled_nodes: Set[str] = set()
@@ -388,7 +112,7 @@ class RandomWalkSampler(SubGraphSampler):
             subgraph_json = {
                 "nodes": [
                     {
-                        "id": node["node_id"],
+                        "elementId": node["node_id"],
                         "labels": node["labels"],
                         "properties": node["properties"],
                     }
@@ -396,10 +120,10 @@ class RandomWalkSampler(SubGraphSampler):
                 ],
                 "relationships": [
                     {
-                        "id": rel["rel_id"],
+                        "elementId": rel["rel_id"],
                         "type": rel["rel_type"],
-                        "start_node_id": rel["start_node_id"],
-                        "end_node_id": rel["end_node_id"],
+                        "start_node_elementId": rel["start_node_id"],
+                        "end_node_elementId": rel["end_node_id"],
                         "properties": rel["properties"],
                     }
                     for rel in relationships
@@ -658,3 +382,190 @@ class RandomWalkSampler(SubGraphSampler):
             return [], []
 
         return nodes, rels
+
+class RandomSubgraphSampler:
+    def __init__(self):
+        # 使用 elementId()（字符串）作为标识
+        self.sampled_node_ids: Set[str] = set()
+        self.recent_sample_nodes: List[str] = []
+        self.last_subgraph: Dict[str, Any] = {}
+
+    def _normalize_params(self, params: Optional[Dict]):
+        """确保数值参数为 int，集合转为 list，避免 float/int 混淆导致 driver 问题"""
+        if not params:
+            return {}
+        norm = {}
+        for k, v in params.items():
+            if isinstance(v, float) and v.is_integer():
+                norm[k] = int(v)
+            elif isinstance(v, set | tuple):
+                norm[k] = list(v)
+            else:
+                norm[k] = v
+        return norm
+
+    def _run(self, graph_db, cypher: str, params: Dict = None):
+        """执行 cypher 并返回 list(dict) 结果。保证 params 类型安全。"""
+        params = self._normalize_params(params)
+        with graph_db.conn.session() as session:
+            result = session.run(cypher, params)
+            # driver 返回的 record 可能不能直接转 dict（取决 driver），
+            # 这里尽量将每条 record 转成 python 原生结构（节点/关系对象由 driver 决定）
+            rows = [dict(r) for r in result]
+        return rows
+
+    def _pick_random_seed(self, graph_db, excluded: Set[str], max_tries: int = 10) -> str:
+        """
+        用 elementId 选随机起点，优先避开 excluded（字符串列表）
+        返回 elementId(n) 的字符串
+        """
+        excluded_list = list(excluded) if excluded else []
+        for attempt in range(max_tries):
+            if excluded_list:
+                q = """
+                MATCH (n)
+                WHERE NOT elementId(n) IN $excluded
+                RETURN elementId(n) AS eid
+                ORDER BY rand()
+                LIMIT 1
+                """
+                rows = self._run(graph_db, q, {"excluded": excluded_list})
+            else:
+                q = "MATCH (n) RETURN elementId(n) AS eid ORDER BY rand() LIMIT 1"
+                rows = self._run(graph_db, q, {})
+            if rows:
+                return rows[0]["eid"]
+        # 放宽：从全图随机挑一个
+        q = "MATCH (n) RETURN elementId(n) AS eid ORDER BY rand() LIMIT 1"
+        rows = self._run(graph_db, q, {})
+        if rows:
+            return rows[0]["eid"]
+        raise RuntimeError("Graph empty: cannot pick seed node")
+
+    def get_random_subgraph(self, graph_db, max_depth: int, max_nodes: int, max_edges: int) -> str:
+        # 参数防御
+        if max_nodes <= 0:
+            raise ValueError("max_nodes must be > 0")
+        if max_depth < 0:
+            raise ValueError("max_depth must be >= 0")
+
+        # 强制整型，避免 float 导致 driver/内部出错
+        max_depth = int(max_depth)
+        max_nodes = int(max_nodes)
+        max_edges = int(max_edges)
+
+        sub_nodes: Set[str] = set()
+        sub_rels: Set[str] = set()
+
+        excluded_for_seed = set(self.sampled_node_ids)
+        seed_eid = self._pick_random_seed(graph_db, excluded_for_seed)
+        sub_nodes.add(seed_eid)
+        frontier = {seed_eid}
+        depth = 0
+
+        while frontier and depth < max_depth and len(sub_nodes) < max_nodes and len(sub_rels) < max_edges:
+            depth += 1
+            new_frontier = set()
+            for eid in list(frontier):
+                if len(sub_nodes) >= max_nodes or len(sub_rels) >= max_edges:
+                    break
+
+                remaining_nodes = max_nodes - len(sub_nodes)
+                remaining_edges = max_edges - len(sub_rels)
+                k = int(min(remaining_nodes, 5))  # 每个节点最多向外扩展 k 个邻居（int 保证）
+                if k <= 0:
+                    continue
+
+                # 找与当前节点相连的邻居（基于 elementId）
+                q = """
+                MATCH (n)-[r]-(m)
+                WHERE elementId(n) = $eid AND NOT elementId(m) IN $excluded_nodes
+                RETURN elementId(m) AS mid, elementId(r) AS rid
+                ORDER BY rand()
+                LIMIT $limit
+                """
+                excluded_nodes = list(sub_nodes.union(self.sampled_node_ids))
+                rows = self._run(graph_db, q, {"eid": eid, "excluded_nodes": excluded_nodes, "limit": k})
+
+                # 若没有结果（图稀疏或 excluded 过多），放宽条件（只排除当前 sub_nodes）
+                if not rows:
+                    q2 = """
+                    MATCH (n)-[r]-(m)
+                    WHERE elementId(n) = $eid AND NOT elementId(m) IN $sub_nodes
+                    RETURN elementId(m) AS mid, elementId(r) AS rid
+                    ORDER BY rand()
+                    LIMIT $limit
+                    """
+                    rows = self._run(graph_db, q2, {"eid": eid, "sub_nodes": list(sub_nodes), "limit": k})
+
+                for r in rows:
+                    if len(sub_nodes) >= max_nodes or len(sub_rels) >= max_edges:
+                        break
+                    mid = r["mid"]
+                    rid = r["rid"]
+                    # rid 与 mid 在这里都是字符串（elementId）
+                    if mid not in sub_nodes:
+                        if len(sub_nodes) < max_nodes:
+                            sub_nodes.add(mid)
+                            new_frontier.add(mid)
+                    # 边数控制（尽量用关系 elementId）
+                    if rid not in sub_rels and len(sub_rels) < max_edges:
+                        sub_rels.add(rid)
+
+            frontier = new_frontier
+
+        # 如果只有一个节点且允许的话，尝试抓取一些与 seed 相连的边（补充边/邻居）
+        if len(sub_nodes) == 1 and max_edges > 0:
+            remaining_edges = max_edges - len(sub_rels)
+            if remaining_edges > 0:
+                q = """
+                MATCH (n)-[r]-(m)
+                WHERE elementId(n) = $eid
+                RETURN elementId(m) AS mid, elementId(r) AS rid
+                ORDER BY rand()
+                LIMIT $limit
+                """
+                rows = self._run(graph_db, q, {"eid": seed_eid, "limit": remaining_edges})
+                for r in rows:
+                    if len(sub_nodes) >= max_nodes or len(sub_rels) >= max_edges:
+                        break
+                    mid = r["mid"]
+                    rid = r["rid"]
+                    if mid not in sub_nodes and len(sub_nodes) < max_nodes:
+                        sub_nodes.add(mid)
+                    if rid not in sub_rels and len(sub_rels) < max_edges:
+                        sub_rels.add(rid)
+
+        # 记录到 sampled_node_ids 用于后续避免重复（字符串 ids）
+        for nid in sub_nodes:
+            self.sampled_node_ids.add(nid)
+        self.recent_sample_nodes = list(sub_nodes)
+
+        # 最终的诱导子图查询（使用 elementId 判断）
+        final_query = """
+        WITH $node_ids AS ids
+        MATCH (n)
+        WHERE elementId(n) IN ids
+        OPTIONAL MATCH (n)-[r]-(m)
+        WHERE elementId(m) IN ids
+        RETURN collect(DISTINCT n) AS nodes, collect(DISTINCT r) AS relationships
+        """
+
+        final_rows = self._run(graph_db, final_query, {"node_ids": list(sub_nodes)})
+
+        nodes_out = []
+        rels_out = []
+        if final_rows:
+            row = final_rows[0]
+            nodes_out = row.get("nodes", [])
+            rels_out = row.get("relationships", [])
+
+        self.last_subgraph = {
+            "node_ids": list(sub_nodes),
+            "rel_ids": list(sub_rels),
+            "nodes": nodes_out,
+            "relationships": rels_out,
+            "final_query": final_query,
+        }
+
+        return json.dumps(self.last_subgraph, indent=2, ensure_ascii=False)

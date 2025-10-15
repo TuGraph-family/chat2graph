@@ -186,10 +186,13 @@ class QueryTaskSubtypes:
         desc="Level Core: Based on the global database, call complex graph algorithms, machine learning models, or multi-algorithm combinations, focusing on complex pattern matching, anomaly detection, prediction and recommendation, and in-depth analysis. The core is to mine implicit rules and future trends through advanced algorithms to obtain high-level business insights.",
         subtasks=l4_tasks,
     )
-    REGISTER_LIST = [L1, L2, L3]
+    REGISTER_LIST = [L1, L2]
 
 
-SUBTYPES_MAP = {"query": [*QueryTaskSubtypes.REGISTER_LIST]}
+SUBTYPES_MAP = {
+    "query": [*QueryTaskSubtypes.REGISTER_LIST],
+    # "non-query": TODO
+}
 
 
 class GraphTaskTypesInfo:

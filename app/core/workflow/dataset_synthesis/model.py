@@ -20,7 +20,7 @@ class Row(BaseModel):
 class WorkflowTrainDataset(BaseModel):
     name: str
     task_desc: str
-    dataset: list[Row]
+    data: list[Row]
 
 
 class SubTaskType(BaseModel):

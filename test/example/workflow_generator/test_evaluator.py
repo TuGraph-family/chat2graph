@@ -5,18 +5,19 @@ from app.core.workflow.workflow_generator.mcts_workflow_generator.evaluator impo
 
 
 async def main():
-    evaluator = LLMEvaluator()
-    optimized_path = "test/example/workflow_generator/workflow_space/test_just"
-    dataset_path = "test/example/workflow_generator/data.json"
-    dataset = load_workflow_train_dataset(task_desc="你的主要任务是完成图数据库的查询任务", path=dataset_path)
-    await evaluator.evaluate_workflow(
-        optimized_path=optimized_path,
-        round_num=1,
-        parent_round=-1,
-        dataset=dataset.dataset[:1],
-        modifications=[
-        ]
-    )
+    # evaluator = LLMEvaluator()
+    # optimized_path = "test/example/workflow_generator/workflow_space/test_just"
+    # dataset_path = "test/example/workflow_generator/data.json"
+    # dataset = load_workflow_train_dataset(task_desc="你的主要任务是完成图数据库的查询任务", path=dataset_path)
+    # await evaluator.evaluate_workflow(
+    #     optimized_path=optimized_path,
+    #     round_num=1,
+    #     parent_round=-1,
+    #     dataset=dataset.dataset[:5],
+    #     modifications=[
+    #     ]
+    # )
+    
     # result = await evaluator._llm_scoring(
     #     question="Which companies have a business type of 'Research Institute' and have invested in companies located in 'Piliscsaba'?",
     #     expected_answer="The company 'Jenkins-Batz' (ID: 7783) has a business type of 'Research Institute' and has invested in 'Stanton PLC', which is located in 'Piliscsaba'.",
@@ -38,8 +39,29 @@ async def main():
     # #       "Split responsibilities across experts to ensure each focuses on a single domain task, improving modularity and performance."
     # #     ]
     # # )
+    dataset_paths = [
+        # "test/example/workflow_generator/data_50.json",
+        "test/example/workflow_generator/data_100.json"
+    ]
+    optimized_path = "test/example/workflow_generator/workflow_space/test_just"
+    
+    for dataset in dataset_paths:
+        await eval(dataset, optimized_path, data_start=70, data_end=80, data_size=10, round_start=107)
 
-
+async def eval(dataset_path: str, optimized_path: str, data_start: int, data_end: int, data_size: int, round_start: int):
+    evaluator = LLMEvaluator(need_reflect=False)
+    dataset = load_workflow_train_dataset(task_desc="你的主要任务是完成图数据库的查询任务", path=dataset_path)
+    round = round_start
+    for i in range(data_start, data_end, data_size):
+        await evaluator.evaluate_workflow(
+            optimized_path=optimized_path,
+            round_num=round,
+            parent_round=-1,
+            dataset=dataset.data[i:i+data_size],
+            modifications=[
+            ]
+        )
+        round += 1
 
 
 

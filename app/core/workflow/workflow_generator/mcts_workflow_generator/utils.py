@@ -131,7 +131,7 @@ async def generate_json(
                     payload=f"When parse and filter json encounter exception={e}, \
                         please output the right json format.",
                     source_type=MessageSourceType.MODEL,
-                    job_id=messages[-1].get_job_id(),  # TODO:CHECK
+                    job_id=messages[-1].get_job_id(), 
                     step=messages[-1].get_step() + 1,
                 )
             )

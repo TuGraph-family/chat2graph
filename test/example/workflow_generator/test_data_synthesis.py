@@ -21,12 +21,12 @@ async def test_indentify_strategy(generator: SamplingDatasetGenerator):
     assert(strategy == "non-query")
 
 async def test_generate_dataset(generator: DatasetGenerator):
-    train_set = await generator.generate("你的主要任务是对用户提出的图数据库查询需求进行响应，完成图数据库查询任务", dataset_name="test", size=30)
+    train_set = await generator.generate("你的主要职责是解决关于图数据库的各种问题，包括实体查询、多跳推理等等", dataset_name="test", size=100)
     print(f"end, train_set={train_set}")
 
     dataset_name = "data" + str(int(time.time())) + ".json"
     with open(dataset_name, "w", encoding="utf-8") as f:
-        json.dump([row.model_dump() for row in train_set.dataset], f, indent=2, ensure_ascii=False)
+        json.dump([row.model_dump() for row in train_set.data], f, indent=2, ensure_ascii=False)
     
 
 async def test():
@@ -35,10 +35,10 @@ async def test():
         graph_db=db, 
         strategy="query",
         sampler_cls=RandomWalkSampler,
-        max_depth=7,
-        max_noeds=15,
-        max_edges=30,
-        nums_per_subgraph=5,
+        max_depth=10,
+        max_noeds=50,
+        max_edges=100,
+        nums_per_subgraph=10,
         )
     tests = [
         (test_generate_dataset, [DatasetGenerator]),

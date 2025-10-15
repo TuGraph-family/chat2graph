@@ -1,152 +1,64 @@
 generate_query_tv_template = """
-You are an expert in graph databases, proficient in generating high-quality question–answer pairs (QA pairs) based on graph data structures.  
-Your task is to generate the specified number of QA pairs according to the provided task description and sub-graph information.  
-These QA pairs must cover as many difficulty levels as possible and use a **variety of query types**, while ensuring that both questions and answers are strictly based on the provided sub-graph data (no fabricated information).
+You are a graph database expert proficient in generating high-quality question-answer (QA) pairs based on graph database content.  
 
-### Task Difficulty Levels
+Your task is to generate the specified number of QA pairs according to the provided task description and subgraph information.  
 
-{task_level_info}
+The generated QA pairs should cover as many difficulty levels as possible to ensure data diversity, with both questions and answers strictly based on the provided subgraph data without fabricating facts.  
 
-### Task Statistic Info
-There are already some question-answer pairs, and its statistics are as follows:
 
-{task_statistic_info}
+### Task Difficulty Level Information  
+This section describes the definitions and types of tasks for different levels: {task_level_info}  
 
-### Generation Requirements
 
-1. **Input Information**  
-**Task description**: 
-{task_description}  
-   
-**Sub-graph information**: 
-{subgraph}  
-   
-**Number of QA pairs**: {num_pairs}  
+### Task Statistical Information  
+A partial set of question-answer pairs is already available, with their statistical information as follows: {task_statistic_info}  
 
-2. **Output Requirements**  
-**Dual Foundation Alignment**:  
-  - All questions and answers must be strictly based on two core references:  
-    **Task Difficulty Levels**: Follow the subtask categories, logic, and difficulty definitions (L1–L3) specified in the task framework (e.g., L1 for single-hop queries, L2 for multi-hop reasoning, L3 for basic algorithm applications).  
-    **Task Statistic Info**: Refer to the distribution of existing QA pairs to guide new QA generation—prioritize supplementing underrepresented types rather than repeating overrepresented ones.  
+When generating answers, reference the statistical information to cover different questions as comprehensively as possible.  
 
-**Uniform Distribution of QA Pairs**:  
-  - Aim for balanced coverage across all query types defined in Task Difficulty Levels. Use Task Statistic Info to identify gaps (e.g., if "Basic Path Analysis" has far fewer QAs than "Simple Attribute Filtering"), and prioritize generating QAs for undercounted types to avoid over-concentration on 1–2 types.  
-  - Ensure each difficulty level (L1-L3) has a reasonable number of QAs, and the query type distribution within each level is also uniform.  
 
-**Diversity in Content & Focus**:  
-  - Vary the focus of entities and relationships across QAs to avoid single-entity/relationship repetition.  
-  - Cover all target query type categories as defined, including but not limited to: `attribute filtering`, `relationship existence verification`, `multi-hop pattern matching`, `statistical aggregation`, `ranking/top-K`, `path analysis (shortest/longest)`, `community detection`, `centrality/influence calculation`.  
+### Input Information  
+**Task Description**: {task_description}  
 
-**Clarity & Accuracy**:  
-  - Questions must be clear and specific: Clearly specify entities, relationships, or constraints.  
-  - Answers must be accurate and complete: Derive results strictly from sub-graph data, and include necessary details .  
+**Subgraph Information**: {subgraph}  
 
-**Explicit Level Labeling**: Each QA pair must clearly mark its difficulty level (L1/L2/L3) in the `"level"` field and task subtype(eg. Entity Attribute and Label Query) in the `"task_subtype"` field, ensuring consistency with the classification in Task Difficulty Levels.
+**Number of QA Pairs**: {num_pairs}  
 
-3. **Workflow for You**  
-   - Analyse the entities and relationships in the sub-graph.  
-   - Determine for each difficulty level (L1-L3) what types of questions can be asked.
-   - Based on the Task Statistic Info of the existing tasks, decide which task subtypes to generate for more diverse and evenly distributed tasks.
-   - Generate diverse questions accordingly and their correct answers.  
-   - Assign the appropriate difficulty `"level"` and task subtype `"task_subtype"` to each QA pair.
 
-4. **Output Format**  
-   Output **only** a JSON list. Each element must contain four fields: `"level"` (L1/L2/L3/L4), `"task_subtype"` (specific subtask type), `"task"` (question), and `"verifier"` (answer).  
-   Example:
-   ```json
-   [
-     {{
-       "level": "L1",
-       "task_subtype" : sbutype1
-       "task": "Question description 1",
-       "verifier": "Answer 1"
-     }},
-     {{
-       "level": "L3",
-       "task_subtype" : subtype2, 
-       "task": "Question description 2",
-       "verifier": "Answer 2"
-     }}
-   ]
-  ```
-"""
-generate_query_tv_template_old = """
-You are an expert in graph databases, proficient in generating high-quality question-answer pairs (QA pairs) based on graph data structures. Please generate the specified number of QA pairs according to the provided task description and sub-graph information. These QA pairs should cover as many difficulty levels as possible, while ensuring that both questions and answers are based on the provided sub-graph data.
+### Output Requirements  
+- **Uniformity**: Achieve balanced coverage across all query types defined in the task difficulty level definitions. Utilize the task statistical information to identify gaps, prioritize generating QA pairs for types with insufficient counts, and avoid undue concentration on 1-2 types. Ensure a reasonable number of QA pairs for each difficulty level, with uniform distribution of query types within each level.  
+- **Diversity of Content and Focus**: Adjust the focus on entities and relationships across different QA pairs to avoid repetition of individual entities/relationships, covering all target query type categories such as "attribute filtering" and "relationship existence verification".  
+- **Clarity and Accuracy**: Questions should be clear and unambiguous, specifying entities, relationships, or constraints; answers should be accurate and complete, strictly obtaining results from subgraph data and including necessary detailed information.  
+- **Answerability**: Perform a consistency check to ensure that the answers to the generated questions are consistent in both the subgraph and the global context, and filter out subgraph aggregation-based questions.  
+  - Unanswerable examples (for reference):
+    - List all xxx
+    - Get all of A's friends
+    - Find all xxxx
 
-### Definition of Task Difficulty Levels
 
-#### L1: Simple Query Tasks
-- Single-hop relationship queries and simple attribute filtering, generally 0-1 hop, without reasoning.
-- Includes: Single-node attribute queries, single-edge relationship existence checks, index query by ID.
-- Typical examples:
- - Query the registration time and membership level of a certain user.
- - Find entities with the node label "User" and the city as "Beijing".
- - Verify whether user u1001 follows user u2002.
- - Filter product nodes with a price > 1000 yuan.
- - Count the total number of nodes of the "Product" type in the graph.
+### Workflow  
+1. Analyze entities and relationships in the subgraph.  
+2. Based on the task statistical information of existing tasks, determine the question types to prioritize for generation to achieve task diversity and uniform distribution.  
+3. Identify the question types that can be raised for each difficulty level.  
+4. Generate diverse questions and their correct answers.  
+5. Assign appropriate difficulty "level" and task subtype "task_subtype" to each QA pair.  
+6. Verify the diversity of generated questions, and generate more diverse questions if they do not meet the requirements.  
+7. Verify the answerability of generated questions and filter out questions that do not meet the conditions.  
 
-#### L2: Simple Multi-hop Queries
-- Multi-hop path queries and pattern matching, which require integrating information from multiple entities and include simple filtering.
-- Typical examples:
- - Query the second-degree friends of user u100.
- - Query "the brands of products purchased by user u1001" (user → purchase → product → belong to → brand).
- - Count the number of "direct friends of user u1001 whose age < 30 years old".
- - Query all interaction relationships (such as likes, collections, comments) of user u1001 with "content c5001".
 
-#### L3: Complex Association Queries
-- Involve long-path queries of ≥ 4 hops or sub-graph level analysis, require multi-attribute cross-type filtering; may involve simple graph algorithms.
-- Typical examples:
- - Query the names of suppliers in the path "user u1001 → purchase → product → belong to → brand → cooperate with → supplier → located in", where "the supplier is located in Shanghai and the product price > 500".
- - Analyze "the top 3 brands with the highest sales volume and their average prices among the electronic products purchased by users in Beijing".
- - Find the shortest path from user A to user B.
- - Identify interest groups in an e-commerce platform.
- - Identify key dissemination nodes in a social network.
-
-#### L4: Algorithm-based Reasoning Queries
-- Complex reasoning based on graph algorithms, dynamic path analysis, requiring in-depth logical reasoning.
-- Typical examples:
- - Query the top 5 core users with the highest influence in the social sub-graph where user u1001 is located.
- - Query the longest path containing ≥ 5 nodes among all possible paths from the raw material supplier to the end-user of product p7001.
- - Identify the fraud-risk community where user u1001 is located and query the number of transaction records of all users in this community.
- - Detect whether there is a money-laundering cycle in the financial transaction graph.
- - Predict the cascading impact after the failure of a certain node in the supply chain.
-
-### Generation Requirements
-
-1. Generate QA pairs based on the following information:
-  - Task description: {task_description}
-  - Sub-graph information: {subgraph}
-  - Number of pairs to generate: {num_pairs} QA pairs
-
-2. The generated QA pairs should meet the following requirements:
-  - Questions and answers must be based on the provided sub-graph data, and no information that does not exist in the sub-graph can be fabricated.
-  - Cover as many difficulty levels (L1-L4) as possible, but it is not mandatory to generate questions for all levels. If the sub-graph does not support tasks of a certain level, that level can be skipped.
-  - Ensure diversity: Cover different entities, relationships, attributes, and query types (attribute, relationship, path, statistics, algorithm-based reasoning). Avoid repeated or highly similar questions.
-  - Questions should be clear and specific, and answers should be accurate and complete.
-  - Output the results only in JSON list format, where each element contains three fields: "task", "verifier", and "level". Among them, "level" can only be one of L1, L2, L3, L4.
-
-### Workflow
-1. Analyze the entities, relationships, etc. in the sub-graph based on the sub-graph information, and pay attention to the association relationships between entities.
-2. Analyze in turn whether questions of levels L1-L4 can be raised based on the sub-graph.
-3. Based on the above analysis, raise several questions.
-4. For each question, conduct in-depth analysis and generate its corresponding answer.
-5. For each question, conduct in-depth analysis and generate its corresponding difficulty level.
-
-### Output Format:
-Please output the results in JSON list format, where each element contains two fields: "task" (question description) and "verifier" (answer). The specific format is as follows:
 ```json
 [
   {{
-    "task": "Question description 1",
     "level": "L1",
-    "verifier": "Answer 1"
+    "task_subtype": "subtype1",
+    "task": "task1",
+    "verifier": "anwser1"
   }},
   {{
-    "task": "Question description 2",
-    "level": "L2",
-    "verifier": "Answer 2"
-  }},
-  ...
+    "level": "L3",
+    "task_subtype": "subtype2",
+    "task": "task2",
+    "verifier": "anwser2"
+  }}
 ]
 ```
 """
@@ -190,4 +102,76 @@ Output: mixed
 **Please analyze the following task descriptions:**
 ## Task Description
 {task_desc}
+"""
+
+
+filter_prompt_template = """
+### Role  
+You are a Synthetic Data Evaluation Expert, specializing in evaluating the quality of synthetic data generated based on a local subgraph from a graph database and filtering out low-quality data.  
+
+
+### Goals  
+1. Evaluate the quality of synthetic data based on evaluation criteria.  
+2. Filter out low-quality synthetic data that does not meet the criteria.  
+3. Output evaluation results in the specified output format.  
+
+
+### Skills  
+1. Possess the ability to judge the authenticity, relevance, and consistency of synthetic data.  
+2. Be familiar with knowledge related to local subgraphs in graph databases.  
+3. Able to output data in the required JSON format.  
+
+
+### Evaluation Criteria  
+1. Synthetic data must be evaluated based on the criteria of authenticity, relevance, and consistency:
+   - **Authenticity**: Judge whether the answers in the synthetic data are based on content in the subgraph; filter out those that are not.  
+   - **Relevance**: Judge whether the synthetic data is relevant to the task description; filter out those that are irrelevant.  
+   - **Consistency**: Judge whether the synthetic data is consistent between local and global answers; filter out those that are inconsistent. 
+      - For example, "finding all friends of A" is generally inconsistent between local and global contexts; most such cases of "finding all xxx" are incorrect, and other types of inconsistencies require independent judgment of consistency.  
+      - For example, "Which accounts have an accountLevel of "Gold" and an accountType of "Corporate Account"?" will have more answers globally than locally, so this type of question also needs to be filtered.
+2. Data that does not meet the above criteria must be excluded.  
+
+
+### Task Description  
+{task_desc}  
+
+
+### Subgraph  
+{subgraph}  
+
+
+### Synthetic Data  
+{dataset}  
+
+Field Descriptions
+- **task**: A string representing the graph database query task description (e.g., "Query the multi-hop relationships of a node", "Filter nodes with specific properties", etc.).
+- **verifier**: A string representing the verification criteria or standard answer for the task (e.g., correct query statement, expected return result, judgment logic, etc.).
+
+### Workflow  
+1. Carefully review the task description, subgraphs, and synthesized data.
+2. Evaluate each synthesized data item by item according to the evaluation criteria.
+3. Determine if it meets the authenticity criteria, and filter if it does not.
+4. Determine if it meets the relevance criteria, and filter if it does not.
+5. Determine if it meets the consistency criteria, and filter if it does not.
+6. Filter if any one of ["all", "List"] appears in the `task` field.
+7. Organize the data that meets the criteria according to the specified output format. 
+
+
+### Output Format  
+```json
+[
+  {{
+    "level": "L1",
+    "task_subtype": "subtype1",
+    "task": "task1",
+    "verifier": "anwser1"
+  }},
+  {{
+    "level": "L3",
+    "task_subtype": "subtype2",
+    "task": "task2",
+    "verifier": "anwser2"
+  }}
+]
+```
 """

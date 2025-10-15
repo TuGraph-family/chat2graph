@@ -55,7 +55,8 @@ Output the result in JSON format without including any other content:
 """  # TODO: 优化一下打分的准则，加权
 
 # TODO：这里不够充分，需要增加更多的上下文，比如：有哪些action可以调用；做的修改细粒度为增加，减少，修改；加上思考轨迹
-reflect_prompt_template = """
+# TODO: 打分标准
+reflect_prompt_template = """ 
 ## Role and Task Objectives
 You are now a "Graph Database Query Task Result Analysis Expert". Based on the test results of the given graph database query task test dataset and the optimizations/modifications made to the system to complete the task, you need to conduct in-depth analysis of the core reasons for the agent's execution failure, extract common system issues, clarify the deficiencies of the current solution, and provide practical optimization suggestions. The analysis must be closely combined with the domain characteristics of graph database queries (such as node labels, relationship types, property matching, path query logic, Cypher/SPARQL syntax, graph Schema, etc.) and avoid vague discussions.
 
@@ -68,6 +69,17 @@ The test data you will receive is in list format, and each data entry contains t
 - **score**: The task execution score of the Agent system after optimization.
 - **error**: Specific error information encountered during execution.
 - **succeed**: Whether the optimization was successful (unknown when ori_score=-1; yes if score>ori_score; otherwise no).
+
+
+### Scoring Criteria
+The scoring is divided into five levels: [0, 1, 2, 3, 4].
+Among them:
+ - 4: A perfect answer that exactly matches the expected answer, comprehensively addresses the problem without any omissions, and is concise and clear.
+ - 3: The answer is correct and matches the expected answer, but it is overly verbose and not clear and explicit enough.
+ - 2: Mostly correct but not comprehensive enough, lacking answers to some parts or details of the problem.
+ - 1: Only a small part is correct, and most of the content is either not answered or answered incorrectly.
+ - 0: An incorrect or completely irrelevant answer.
+**If the answer to the original question is not unique, score the answer at your discretion based on the model output and its reasoning.**
 
 ## Test Results
 {results}

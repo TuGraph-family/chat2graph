@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 import json
 import random
 import re
-import time
 from typing import Dict, List, Type, get_args
 
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
 from app.core.prompt.data_synthesis import (
+    filter_prompt_template,
     generate_non_query_tv_template,
     generate_query_tv_template,
     strategy_indentify_template,
@@ -111,7 +111,7 @@ class SamplingDatasetGenerator(DatasetGenerator):
             step=step,
         )
         messages.append(message)
-        while times < 3 and found_strategy is None:  # TODO
+        while times < 3 and found_strategy is None:
             times += 1
             response = await self._llm.generate(sys_prompt="", messages=messages)
 
@@ -182,9 +182,26 @@ class SamplingDatasetGenerator(DatasetGenerator):
 
         return random.choice([x for x in get_args(TASK_TYPES) if x])
 
-    async def filter(self, pairs: list[Row]) -> list[Row]:
+    async def filter(self, task_type: TASK_TYPES, task_desc: str, subgraph: str, dataset: list[Row]) -> list[Row]:
         # TODO: implement
-        return pairs
+        prompt = filter_prompt_template.format(
+            task_desc=task_desc,
+            subgraph=subgraph,
+            dataset=dataset,
+        )
+        job_id = "filter_job"
+        message = ModelMessage(
+            payload=prompt,
+            source_type=MessageSourceType.MODEL,
+            job_id=job_id,
+            step=1,
+        )
+
+        # 生成响应
+        response = await self._llm.generate(sys_prompt="", messages=[message])
+
+        qas: list[Row] = self.extract_pairs(task_type, response.get_payload())
+        return qas
 
     async def generate(self, task_desc: str, dataset_name: str, size: int) -> WorkflowTrainDataset:
         dataset: list[Row] = []
@@ -237,16 +254,16 @@ class SamplingDatasetGenerator(DatasetGenerator):
                 )
                 continue
 
-            pairs = await self.filter(pairs=pairs)
+            pairs = await self.filter(task_type=task_type, task_desc=task_desc, subgraph=subgraph, dataset=pairs)
 
             task_types_info.update(pairs)
             dataset.extend(pairs)
             total += len(pairs)
-            time.sleep(2)  # 速率控制
+            # time.sleep(2)  # 速率控制
 
         # 创建最终数据集对象
         workflow_dataset = WorkflowTrainDataset(
-            name=dataset_name, task_desc=task_desc, dataset=dataset
+            name=dataset_name, task_desc=task_desc, data=dataset
         )
 
         print(task_types_info.get_count_info())
