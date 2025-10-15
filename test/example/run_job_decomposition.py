@@ -10,11 +10,11 @@ from app.core.prompt.job_decomposition import (
     JOB_DECOMPOSITION_PROMPT,
 )
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+from app.core.sdk.init_server import init_server
 from app.core.service.job_service import JobService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from test.resource.init_server import init_server
 
 init_server()
 

@@ -1,13 +1,39 @@
 import matplotlib.pyplot as plt
 
+from app.core.sdk.init_server import init_server
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
 from app.core.toolkit.tool import Tool
 from app.core.toolkit.toolkit import Toolkit
-from test.resource.init_server import init_server
-from test.resource.tool_resource import ExampleQuery
 
 init_server()
+
+
+# example tool
+class ExampleQuery(Tool):
+    """The query tool in the toolkit."""
+
+    def __init__(self):
+        super().__init__(
+            name="query_tool",
+            description="A test query tool",
+            function=self.query,
+        )
+
+    async def query(self, text: str) -> str:
+        """Query the database/document by the text.
+
+        Args:
+            text: The text to query.
+
+        Returns:
+            The result of the query from the database/document.
+        """
+        return "This is a mocked query result"
+
+    def copy(self) -> "ExampleQuery":
+        """Create a copy of the ExampleQuery tool."""
+        return ExampleQuery()
 
 
 def main():

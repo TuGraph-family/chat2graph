@@ -12,16 +12,23 @@ from app.core.workflow.operator_config import OperatorConfig
 
 
 @dataclass
-class ToolCallContext:
-    """Context for tool call execution.
+class ReasonerKey:
+    """Key for identifying reasoner memory.
 
     Attributes:
-        job_id: The job ID associated with the tool call.
-        operator_id: The operator ID associated with the tool call.
+        job_id (str): The job ID associated with the reasoner.
+        operator_id (str): The operator ID associated with the reasoner.
     """
 
     job_id: str
     operator_id: str
+
+
+# ToolCallContext is conceptually identical to ReasonerKey; use an alias so they are the same type.
+ToolCallContext = ReasonerKey
+
+# MemoryKey is conceptually identical to ReasonerKey; use an alias so they are the same type.
+MemoryKey = ReasonerKey
 
 
 @dataclass
@@ -35,7 +42,7 @@ class Task:
         tools (List[Action]): The tools recommended by the toolkit for the operator.
         actions (List[Action]): The actions recommended by the toolkit for the operator.
         knowledge (Optional[Knowledge]): The knowledge from the knowledge base.
-        insights (Optional[List[Insight]]): The insights from the environment.
+        insights (Optional[List[Insight]]): The insights from the memory module.
         lesson (Optional[str]): The lesson learned from the job execution.
         file_descriptors (Optional[List[FileDescriptor]]): The file descriptors.
     """
@@ -56,3 +63,14 @@ class Task:
             job_id=self.job.id,
             operator_id=self.operator_config.id if self.operator_config else "unknown_operator_id",
         )
+
+    def get_reasoner_memory_key(self) -> MemoryKey:
+        """Get the memory context (job_id, operator_id) for the task."""
+        return MemoryKey(
+            job_id=self.job.id,
+            operator_id=self.operator_config.id if self.operator_config else "unknown_operator_id",
+        )
+
+    def get_operator_memory_key(self) -> MemoryKey:
+        """Get the memory context (job_id, operator_id) for the task."""
+        return self.get_reasoner_memory_key()

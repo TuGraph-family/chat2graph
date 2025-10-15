@@ -1,27 +1,21 @@
 from typing import List, Optional, cast
 
+from app.core.common.system_env import SystemEnv
 from app.core.env.insight.insight import Insight
 from app.core.model.file_descriptor import FileDescriptor
 from app.core.model.job import Job, SubJob
 from app.core.model.knowledge import Knowledge
 from app.core.model.message import FileMessage, HybridMessage, MessageType, WorkflowMessage
-from app.core.model.task import Task
+from app.core.model.task import MemoryKey, Task
 from app.core.reasoner.reasoner import Reasoner
 from app.core.service.file_service import FileService
 from app.core.service.knowledge_base_service import KnowledgeBaseService
+from app.core.service.memory_service import MemoryService
 from app.core.service.message_service import MessageService
 from app.core.service.tool_connection_service import ToolConnectionService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.workflow.operator_config import OperatorConfig
-from app.core.common.system_env import SystemEnv
-
-# Lazy import enhanced operator components; safe if missing
-try:
-    from app.core.memory.enhanced.hook import get_operator_hook
-    from app.core.memory.enhanced.integration import EnhancedOperator
-except Exception:  # noqa: BLE001
-    get_operator_hook = None  # type: ignore[assignment]
-    EnhancedOperator = None  # type: ignore[assignment]
+from app.plugin.memfuse.operator_memory import MemFuseOperatorMemory
 
 
 class Operator:
@@ -53,47 +47,26 @@ class Operator:
                 experts in workflow message type.
             lesson (Optional[str]): The lesson learned (provided by the successor expert).
         """
-        task = self._build_task(
+        task = await self._build_task(
             job=job,
             workflow_messages=workflow_messages,
             previous_expert_outputs=previous_expert_outputs,
             lesson=lesson,
         )
 
-        # pre-execution hook to retrieve operator experience (best-effort)
-        enriched_task = task
-        try:
-            if SystemEnv.ENABLE_MEMFUSE and get_operator_hook:  # type: ignore[truthy-bool]
-                hook = get_operator_hook()  # type: ignore[operator]
-                enriched_task = await hook.pre_execute(task)
-                if SystemEnv.PRINT_MEMORY_LOG:
-                    print(f"[memory] operator pre_execute hook completed for operator={self._config.id}")
-        except Exception as e:  # noqa: BLE001
-            # swallow hook errors to keep operator stable, continue with original task
-            if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] operator pre_execute hook failed: {e}")
-            enriched_task = task
-
         # infer by the reasoner using enriched task
-        result = await reasoner.infer(task=enriched_task)
+        result = await reasoner.infer(task=task)
 
         # post-execution hook to persist operator experience (best-effort)
-        try:
-            if SystemEnv.ENABLE_MEMFUSE and get_operator_hook:  # type: ignore[truthy-bool]
-                hook = get_operator_hook()  # type: ignore[operator]
-                await hook.post_execute(enriched_task, result)
-        except Exception as e:  # noqa: BLE001
-            # swallow hook errors to keep operator stable
-            if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] operator post_execute hook failed: {e}")
+        await self.memorize(task=task, result=result)
 
         # destroy MCP connections for the operator
         tool_connection_service: ToolConnectionService = ToolConnectionService.instance
-        await tool_connection_service.release_connection(call_tool_ctx=enriched_task.get_tool_call_ctx())
+        await tool_connection_service.release_connection(call_tool_ctx=task.get_tool_call_ctx())
 
         return WorkflowMessage(payload={"scratchpad": result}, job_id=job.id)
 
-    def _build_task(
+    async def _build_task(
         self,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
@@ -136,6 +109,14 @@ class Operator:
                     )
                     file_descriptors.append(file_descriptor)
 
+        # get insights from the memory
+        insights = await self.get_mem_insights(
+            memory_key=MemoryKey(job_id=job.id, operator_id=self.get_id()),
+            instruction=self._config.instruction,
+            goal=job.goal,
+            context=job.context,
+        )
+
         task = Task(
             job=job,
             operator_config=self._config,
@@ -143,7 +124,7 @@ class Operator:
             tools=rec_tools,
             actions=rec_actions,
             knowledge=self.get_knowledge(job),
-            insights=self.get_env_insights(),
+            insights=insights,
             lesson=lesson,
             file_descriptors=file_descriptors,
         )
@@ -155,37 +136,45 @@ class Operator:
         knowledge_base_service: KnowledgeBaseService = KnowledgeBaseService.instance
         return knowledge_base_service.get_knowledge(query, job.session_id)
 
-    def get_env_insights(self) -> Optional[List[Insight]]:
-        """Get the environment information."""
-        # TODO: get the environment information
+    async def get_mem_insights(
+        self,
+        memory_key: MemoryKey,
+        instruction: str,
+        goal: str,
+        context: Optional[str],
+    ) -> Optional[List[Insight]]:
+        """Get the memory information."""
+        # TODO: get the memory information
+        if SystemEnv.ENABLE_MEMFUSE:
+            memory_service: MemoryService = MemoryService.instance
+            memory = await memory_service.get_or_create_operator_memory(memory_key)
+            assert isinstance(memory, MemFuseOperatorMemory)
+            query_text = f"{goal}\n{context or ''}\n{instruction}"
+            return await memory.retrieve(memory_key=memory_key, query_text=query_text)
+        return None
+
+    async def memorize(self, task: Task, result: str) -> None:
+        """Persist the memory information."""
+        if task.operator_config is None:
+            return None
+
+        if SystemEnv.ENABLE_MEMFUSE:
+            memory_key = task.get_operator_memory_key()
+            memory_service: MemoryService = MemoryService.instance
+            memory = await memory_service.get_or_create_operator_memory(memory_key)
+            assert isinstance(memory, MemFuseOperatorMemory)
+            # build a compact system prompt for operator experience
+            instruction = task.operator_config.instruction
+            memory_text = (
+                "[operator_instruction]\n"
+                f"{instruction}\n\n"
+                "[job]\n"
+                f"goal: {task.job.goal}\n"
+                f"context: {task.job.context}"
+            )
+            await memory.memorize(memory_key=memory_key, memory_text=memory_text, result=result)
         return None
 
     def get_id(self) -> str:
         """Get the operator id."""
         return self._config.id
-
-
-def create_operator(config: OperatorConfig):
-    """Factory function to create an operator, optionally enhanced with memory capabilities.
-
-    When ENABLE_MEMFUSE is True and enhanced components are available, returns an
-    EnhancedOperator wrapped with memory hooks. Otherwise returns a standard Operator.
-    """
-    base_operator = Operator(config)
-
-    # Conditionally wrap with enhanced memory when enabled and available
-    if SystemEnv.ENABLE_MEMFUSE and EnhancedOperator and get_operator_hook:  # type: ignore[truthy-bool]
-        try:
-            hook = get_operator_hook()  # type: ignore[call-arg]
-            enhanced = EnhancedOperator(base_operator, hook)  # type: ignore[call-arg]
-            if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] create_operator: created EnhancedOperator for operator={config.id}")
-            return enhanced
-        except Exception as e:  # noqa: BLE001
-            if SystemEnv.PRINT_MEMORY_LOG:
-                print(f"[memory] create_operator: EnhancedOperator creation failed, using base: {e}")
-
-    if SystemEnv.PRINT_MEMORY_LOG and SystemEnv.ENABLE_MEMFUSE:
-        print(f"[memory] create_operator: created base Operator for operator={config.id} (enhanced components unavailable)")
-
-    return base_operator

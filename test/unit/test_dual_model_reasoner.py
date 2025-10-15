@@ -8,9 +8,9 @@ from app.core.model.job import SubJob
 from app.core.model.message import ModelMessage
 from app.core.model.task import Task, ToolCallContext
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.sdk.init_server import init_server
 from app.core.toolkit.tool import Tool
 from app.core.workflow.operator_config import OperatorConfig
-from test.resource.init_server import init_server
 
 init_server()
 
@@ -60,7 +60,7 @@ async def test_infer_basic_flow(mock_reasoner: DualModelReasoner, task: Task):
     assert mock_reasoner._thinker_model.generate.called
 
     # verify memory management
-    reasoner_memory = mock_reasoner.get_memory(task=task)
+    reasoner_memory = await mock_reasoner.get_memory(memory_key=task.get_reasoner_memory_key())
     messages = reasoner_memory.get_messages()
 
     # check initial message
@@ -120,7 +120,7 @@ async def test_infer_multiple_rounds(mock_reasoner: DualModelReasoner, task: Tas
     _ = await mock_reasoner.infer(task=task)
 
     # verify message accumulation
-    reasoner_memory = mock_reasoner.get_memory(task=task)
+    reasoner_memory = await mock_reasoner.get_memory(memory_key=task.get_reasoner_memory_key())
     messages = reasoner_memory.get_messages()
 
     assert len(messages) > round_count  # Including initial message
@@ -141,7 +141,7 @@ async def test_infer_error_handling(mock_reasoner: DualModelReasoner, task: Task
 
     assert str(exc_info.value) == "Model error"
 
-    reasoner_memory = mock_reasoner.get_memory(task=task)
+    reasoner_memory = await mock_reasoner.get_memory(memory_key=task.get_reasoner_memory_key())
     messages = reasoner_memory.get_messages()
     assert len(messages) == 1
     assert messages[0].get_source_type() == MessageSourceType.ACTOR
@@ -156,7 +156,7 @@ async def test_infer_without_operator(mock_reasoner: DualModelReasoner, task: Ta
     assert mock_reasoner._thinker_model.generate.called
     assert mock_reasoner._actor_model.generate.called
 
-    # since there is no operator, the reasoner will not persist the memory
-    reasoner_memory = mock_reasoner.get_memory(task=task)
+    # although there is no operator, the reasoner will persist the memory
+    reasoner_memory = await mock_reasoner.get_memory(memory_key=task.get_reasoner_memory_key())
     messages = reasoner_memory.get_messages()
-    assert not messages
+    assert len(messages) == 201

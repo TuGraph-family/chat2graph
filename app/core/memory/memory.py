@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import Any, List, Optional, Union
 
 from app.core.model.message import ModelMessage
+from app.core.model.task import MemoryKey
 
 
-class ReasonerMemory(ABC):
-    """Agent message memory."""
+class Memory(ABC):
+    """Agent memory."""
 
     def __init__(self) -> None:
         self._history_messages: List[ModelMessage] = []
@@ -39,15 +40,7 @@ class ReasonerMemory(ABC):
         """Get a message by id."""
 
     @abstractmethod
-    def get_message_metadata(self, message: ModelMessage) -> dict:
-        """Get a message in json format."""
-
-    @abstractmethod
-    def get_messages_metadata(self) -> List[dict]:
-        """Get all the messages in the memory in json format."""
-
-    @abstractmethod
-    def retrieve(self, query_text: str, top_k: int) -> List[str]:
+    async def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Any]:
         """Retrieve relevant memories.
 
         Args:
@@ -59,9 +52,7 @@ class ReasonerMemory(ABC):
         """
 
     @abstractmethod
-    def write_turn(
-        self, sys_prompt: str, messages: List[ModelMessage], job_id: str, operator_id: str
-    ) -> None:
+    async def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
         """Persist a conversation turn to the memory backend.
 
         Implementations may choose to be no-ops. Should never raise.
@@ -74,7 +65,7 @@ class ReasonerMemory(ABC):
         """
 
 
-class BuiltinReasonerMemory(ReasonerMemory):
+class BuiltinMemory(Memory):
     """Agent message memory."""
 
     def add_message(self, message: ModelMessage):
@@ -101,7 +92,7 @@ class BuiltinReasonerMemory(ReasonerMemory):
         """Get a message by index."""
         return self._history_messages[index]
 
-    def get_message_by_id(self, message_id: str) -> Union[ModelMessage, None]:
+    def get_message_by_id(self, message_id: str) -> Optional[ModelMessage]:
         """Get a message by id."""
         for message in self._history_messages:
             if message.get_id() == message_id:
@@ -109,19 +100,10 @@ class BuiltinReasonerMemory(ReasonerMemory):
 
         return None
 
-    def get_message_metadata(self, message: ModelMessage) -> dict:
-        """Get a message in json format."""
-        return message.__dict__
-
-    def get_messages_metadata(self) -> List[dict]:
-        """Get all the messages in the memory in json format."""
-        return [message.__dict__ for message in self._history_messages]
-
-    def retrieve(self, query_text: str, top_k: int) -> List[str]:
+    async def retrieve(self, memory_key: MemoryKey, query_text: str) -> List[Any]:
+        """Retrieve relevant memories (no-op for builtin memory)."""
         return []
 
-    def write_turn(
-        self, sys_prompt: str, messages: List[ModelMessage], job_id: str, operator_id: str
-    ) -> None:
+    async def memorize(self, memory_key: MemoryKey, memory_text: str, result: str) -> None:
         """Persist a conversation turn (no-op for builtin memory)."""
         return None

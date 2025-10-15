@@ -137,16 +137,18 @@ Chat2Graph Request
 
 **Code implementation reference:** `lite_llm_client.py`
 
+> Need to understand how memory works and when to enable MemFuse? See the [Memory System guide](../principle/memory.md).
+
 ## 2. Embedding Model Configuration
 
 The embedding model uses an independent configuration system, not dependent on `MODEL_PLATFORM_TYPE`.
 
-#### Configuration Rules
+### 2.1 Configuration Rules
 
 - Uses OpenAI compatible format by default, so no `openai/` prefix needed
 - Supports custom endpoints and API keys
 
-#### Example Configuration
+### 2.2 Example Configuration
 
 ```env
 # OpenAI https://platform.openai.com/docs/api-reference
@@ -169,3 +171,25 @@ EMBEDDING_MODEL_NAME=your-embedding-model
 EMBEDDING_MODEL_ENDPOINT=http://localhost:8000/v1/embeddings
 EMBEDDING_MODEL_APIKEY=
 ```
+
+## 3. Memory (MemFuse) Configuration
+
+MemFuse is an optional memory backend packaged as a plugin. Enable it when you want persistent memory outside the runtime process.
+
+```env
+ENABLE_MEMFUSE=true
+PRINT_MEMORY_LOG=true
+MEMFUSE_BASE_URL=http://localhost:8765
+MEMFUSE_API_KEY=
+MEMFUSE_TIMEOUT=30
+MEMFUSE_RETRY_COUNT=3
+MEMFUSE_RETRIEVAL_TOP_K=5
+MEMFUSE_MAX_CONTENT_LENGTH=10000
+```
+
+### 3.1 Notes
+
+- `ENABLE_MEMFUSE` controls whether `MemoryService` instantiates MemFuse-backed memories. When false, the builtin in-process memory is used.
+- `MEMFUSE_BASE_URL` must point to the MemFuse service. Initialization fails fast if unreachable.
+- `MEMFUSE_API_KEY` is optional depending on the deployment setup.
+- Tuning `MEMFUSE_RETRIEVAL_TOP_K` and `MEMFUSE_MAX_CONTENT_LENGTH` affects how much context is retrieved and stored.

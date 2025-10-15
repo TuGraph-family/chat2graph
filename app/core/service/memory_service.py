@@ -2,10 +2,10 @@ from typing import Dict
 
 from app.core.common.singleton import Singleton
 from app.core.common.system_env import SystemEnv
-from app.core.memory.reasoner_memory import (
-    BuiltinReasonerMemory,
-    ReasonerMemory,
-)
+from app.core.memory.memory import BuiltinMemory, Memory
+from app.core.model.task import MemoryKey
+from app.plugin.memfuse.operator_memory import MemFuseOperatorMemory
+from app.plugin.memfuse.reasoner_memory import MemFuseReasonerMemory
 
 
 class MemoryService(metaclass=Singleton):
@@ -18,47 +18,41 @@ class MemoryService(metaclass=Singleton):
 
     def __init__(self) -> None:
         # job_id -> operator_id -> ReasonerMemory
-        self._reasoner_memories: Dict[str, Dict[str, ReasonerMemory]] = {}
-        self._operator_memories: Dict[str, Dict[str, ReasonerMemory]] = {}
+        self._reasoner_memories: Dict[str, Dict[str, Memory]] = {}
+        self._operator_memories: Dict[str, Dict[str, Memory]] = {}
 
-    def get_or_create_reasoner_memory(self, job_id: str, operator_id: str) -> ReasonerMemory:
-        """Get or create a ReasonerMemory instance for a job/operator pair."""
+    async def get_or_create_reasoner_memory(self, reasoner_memory_key: MemoryKey) -> Memory:
+        """Get or create a ReasonerMemory instance for a job/operator pair.
+
+        If `ENABLE_MEMFUSE` is set, create a MemFuse-backed memory.
+        """
+        job_id = reasoner_memory_key.job_id
+        operator_id = reasoner_memory_key.operator_id
         if job_id not in self._reasoner_memories:
             self._reasoner_memories[job_id] = {}
         if operator_id not in self._reasoner_memories[job_id]:
-            self._reasoner_memories[job_id][operator_id] = self._create_memory(job_id, operator_id)
+            if SystemEnv.ENABLE_MEMFUSE:
+                memory = MemFuseReasonerMemory(job_id=job_id, operator_id=operator_id)
+                await memory.initialize()
+                self._reasoner_memories[job_id][operator_id] = memory
+            else:
+                self._reasoner_memories[job_id][operator_id] = BuiltinMemory()
         return self._reasoner_memories[job_id][operator_id]
 
-    def get_or_create_operator_memory(self, job_id: str, operator_id: str) -> ReasonerMemory:
-        """Get or create an Operator memory instance for a job/operator pair."""
+    async def get_or_create_operator_memory(self, operator_memory_key: MemoryKey) -> Memory:
+        """Get or create an Operator memory instance for a job/operator pair.
+
+        If `ENABLE_MEMFUSE` is set, create a MemFuse-backed memory.
+        """
+        job_id = operator_memory_key.job_id
+        operator_id = operator_memory_key.operator_id
         if job_id not in self._operator_memories:
             self._operator_memories[job_id] = {}
         if operator_id not in self._operator_memories[job_id]:
-            self._operator_memories[job_id][operator_id] = self._create_memory(job_id, operator_id)
+            if SystemEnv.ENABLE_MEMFUSE:
+                memory = MemFuseOperatorMemory(job_id=job_id, operator_id=operator_id)
+                await memory.initialize()
+                self._operator_memories[job_id][operator_id] = memory
+            else:
+                self._operator_memories[job_id][operator_id] = BuiltinMemory()
         return self._operator_memories[job_id][operator_id]
-
-    def _create_memory(self, job_id: str, operator_id: str) -> ReasonerMemory:
-        """Create a memory implementation based on SystemEnv flags.
-
-        If `ENABLE_MEMFUSE` is set, try to create a MemFuse-backed memory; otherwise
-        or on any import/creation failure, fall back to `BuiltinReasonerMemory`.
-        """
-        if SystemEnv.ENABLE_MEMFUSE:
-            try:
-                # Lazy import to avoid hard dependency if not enabled yet
-                from app.core.memory.memfuse_memory import MemFuseMemory  # type: ignore
-
-                if SystemEnv.PRINT_MEMORY_LOG:
-                    print(
-                        f"[memory] MemoryService: creating MemFuseMemory for job={job_id} operator={operator_id}"
-                    )
-                return MemFuseMemory(job_id=job_id, operator_id=operator_id)
-            except Exception as e:  # noqa: BLE001
-                if SystemEnv.PRINT_MEMORY_LOG:
-                    print(
-                        f"[memory] MemoryService: MemFuseMemory unavailable, falling back to BuiltinReasonerMemory. Error: {e}"
-                    )
-        # fallback
-        if SystemEnv.PRINT_MEMORY_LOG:
-            print(f"[memory] MemoryService: creating BuiltinReasonerMemory for job={job_id} operator={operator_id}")
-        return BuiltinReasonerMemory()

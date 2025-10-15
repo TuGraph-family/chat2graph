@@ -14,12 +14,11 @@ from app.core.model.message import AgentMessage, WorkflowMessage
 from app.core.prompt.job_decomposition import JOB_DECOMPOSITION_OUTPUT_SCHEMA
 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
 from app.core.reasoner.reasoner import Reasoner
+from app.core.sdk.init_server import init_server
 from app.core.service.job_service import JobService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
-from app.core.workflow.workflow import Workflow
-from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from test.resource.init_server import init_server
+from app.core.workflow.workflow import BuiltinWorkflow, Workflow
 
 init_server()
 
@@ -30,11 +29,12 @@ class MockWorkflow(Workflow):
     def build_workflow(self, reasoner: Reasoner) -> None:
         """Build in the workflow."""
 
-    async def execute(
+    def execute(
         self,
         job: Job,
         reasoner: Reasoner,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
+        lesson: Optional[str] = None,
     ) -> WorkflowMessage:
         """Execute the workflow."""
 
@@ -103,7 +103,7 @@ def leader(mock_reasoner: Reasoner):
     )
     decomposition_operator = Operator(config=decomp_operator_config)
 
-    workflow = DbgptWorkflow()
+    workflow = BuiltinWorkflow()
     workflow.add_operator(decomposition_operator)
 
     config = AgentConfig(
@@ -125,7 +125,7 @@ Final Delivery:
 
     <decomposition>
     {
-        "subtask_1": 
+        "subtask_1":
         {
             "goal": "信息收集, 获取原始文本数据。",
             "context": "需要从各个数据源收集相关文本。",
@@ -221,8 +221,7 @@ Final Delivery:
     assert job_service.get_subjob(sub_job.id).is_legacy
 
 
-@pytest.mark.asyncio
-async def test_execute_error_handling(leader: Leader, mock_reasoner: AsyncMock):
+def test_execute_error_handling(leader: Leader, mock_reasoner: AsyncMock):
     """Test job decomposition with empty job."""
     mock_response = """<Initial state ψ>
 Analyzing the task...

@@ -2,16 +2,16 @@ from typing import Any, List, Optional
 
 import pytest
 
-from app.core.memory.reasoner_memory import ReasonerMemory
+from app.core.memory.memory import Memory
 from app.core.model.job import Job, SubJob
 from app.core.model.message import WorkflowMessage
 from app.core.model.task import Task
 from app.core.reasoner.reasoner import Reasoner
+from app.core.sdk.init_server import init_server
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.core.workflow.workflow import BuiltinWorkflow
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from test.resource.init_server import init_server
 
 init_server()
 
@@ -31,15 +31,15 @@ class TestReasoner(Reasoner):
         """Evaluate the inference process."""
         raise NotImplementedError("Evaluate method not implemented")
 
-    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+    async def conclude(self, reasoner_memory: Memory) -> str:
         """Conclude the inference results."""
         raise NotImplementedError("Conclude method not implemented")
 
-    def init_memory(self, task: Task) -> ReasonerMemory:
+    def init_memory(self, task: Task) -> Memory:
         """Initialize the memory."""
         raise NotImplementedError("Init memory method not implemented")
 
-    def get_memory(self, task: Task) -> ReasonerMemory:
+    def get_memory(self, task: Task) -> Memory:
         """Get the memory."""
         raise NotImplementedError("Get memory method not implemented")
 

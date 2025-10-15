@@ -3,8 +3,8 @@ from typing import Any, Dict
 import pytest
 
 from app.core.model.artifact import ContentType
+from app.core.sdk.init_server import init_server
 from app.core.service.artifact_service import ArtifactService
-from test.resource.init_server import init_server
 
 init_server()
 

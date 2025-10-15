@@ -44,7 +44,7 @@ check_env() {
   local os_type=$(uname -s)
   local install_libmagic_cmd=""
 
-  # Simplified OS detection for libmagic
+  # simplified OS detection for libmagic
   if [[ "$os_type" == "Darwin" ]]; then # macOS
     if command -v brew >/dev/null 2>&1 && ! brew list libmagic &>/dev/null; then
       install_libmagic_cmd="brew install libmagic"
@@ -266,11 +266,12 @@ install_python_extras() {
 
 # TODO: resolve dependency conflict resolution
 # temporary workaround for aiohttp version conflicts until proper resolution in pyproject.toml
-# force reinstall specific aiohttp version without showing installation output
-handle_dependency_conflicts() {
-  info "Resolving aiohttp version conflict..."
-  local target_aiohttp_version="3.12.13"
-  pip install --force-reinstall "aiohttp==$target_aiohttp_version" --trusted-host pypi.org --trusted-host files.pythonhosted.org >/dev/null 2>&1 || warn "Failed to resolve aiohttp version conflict"
+# force reinstall specific dbgpt version without showing installation output
+pip_install_dbgpt() {
+  info "Resolving dbgpt version conflict..."
+  pip install --force-reinstall "dbgpt[agent,simple_framework,framework]==0.7.3" --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>&1 | sed 's/ERROR/WARNING/g'
+  info "Resolving dbgpt-ext dependencies..."
+  pip install --force-reinstall "dbgpt-ext[rag,graph_rag,storage_chromadb]==0.7.3" --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>&1 | sed 's/ERROR/WARNING/g'
 }
 
 build_python() {
@@ -278,9 +279,9 @@ build_python() {
 
   cd ${app_dir}
   info "Installing python packages: ${app_dir}"
+  pip_install_dbgpt
   poetry lock && poetry install || fatal "Failed to install python packages"
   install_python_extras
-  handle_dependency_conflicts
 }
 
 build_web() {

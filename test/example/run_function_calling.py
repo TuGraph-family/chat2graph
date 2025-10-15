@@ -5,8 +5,8 @@ from app.core.common.type import MessageSourceType
 from app.core.model.message import ModelMessage
 from app.core.model.task import ToolCallContext
 from app.core.reasoner.model_service import ModelService
+from app.core.sdk.init_server import init_server
 from app.core.toolkit.tool import Tool
-from test.resource.init_server import init_server
 
 init_server()
 

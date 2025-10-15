@@ -42,7 +42,7 @@ class EvalOperator(Operator):
         # is the output of the evaluated operator
         previous_op_message = workflow_messages[0].scratchpad
 
-        task = self._build_task(
+        task = await self._build_task(
             job=job,
             workflow_messages=workflow_messages,
             previous_expert_outputs=previous_expert_outputs,
@@ -82,7 +82,7 @@ class EvalOperator(Operator):
             job_id=job.id,
         )
 
-    def _build_task(
+    async def _build_task(
         self,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
@@ -139,7 +139,7 @@ class EvalOperator(Operator):
             tools=rec_tools,
             actions=rec_actions,
             knowledge=self.get_knowledge(job),
-            insights=self.get_env_insights(),
+            insights=None,  # TODO: get insights from memory for the evaluation
             lesson=lesson,
         )
         return task

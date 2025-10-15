@@ -9,12 +9,15 @@ __pycache__
 
 # ignore db instances
 **/*.db
+
+# ignore logs and temp files
 **/running_logs/
 test/benchmark/gaia/artifacts/*
 test/benchmark/gaia/logs/*
 test/benchmark/gaia/results/*
+
 app/server/web/*
-app/server/web/*
+
 web/node_modules
 web/.env.local
 web/config/config.local.ts
@@ -27,4 +30,3 @@ web/.umi-test
 web/dist
 web/.mfsu
 web/.swc
-data/

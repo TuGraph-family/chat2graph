@@ -3,7 +3,7 @@ from typing import Any
 
 from app.core.common.system_env import SystemEnv
 from app.core.common.type import MessageSourceType
-from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
+from app.core.memory.memory import Memory
 from app.core.model.message import ModelMessage
 from app.core.model.task import Task
 from app.core.prompt.reasoner import MONO_PROMPT_TEMPLATE
@@ -65,7 +65,7 @@ class MonoModelReasoner(Reasoner):
         )
 
         # init the memory
-        reasoner_memory = self.init_memory(task=task)
+        reasoner_memory = await self.get_memory(memory_key=task.get_reasoner_memory_key())
         reasoner_memory.add_message(init_message)
 
         for _ in range(max_reasoning_rounds):
@@ -110,7 +110,7 @@ class MonoModelReasoner(Reasoner):
         """Evaluate the inference process, used to debug the process."""
         # TODO: implement the evaluation of the inference process, to detect the issues and errors
 
-    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+    async def conclude(self, reasoner_memory: Memory) -> str:
         """Conclude the inference results."""
         content = reasoner_memory.get_message_by_index(-1).get_payload()
 
@@ -172,36 +172,6 @@ class MonoModelReasoner(Reasoner):
             functions=func_description,
             output_schema=output_schema,
         )
-
-    def init_memory(self, task: Task) -> ReasonerMemory:
-        """Initialize the memory."""
-        if not task.operator_config:
-            return BuiltinReasonerMemory()
-
-        session_id = task.job.session_id
-        job_id = task.job.id
-        operator_id = task.operator_config.id
-
-        if session_id not in self._memories:
-            self._memories[session_id] = {}
-        if job_id not in self._memories[session_id]:
-            self._memories[session_id][job_id] = {}
-        reasoner_memory = BuiltinReasonerMemory()
-        self._memories[session_id][job_id][operator_id] = reasoner_memory
-
-        return reasoner_memory
-
-    def get_memory(self, task: Task) -> ReasonerMemory:
-        """Get the memory."""
-        session_id = task.job.session_id
-        job_id = task.job.id
-
-        try:
-            assert task.operator_config
-            operator_id = task.operator_config.id
-            return self._memories[session_id][job_id][operator_id]
-        except (KeyError, AssertionError, AttributeError):
-            return self.init_memory(task=task)
 
     @staticmethod
     def stopped(message: ModelMessage) -> bool:

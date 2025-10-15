@@ -3,15 +3,42 @@ import asyncio
 import matplotlib.pyplot as plt
 
 from app.core.model.job import SubJob
+from app.core.sdk.init_server import init_server
 from app.core.service.reasoner_service import ReasonerService
 from app.core.service.toolkit_service import ToolkitService
 from app.core.toolkit.action import Action
+from app.core.toolkit.tool import Tool
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
-from test.resource.init_server import init_server
-from test.resource.tool_resource import ExampleQuery
 
 init_server()
+
+
+# example tool
+class ExampleQuery(Tool):
+    """The query tool in the toolkit."""
+
+    def __init__(self):
+        super().__init__(
+            name="query_tool",
+            description="A test query tool",
+            function=self.query,
+        )
+
+    async def query(self, text: str) -> str:
+        """Query the database/document by the text.
+
+        Args:
+            text: The text to query.
+
+        Returns:
+            The result of the query from the database/document.
+        """
+        return "This is a mocked query result"
+
+    def copy(self) -> "ExampleQuery":
+        """Create a copy of the ExampleQuery tool."""
+        return ExampleQuery()
 
 
 async def main():
@@ -119,6 +146,7 @@ Answer in Chinese.
     # execute operator (with minimal reasoning rounds for testing)
     job = SubJob(
         id="test_job_id",
+        original_job_id="test_original_job_id",
         session_id="test_session_id",
         goal="Test goal",
         context=context,

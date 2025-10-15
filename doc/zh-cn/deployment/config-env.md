@@ -169,3 +169,27 @@ EMBEDDING_MODEL_NAME=your-embedding-model
 EMBEDDING_MODEL_ENDPOINT=http://localhost:8000/v1/embeddings
 EMBEDDING_MODEL_APIKEY=
 ```
+
+## 3. 记忆（MemFuse）配置
+
+MemFuse 是一个可选的内存后端，以插件形式提供。当你需要在进程外持久化记忆时可启用它。
+
+> 想深入了解记忆架构？请参考[记忆系统指南](../principle/memory.md)。
+
+```env
+ENABLE_MEMFUSE=true
+PRINT_MEMORY_LOG=true
+MEMFUSE_BASE_URL=http://localhost:8765
+MEMFUSE_API_KEY=
+MEMFUSE_TIMEOUT=30
+MEMFUSE_RETRY_COUNT=3
+MEMFUSE_RETRIEVAL_TOP_K=5
+MEMFUSE_MAX_CONTENT_LENGTH=10000
+```
+
+### 3.1 注意事项
+
+- `ENABLE_MEMFUSE` 控制 `MemoryService` 是否实例化 MemFuse 记忆，关闭时仅使用进程内的 `BuiltinMemory`。
+- `MEMFUSE_BASE_URL` 必须指向 MemFuse 服务；若不可访问会在初始化阶段直接报错。
+- `MEMFUSE_API_KEY` 根据部署环境决定是否需要填写。
+- `MEMFUSE_RETRIEVAL_TOP_K` 和 `MEMFUSE_MAX_CONTENT_LENGTH` 决定检索和写入的上下文规模。

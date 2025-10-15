@@ -9,7 +9,24 @@ def run_async_function(
     *args: Any,
     **kwargs: Any,
 ):
-    """Run an async function in a new event loop."""
+    """Run an async function in a sync context by managing event loops intelligently.
+
+    This is particularly useful when you need to call async functions from synchronous code,
+    or when dealing with nested event loops (e.g., calling async code from within async code
+    that's being run synchronously).
+
+    Args:
+        async_func: An async function (coroutine function) to execute. This should be a
+            function defined with `async def`, not an already-created coroutine.
+        *args: Positional arguments to pass to the async function.
+        **kwargs: Keyword arguments to pass to the async function.
+
+    Returns:
+        The return value of the async function after it completes execution.
+
+    Raises:
+        Exception: Any exception raised by the async function is re-raised to the caller.
+    """
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
@@ -46,8 +63,34 @@ def run_async_function(
 
 
 def run_in_thread(func, *args, **kwargs):
-    """Run a function in a new thread without blocking the current thread."""
+    """Execute a function in a separate daemon thread without blocking the current thread.
 
+    This function is useful for fire-and-forget operations or when you want to run
+    a potentially long-running or blocking operation without waiting for it to complete.
+    The created thread is a daemon thread, meaning it won't prevent the program from exiting.
+
+    Args:
+        func: A callable (function or method) to execute in the new thread. Can be either
+            synchronous or asynchronous (though async functions need special handling).
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        threading.Thread: The thread object that was created and started. This allows
+            the caller to:
+            - Call thread.join() to wait for completion
+            - Check thread.is_alive() to monitor status
+            - Access other thread properties if needed
+
+    Notes:
+        - The thread is marked as a daemon thread (daemon=True), which means:
+          * It will be automatically terminated when the main program exits
+          * It won't prevent the program from shutting down
+        - Return values from the function are not captured (fire-and-forget pattern)
+        - Exceptions in the thread will not propagate to the caller
+        - For capturing return values or exceptions, consider using concurrent.futures instead
+        - Thread starts immediately upon creation
+    """
     def thread_target():
         return func(*args, **kwargs)
 

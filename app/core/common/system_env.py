@@ -58,13 +58,12 @@ _env_vars: Dict[str, Tuple[Type, Any]] = {
     "LANGUAGE": (str, "en-US"),
     "ENABLE_MEMFUSE": (bool, False),  # enable MemFuse as agent memory module
     "PRINT_MEMORY_LOG": (bool, False),
-    "MEMFUSE_BASE_URL": (str, "http://localhost:8001"),
+    "MEMFUSE_BASE_URL": (str, "http://localhost:8765"),
+    "MEMFUSE_API_KEY": (str, None),
     "MEMFUSE_TIMEOUT": (float, 30.0),
     "MEMFUSE_RETRY_COUNT": (int, 3),
     "MEMFUSE_RETRIEVAL_TOP_K": (int, 5),
     "MEMFUSE_MAX_CONTENT_LENGTH": (int, 10000),
-    "MEMFUSE_ASYNC_WRITE": (bool, True),
-    "MEMFUSE_API_KEY": (str, None),
 }
 
 # system environment variable value cache.
@@ -86,7 +85,7 @@ class SystemEnvMeta(type):
 
         # get value from .env
         val = _env_values.get(key, None)
-        if val:
+        if val is not None:
             return val
 
         # get value from system env
@@ -99,13 +98,14 @@ class SystemEnvMeta(type):
             return val
 
         # use default value
-        val = val if val else default_value
+        # only fall back to default when the env var is truly missing (None)
+        val = default_value if val is None else val
 
         # cast value by type
         if key_type is bool:
-            val = str(val).lower() in ("true", "1", "yes") if val else None
+            val = (str(val).lower() in ("true", "1", "yes")) if val is not None else None
         else:
-            val = key_type(val) if val else None
+            val = key_type(val) if val is not None else None
 
         _env_values[key] = val
         return val
@@ -119,11 +119,11 @@ class SystemEnvMeta(type):
         if key_info:
             key_type, _ = key_info
 
-            # Apply type conversion
+            # apply type conversion
             if key_type is bool:
                 value = str(value).lower() in ("true", "1", "yes") if value else False
             else:
-                value = key_type(value) if value is not None else None
+                value = key_type(value) if value else None
 
             # store value in cache
             _env_values[key] = value

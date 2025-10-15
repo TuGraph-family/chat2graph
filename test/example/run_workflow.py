@@ -3,15 +3,15 @@ import time
 from typing import Any, List, Optional
 
 from app.core.common.type import WorkflowStatus
-from app.core.memory.reasoner_memory import BuiltinReasonerMemory, ReasonerMemory
+from app.core.memory.memory import BuiltinMemory, Memory
 from app.core.model.job import Job, SubJob
 from app.core.model.message import WorkflowMessage
-from app.core.model.task import Task
+from app.core.model.task import MemoryKey, Task
 from app.core.reasoner.reasoner import Reasoner
+from app.core.sdk.init_server import init_server
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from test.resource.init_server import init_server
 
 init_server()
 
@@ -29,17 +29,13 @@ class TestReasoner(Reasoner):
     async def evaluate(self, data: Any) -> Any:
         """Evaluate the inference process."""
 
-    async def conclude(self, reasoner_memory: ReasonerMemory) -> str:
+    async def conclude(self, reasoner_memory: Memory) -> str:
         """Conclude the inference results."""
         return "Test conclusion"
 
-    def init_memory(self, task: Task) -> ReasonerMemory:
-        """Initialize the memory."""
-        return BuiltinReasonerMemory()
-
-    def get_memory(self, task: Task) -> ReasonerMemory:
+    async def get_memory(self, memory_key: MemoryKey) -> Memory:
         """Get the memory."""
-        return BuiltinReasonerMemory()
+        return BuiltinMemory()
 
 
 class BaseTestOperator(Operator):
@@ -170,7 +166,7 @@ class EvalOperator(BaseTestOperator):
         return WorkflowMessage(
             payload={
                 "scratchpad": result,
-                "status": "success",
+                "status": "SUCCESS",
                 "experience": "The workflow is executed successfully",
             },
             job_id=job.id,

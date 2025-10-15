@@ -2,9 +2,9 @@ import asyncio
 
 from app.core.model.job import SubJob
 from app.core.model.task import Task
+from app.core.sdk.init_server import init_server
 from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.operator import OperatorConfig
-from test.resource.init_server import init_server
 
 init_server()
 
@@ -16,6 +16,7 @@ async def main():
 """
     graph_modeling_context = """
 输入的数据是三国演义全文，需要从中识别出关键实体类型。这些文本包含了丰富的历史信息，涵盖了人物对话、事件描述、地理位置、时间节点等多个维度的内容。文本中的实体之间存在复杂的关联关系，需要系统性地进行识别和分类。
+
 Knowledge:
 在文学文本的实体识别过程中，需要注意以下几点：
 1. 命名实体识别规则
@@ -27,17 +28,10 @@ Knowledge:
   ○ 同一实体可能有不同的指代方式（别名、尊称等）
   ○ 实体提及可能是显式或隐式的
   ○ 上下文对实体类型判断至关重要
+
 Actions:
 读取文本内容 -next-> 识别关键实体类型
-Tools:
-1. text_content_loader
-描述: 加载并解析源文本内容
-输入: file_path, encoding_type
-输出: text_content(string)
-2. entity_type_extractor
-描述: 从文本中识别和提取关键实体类型
-输入: text_content(string), extraction_rules(dict)
-输出: entity_types(list)
+
 Scratchpad:
 输入文本示例：
 建安七年春，曹操率军南下。时刘备驻守新野，闻曹操将至，召诸葛亮商议军情。亮曰：“曹操兵强粮足，不可与战，宜退保川口，观机而动。”备从之，遂退守川口。

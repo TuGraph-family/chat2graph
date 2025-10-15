@@ -8,14 +8,14 @@ from app.core.model.job import Job, SubJob
 from app.core.model.job_graph import JobGraph
 from app.core.model.job_result import JobResult
 from app.core.model.message import AgentMessage, MessageType, WorkflowMessage
-from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.reasoner.reasoner import Reasoner
+from app.core.sdk.init_server import init_server
 from app.core.service.job_service import JobService
 from app.core.service.message_service import MessageService
 from app.core.service.reasoner_service import ReasonerService
 from app.core.workflow.operator import Operator
 from app.core.workflow.operator_config import OperatorConfig
 from app.plugin.dbgpt.dbgpt_workflow import DbgptWorkflow
-from test.resource.init_server import init_server
 
 init_server()
 
@@ -28,7 +28,7 @@ class TestAgentOperator(Operator):
 
     async def execute(
         self,
-        reasoner: DualModelReasoner,
+        reasoner: Reasoner,
         job: Job,
         workflow_messages: Optional[List[WorkflowMessage]] = None,
         previous_expert_outputs: Optional[List[WorkflowMessage]] = None,

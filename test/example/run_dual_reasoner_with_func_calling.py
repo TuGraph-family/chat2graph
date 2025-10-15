@@ -4,8 +4,8 @@ from typing import Any, Dict, List
 from app.core.model.job import SubJob
 from app.core.model.task import Task
 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+from app.core.sdk.init_server import init_server
 from app.core.toolkit.tool import Tool
-from test.resource.init_server import init_server
 
 init_server()
 # example tool
@@ -84,5 +84,4 @@ d) 三年总收益率（用百分比表示）
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
     asyncio.run(main())
