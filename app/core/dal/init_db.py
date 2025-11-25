@@ -1,5 +1,6 @@
 from app.core.common.system_env import SystemEnv
 from app.core.dal.database import Do, engine
+from app.core.dal.do.agent_do import AgentDo  # Issue #40: Agent persistence
 from app.core.dal.do.artifact_do import ArtifactDo
 from app.core.dal.do.file_descriptor_do import FileDescriptorDo
 from app.core.dal.do.graph_db_do import GraphDbDo
@@ -19,6 +20,7 @@ def init_db() -> None:
     Do.metadata.create_all(
         bind=engine,
         tables=[
+            AgentDo.__table__,  # Issue #40: Agent persistence table
             GraphDbDo.__table__,
             FileDescriptorDo.__table__,
             KnowledgeBaseDo.__table__,
