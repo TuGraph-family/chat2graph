@@ -220,10 +220,9 @@ class AgentDao(Dao[AgentDo]):
             >>> agent_dao.deactivate_agent("agent-123")
         """
         try:
-            result = self.update(agent_id, is_active=False)
-            if result:
-                logger.info(f"Deactivated agent: {agent_id}")
-            return result
+            self.update(agent_id, is_active=False)
+            logger.info(f"Deactivated agent: {agent_id}")
+            return True
         except Exception as e:
             logger.error(f"Failed to deactivate agent {agent_id}: {e}")
             return False
@@ -242,10 +241,9 @@ class AgentDao(Dao[AgentDo]):
             >>> agent_dao.activate_agent("agent-123")
         """
         try:
-            result = self.update(agent_id, is_active=True)
-            if result:
-                logger.info(f"Activated agent: {agent_id}")
-            return result
+            self.update(agent_id, is_active=True)
+            logger.info(f"Activated agent: {agent_id}")
+            return True
         except Exception as e:
             logger.error(f"Failed to activate agent {agent_id}: {e}")
             return False
@@ -374,17 +372,17 @@ class AgentDao(Dao[AgentDo]):
 
             # 降级方案：直接导入并实例化
             # 这里需要根据实际的 Reasoner 实现来调整
-            if reasoner_type == "DualReasoner":
-                from app.core.reasoner.dual_reasoner import DualReasoner
-                return DualReasoner()
-            elif reasoner_type == "MonoReasoner":
-                from app.core.reasoner.mono_reasoner import MonoReasoner
-                return MonoReasoner()
+            if reasoner_type == "DualModelReasoner":
+                from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+                return DualModelReasoner()
+            elif reasoner_type == "MonoModelReasoner":
+                from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
+                return MonoModelReasoner()
             else:
                 logger.warning(f"Unknown reasoner type: {reasoner_type}, using default")
                 # 使用默认 Reasoner
-                from app.core.reasoner.dual_reasoner import DualReasoner
-                return DualReasoner()
+                from app.core.reasoner.dual_model_reasoner import DualModelReasoner
+                return DualModelReasoner()
 
         except Exception as e:
             logger.error(f"Failed to rebuild reasoner: {e}")
@@ -422,7 +420,7 @@ class AgentDao(Dao[AgentDo]):
             else:
                 logger.warning(f"Unknown workflow type: {workflow_type}, using default")
                 # 使用默认 Workflow（需要根据实际情况调整）
-                from app.core.workflow.builtin_workflow import BuiltinWorkflow
+                from app.core.workflow.workflow import BuiltinWorkflow
                 return BuiltinWorkflow()
 
         except Exception as e:

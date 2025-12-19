@@ -7,7 +7,7 @@ from app.utils.logger import logger
 
 
 class BuiltinLeaderState(LeaderState):
-    """Builtin leader state with persistence support .
+    """Builtin leader state with persistence support.
 
     attributes:
         _expert_instances (Dict[str, Expert]): it stores the expert agent instances.
@@ -17,7 +17,7 @@ class BuiltinLeaderState(LeaderState):
 
     def __init__(self):
         super().__init__()
-        #  Cache for expert configurations loaded from database
+        # Cache for expert configurations loaded from database
         self._expert_configs: Dict[str, AgentConfig] = {}
 
     def get_expert_by_name(self, expert_name: str) -> Expert:
@@ -29,7 +29,7 @@ class BuiltinLeaderState(LeaderState):
         raise ValueError(f"Expert {expert_name} not exists in the leader state.")
 
     def get_expert_by_id(self, expert_id: str) -> Expert:
-        """Get existing expert instance with lazy loading ."""
+        """Get existing expert instance with lazy loading."""
         # 1. Check memory cache first
         if expert_id in self._expert_instances:
             return self._expert_instances[expert_id]
@@ -63,7 +63,7 @@ class BuiltinLeaderState(LeaderState):
         return list(self._expert_instances.values())
 
     def create_expert(self, agent_config: AgentConfig) -> Expert:
-        """Add an expert profile to the registry with persistence ."""
+        """Add an expert profile to the registry with persistence."""
         with self._expert_creation_lock:
             expert_name = agent_config.profile.name
 
@@ -114,7 +114,7 @@ class BuiltinLeaderState(LeaderState):
         self._expert_instances.pop(expert_id, None)
 
     def load_experts_from_db(self) -> None:
-        """Load expert configurations from database .
+        """Load expert configurations from database.
 
         This loads all expert configurations from the database and caches them.
         Actual Expert instances are created lazily when accessed via get_expert_by_id.

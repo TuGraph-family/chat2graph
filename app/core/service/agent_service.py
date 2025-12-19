@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from app.core.agent.agent import AgentConfig
 from app.core.agent.expert import Expert
@@ -6,17 +6,20 @@ from app.core.agent.leader import Leader
 from app.core.common.singleton import Singleton
 from app.utils.logger import logger
 
+if TYPE_CHECKING:
+    from app.core.dal.dao.agent_dao import AgentDao
+
 
 class AgentService(metaclass=Singleton):
-    """Leader service with persistence support """
+    """Leader service with persistence support."""
 
     def __init__(self):
         self._leaders: List[Leader] = []
-        #  DAO for agent persistence
-        self._agent_dao: Optional['AgentDao'] = None  # type: ignore
+        # DAO for agent persistence
+        self._agent_dao: Optional['AgentDao'] = None
 
-    def set_agent_dao(self, agent_dao: 'AgentDao') -> None:  # type: ignore
-        """Set the AgentDao for persistence .
+    def set_agent_dao(self, agent_dao: 'AgentDao') -> None:
+        """Set the AgentDao for persistence.
 
         Args:
             agent_dao: AgentDao instance
@@ -44,7 +47,7 @@ class AgentService(metaclass=Singleton):
         return self._leaders[0]
 
     def save_leader(self) -> bool:
-        """Save leader configuration to database .
+        """Save leader configuration to database.
 
         Returns:
             bool: True if successful, False otherwise
@@ -66,7 +69,7 @@ class AgentService(metaclass=Singleton):
             return False
 
     def load_leader(self, leader_config: AgentConfig) -> Leader:
-        """Load or create leader with persistence support .
+        """Load or create leader with persistence support.
 
         Tries to load existing leader from database. If not found, creates new one.
 
