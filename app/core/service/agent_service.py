@@ -92,6 +92,14 @@ class AgentService(metaclass=Singleton):
                 logger.info(f"Loading existing leader from database: {leader_do.id}")
                 config = self._agent_dao.get_agent_config(leader_do.id)
                 if config:
+                    # Check config consistency
+                    if config.profile.name != leader_config.profile.name:
+                        logger.warning(
+                            f"Leader name mismatch: DB has '{config.profile.name}', "
+                            f"but provided config has '{leader_config.profile.name}'. "
+                            "Using DB configuration."
+                        )
+
                     leader = Leader(config, id=leader_do.id)
                     self.set_leadder(leader)
 
@@ -101,7 +109,7 @@ class AgentService(metaclass=Singleton):
                     # Load expert configurations from database
                     leader.state.load_experts_from_db()
 
-                    logger.info(f"Leader loaded successfully with {len(leader.state._expert_configs)} expert configs")
+                    logger.info(f"Leader loaded successfully with {leader.state.get_cached_expert_config_count()} expert configs")
                     return leader
 
             # No existing leader, create new one

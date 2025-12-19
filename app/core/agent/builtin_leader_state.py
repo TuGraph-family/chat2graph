@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from app.core.agent.agent import AgentConfig
 from app.core.agent.expert import Expert
@@ -29,33 +29,39 @@ class BuiltinLeaderState(LeaderState):
         raise ValueError(f"Expert {expert_name} not exists in the leader state.")
 
     def get_expert_by_id(self, expert_id: str) -> Expert:
-        """Get existing expert instance with lazy loading."""
-        # 1. Check memory cache first
+        """Get existing expert instance with thread-safe lazy loading."""
+        # 1. Check memory cache first (fast path, no lock needed for read)
         if expert_id in self._expert_instances:
             return self._expert_instances[expert_id]
 
-        # 2. Try to load from configuration cache
-        if expert_id in self._expert_configs:
-            logger.info(f"Lazy loading expert from config cache: {expert_id}")
-            config = self._expert_configs[expert_id]
-            expert = Expert(agent_config=config, id=expert_id)
-            self._expert_instances[expert_id] = expert
-            return expert
+        # 2. Acquire lock for lazy loading to prevent duplicate creation
+        with self._expert_creation_lock:
+            # Double-check after acquiring lock (another thread may have created it)
+            if expert_id in self._expert_instances:
+                return self._expert_instances[expert_id]
 
-        # 3. Try to load from database
-        if self._agent_dao:
-            try:
-                logger.info(f"Lazy loading expert from database: {expert_id}")
-                config = self._agent_dao.get_agent_config(expert_id)
-                if config:
-                    expert = Expert(agent_config=config, id=expert_id)
-                    self._expert_instances[expert_id] = expert
-                    self._expert_configs[expert_id] = config
-                    return expert
-            except Exception as e:
-                logger.error(f"Failed to load expert {expert_id} from database: {e}")
+            # 3. Try to load from configuration cache
+            if expert_id in self._expert_configs:
+                logger.info(f"Lazy loading expert from config cache: {expert_id}")
+                config = self._expert_configs[expert_id]
+                expert = Expert(agent_config=config, id=expert_id)
+                self._expert_instances[expert_id] = expert
+                return expert
 
-        # 4. Not found
+            # 4. Try to load from database
+            if self._agent_dao:
+                try:
+                    logger.info(f"Lazy loading expert from database: {expert_id}")
+                    config = self._agent_dao.get_agent_config(expert_id)
+                    if config:
+                        expert = Expert(agent_config=config, id=expert_id)
+                        self._expert_instances[expert_id] = expert
+                        self._expert_configs[expert_id] = config
+                        return expert
+                except Exception as e:
+                    logger.error(f"Failed to load expert {expert_id} from database: {e}")
+
+        # 5. Not found
         raise KeyError(f"Expert {expert_id} not found")
 
     def list_experts(self) -> List[Expert]:
@@ -110,8 +116,18 @@ class BuiltinLeaderState(LeaderState):
         self._expert_instances[expert.get_id()] = expert
 
     def remove_expert(self, expert_id: str) -> None:
-        """Remove the expert"""
+        """Remove the expert and clean up all cache layers."""
+        # Remove from memory cache
         self._expert_instances.pop(expert_id, None)
+        # Remove from config cache
+        self._expert_configs.pop(expert_id, None)
+        # Deactivate in database
+        if self._agent_dao:
+            try:
+                self._agent_dao.deactivate_agent(expert_id)
+                logger.info(f"Deactivated expert in database: {expert_id}")
+            except Exception as e:
+                logger.error(f"Failed to deactivate expert {expert_id} in database: {e}")
 
     def load_experts_from_db(self) -> None:
         """Load expert configurations from database.
@@ -140,3 +156,11 @@ class BuiltinLeaderState(LeaderState):
 
         except Exception as e:
             logger.error(f"Failed to load experts from database: {e}")
+
+    def get_cached_expert_config_count(self) -> int:
+        """Get the count of cached expert configurations.
+
+        Returns:
+            int: Number of cached expert configurations
+        """
+        return len(self._expert_configs)

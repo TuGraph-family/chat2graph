@@ -7,7 +7,7 @@ Author: kaichuan
 Date: 2025-11-24
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from app.core.reasoner.reasoner import Reasoner
 from app.utils.logger import logger
 
@@ -19,7 +19,7 @@ class ReasonerFactory:
     """
 
     @staticmethod
-    def create(reasoner_type: str, config: Dict[str, Any]) -> Reasoner:
+    def create(reasoner_type: str, config: Optional[Dict[str, Any]] = None) -> Reasoner:
         """根据类型创建 Reasoner
 
         Args:
@@ -36,6 +36,8 @@ class ReasonerFactory:
             >>> config = {"actor_name": "actor", "thinker_name": "thinker"}
             >>> reasoner = ReasonerFactory.create("DualModelReasoner", config)
         """
+        config = config or {}
+
         try:
             if reasoner_type == "DualModelReasoner":
                 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
@@ -49,19 +51,33 @@ class ReasonerFactory:
 
             elif reasoner_type == "MonoModelReasoner":
                 from app.core.reasoner.mono_model_reasoner import MonoModelReasoner
-                # MonoModelReasoner 可能有不同的构造参数
                 return MonoModelReasoner()
 
             else:
                 logger.warning(f"Unknown reasoner type: {reasoner_type}, using default DualModelReasoner")
                 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-                return DualModelReasoner()
+                # Use config if available for fallback
+                actor_name = config.get("actor_name", "actor")
+                thinker_name = config.get("thinker_name", "thinker")
+                return DualModelReasoner(
+                    actor_name=actor_name,
+                    thinker_name=thinker_name
+                )
 
         except Exception as e:
             logger.error(f"Failed to create reasoner {reasoner_type}: {e}")
-            # 降级：返回默认 Reasoner
+            # 降级：返回默认 Reasoner，仍尝试使用 config
             from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-            return DualModelReasoner()
+            try:
+                actor_name = config.get("actor_name", "actor")
+                thinker_name = config.get("thinker_name", "thinker")
+                return DualModelReasoner(
+                    actor_name=actor_name,
+                    thinker_name=thinker_name
+                )
+            except Exception:
+                # 最终降级：使用完全默认值
+                return DualModelReasoner()
 
     @staticmethod
     def get_supported_types() -> list:

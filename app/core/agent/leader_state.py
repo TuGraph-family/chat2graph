@@ -64,3 +64,11 @@ class LeaderState(ABC):
         Actual Expert instances are created lazily when needed.
         """
         pass  # Subclasses can override if needed
+
+    def get_cached_expert_config_count(self) -> int:
+        """Get the count of cached expert configurations.
+
+        Returns:
+            int: Number of cached expert configurations
+        """
+        return 0  # Subclasses can override if needed

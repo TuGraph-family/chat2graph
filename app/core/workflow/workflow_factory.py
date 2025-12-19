@@ -7,7 +7,7 @@ Author: kaichuan
 Date: 2025-11-24
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from app.core.workflow.workflow import Workflow
 from app.utils.logger import logger
 
@@ -19,12 +19,12 @@ class WorkflowFactory:
     """
 
     @staticmethod
-    def create(workflow_type: str, config: Dict[str, Any]) -> Workflow:
+    def create(workflow_type: str, config: Optional[Dict[str, Any]] = None) -> Workflow:
         """根据类型创建 Workflow
 
         Args:
             workflow_type: Workflow 类名，如 'BuiltinWorkflow'
-            config: 配置参数字典
+            config: 配置参数字典（预留扩展，当前 BuiltinWorkflow 不使用）
 
         Returns:
             Workflow 实例
@@ -33,18 +33,16 @@ class WorkflowFactory:
             ValueError: 如果 workflow_type 未知
 
         Example:
-            >>> config = {}
-            >>> workflow = WorkflowFactory.create("BuiltinWorkflow", config)
+            >>> workflow = WorkflowFactory.create("BuiltinWorkflow")
         """
+        # Log config for debugging if provided
+        if config:
+            logger.debug(f"Creating workflow {workflow_type} with config: {config}")
+
         try:
             if workflow_type == "BuiltinWorkflow":
                 from app.core.workflow.workflow import BuiltinWorkflow
                 return BuiltinWorkflow()
-
-            # 可以在这里添加更多 Workflow 类型
-            # elif workflow_type == "CustomWorkflow":
-            #     from app.core.workflow.custom_workflow import CustomWorkflow
-            #     return CustomWorkflow(**config)
 
             else:
                 logger.warning(f"Unknown workflow type: {workflow_type}, using default BuiltinWorkflow")
@@ -66,5 +64,4 @@ class WorkflowFactory:
         """
         return [
             "BuiltinWorkflow",
-            # 在这里添加其他支持的类型
         ]

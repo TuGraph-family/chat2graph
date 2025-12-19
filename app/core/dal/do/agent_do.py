@@ -25,7 +25,7 @@ class AgentDo(Do):
         agent_type: Agent 类型，'leader' 或 'expert'
         name: Agent 名称（唯一）
         description: Agent 描述信息
-        reasoner_type: Reasoner 类型，如 'DualReasoner', 'MonoReasoner'
+        reasoner_type: Reasoner 类型，如 'DualModelReasoner', 'MonoModelReasoner'
         reasoner_config: Reasoner 配置参数（JSON 格式）
         workflow_type: Workflow 类型（类名）
         workflow_config: Workflow 配置参数（JSON 格式）
@@ -68,7 +68,7 @@ class AgentDo(Do):
     reasoner_type = Column(
         String(50),
         nullable=False,
-        comment="Reasoner 类型，如 'DualReasoner', 'MonoReasoner'"
+        comment="Reasoner 类型，如 'DualModelReasoner', 'MonoModelReasoner'"
     )
 
     reasoner_config = Column(

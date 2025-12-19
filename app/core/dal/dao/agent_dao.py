@@ -263,6 +263,12 @@ class AgentDao(Dao[AgentDo]):
         """
         config = {}
 
+        # 提取 DualModelReasoner 特定属性
+        if hasattr(reasoner, '_actor_name'):
+            config['actor_name'] = getattr(reasoner, '_actor_name')
+        if hasattr(reasoner, '_thinker_name'):
+            config['thinker_name'] = getattr(reasoner, '_thinker_name')
+
         # 提取通用属性（如果存在）
         common_attrs = ['temperature', 'max_tokens', 'top_p', 'model_name']
         for attr in common_attrs:
@@ -410,16 +416,12 @@ class AgentDao(Dao[AgentDo]):
                 pass
 
             # 降级方案：直接导入并实例化
-            # 这里需要根据实际的 Workflow 实现来调整
-            if workflow_type == "LinearWorkflow":
-                from app.core.workflow.linear_workflow import LinearWorkflow
-                return LinearWorkflow()
-            elif workflow_type == "DAGWorkflow":
-                from app.core.workflow.dag_workflow import DAGWorkflow
-                return DAGWorkflow()
+            # 当前仅支持 BuiltinWorkflow
+            if workflow_type == "BuiltinWorkflow":
+                from app.core.workflow.workflow import BuiltinWorkflow
+                return BuiltinWorkflow()
             else:
-                logger.warning(f"Unknown workflow type: {workflow_type}, using default")
-                # 使用默认 Workflow（需要根据实际情况调整）
+                logger.warning(f"Unknown workflow type: {workflow_type}, using default BuiltinWorkflow")
                 from app.core.workflow.workflow import BuiltinWorkflow
                 return BuiltinWorkflow()
 
