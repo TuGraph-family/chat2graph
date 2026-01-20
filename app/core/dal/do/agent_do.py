@@ -1,11 +1,7 @@
-"""
-Agent 配置持久化模型
+"""Agent Configuration Persistence Model.
 
-此模型存储 Agent 的配置信息，而非运行时实例。
-Agent 实例在需要时根据配置重建。
-
-Author: kaichuan
-Date: 2025-11-24
+This model stores Agent configuration information, not runtime instances.
+Agent instances are reconstructed from configuration when needed.
 """
 
 from uuid import uuid4
@@ -15,107 +11,107 @@ from app.core.dal.database import Do
 
 
 class AgentDo(Do):
-    """Agent 配置持久化模型
+    """Agent Configuration Persistence Model.
 
-    存储 Agent 的配置信息，支持 Leader 和 Expert 两种类型。
-    通过存储配置而非实例，实现跨重启持久化。
+    Stores Agent configuration information, supports both Leader and Expert types.
+    Enables cross-restart persistence by storing configuration rather than instances.
 
     Attributes:
-        id: Agent 唯一标识符 (UUID)
-        agent_type: Agent 类型，'leader' 或 'expert'
-        name: Agent 名称（唯一）
-        description: Agent 描述信息
-        reasoner_type: Reasoner 类型，如 'DualModelReasoner', 'MonoModelReasoner'
-        reasoner_config: Reasoner 配置参数（JSON 格式）
-        workflow_type: Workflow 类型（类名）
-        workflow_config: Workflow 配置参数（JSON 格式）
-        leader_state_type: LeaderState 类型，仅 leader 使用
-        created_at: 创建时间戳（Unix 时间）
-        updated_at: 更新时间戳（Unix 时间）
-        is_active: 是否激活
+        id: Agent unique identifier (UUID)
+        agent_type: Agent type, 'leader' or 'expert'
+        name: Agent name (unique)
+        description: Agent description
+        reasoner_type: Reasoner type, e.g. 'DualModelReasoner', 'MonoModelReasoner'
+        reasoner_config: Reasoner configuration parameters (JSON format)
+        workflow_type: Workflow type (class name)
+        workflow_config: Workflow configuration parameters (JSON format)
+        leader_state_type: LeaderState type, only for leader
+        created_at: Creation timestamp (Unix time)
+        updated_at: Update timestamp (Unix time)
+        is_active: Whether active
     """
 
     __tablename__ = "agent"
 
-    # ==================== 基本信息 ====================
+    # ==================== Basic Information ====================
     id = Column(
         String(36),
         primary_key=True,
         default=lambda: str(uuid4()),
-        comment="Agent 唯一标识符 (UUID)"
+        comment="Agent unique identifier (UUID)"
     )
 
     agent_type = Column(
         String(20),
         nullable=False,
-        comment="Agent 类型: 'leader' 或 'expert'"
+        comment="Agent type: 'leader' or 'expert'"
     )
 
     name = Column(
         String(100),
         nullable=False,
         unique=True,
-        comment="Agent 名称（唯一）"
+        comment="Agent name (unique)"
     )
 
     description = Column(
         Text,
         nullable=True,
-        comment="Agent 描述信息"
+        comment="Agent description"
     )
 
-    # ==================== 配置信息 ====================
+    # ==================== Configuration Information ====================
     reasoner_type = Column(
         String(50),
         nullable=False,
-        comment="Reasoner 类型，如 'DualModelReasoner', 'MonoModelReasoner'"
+        comment="Reasoner type, e.g. 'DualModelReasoner', 'MonoModelReasoner'"
     )
 
     reasoner_config = Column(
         JSON,
         nullable=True,
-        comment="Reasoner 配置参数（JSON 格式）"
+        comment="Reasoner configuration parameters (JSON format)"
     )
 
     workflow_type = Column(
         String(100),
         nullable=False,
-        comment="Workflow 类型（类名）"
+        comment="Workflow type (class name)"
     )
 
     workflow_config = Column(
         JSON,
         nullable=True,
-        comment="Workflow 配置参数（JSON 格式）"
+        comment="Workflow configuration parameters (JSON format)"
     )
 
-    # ==================== Leader 特定字段 ====================
+    # ==================== Leader Specific Fields ====================
     leader_state_type = Column(
         String(50),
         nullable=True,
-        comment="LeaderState 类型，仅 leader 使用"
+        comment="LeaderState type, only for leader"
     )
 
-    # ==================== 元数据 ====================
+    # ==================== Metadata ====================
     created_at = Column(
         BigInteger,
         server_default=func.strftime("%s", "now"),
-        comment="创建时间戳（Unix 时间）"
+        comment="Creation timestamp (Unix time)"
     )
 
     updated_at = Column(
         BigInteger,
         onupdate=func.strftime("%s", "now"),
-        comment="更新时间戳（Unix 时间）"
+        comment="Update timestamp (Unix time)"
     )
 
     is_active = Column(
         Boolean,
         default=True,
-        comment="是否激活"
+        comment="Whether active"
     )
 
-    # ==================== 索引 ====================
+    # ==================== Indexes ====================
     __table_args__ = (
         Index('idx_agent_type', 'agent_type'),
         Index('idx_agent_name', 'name'),
@@ -124,17 +120,17 @@ class AgentDo(Do):
     )
 
     def __repr__(self):
-        """字符串表示"""
+        """String representation."""
         return (
             f"<AgentDo(id={self.id}, name={self.name}, "
             f"type={self.agent_type}, active={self.is_active})>"
         )
 
     def to_dict(self):
-        """转换为字典
+        """Convert to dictionary.
 
         Returns:
-            dict: Agent 配置字典
+            dict: Agent configuration dictionary
         """
         return {
             "id": self.id,

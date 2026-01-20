@@ -1,10 +1,6 @@
-"""
-Workflow 工厂类
+"""Workflow Factory.
 
-用于根据类型和配置创建 Workflow 实例。
-
-Author: kaichuan
-Date: 2025-11-24
+Creates Workflow instances based on type and configuration.
 """
 
 from typing import Dict, Any, Optional
@@ -13,24 +9,24 @@ from app.utils.logger import logger
 
 
 class WorkflowFactory:
-    """Workflow 工厂类
+    """Workflow Factory.
 
-    提供静态方法根据类型名称和配置参数创建 Workflow 实例。
+    Provides static methods to create Workflow instances based on type name and configuration parameters.
     """
 
     @staticmethod
     def create(workflow_type: str, config: Optional[Dict[str, Any]] = None) -> Workflow:
-        """根据类型创建 Workflow
+        """Create Workflow based on type.
 
         Args:
-            workflow_type: Workflow 类名，如 'BuiltinWorkflow'
-            config: 配置参数字典（预留扩展，当前 BuiltinWorkflow 不使用）
+            workflow_type: Workflow class name, e.g. 'BuiltinWorkflow'
+            config: Configuration parameter dictionary (reserved for extension, currently unused by BuiltinWorkflow)
 
         Returns:
-            Workflow 实例
+            Workflow instance
 
         Raises:
-            ValueError: 如果 workflow_type 未知
+            ValueError: If workflow_type is unknown
 
         Example:
             >>> workflow = WorkflowFactory.create("BuiltinWorkflow")
@@ -51,16 +47,16 @@ class WorkflowFactory:
 
         except Exception as e:
             logger.error(f"Failed to create workflow {workflow_type}: {e}")
-            # 降级：返回默认 Workflow
+            # Fallback: return default Workflow
             from app.core.workflow.workflow import BuiltinWorkflow
             return BuiltinWorkflow()
 
     @staticmethod
     def get_supported_types() -> list:
-        """获取支持的 Workflow 类型列表
+        """Get list of supported Workflow types.
 
         Returns:
-            支持的类型名称列表
+            List of supported type names
         """
         return [
             "BuiltinWorkflow",

@@ -1,10 +1,6 @@
-"""
-Agent 数据访问对象
+"""Agent Data Access Object.
 
-提供 Agent 配置的 CRUD 操作和配置重建功能。
-
-Author: kaichuan
-Date: 2025-11-24
+Provides CRUD operations and configuration reconstruction for Agent persistence.
 """
 
 from typing import List, Optional, Dict, Any
@@ -19,36 +15,36 @@ from app.utils.logger import logger
 
 
 class AgentDao(Dao[AgentDo]):
-    """Agent 数据访问对象
+    """Agent Data Access Object.
 
-    提供 Agent 配置的持久化、查询和重建功能。
+    Provides persistence, query, and reconstruction functionality for Agent configuration.
 
     Attributes:
-        model_class: AgentDo 数据模型类
-        session: SQLAlchemy 会话
+        model_class: AgentDo data model class
+        session: SQLAlchemy session
     """
 
     def __init__(self, session: Session):
-        """初始化 AgentDao
+        """Initialize AgentDao.
 
         Args:
-            session: SQLAlchemy 会话
+            session: SQLAlchemy session
         """
         super().__init__(AgentDo, session)
 
-    # ==================== 保存方法 ====================
+    # ==================== Save Methods ====================
 
     def save_agent_config(self, agent: Agent) -> AgentDo:
-        """保存 Agent 配置到数据库
+        """Save Agent configuration to database.
 
-        从 Agent 实例提取配置信息并持久化。
-        如果 agent 已存在（根据 ID），则更新；否则创建新记录。
+        Extract configuration from Agent instance and persist it.
+        If agent already exists (by ID), update; otherwise create new record.
 
         Args:
-            agent: Agent 实例
+            agent: Agent instance
 
         Returns:
-            AgentDo: 保存的数据对象
+            AgentDo: Saved data object
 
         Example:
             >>> from app.core.agent.expert import Expert
@@ -57,19 +53,19 @@ class AgentDao(Dao[AgentDo]):
             >>> agent_do = agent_dao.save_agent_config(expert)
         """
         try:
-            # 检查是否已存在
+            # Check if already exists
             existing = self.get_by_id(agent._id)
 
-            # 提取配置
+            # Extract configuration
             config_data = self._extract_agent_config(agent)
 
             if existing:
-                # 更新现有记录
+                # Update existing record
                 logger.info(f"Updating existing agent config: {agent._id}")
                 self.update(agent._id, **config_data)
                 return self.get_by_id(agent._id)
             else:
-                # 创建新记录
+                # Create new record
                 logger.info(f"Creating new agent config: {agent._id}")
                 config_data["id"] = agent._id
                 return self.create(**config_data)
@@ -79,15 +75,15 @@ class AgentDao(Dao[AgentDo]):
             raise
 
     def _extract_agent_config(self, agent: Agent) -> Dict[str, Any]:
-        """从 Agent 实例提取配置信息
+        """Extract configuration from Agent instance.
 
         Args:
-            agent: Agent 实例
+            agent: Agent instance
 
         Returns:
-            配置字典
+            Configuration dictionary
         """
-        # 确定 agent 类型
+        # Determine agent type
         from app.core.agent.leader import Leader
         agent_type = "leader" if isinstance(agent, Leader) else "expert"
 
@@ -101,24 +97,24 @@ class AgentDao(Dao[AgentDo]):
             "workflow_config": self._extract_workflow_config(agent._workflow),
         }
 
-        # Leader 特定配置
+        # Leader specific configuration
         if agent_type == "leader" and hasattr(agent, '_leader_state'):
             config_data["leader_state_type"] = agent._leader_state.__class__.__name__
 
         return config_data
 
-    # ==================== 查询方法 ====================
+    # ==================== Query Methods ====================
 
     def get_agent_config(self, agent_id: str) -> Optional[AgentConfig]:
-        """获取 Agent 配置并重建 AgentConfig
+        """Get Agent configuration and rebuild AgentConfig.
 
-        从数据库读取配置并构建 AgentConfig 对象，用于重建 Agent 实例。
+        Read configuration from database and build AgentConfig object for Agent reconstruction.
 
         Args:
             agent_id: Agent ID
 
         Returns:
-            AgentConfig 或 None（如果不存在）
+            AgentConfig or None (if not exists)
 
         Example:
             >>> agent_dao = AgentDao(session)
@@ -140,13 +136,13 @@ class AgentDao(Dao[AgentDo]):
             return None
 
     def get_agent_by_name(self, name: str) -> Optional[AgentDo]:
-        """根据名称获取 Agent
+        """Get Agent by name.
 
         Args:
-            name: Agent 名称
+            name: Agent name
 
         Returns:
-            AgentDo 或 None
+            AgentDo or None
 
         Example:
             >>> agent_dao = AgentDao(session)
@@ -160,13 +156,13 @@ class AgentDao(Dao[AgentDo]):
             return None
 
     def list_experts(self, active_only: bool = True) -> List[AgentDo]:
-        """获取所有 Expert 配置
+        """Get all Expert configurations.
 
         Args:
-            active_only: 是否只返回激活的 experts
+            active_only: Whether to return only active experts
 
         Returns:
-            Expert 配置列表
+            List of Expert configurations
 
         Example:
             >>> agent_dao = AgentDao(session)
@@ -184,12 +180,12 @@ class AgentDao(Dao[AgentDo]):
             return []
 
     def get_leader(self) -> Optional[AgentDo]:
-        """获取 Leader 配置
+        """Get Leader configuration.
 
-        假设系统中只有一个激活的 Leader。
+        Assumes there is only one active Leader in the system.
 
         Returns:
-            Leader 配置或 None
+            Leader configuration or None
 
         Example:
             >>> agent_dao = AgentDao(session)
@@ -202,18 +198,18 @@ class AgentDao(Dao[AgentDo]):
             logger.error(f"Failed to get leader: {e}")
             return None
 
-    # ==================== 更新方法 ====================
+    # ==================== Update Methods ====================
 
     def deactivate_agent(self, agent_id: str) -> bool:
-        """停用 Agent
+        """Deactivate Agent.
 
-        将 Agent 标记为非激活状态，而不删除记录。
+        Mark Agent as inactive instead of deleting the record.
 
         Args:
             agent_id: Agent ID
 
         Returns:
-            是否成功
+            Whether successful
 
         Example:
             >>> agent_dao = AgentDao(session)
@@ -228,13 +224,13 @@ class AgentDao(Dao[AgentDo]):
             return False
 
     def activate_agent(self, agent_id: str) -> bool:
-        """激活 Agent
+        """Activate Agent.
 
         Args:
             agent_id: Agent ID
 
         Returns:
-            是否成功
+            Whether successful
 
         Example:
             >>> agent_dao = AgentDao(session)
@@ -248,98 +244,98 @@ class AgentDao(Dao[AgentDo]):
             logger.error(f"Failed to activate agent {agent_id}: {e}")
             return False
 
-    # ==================== 私有辅助方法 ====================
+    # ==================== Private Helper Methods ====================
 
     def _extract_reasoner_config(self, reasoner: Reasoner) -> Optional[Dict[str, Any]]:
-        """提取 Reasoner 配置
+        """Extract Reasoner configuration.
 
-        从 Reasoner 实例中提取可序列化的配置参数。
+        Extract serializable configuration parameters from Reasoner instance.
 
         Args:
-            reasoner: Reasoner 实例
+            reasoner: Reasoner instance
 
         Returns:
-            配置字典
+            Configuration dictionary
         """
         config = {}
 
-        # 提取 DualModelReasoner 特定属性
+        # Extract DualModelReasoner specific attributes
         if hasattr(reasoner, '_actor_name'):
             config['actor_name'] = getattr(reasoner, '_actor_name')
         if hasattr(reasoner, '_thinker_name'):
             config['thinker_name'] = getattr(reasoner, '_thinker_name')
 
-        # 提取通用属性（如果存在）
+        # Extract common attributes (if exists)
         common_attrs = ['temperature', 'max_tokens', 'top_p', 'model_name']
         for attr in common_attrs:
             if hasattr(reasoner, attr):
                 value = getattr(reasoner, attr)
-                # 只保存基本类型
+                # Only save basic types
                 if isinstance(value, (str, int, float, bool)):
                     config[attr] = value
 
         return config if config else None
 
     def _extract_workflow_config(self, workflow: Workflow) -> Optional[Dict[str, Any]]:
-        """提取 Workflow 配置
+        """Extract Workflow configuration.
 
-        从 Workflow 实例中提取可序列化的配置参数。
+        Extract serializable configuration parameters from Workflow instance.
 
         Args:
-            workflow: Workflow 实例
+            workflow: Workflow instance
 
         Returns:
-            配置字典
+            Configuration dictionary
         """
         config = {}
 
-        # 如果 workflow 有 to_config 方法，使用它
+        # If workflow has to_config method, use it
         if hasattr(workflow, 'to_config') and callable(workflow.to_config):
             try:
                 config = workflow.to_config()
             except Exception as e:
                 logger.warning(f"Failed to extract workflow config via to_config: {e}")
 
-        # 提取其他通用属性
+        # Extract other common attributes
         if not config:
             common_attrs = ['workflow_type', 'steps', 'operators']
             for attr in common_attrs:
                 if hasattr(workflow, attr):
                     value = getattr(workflow, attr)
-                    # 只保存基本类型或可序列化类型
+                    # Only save basic types or serializable types
                     if isinstance(value, (str, int, float, bool, list, dict)):
                         config[attr] = value
 
         return config if config else None
 
     def _build_agent_config(self, agent_do: AgentDo) -> AgentConfig:
-        """从 AgentDo 构建 AgentConfig
+        """Build AgentConfig from AgentDo.
 
-        根据数据库记录重建 AgentConfig 对象。
+        Reconstruct AgentConfig object from database record.
 
         Args:
-            agent_do: 数据库记录
+            agent_do: Database record
 
         Returns:
-            AgentConfig 对象
+            AgentConfig object
 
         Raises:
-            ValueError: 如果无法重建配置
+            ValueError: If unable to reconstruct configuration
         """
         try:
-            # 构建 Profile
+            # Build Profile
             profile = Profile(
                 name=agent_do.name,
                 description=agent_do.description or ""
             )
 
-            # 重建 Reasoner
+            # Rebuild Reasoner
             reasoner = self._rebuild_reasoner(
                 agent_do.reasoner_type,
                 agent_do.reasoner_config
             )
 
-            # 重建 Workflow
+            # Rebuild Workflow
             workflow = self._rebuild_workflow(
                 agent_do.workflow_type,
                 agent_do.workflow_config
@@ -356,28 +352,27 @@ class AgentDao(Dao[AgentDo]):
             raise ValueError(f"Cannot rebuild agent config: {e}")
 
     def _rebuild_reasoner(self, reasoner_type: str, config: Optional[Dict]) -> Reasoner:
-        """根据类型和配置重建 Reasoner
+        """Rebuild Reasoner from type and configuration.
 
         Args:
-            reasoner_type: Reasoner 类名
-            config: 配置参数
+            reasoner_type: Reasoner class name
+            config: Configuration parameters
 
         Returns:
-            Reasoner 实例
+            Reasoner instance
 
         Raises:
-            ValueError: 如果无法创建 Reasoner
+            ValueError: If unable to create Reasoner
         """
         try:
-            # 尝试使用工厂方法（如果存在）
+            # Try to use factory method (if exists)
             try:
                 from app.core.reasoner.reasoner_factory import ReasonerFactory
                 return ReasonerFactory.create(reasoner_type, config or {})
             except ImportError:
                 pass
 
-            # 降级方案：直接导入并实例化
-            # 这里需要根据实际的 Reasoner 实现来调整
+            # Fallback: import and instantiate directly
             if reasoner_type == "DualModelReasoner":
                 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
                 return DualModelReasoner()
@@ -386,7 +381,7 @@ class AgentDao(Dao[AgentDo]):
                 return MonoModelReasoner()
             else:
                 logger.warning(f"Unknown reasoner type: {reasoner_type}, using default")
-                # 使用默认 Reasoner
+                # Use default Reasoner
                 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
                 return DualModelReasoner()
 
@@ -395,28 +390,28 @@ class AgentDao(Dao[AgentDo]):
             raise ValueError(f"Cannot create reasoner {reasoner_type}: {e}")
 
     def _rebuild_workflow(self, workflow_type: str, config: Optional[Dict]) -> Workflow:
-        """根据类型和配置重建 Workflow
+        """Rebuild Workflow from type and configuration.
 
         Args:
-            workflow_type: Workflow 类名
-            config: 配置参数
+            workflow_type: Workflow class name
+            config: Configuration parameters
 
         Returns:
-            Workflow 实例
+            Workflow instance
 
         Raises:
-            ValueError: 如果无法创建 Workflow
+            ValueError: If unable to create Workflow
         """
         try:
-            # 尝试使用工厂方法（如果存在）
+            # Try to use factory method (if exists)
             try:
                 from app.core.workflow.workflow_factory import WorkflowFactory
                 return WorkflowFactory.create(workflow_type, config or {})
             except ImportError:
                 pass
 
-            # 降级方案：直接导入并实例化
-            # 当前仅支持 BuiltinWorkflow
+            # Fallback: import and instantiate directly
+            # Currently only supports BuiltinWorkflow
             if workflow_type == "BuiltinWorkflow":
                 from app.core.workflow.workflow import BuiltinWorkflow
                 return BuiltinWorkflow()

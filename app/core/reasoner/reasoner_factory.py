@@ -1,10 +1,6 @@
-"""
-Reasoner 工厂类
+"""Reasoner Factory.
 
-用于根据类型和配置创建 Reasoner 实例。
-
-Author: kaichuan
-Date: 2025-11-24
+Creates Reasoner instances based on type and configuration.
 """
 
 from typing import Dict, Any, Optional
@@ -13,24 +9,24 @@ from app.utils.logger import logger
 
 
 class ReasonerFactory:
-    """Reasoner 工厂类
+    """Reasoner Factory.
 
-    提供静态方法根据类型名称和配置参数创建 Reasoner 实例。
+    Provides static methods to create Reasoner instances based on type name and configuration parameters.
     """
 
     @staticmethod
     def create(reasoner_type: str, config: Optional[Dict[str, Any]] = None) -> Reasoner:
-        """根据类型创建 Reasoner
+        """Create Reasoner based on type.
 
         Args:
-            reasoner_type: Reasoner 类名，如 'DualModelReasoner', 'MonoModelReasoner'
-            config: 配置参数字典
+            reasoner_type: Reasoner class name, e.g. 'DualModelReasoner', 'MonoModelReasoner'
+            config: Configuration parameter dictionary
 
         Returns:
-            Reasoner 实例
+            Reasoner instance
 
         Raises:
-            ValueError: 如果 reasoner_type 未知
+            ValueError: If reasoner_type is unknown
 
         Example:
             >>> config = {"actor_name": "actor", "thinker_name": "thinker"}
@@ -41,7 +37,7 @@ class ReasonerFactory:
         try:
             if reasoner_type == "DualModelReasoner":
                 from app.core.reasoner.dual_model_reasoner import DualModelReasoner
-                # 提取构造函数参数
+                # Extract constructor parameters
                 actor_name = config.get("actor_name", "actor")
                 thinker_name = config.get("thinker_name", "thinker")
                 return DualModelReasoner(
@@ -66,7 +62,7 @@ class ReasonerFactory:
 
         except Exception as e:
             logger.error(f"Failed to create reasoner {reasoner_type}: {e}")
-            # 降级：返回默认 Reasoner，仍尝试使用 config
+            # Fallback: return default Reasoner, still try to use config
             from app.core.reasoner.dual_model_reasoner import DualModelReasoner
             try:
                 actor_name = config.get("actor_name", "actor")
@@ -76,15 +72,15 @@ class ReasonerFactory:
                     thinker_name=thinker_name
                 )
             except Exception:
-                # 最终降级：使用完全默认值
+                # Final fallback: use completely default values
                 return DualModelReasoner()
 
     @staticmethod
     def get_supported_types() -> list:
-        """获取支持的 Reasoner 类型列表
+        """Get list of supported Reasoner types.
 
         Returns:
-            支持的类型名称列表
+            List of supported type names
         """
         return [
             "DualModelReasoner",
