@@ -450,16 +450,36 @@ operators:
       3. 处理结果
       4. 记录执行统计（延迟、结果数等）
 
+      错误处理策略：
+      1. 连接错误：记录错误并建议检查数据库连接配置
+      2. 超时错误：记录超时，建议优化查询或增加超时限制
+      3. 语法错误：返回详细错误信息，建议重新验证查询
+      4. 权限错误：记录权限问题，建议检查用户权限配置
+      5. 资源限制错误：建议简化查询或分批执行
+
+      重试策略：
+      - 对于瞬时错误（连接超时、网络波动），最多重试 3 次
+      - 重试间隔：1s, 2s, 4s（指数退避）
+      - 非瞬时错误（语法、权限）不进行重试
+
       输出格式：
-      - execution_status: SUCCESS|FAILED
+      - execution_status: SUCCESS|FAILED|RETRY_EXHAUSTED
       - query_result: 查询结果
       - execution_stats: 执行统计
       - error_message: 错误信息（如有）
+      - retry_count: 重试次数（如有）
+      - error_category: 错误类别（CONNECTION|TIMEOUT|SYNTAX|PERMISSION|RESOURCE）
     output_schema: |
       {
           "execution_status": "状态",
           "query_result": "查询结果",
-          "execution_stats": {...}
+          "execution_stats": {...},
+          "error_handling": {
+              "error_message": "错误信息",
+              "error_category": "错误类别",
+              "retry_count": "重试次数",
+              "recovery_suggestion": "恢复建议"
+          }
       }
     actions:
       - *query_execution_action

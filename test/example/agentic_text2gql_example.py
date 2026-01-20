@@ -8,13 +8,9 @@ Date: 2025-11-25
 """
 
 import asyncio
-from typing import Dict, Any
 
-from app.core.agent.expert import Expert
 from app.core.model.job import Job
-from app.core.model.message import AgentMessage
 from app.core.service.query_context_service import QueryContextService
-from app.core.sdk.chat2graph import Chat2Graph
 
 
 async def example_simple_query():
@@ -23,33 +19,30 @@ async def example_simple_query():
     print("示例 1: 简单查询")
     print("=" * 80)
 
-    # 初始化 Chat2Graph SDK
-    c2g = Chat2Graph(config_path="config/agent_workflows/agentic_text2gql.yml")
-
-    # 创建查询会话
+    # Create query session
     context_service = QueryContextService.instance
     session = context_service.create_session(
         user_id="example_user_001",
         initial_context={"query_source": "example_script"}
     )
 
-    # 自然语言查询
+    # Natural language query
     natural_query = "Find all Person nodes named 'John'"
 
-    # 创建 Job
-    job = Job(
+    # Create Job (intentionally unused - for demonstration only)
+    _job = Job(
         goal=natural_query,
         context="Simple vertex query example",
         session_id=session.session_id
     )
 
-    # 执行查询
+    # Execute query
     print(f"\n自然语言查询: {natural_query}")
     print(f"会话 ID: {session.session_id}")
     print("\n开始执行...")
 
-    # 注意：实际执行需要完整的 Agent 初始化
-    # result = await c2g.run(job)
+    # Note: Actual execution requires full Agent initialization
+    # result = await sdk.run(_job)
     # print(f"\n查询结果:\n{result}")
 
     print("\n示例 1 完成")
@@ -61,17 +54,16 @@ async def example_complex_query():
     print("示例 2: 复杂多跳查询")
     print("=" * 80)
 
-    # 初始化
-    c2g = Chat2Graph(config_path="config/agent_workflows/agentic_text2gql.yml")
     context_service = QueryContextService.instance
 
-    # 创建会话
+    # Create session
     session = context_service.create_session(user_id="example_user_002")
 
-    # 复杂查询：朋友的朋友
+    # Complex query: friends of friends
     natural_query = "Find friends of friends of John who work at Tech companies"
 
-    job = Job(
+    # Create Job (intentionally unused - for demonstration only)
+    _job = Job(
         goal=natural_query,
         context="Multi-hop relationship query with filtering",
         session_id=session.session_id
@@ -100,10 +92,11 @@ async def example_temporal_query():
     context_service = QueryContextService.instance
     session = context_service.create_session(user_id="example_user_003")
 
-    # 时间查询
+    # Temporal query
     natural_query = "Find all projects created in the last year"
 
-    job = Job(
+    # Create Job (intentionally unused - for demonstration only)
+    _job = Job(
         goal=natural_query,
         context="Temporal query with relative time constraint",
         session_id=session.session_id
@@ -128,10 +121,11 @@ async def example_spatial_query():
     context_service = QueryContextService.instance
     session = context_service.create_session(user_id="example_user_004")
 
-    # 空间查询
+    # Spatial query
     natural_query = "Find all stores within 5 km of Beijing"
 
-    job = Job(
+    # Create Job (intentionally unused - for demonstration only)
+    _job = Job(
         goal=natural_query,
         context="Spatial query with distance constraint",
         session_id=session.session_id
@@ -155,10 +149,10 @@ async def example_with_context():
 
     context_service = QueryContextService.instance
 
-    # 创建会话并执行多个查询以建立历史
+    # Create session and execute multiple queries to build history
     session = context_service.create_session(user_id="example_user_005")
 
-    # 模拟历史查询
+    # Simulate historical queries
     print("\n模拟建立查询历史...")
     queries = [
         "Find Person nodes",
@@ -167,7 +161,7 @@ async def example_with_context():
     ]
 
     for query_text in queries:
-        # 保存查询历史（简化示例）
+        # Save query history (simplified example)
         context_service.save_query(
             session_id=session.session_id,
             user_id="example_user_005",
@@ -178,10 +172,11 @@ async def example_with_context():
         )
         print(f"  - {query_text}")
 
-    # 执行新查询，应该利用上下文
+    # Execute new query, should leverage context
     natural_query = "Find Person nodes with name containing 'Bob'"
 
-    job = Job(
+    # Create Job (intentionally unused - for demonstration only)
+    _job = Job(
         goal=natural_query,
         context="Query with historical context",
         session_id=session.session_id
@@ -207,10 +202,11 @@ async def example_validation_workflow():
     context_service = QueryContextService.instance
     session = context_service.create_session(user_id="example_user_006")
 
-    # 一个可能有问题的查询
+    # A query that may have issues
     natural_query = "Find all Person and Company nodes"
 
-    job = Job(
+    # Create Job (intentionally unused - for demonstration only)
+    _job = Job(
         goal=natural_query,
         context="Query that may have validation issues",
         session_id=session.session_id
@@ -257,7 +253,8 @@ async def example_full_workflow():
 
     natural_query = "Find the shortest path between Person 'Alice' and Company 'TechCorp'"
 
-    job = Job(
+    # Create Job (intentionally unused - for demonstration only)
+    _job = Job(
         goal=natural_query,
         context="Complex path finding query",
         session_id=session.session_id
