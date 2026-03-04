@@ -1,0 +1,523 @@
+app:
+  name: "Chat2Graph - Agentic Text2GQL"
+  desc: "Agentic Text-to-Graph Query Language System with Context Awareness and Self-Validation"
+  version: "0.1.0"
+
+plugin:
+  workflow_platform: "BUILTIN"
+
+reasoner:
+  type: "DUAL"
+
+# ==================== Tools Definition ====================
+tools:
+  # Schema and Grammar Tools
+  - &schema_getter_tool
+    name: "SchemaGetter"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.graph_query"
+
+  - &grammer_reader_tool
+    name: "GrammerReader"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.graph_query"
+
+  - &vertex_querier_tool
+    name: "VertexQuerier"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.graph_query"
+
+  # Query Planning Tools (Week 2)
+  - &query_complexity_analyzer_tool
+    name: "QueryComplexityAnalyzer"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.query_planning"
+
+  - &index_recommender_tool
+    name: "IndexRecommender"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.query_planning"
+
+  - &query_rewriter_tool
+    name: "QueryRewriter"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.query_planning"
+
+  # Multi-Hop Reasoning Tools (Week 2)
+  - &path_pattern_recognizer_tool
+    name: "PathPatternRecognizer"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.multi_hop_reasoning"
+
+  - &temporal_query_builder_tool
+    name: "TemporalQueryBuilder"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.multi_hop_reasoning"
+
+  - &spatial_query_builder_tool
+    name: "SpatialQueryBuilder"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.multi_hop_reasoning"
+
+  # Query Validation Tools (Week 3)
+  - &schema_validator_tool
+    name: "SchemaValidator"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.query_validation"
+
+  - &semantic_checker_tool
+    name: "SemanticChecker"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.query_validation"
+
+  - &performance_predictor_tool
+    name: "PerformancePredictor"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.query_validation"
+
+  - &security_scanner_tool
+    name: "SecurityScanner"
+    type: "LOCAL_TOOL"
+    module_path: "app.plugin.tugraph.resource.query_validation"
+
+  # Context Management Tools (Week 3)
+  - &context_retriever_tool
+    name: "ContextRetriever"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.service.context_tools"
+
+  - &preference_learner_tool
+    name: "PreferenceLearner"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.service.context_tools"
+
+  - &query_suggester_tool
+    name: "QuerySuggester"
+    type: "LOCAL_TOOL"
+    module_path: "app.core.service.context_tools"
+
+# ==================== Actions Definition ====================
+actions:
+  # Query Intention Actions
+  - &query_intention_identification_action
+    name: "query_intention_identification"
+    desc: "识别并理解提供的查询要求，提取出查询针对的图模型名称、查询点的种类和查询条件"
+
+  - &vertex_type_and_condition_validation_action
+    name: "vertex_type_and_condition_validation"
+    desc: "读取图数据现有的 schema，以帮助检查节点类型是否和对应的模型匹配"
+    tools:
+      - *schema_getter_tool
+
+  # Query Complexity Actions
+  - &complexity_analysis_action
+    name: "complexity_analysis"
+    desc: "分析查询复杂度，包括实体数量、关系深度、时空约束等多个维度"
+    tools:
+      - *query_complexity_analyzer_tool
+
+  - &index_recommendation_action
+    name: "index_recommendation"
+    desc: "基于查询模式推荐索引以优化性能"
+    tools:
+      - *index_recommender_tool
+
+  # Path Pattern Actions
+  - &path_pattern_recognition_action
+    name: "path_pattern_recognition"
+    desc: "识别复杂路径模式，包括多跳、可变长度、最短路径等"
+    tools:
+      - *path_pattern_recognizer_tool
+
+  - &temporal_condition_building_action
+    name: "temporal_condition_building"
+    desc: "从时间表达式构建 Cypher 时间查询条件"
+    tools:
+      - *temporal_query_builder_tool
+
+  - &spatial_condition_building_action
+    name: "spatial_condition_building"
+    desc: "从空间表达式构建 Cypher 空间查询条件"
+    tools:
+      - *spatial_query_builder_tool
+
+  # Validation Actions
+  - &schema_validation_action
+    name: "schema_validation"
+    desc: "验证查询与 Schema 的合规性"
+    tools:
+      - *schema_validator_tool
+
+  - &semantic_checking_action
+    name: "semantic_checking"
+    desc: "检查查询的语义正确性和逻辑一致性"
+    tools:
+      - *semantic_checker_tool
+
+  - &performance_prediction_action
+    name: "performance_prediction"
+    desc: "预测查询性能特征和识别瓶颈"
+    tools:
+      - *performance_predictor_tool
+
+  - &security_scanning_action
+    name: "security_scanning"
+    desc: "扫描查询的安全漏洞"
+    tools:
+      - *security_scanner_tool
+
+  # Context Actions
+  - &context_retrieval_action
+    name: "context_retrieval"
+    desc: "从查询历史检索相关上下文"
+    tools:
+      - *context_retriever_tool
+
+  - &preference_learning_action
+    name: "preference_learning"
+    desc: "从历史查询学习用户偏好"
+    tools:
+      - *preference_learner_tool
+
+  - &query_suggestion_action
+    name: "query_suggestion"
+    desc: "基于上下文生成查询建议"
+    tools:
+      - *query_suggester_tool
+
+  # Query Design Actions
+  - &grammar_study_action
+    name: "grammar_study"
+    desc: "按查询要求在图查询语法文档中学习对应语法"
+    tools:
+      - *grammer_reader_tool
+
+  - &query_design_action
+    name: "query_design"
+    desc: "设计和生成优化的 Cypher 查询"
+    tools:
+      - *schema_getter_tool
+      - *vertex_querier_tool
+      - *query_rewriter_tool
+
+  - &query_execution_action
+    name: "query_execution"
+    desc: "执行设计的查询并返回结果"
+    tools:
+      - *schema_getter_tool
+      - *vertex_querier_tool
+
+# ==================== Toolkit Definition ====================
+toolkit:
+  # Toolkit for complexity analysis
+  - [*complexity_analysis_action, *index_recommendation_action]
+  # Toolkit for path pattern recognition
+  - [
+      *path_pattern_recognition_action,
+      *temporal_condition_building_action,
+      *spatial_condition_building_action,
+    ]
+  # Toolkit for validation
+  - [
+      *schema_validation_action,
+      *semantic_checking_action,
+      *performance_prediction_action,
+      *security_scanning_action,
+    ]
+  # Toolkit for context enhancement
+  - [
+      *context_retrieval_action,
+      *preference_learning_action,
+      *query_suggestion_action,
+    ]
+  # Toolkit for query design and execution
+  - [*grammar_study_action, *query_design_action, *query_execution_action]
+
+# ==================== Operators Definition ====================
+operators:
+  # Operator 1: Query Intention Analysis
+  - &query_intention_analysis_operator
+    instruction: |
+      你是一位专业的查询意图识别专家。你的工作是理解给定的自然语言查询，识别查询意图并提取关键信息。
+
+      你需要完成以下任务：
+      1. 理解自然语言查询的核心意图
+      2. 提取查询涉及的实体类型（顶点类型）
+      3. 识别查询条件和筛选要求
+      4. 检测查询动作类型（查找、创建、更新、删除等）
+
+      请按照以下格式输出：
+      {
+          "action": "find|create|update|delete|aggregate",
+          "object_vertex_types": ["Type1", "Type2"],
+          "query_conditions": [
+              {
+                  "field": "property_name",
+                  "operator": "=|>|<|CONTAINS|...",
+                  "value": "value"
+              }
+          ],
+          "additional_requirements": {
+              "ordering": "ASC|DESC on field",
+              "limit": number,
+              "aggregation": "COUNT|SUM|AVG|..."
+          }
+      }
+    output_schema: |
+      {
+          "action": "查询动作类型",
+          "object_vertex_types": ["涉及的顶点类型列表"],
+          "query_conditions": ["查询条件列表"],
+          "additional_requirements": "额外要求"
+      }
+    actions:
+      - *query_intention_identification_action
+      - *vertex_type_and_condition_validation_action
+
+  # Operator 2: Query Complexity Analysis (Week 2)
+  - &query_complexity_analysis_operator
+    instruction: |
+      你是一位查询复杂度分析专家。使用 QueryComplexityAnalyzer 和 IndexRecommender 工具分析查询复杂度并提供优化建议。
+
+      工作流程：
+      1. 调用 analyze_complexity 分析查询的多维度复杂度
+      2. 根据复杂度分析结果，调用 recommend_indexes 推荐索引
+      3. 综合分析结果，提供执行策略建议
+
+      输出格式要包含：
+      - complexity_level: SIMPLE|MODERATE|COMPLEX
+      - complexity_score: 0.0-1.0
+      - recommended_strategy: 推荐的执行策略
+      - index_recommendations: 索引推荐列表
+      - optimization_hints: 优化提示列表
+    output_schema: |
+      {
+          "complexity_analysis": {...},
+          "index_recommendations": {...},
+          "execution_recommendation": {...}
+      }
+    actions:
+      - *complexity_analysis_action
+      - *index_recommendation_action
+
+  # Operator 3: Path Pattern Recognition (Week 2)
+  - &path_pattern_recognition_operator
+    instruction: |
+      你是一位路径模式识别专家。使用多跳推理工具识别复杂图遍历模式。
+
+      工作流程：
+      1. 调用 recognize_patterns 识别路径模式类型
+      2. 如果查询包含时间约束，调用 build_temporal_query 构建时间条件
+      3. 如果查询包含空间约束，调用 build_spatial_query 构建空间条件
+      4. 综合所有模式和约束，生成统一的路径分析结果
+
+      输出格式要包含：
+      - path_analysis: 识别的路径模式列表
+      - temporal_conditions: 时间查询条件（如有）
+      - spatial_conditions: 空间查询条件（如有）
+      - combined_cypher_hints: 综合的 Cypher 提示
+    output_schema: |
+      {
+          "path_analysis": {...},
+          "temporal_conditions": {...},
+          "spatial_conditions": {...},
+          "combined_cypher_hints": {...}
+      }
+    actions:
+      - *path_pattern_recognition_action
+      - *temporal_condition_building_action
+      - *spatial_condition_building_action
+
+  # Operator 4: Query Validation (Week 3)
+  - &query_validation_operator
+    instruction: |
+      你是一位查询验证专家。对生成的 Cypher 查询进行全面验证。
+
+      工作流程：
+      1. 调用 validate_schema 验证 Schema 合规性
+      2. 调用 check_semantics 检查语义正确性
+      3. 调用 predict_performance 预测性能特征
+      4. 调用 scan_security 扫描安全漏洞
+      5. 综合所有验证结果，生成最终验证报告
+
+      验证优先级：
+      1. 安全问题（最高优先级）- 必须立即处理
+      2. Schema 错误 - 阻止执行
+      3. 语义问题 - 可能导致错误结果
+      4. 性能警告 - 优化建议
+
+      输出格式要包含：
+      - validation_summary: 验证摘要
+      - schema_validation: Schema 验证结果
+      - semantic_validation: 语义验证结果
+      - performance_prediction: 性能预测
+      - security_scan: 安全扫描结果
+      - final_recommendation: 最终建议（APPROVE|REJECT|REQUIRE_MODIFICATION）
+    output_schema: |
+      {
+          "validation_summary": {...},
+          "schema_validation": {...},
+          "semantic_validation": {...},
+          "performance_prediction": {...},
+          "security_scan": {...},
+          "final_recommendation": {...}
+      }
+    actions:
+      - *schema_validation_action
+      - *semantic_checking_action
+      - *performance_prediction_action
+      - *security_scanning_action
+
+  # Operator 5: Context Enhancement (Week 3)
+  - &context_enhancement_operator
+    instruction: |
+      你是一位上下文感知的查询优化专家。利用历史查询和用户偏好增强查询生成。
+
+      工作流程：
+      1. 调用 retrieve_context 检索相关历史和偏好
+      2. 调用 learn_preferences 学习或更新用户偏好
+      3. 调用 suggest_queries 生成上下文相关的查询建议
+      4. 综合上下文信息，提供个性化建议
+
+      输出格式要包含：
+      - context_summary: 上下文摘要
+      - preference_insights: 偏好洞察
+      - query_suggestions: 查询建议
+      - enhancement_recommendations: 增强建议
+    output_schema: |
+      {
+          "context_summary": {...},
+          "preference_insights": {...},
+          "query_suggestions": {...},
+          "enhancement_recommendations": {...}
+      }
+    actions:
+      - *context_retrieval_action
+      - *preference_learning_action
+      - *query_suggestion_action
+
+  # Operator 6: Query Design (Enhanced)
+  - &query_design_operator
+    instruction: |
+      你是一位专业的 Cypher 查询设计专家。基于前序 Operator 的分析结果，设计优化的查询。
+
+      你需要考虑：
+      1. 查询意图分析结果
+      2. 复杂度分析和索引建议
+      3. 路径模式和时空约束
+      4. 验证结果和优化建议
+      5. 用户偏好和历史模式
+
+      工作流程：
+      1. 学习 Cypher 语法（如需要）
+      2. 根据所有输入设计查询
+      3. 应用优化策略（使用 rewrite_query）
+      4. 生成最终查询和元数据
+
+      设计原则：
+      - 优先使用索引（根据 index_recommendations）
+      - 遵循复杂度建议的执行策略
+      - 应用路径模式模板
+      - 整合时间和空间条件
+      - 考虑用户偏好（如 preferred_complexity）
+      - 确保通过所有验证检查
+
+      输出格式要包含：
+      - designed_query: 设计的 Cypher 查询
+      - optimization_applied: 应用的优化
+      - design_rationale: 设计理由
+      - execution_metadata: 执行元数据
+      - alternative_designs: 替代设计（如有）
+    output_schema: |
+      {
+          "designed_query": {...},
+          "optimization_applied": {...},
+          "design_rationale": {...},
+          "execution_metadata": {...}
+      }
+    actions:
+      - *grammar_study_action
+      - *query_design_action
+
+  # Operator 7: Query Execution
+  - &query_execution_operator
+    instruction: |
+      你是查询执行专家。执行验证通过的查询并返回结果。
+
+      工作流程：
+      1. 确认查询已通过验证
+      2. 执行查询
+      3. 处理结果
+      4. 记录执行统计（延迟、结果数等）
+
+      错误处理策略：
+      1. 连接错误：记录错误并建议检查数据库连接配置
+      2. 超时错误：记录超时，建议优化查询或增加超时限制
+      3. 语法错误：返回详细错误信息，建议重新验证查询
+      4. 权限错误：记录权限问题，建议检查用户权限配置
+      5. 资源限制错误：建议简化查询或分批执行
+
+      重试策略：
+      - 对于瞬时错误（连接超时、网络波动），最多重试 3 次
+      - 重试间隔：1s, 2s, 4s（指数退避）
+      - 非瞬时错误（语法、权限）不进行重试
+
+      输出格式：
+      - execution_status: SUCCESS|FAILED|RETRY_EXHAUSTED
+      - query_result: 查询结果
+      - execution_stats: 执行统计
+      - error_message: 错误信息（如有）
+      - retry_count: 重试次数（如有）
+      - error_category: 错误类别（CONNECTION|TIMEOUT|SYNTAX|PERMISSION|RESOURCE）
+    output_schema: |
+      {
+          "execution_status": "状态",
+          "query_result": "查询结果",
+          "execution_stats": {...},
+          "error_handling": {
+              "error_message": "错误信息",
+              "error_category": "错误类别",
+              "retry_count": "重试次数",
+              "recovery_suggestion": "恢复建议"
+          }
+      }
+    actions:
+      - *query_execution_action
+
+# ==================== Experts Definition ====================
+experts:
+  - profile:
+      name: "Agentic Text2GQL Expert"
+      desc: |
+        你是一位全能的智能图查询专家，具备以下能力：
+        1. 理解自然语言查询意图
+        2. 分析查询复杂度并推荐优化策略
+        3. 识别复杂路径模式和时空约束
+        4. 全面验证查询的正确性、性能和安全性
+        5. 利用上下文和用户偏好优化查询
+        6. 设计高效、安全的 Cypher 查询
+        7. 执行查询并返回结果
+
+        你采用 Agentic 工作流，能够自主决策、自我验证和持续优化。
+    reasoner:
+      actor_name: "Agentic Text2GQL Expert"
+      thinker_name: "Agentic Text2GQL Expert"
+    workflow:
+      # Stage 1: Understand and Analyze
+      - [
+          *query_intention_analysis_operator,
+          *query_complexity_analysis_operator,
+          *path_pattern_recognition_operator,
+        ]
+      # Stage 2: Enhance with Context
+      - [*context_enhancement_operator]
+      # Stage 3: Design Query
+      - [*query_design_operator]
+      # Stage 4: Validate
+      - [*query_validation_operator]
+      # Stage 5: Execute (only if validation passes)
+      - [*query_execution_operator]
+
+knowledgebase: {}
+memory: {}
+env: {}
